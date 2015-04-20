@@ -9,6 +9,7 @@
     }
   ],
   "dependencies": {
+    "core-js": "^0.8.4",
     "esgraph": "*",
     "walkes": "*"
   },
