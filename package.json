@@ -1,7 +1,7 @@
 {
   "name": "dujs",
   "description": "Aim to find the intra-procedural, inter-procedural and intra-page Def-Use pairs of the client-side JavaScript",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "maintainers": [
     {
       "name": "chengfulin",
