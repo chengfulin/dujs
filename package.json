@@ -1,0 +1,28 @@
+{
+  "name": "dujs",
+  "description": "Aim to find the intra-procedural, inter-procedural and intra-page Def-Use pairs of the client-side JavaScript",
+  "version": "0.0.1",
+  "maintainers": [
+    {
+      "name": "chengfulin",
+      "email": "chengfulin0806@gmail.com"
+    }
+  ],
+  "dependencies": {
+    "esgraph": "*",
+    "walkes": "*"
+  },
+  "peerDependencies": {
+    "esprima": "~ 1.0"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*",
+    "istanbul": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/chengfulin/dujs.git"
+  },
+  "license": "MIT"
+}
