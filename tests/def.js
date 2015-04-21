@@ -13,18 +13,42 @@ describe('Def class', function () {
         def.scope.should.eql(new Scope('Program'));
     });
 
-    it('should handle missing parameters', function () {
-        var missingScope = new Def(2, [1, 6]);
-        should.not.exist(missingScope.scope);
+    it('should handle invalid parameters', function () {
+        (function () {
+            new Def(2, [1, 6]);
+        }).should.throw('Invalid Scope');
 
-        var missingRange = new Def(3);
-        should.not.exist(missingRange.range);
-        should.not.exist(missingRange.scope);
+        (function () {
+            new Def(2, [1, 6], 'Global');
+        }).should.throw('Def in "Global" scope not from n0');
 
-        var emptyDef = new Def();
-        should.not.exist(emptyDef.from);
-        should.not.exist(emptyDef.range);
-        should.not.exist(emptyDef.scope);
+        (function () {
+            new Def(2, [0, 0], 'Program');
+        }).should.throw('Invalid range of Def');
+
+        (function () {
+            new Def(2, [1, 0], 'Program');
+        }).should.throw('Invalid range of Def');
+
+        (function () {
+            new Def(2, [0], 'Program');
+        }).should.throw('Invalid range of Def');
+
+        (function () {
+            new Def(2, ['0', '1'], 'Program');
+        }).should.throw('Invalid range of Def');
+
+        (function () {
+            new Def(2, {"0": 0, "1": 1}, 'Program');
+        }).should.throw('Invalid range of Def');
+
+        (function () {
+            new Def(2, null, 'Program');
+        }).should.throw('Invalid range of Def');
+
+        (function () {
+            new Def(-1, [0,1], 'Program');
+        }).should.throw('Def should from the node with valid index');
     });
 
     it('should convert ot string correctly', function () {
