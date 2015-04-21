@@ -6,7 +6,8 @@ var CFGWrapper = require('../lib/dujs').CFGWrapper,
     esprima = require('esprima'),
     should = require('should'),
     Def = require('../lib/dujs').Def,
-    Set = require('../lib/analyses').Set;
+    Set = require('../lib/analyses').Set,
+    Scope = require('../lib/dujs').Scope;
 
 describe('CFG Wrapper', function () {
     it('should be constructed with CFG well', function () {
@@ -16,7 +17,7 @@ describe('CFG Wrapper', function () {
                 esprima.parse('var x = 1, y = 0;', { range:true})
             )
         );
-        cfgwrp.scope.should.eql('Program');
+        cfgwrp.scope.should.eql(new Scope('Program'));
         cfgwrp.cfg.length.should.eql(3);
         cfgwrp.cfg[2].length.should.eql(3);
         esgraph.dot(cfgwrp.cfg, 'var x = 1, y = 0;').should.eql(
