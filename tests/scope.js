@@ -93,6 +93,9 @@ describe('Scope', function () {
                 (function () {
                     Scope.validate(invalidIdentifier);
                 }).should.throw('Invalid Scope value');
+                (function () {
+                    Scope.validate();
+                }).should.throw('Invalid Scope value');
             });
         });
 
@@ -103,10 +106,10 @@ describe('Scope', function () {
                 }).should.not.throw();
                 (function () {
                     Scope.validateType('text');
-                }).should.throw('TypeError: not a Scope');
+                }).should.throw('Not a Scope');
                 (function () {
-                    Scope.validateType({}, 'custom message');
-                }).should.throw('custom message');
+                    Scope.validateType();
+                }).should.throw('Not a Scope');
             });
         });
     });
