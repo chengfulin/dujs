@@ -1,7 +1,7 @@
 /**
  * Created by chengfulin on 2015/4/16.
  */
-var DUPair = require('../lib/dujs').DUPair;
+var DUPair = require('../../lib/dujs/index').DUPair;
 
 describe('DUPair class', function () {
     it('should be created by constructor well', function () {

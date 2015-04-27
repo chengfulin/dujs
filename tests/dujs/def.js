@@ -1,8 +1,8 @@
 /**
  * Created by chengfulin on 2015/4/16.
  */
-var Def = require('../lib/dujs').Def,
-    Scope = require('../lib/dujs').Scope,
+var Def = require('../../lib/dujs/index').Def,
+    Scope = require('../../lib/dujs/index').Scope,
     should = require('should');
 
 describe('Def class', function () {

@@ -1,10 +1,10 @@
 /**
  * Created by chengfulin on 2015/4/10.
  */
-var ReachDefinitions = require('../lib/dujs').ReachDefinitions,
-    Set = require('../lib/analyses').Set,
-    Def = require('../lib/dujs').Def,
-    cfgext = require('../lib/dujs').CFGExt,
+var ReachDefinitions = require('../../lib/dujs/index').ReachDefinitions,
+    Set = require('../../lib/analyses/index').Set,
+    Def = require('../../lib/dujs/index').Def,
+    cfgext = require('../../lib/dujs/index').CFGExt,
     should = require('should');
 
 /**

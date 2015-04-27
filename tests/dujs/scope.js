@@ -1,7 +1,7 @@
 /**
  * Created by chengfulin on 2015/4/24.
  */
-var Scope = require('../lib/dujs').Scope,
+var Scope = require('../../lib/dujs/index').Scope,
     should = require('should');
 
 describe('Scope', function () {

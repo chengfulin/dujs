@@ -1,9 +1,9 @@
 /**
  * Created by chengfulin on 2015/4/22.
  */
-var VarTable = require('../lib/dujs').VarTable,
-    Var = require('../lib/dujs').Var,
-    Set = require('../lib/analyses').Set,
+var VarTable = require('../../lib/dujs/index').VarTable,
+    Var = require('../../lib/dujs/index').Var,
+    Set = require('../../lib/analyses/index').Set,
     should = require('should');
 
 describe('VarTable', function () {

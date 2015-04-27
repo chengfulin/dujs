@@ -1,13 +1,13 @@
 /**
  * Created by chengfulin on 2015/4/20.
  */
-var CFGWrapper = require('../lib/dujs').CFGWrapper,
+var CFGWrapper = require('../../lib/dujs/index').CFGWrapper,
     esgraph = require('esgraph'),
     esprima = require('esprima'),
     should = require('should'),
-    Def = require('../lib/dujs').Def,
-    Set = require('../lib/analyses').Set,
-    Scope = require('../lib/dujs').Scope;
+    Def = require('../../lib/dujs/index').Def,
+    Set = require('../../lib/analyses/index').Set,
+    Scope = require('../../lib/dujs/index').Scope;
 
 describe('CFG Wrapper', function () {
     it('should be constructed with CFG well', function () {

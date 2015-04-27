@@ -1,11 +1,11 @@
 /**
  * Created by chengfulin on 2015/4/15.
  */
-var cfgext = require('../lib/dujs').CFGExt,
-    DUA = require('../lib/dujs').DUA,
-    DUPair = require('../lib/dujs').DUPair,
-    Def = require('../lib/dujs').Def,
-    Set = require('../lib/analyses').Set,
+var cfgext = require('../../lib/dujs/index').CFGExt,
+    DUA = require('../../lib/dujs/index').DUA,
+    DUPair = require('../../lib/dujs/index').DUPair,
+    Def = require('../../lib/dujs/index').Def,
+    Set = require('../../lib/analyses/index').Set,
     should = require('should');
 
 describe('Def-Use Analysis', function () {

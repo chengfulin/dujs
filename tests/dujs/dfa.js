@@ -1,10 +1,10 @@
 /**
  * Created by chengfulin on 2015/4/13.
  */
-var DFA = require('../lib/dujs').DFA,
-    Set = require('../lib/analyses').Set,
-    cfgext = require('../lib/dujs').CFGExt,
-    Def = require('../lib/dujs').Def;
+var DFA = require('../../lib/dujs/index').DFA,
+    Set = require('../../lib/analyses/index').Set,
+    cfgext = require('../../lib/dujs/index').CFGExt,
+    Def = require('../../lib/dujs/index').Def;
 
 describe('KILL set', function () {
     it('should work for declaration only', function () {

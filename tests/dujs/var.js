@@ -1,7 +1,7 @@
 /**
  * Created by chengfulin on 2015/4/22.
  */
-var Var = require('../lib/dujs').Var,
+var Var = require('../../lib/dujs/index').Var,
     should = require('should');
 
 describe('Var model', function () {

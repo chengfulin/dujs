@@ -1,5 +1,5 @@
 
-var worklist = require('../lib/analyses');
+var worklist = require('../../lib/analyses/index');
 var Set = worklist.Set;
 var esgraph = require('esgraph');
 var esprima = require('esprima');

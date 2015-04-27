@@ -1,7 +1,7 @@
 
 var esprima = require('esprima');
 var esgraph = require('esgraph');
-var availableExpressions = require('../lib/analyses').examples.availableExpressions;
+var availableExpressions = require('../../lib/analyses/index').examples.availableExpressions;
 
 /**
  * returns the analysis output for the exit node, since this is a

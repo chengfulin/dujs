@@ -1,5 +1,5 @@
 
-var Set = require('../lib/analyses').Set,
+var Set = require('../../lib/analyses/index').Set,
 	should = require('should');
 
 describe('Set', function () {

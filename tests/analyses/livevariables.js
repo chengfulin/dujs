@@ -1,8 +1,9 @@
 
 var esprima = require('esprima');
 var esgraph = require('esgraph');
-var liveVariables = require('../lib/analyses').examples.liveVariables;
-var Set = require('../lib/analyses').Set;
+var liveVariables = require('../../lib/analyses/index').examples.liveVariables;
+var Set = require('../../lib/analyses/index').Set,
+	should = require('should');
 
 /**
  * returns the analysis output for the entry node, since this is a
