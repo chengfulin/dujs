@@ -6,6 +6,7 @@ var Var = require('../../lib/dujs').Var,
     should = require('should');
 
 describe('Var', function () {
+    'use strict';
     describe('constructor', function () {
         it('should construct well', function () {
             var normal = new Var('ga', Scope.GLOBAL_SCOPE),
@@ -20,13 +21,13 @@ describe('Var', function () {
             property.getVarLivingWith().getScope().toString().should.eql('Program');
 
             (function () {
-                new Var('!invalid', Scope.PROGRAM_SCOPE);
+                var invalid = new Var('!invalid', Scope.PROGRAM_SCOPE);
             }).should.throw('Invalid Var value');
             (function () {
-                new Var('valid', {});
+                var invalid = new Var('valid', {});
             }).should.throw('Invalid Var value');
             (function () {
-                new Var('valid', Scope.PROGRAM_SCOPE, {});
+                var invalid = new Var('valid', Scope.PROGRAM_SCOPE, {});
             }).should.throw('Invalid Var value');
         });
     });

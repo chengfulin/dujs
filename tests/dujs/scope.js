@@ -5,10 +5,11 @@ var Scope = require('../../lib/dujs/index').Scope,
     should = require('should');
 
 describe('Scope', function () {
+    'use strict';
     describe('constructor', function () {
         it('should construct well', function () {
             (function () {
-                new Scope('!invalid');
+                var invalid = new Scope('!invalid');
             }).should.throw('Invalid Scope value');
             var global = new Scope('!GLOBAL'),
                 program = new Scope('!PROGRAM'),
@@ -36,8 +37,8 @@ describe('Scope', function () {
         });
 
         it('should have global Scope objects', function () {
-            should(Scope.GLOBAL_SCOPE instanceof Scope).be.true;
-            should(Scope.PROGRAM_SCOPE instanceof Scope).be.true;
+            should(Scope.GLOBAL_SCOPE instanceof Scope).equal(true);
+            should(Scope.PROGRAM_SCOPE instanceof Scope).equal(true);
             Scope.GLOBAL_SCOPE.getValue().should.eql('!GLOBAL');
             Scope.GLOBAL_SCOPE.getType().should.eql('Global');
             Scope.PROGRAM_SCOPE.getValue().should.eql('!PROGRAM');
@@ -75,13 +76,13 @@ describe('Scope', function () {
 
         describe('isValidValue', function () {
             it('should support for checking valid scope value', function () {
-                Scope.isValidValue(tmpScope).should.be.true;
-                Scope.isValidValue(globalScopeValue).should.be.true;
-                Scope.isValidValue(programScopeValue).should.be.true;
-                Scope.isValidValue(functionScopeValue).should.be.true;
-                Scope.isValidValue(anonymousFunScopeValue).should.be.true;
-                Scope.isValidValue(negativeNumber).should.be.false;
-                Scope.isValidValue(invalidIdentifier).should.be.false;
+                Scope.isValidValue(tmpScope).should.equal(true);
+                Scope.isValidValue(globalScopeValue).should.equal(true);
+                Scope.isValidValue(programScopeValue).should.equal(true);
+                Scope.isValidValue(functionScopeValue).should.equal(true);
+                Scope.isValidValue(anonymousFunScopeValue).should.equal(true);
+                Scope.isValidValue(negativeNumber).should.equal(false);
+                Scope.isValidValue(invalidIdentifier).should.equal(false);
             });
         });
 

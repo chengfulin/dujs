@@ -5,6 +5,7 @@ var Range = require('../../lib/dujs').Range,
     should = require('should');
 
 describe('Range', function () {
+    'use strict';
     describe('constructor', function () {
         it('should construct well', function () {
             var tmp = new Range(0, 1),
@@ -19,13 +20,13 @@ describe('Range', function () {
             initPairs.getEnd().should.eql(10);
 
             (function () {
-                new Range();
+                var invalid = new Range();
             }).should.throw('Invalid Range value');
             (function () {
-                new Range([1]);
+                var invalid = new Range([1]);
             }).should.throw('Invalid Range value');
             (function () {
-                new Range(1, 0);
+                var invalid = new Range(1, 0);
             }).should.throw('Invalid Range value');
         });
     });
