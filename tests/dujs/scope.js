@@ -13,7 +13,8 @@ describe('Scope', function () {
             var global = new Scope('!GLOBAL'),
                 program = new Scope('!PROGRAM'),
                 normalFun = new Scope('fun'),
-                anonymousFun = new Scope(0);
+                anonymousFun = new Scope(0),
+                anotherScope = new Scope(new Scope('foo'));
             global.getValue().should.eql('!GLOBAL');
             global.getType().should.eql('Global');
             program.getValue().should.eql('!PROGRAM');
@@ -22,6 +23,8 @@ describe('Scope', function () {
             normalFun.getType().should.eql('Function');
             anonymousFun.getValue().should.eql(0);
             anonymousFun.getType().should.eql('AnonymousFunction');
+            anotherScope.getValue().should.eql('foo');
+            anotherScope.getType().should.eql('Function');
         });
     });
     describe('static members', function () {
