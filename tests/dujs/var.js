@@ -1,64 +1,107 @@
 /**
  * Created by chengfulin on 2015/4/22.
  */
-var Var = require('../../lib/dujs/index').Var,
+var Var = require('../../lib/dujs').Var,
+    Scope = require('../../lib/dujs').Scope,
     should = require('should');
 
-describe('Var model', function () {
+describe('Var', function () {
     describe('constructor', function () {
-        it('should created well', function () {
-            var var1 = new Var('var1', 'fun'),
-                var2 = new Var('var2', 'Program'),
-                var3 = new Var('var3', 'Global'),
-                var4 = new Var('var4', 0);
-            var1.name.should.eql('var1');
-            var1.scope.toString().should.eql('Function["fun"]');
-            var2.name.should.eql('var2');
-            var2.scope.toString().should.eql('Program');
-            var3.name.should.eql('var3');
-            var3.scope.toString().should.eql('Global');
-            var4.name.should.eql('var4');
-            var4.scope.toString().should.eql('FunctionExpression[0]');
+        it('should construct well', function () {
+            var normal = new Var('ga', Scope.GLOBAL_SCOPE),
+                property = new Var('prop', Scope.PROGRAM_SCOPE, new Var('obj', Scope.PROGRAM_SCOPE));
+            normal.getName().should.eql('ga');
+            normal.getScope().toString().should.eql('Global');
+            should.not.exist(normal.getVarLivingWith());
+
+            property.getName().should.eql('prop');
+            property.getScope().toString().should.eql('Program');
+            property.getVarLivingWith().getName().should.eql('obj');
+            property.getVarLivingWith().getScope().toString().should.eql('Program');
+
+            (function () {
+                new Var('!invalid', Scope.PROGRAM_SCOPE);
+            }).should.throw('Invalid Var value');
+            (function () {
+                new Var('valid', {});
+            }).should.throw('Invalid Var value');
+            (function () {
+                new Var('valid', Scope.PROGRAM_SCOPE, {});
+            }).should.throw('Invalid Var value');
         });
     });
 
     describe('methods', function () {
-        describe('isValidName', function () {
-            it('should checking param name well', function () {
-                Var.isValidName('name').should.be.true;
-                Var.isValidName(0).should.be.false;
-                Var.isValidName({}).should.be.false;
+        describe('validate', function () {
+            it('should validate name', function () {
+                (function () {
+                    Var.validate('', Scope.PROGRAM_SCOPE);
+                }).should.throw('Invalid Var value');
+                (function () {
+                    Var.validate('!invalid', Scope.PROGRAM_SCOPE);
+                }).should.throw('Invalid Var value');
+                (function () {
+                    Var.validate('valid', Scope.PROGRAM_SCOPE);
+                }).should.not.throw();
+            });
+
+            it('should validate the Var living with', function () {
+                (function () {
+                    Var.validate('valid', Scope.PROGRAM_SCOPE, {});
+                }).should.throw('Invalid Var value');
+                (function () {
+                    Var.validate('valid', Scope.PROGRAM_SCOPE, null);
+                }).should.not.throw();
+                (function () {
+                    Var.validate('valid', Scope.PROGRAM_SCOPE);
+                }).should.not.throw();
             });
         });
 
-        describe('validate', function () {
-            it('should validate well', function () {
+        describe('validateType', function () {
+            it('should validate Var type well', function () {
                 (function () {
-                    Var.validate(0)
-                }).should.throw('Variable name should be string');
+                    Var.validateType();
+                }).should.throw('Not a Var');
                 (function () {
-                    Var.validate({})
-                }).should.throw('Variable name should be string');
+                    Var.validateType({});
+                }).should.throw('Not a Var');
+                (function () {
+                    Var.validateType(new Var('normal', Scope.PROGRAM_SCOPE));
+                }).should.not.throw();
+            });
+        });
+
+        describe('toString', function () {
+            it('should convert to string correctly', function () {
+                var global = new Var('global', Scope.GLOBAL_SCOPE),
+                    normal = new Var('normal', Scope.PROGRAM_SCOPE),
+                    prop = new Var('prop', new Scope('foo'), normal);
+                global.toString().should.eql('global@Global');
+                normal.toString().should.eql('normal@Program');
+                prop.toString().should.eql('prop:normal@Program@Function["foo"]');
             });
         });
 
         describe('live', function () {
-            it('should live with a Var', function () {
-                var thisVar = new Var('var1', 'Program'),
-                    var2 = new Var('var2', 'Global');
+            it('should set the Var living with well', function () {
+                var obj = new Var('obj', Scope.GLOBAL_SCOPE),
+                    notProp = new Var('notProp', Scope.PROGRAM_SCOPE),
+                    prop = new Var('prop', Scope.PROGRAM_SCOPE, obj),
+                    objX = new Var('objX', Scope.PROGRAM_SCOPE);
 
                 (function () {
-                    thisVar.live('var1');
-                }).should.throw('Var cannot live with a non-Var');
-                (function () {
-                    thisVar.live({});
-                }).should.throw('Var cannot live with a non-Var');
-                (function () {
-                    thisVar.live();
-                }).should.throw('Var cannot live with a non-Var');
+                    notProp.live({});
+                }).should.throw('Not a Var');
 
-                thisVar.live(var2);
-                thisVar.liveWith.toString().should.eql('var2@Global');
+                notProp.live(obj);
+                notProp.getVarLivingWith().getName().should.eql('obj');
+                notProp.getVarLivingWith().getScope().toString().should.eql('Global');
+
+                prop.getVarLivingWith().getName().should.eql('obj');
+                prop.live(objX);
+                prop.getVarLivingWith().getName().should.eql('objX');
+                prop.getVarLivingWith().getScope().toString().should.eql('Program');
             });
         });
     });
