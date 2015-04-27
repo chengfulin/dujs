@@ -17,6 +17,16 @@ describe('Range', function () {
             initArr.getEnd().should.eql(3);
             initPairs.getStart().should.eql(0);
             initPairs.getEnd().should.eql(10);
+
+            (function () {
+                new Range();
+            }).should.throw('Invalid Range value');
+            (function () {
+                new Range([1]);
+            }).should.throw('Invalid Range value');
+            (function () {
+                new Range(1, 0);
+            }).should.throw('Invalid Range value');
         });
     });
 
@@ -41,6 +51,9 @@ describe('Range', function () {
             });
 
             it('should validate array of numbers', function () {
+                (function () {
+                    Range.validate([0]);
+                }).should.throw('Invalid Range value');
                 (function () {
                     Range.validate([-1, 0]);
                 }).should.throw('Invalid Range value');
