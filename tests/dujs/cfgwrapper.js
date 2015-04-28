@@ -1,69 +1,70 @@
 /**
  * Created by chengfulin on 2015/4/20.
  */
-var CFGWrapper = require('../../lib/dujs/index').CFGWrapper,
-    esgraph = require('esgraph'),
-    esprima = require('esprima'),
-    should = require('should'),
-    Def = require('../../lib/dujs/index').Def,
-    Set = require('../../lib/analyses/index').Set,
-    Scope = require('../../lib/dujs/index').Scope;
+var CFGWrapper = require('../../lib/dujs').CFGWrapper,
+    Var = require('../../lib/dujs').Var,
+    Scope = require('../../lib/dujs').Scope,
+    Range = require('../../lib/dujs').Range,
+    CfgExt = require('../../lib/dujs').CFGExt,
+    should = require('should');
 
-describe('CFG Wrapper', function () {
-    it('should be constructed with CFG well', function () {
-        var cfgwrp = new CFGWrapper(
-            'Program',
-            esgraph(
-                esprima.parse('var x = 1, y = 0;', { range:true})
-            )
-        );
-        cfgwrp.scope.should.eql(new Scope('Program'));
-        cfgwrp.cfg.length.should.eql(3);
-        cfgwrp.cfg[2].length.should.eql(3);
-        esgraph.dot(cfgwrp.cfg, 'var x = 1, y = 0;').should.eql(
-            'n0 [label="entry", style="rounded"]\n' +
-            'n1 [label="VariableDeclaration"]\n' +
-            'n2 [label="exit", style="rounded"]\n' +
-            'n0 -> n1 []\n' +
-            'n1 -> n2 []\n'
-        );
+describe('CFGWrapper', function () {
+    'use strict';
+    var code,
+        scopeASTs,
+        scopeCFGs,
+        programScope,
+        funScope,
+        programCFGWrapper,
+        funCFGWrapper;
+
+    beforeEach(function () {
+        code = 'var a = 0, b = 1;\n' +
+        'function fun(a,b) {\n' +
+            'var c = a + b;\n' +
+        '}\n' +
+        'var d = function () {};';
+        scopeASTs = [];
+        scopeCFGs = [];
+        scopeASTs = CfgExt.findScopes(CfgExt.parseAST(code));
+        scopeASTs.length.should.eql(3);
+
+        scopeASTs.forEach(function (ast) {
+            scopeCFGs.push(CfgExt.getCFG(ast));
+        });
+        scopeCFGs.length.should.eql(3);
+
+        programScope = Scope.PROGRAM_SCOPE;
+        funScope = new Scope('fun');
+        programCFGWrapper = new CFGWrapper(scopeCFGs[0], programScope, null);
+        funCFGWrapper = new CFGWrapper(scopeCFGs[1], funScope, programCFGWrapper);
     });
 
-    it('should set Reach Definitions well', function () {
-        var fakeRDs = new Map(),
-            cfgwrp = new CFGWrapper(
-                'Program',
-                esgraph(
-                    esprima.parse('var x = 1, y = 0;', { range:true})
-                )
-            );
-        fakeRDs.set(cfgwrp.cfg[0], new Set());
-        fakeRDs.set(cfgwrp.cfg[1],
-            new Set([
-                new Def(1, [8, 9], 'Program'),
-                new Def(1, [15, 16], 'Program')
-            ])
-        );
-        fakeRDs.set(cfgwrp.cfg[2][1], new Set());
-        cfgwrp.setReachDefinitions(fakeRDs);
+    describe('constructor', function () {
+        it('should construct simply well', function () {
+            programCFGWrapper.getCFG().length.should.eql(3);
+            programCFGWrapper.getRange().toString().should.eql('[0,78]');
+            programCFGWrapper.getScope().toString().should.eql('Program');
+            should.not.exist(programCFGWrapper.getParent());
+        });
 
-        should(cfgwrp.rds.get(cfgwrp.cfg[0]) instanceof Set).be.ok;
-        cfgwrp.rds.get(cfgwrp.cfg[0]).values().should.be.empty;
-        should(cfgwrp.rds.get(cfgwrp.cfg[1]) instanceof Set).be.ok;
-        cfgwrp.rds.get(cfgwrp.cfg[1]).values().length.should.eql(2);
-        cfgwrp.rds.get(cfgwrp.cfg[1]).values()[0].toString().should.eql('Def @n1 @[8,9]_Program');
-        cfgwrp.rds.get(cfgwrp.cfg[1]).values()[1].toString().should.eql('Def @n1 @[15,16]_Program');
-        should(cfgwrp.rds.get(cfgwrp.cfg[2][1]) instanceof Set).be.ok;
-        cfgwrp.rds.get(cfgwrp.cfg[2][1]).values().should.be.empty;
+        it('should connect to parent scope well', function () {
+            funCFGWrapper.getRange().toString().should.eql('[18,54]');
+            funCFGWrapper.getScope().toString().should.eql('Function["fun"]');
+            funCFGWrapper.getParent().getRange().toString().should.eql('[0,78]');
+            funCFGWrapper.getParent().getScope().toString().should.eql('Program');
+        });
+    });
 
-        var invalidRDs = new Map();
-        invalidRDs.set(cfgwrp.cfg[0], 'entry');
-        invalidRDs.set(cfgwrp.cfg[1], 'exit');
-        invalidRDs.set(cfgwrp.cfg[2][1], 'n1');
-        cfgwrp.setReachDefinitions(invalidRDs);
-
-        should.not.exist(cfgwrp.rds.get(cfgwrp.cfg[0]));
-        should.not.exist(cfgwrp.rds.get(cfgwrp.cfg[1]));
-        should.not.exist(cfgwrp.rds.get(cfgwrp.cfg[2][1]));
+    describe('methods', function () {
+        describe('setVars', function () {
+            it('should find Vars declared in this scope well', function () {
+                programCFGWrapper.setVars();
+                programCFGWrapper.getScopeVars().size.should.eql(3);
+                should.exist(programCFGWrapper.getScopeVars().get('a'));
+                should.exist(programCFGWrapper.getScopeVars().get('b'));
+                should.exist(programCFGWrapper.getScopeVars().get('d'));
+            });
+        });
     });
 });
