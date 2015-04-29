@@ -85,6 +85,20 @@ describe('Def', function () {
             });
         });
 
+        describe('validateType', function () {
+            it('should validate type well', function () {
+                (function () {
+                    Def.validateType();
+                }).should.throw('Not a Def');
+                (function () {
+                    Def.validateType({});
+                }).should.throw('Not a Def');
+                (function () {
+                    Def.validateType(new Def(0, 'object', [0,1], Scope.PROGRAM_SCOPE));
+                }).should.not.throw();
+            });
+        });
+
         describe('toString', function () {
             it('should convert to string correctly', function () {
                 var aDef = new Def(0, 'object', [0, 1], Scope.PROGRAM_SCOPE),
