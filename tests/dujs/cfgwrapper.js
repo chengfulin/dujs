@@ -15,8 +15,10 @@ describe('CFGWrapper', function () {
         scopeCFGs,
         programScope,
         funScope,
+        anonymousFunScope,
         programCFGWrapper,
-        funCFGWrapper;
+        funCFGWrapper,
+        anonymousFunCFGWrapper;
 
     beforeEach(function () {
         code = 'var a = 0, b = 1;\n' +
@@ -36,8 +38,10 @@ describe('CFGWrapper', function () {
 
         programScope = Scope.PROGRAM_SCOPE;
         funScope = new Scope('fun');
+        anonymousFunScope = new Scope(0);
         programCFGWrapper = new CFGWrapper(scopeCFGs[0], programScope, null);
         funCFGWrapper = new CFGWrapper(scopeCFGs[1], funScope, programCFGWrapper);
+        anonymousFunCFGWrapper = new CFGWrapper(scopeCFGs[2], anonymousFunScope, programCFGWrapper);
     });
 
     describe('constructor', function () {
@@ -58,12 +62,12 @@ describe('CFGWrapper', function () {
 
     describe('methods', function () {
         describe('setVars', function () {
-            it('should find Vars declared in this scope well', function () {
+            it('should find Vars declared in program scope well', function () {
                 programCFGWrapper.setVars();
-                programCFGWrapper.getScopeVars().size.should.eql(3);
+                programCFGWrapper.getScopeVars().size.should.eql(2);
+                /// before adding any child
                 should.exist(programCFGWrapper.getScopeVars().get('a'));
                 should.exist(programCFGWrapper.getScopeVars().get('b'));
-                should.exist(programCFGWrapper.getScopeVars().get('d'));
             });
         });
     });
