@@ -3,9 +3,11 @@
  */
 var CFGWrapper = require('../../lib/dujs').CFGWrapper,
     Var = require('../../lib/dujs').Var,
+    Def = require('../../lib/dujs').Def,
     Scope = require('../../lib/dujs').Scope,
     Range = require('../../lib/dujs').Range,
     CfgExt = require('../../lib/dujs').CFGExt,
+    Map = require('core-js/es6/map'),
     should = require('should');
 
 describe('CFGWrapper', function () {
@@ -128,6 +130,27 @@ describe('CFGWrapper', function () {
                 cInFun = funCFGWrapper.getScopeVars().get('c');
                 should.exist(cInFun);
                 cInFun.getScope().toString().should.eql('Function["fun"]');
+            });
+
+            it('should set initial global variables well', function () {
+                var variables;
+                programCFGWrapper.setVars();
+                variables = programCFGWrapper.getScopeVars();
+                variables.size.should.eql(2);
+                should(variables.has('a')).eql(true);
+                should(variables.has('b')).eql(true);
+
+                var globalVars = new Map();
+                globalVars.set(
+                    new Var('ga', [0,1], Scope.GLOBAL_SCOPE),
+                    new Def(0, Def.OBJECT_TYPE, [0,1], Scope.GLOBAL_SCOPE)
+                );
+                programCFGWrapper.setVars(globalVars);
+                variables = programCFGWrapper.getScopeVars();
+                variables.size.should.eql(3);
+                should(variables.has('a')).eql(true);
+                should(variables.has('b')).eql(true);
+                should(variables.has('ga')).eql(true);
             });
         });
 
