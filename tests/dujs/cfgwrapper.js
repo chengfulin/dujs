@@ -215,6 +215,26 @@ describe('CFGWrapper', function () {
                     .should.eql(programCFGWrapper.getScopeVars().get('b').toString());
             });
 
+            it('should support initial gloval Vars', function () {
+                var globalVars = new Map();
+                globalVars.set(
+                    new Var('ga', [0,1], Scope.GLOBAL_SCOPE),
+                    new Def(0, Def.OBJECT_TYPE, [0,1], Scope.GLOBAL_SCOPE)
+                );
+                globalVars.set(
+                    new Var('gb', [0,1], Scope.GLOBAL_SCOPE),
+                    new Def(0, Def.LITERAL_TYPE, [0,1], Scope.GLOBAL_SCOPE)
+                );
+                programCFGWrapper.setVars(globalVars);
+                programCFGWrapper.initRDs();
+
+                var rds = programCFGWrapper.getReachIns();
+                rds.get(programCFGWrapper.getCFG()[0]).values().length.should.eql(2);
+                rds.get(programCFGWrapper.getCFG()[0]).values()[0]
+                    .variable.toString()
+                    .should.eql(programCFGWrapper.getVarByName('ga').toString());
+            });
+
             it('should support parameters', function () {
                 /// function parameters
                 funCFGWrapper.setParams(funParams);
