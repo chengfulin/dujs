@@ -57,6 +57,7 @@ describe('CFGWrapper', function () {
             }
         });
         scopeCFGs.length.should.eql(3);
+        scopeCFGs[0][2].length.should.eql(4);
 
         anonymousFunScope = new Scope(0);
         programCFGWrapper = new CFGWrapper(scopeCFGs[0], programScope, null);
@@ -99,13 +100,17 @@ describe('CFGWrapper', function () {
                         .has(anonymousFunCFGWrapper.getDef())
                 ).eql(true);
                 should.exist(programCFGWrapper.getScopeVars().get('fun'));
-                should.exist(programCFGWrapper.getScopeVars().get('d'));
 
                 var rdsOfEntry = programCFGWrapper
-                    .getReachDefinitions()
+                    .getReachIns()
                     .get(programCFGWrapper.getCFG()[0]);
                 should.exist(rdsOfEntry);
-                should(rdsOfEntry.has(programCFGWrapper.getScopeVars().get('fun'))).eql(true);
+                should(rdsOfEntry.values()).containDeep([
+                    {
+                        variable: programCFGWrapper.getScopeVars().get('fun'),
+                        definition: funCFGWrapper.getDef()
+                    }
+                ]);
             });
         });
 
@@ -171,6 +176,62 @@ describe('CFGWrapper', function () {
 
                 aInFun.getScope().toString().should.eql('Function["fun"]');
                 bInFun.getScope().toString().should.eql('Function["fun"]');
+            });
+        });
+
+        describe('initRDs', function () {
+            it('should find correct intra-procedural definitions', function () {
+                programCFGWrapper.addChild(funCFGWrapper);
+                programCFGWrapper.addChild(
+                    anonymousFunCFGWrapper,
+                    new Var('d', [59,78], programScope, null)
+                );
+                programCFGWrapper.setVars();
+                programCFGWrapper.initRDs();
+
+                var rds = programCFGWrapper.getReachIns();
+                /// size equals to CFG nodes
+                rds.size.should.eql(4);
+                rds.get(programCFGWrapper.getCFG()[0]).values().length.should.eql(1);
+                rds.get(programCFGWrapper.getCFG()[2][2]).values().length.should.eql(3);
+                rds.get(programCFGWrapper.getCFG()[2][3]).values().length.should.eql(3);
+
+                /// RDs of entry node
+                rds.get(programCFGWrapper.getCFG()[0]).values()[0]
+                    .variable.toString()
+                    .should.eql(programCFGWrapper.getVarByName('fun').toString());
+                rds.get(programCFGWrapper.getCFG()[0]).values()[0]
+                    .definition.should.eql(funCFGWrapper.getDef());
+
+                /// ReachIns of 2nd declaration node
+                rds.get(programCFGWrapper.getCFG()[2][2]).values()[0]
+                    .variable.toString()
+                    .should.eql(programCFGWrapper.getScopeVars().get('fun').toString());
+                rds.get(programCFGWrapper.getCFG()[2][2]).values()[1]
+                    .variable.toString()
+                    .should.eql(programCFGWrapper.getScopeVars().get('a').toString());
+                rds.get(programCFGWrapper.getCFG()[2][2]).values()[2]
+                    .variable.toString()
+                    .should.eql(programCFGWrapper.getScopeVars().get('b').toString());
+            });
+
+            it('should support parameters', function () {
+                /// function parameters
+                funCFGWrapper.setParams(funParams);
+                funCFGWrapper.setVars();
+                funCFGWrapper.initRDs();
+                var reachInsOfFun = funCFGWrapper.getReachIns();
+                /// size equals to CFG nodes
+                reachInsOfFun.size.should.eql(3);
+                /// ReachIns of entry node
+                reachInsOfFun.get(funCFGWrapper.getCFG()[0]).values().length.should.eql(2);
+                reachInsOfFun.get(funCFGWrapper.getCFG()[2][1]).values().length.should.eql(2);
+                reachInsOfFun.get(funCFGWrapper.getCFG()[2][1]).values()[0]
+                    .variable.toString()
+                    .should.eql(funCFGWrapper.getScopeVars().get('a').toString());
+                reachInsOfFun.get(funCFGWrapper.getCFG()[2][1]).values()[1]
+                    .variable.toString()
+                    .should.eql(funCFGWrapper.getScopeVars().get('b').toString());
             });
         });
     });
