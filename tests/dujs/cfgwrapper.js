@@ -8,6 +8,7 @@ var CFGWrapper = require('../../lib/dujs').CFGWrapper,
     Range = require('../../lib/dujs').Range,
     CfgExt = require('../../lib/dujs').CFGExt,
     Map = require('core-js/es6/map'),
+    Set = require('../../lib/analyses').Set,
     should = require('should');
 
 describe('CFGWrapper', function () {
@@ -87,24 +88,25 @@ describe('CFGWrapper', function () {
             it('should add child well', function () {
                 programCFGWrapper.addChild(funCFGWrapper);
                 programCFGWrapper.getChildren().size.should.eql(1);
-                should(programCFGWrapper.getChildren().has(funCFGWrapper.getDef())).eql(true);
+                should(programCFGWrapper.getChildren().has(funCFGWrapper.getRange().toString())).eql(true);
 
-                programCFGWrapper.addChild(
-                    anonymousFunCFGWrapper,
-                    new Var('d', [59,78], programScope, null)
-                );
+                programCFGWrapper.addChild(anonymousFunCFGWrapper);
                 programCFGWrapper.getChildren().size.should.eql(2);
                 should(
                     programCFGWrapper
                         .getChildren()
-                        .has(anonymousFunCFGWrapper.getDef())
+                        .has(anonymousFunCFGWrapper.getRange().toString())
                 ).eql(true);
                 should.exist(programCFGWrapper.getScopeVars().get('fun'));
 
                 var rdsOfEntry = programCFGWrapper
-                    .getReachIns()
-                    .get(programCFGWrapper.getCFG()[0]);
+                        .getReachIns()
+                        .get(programCFGWrapper.getCFG()[0]),
+                    reachOutsOfEntry = programCFGWrapper
+                        .getReachOuts();
                 should.exist(rdsOfEntry);
+                /// not find RDs yet
+                reachOutsOfEntry.size.should.eql(0);
                 should(rdsOfEntry.values()).containDeep([
                     {
                         variable: programCFGWrapper.getScopeVars().get('fun'),
@@ -118,16 +120,20 @@ describe('CFGWrapper', function () {
             it('should find Vars declared in program scope well', function () {
                 var aInProgram,
                     bInProgram,
-                    cInFun;
+                    cInFun,
+                    dInProgram;
                 programCFGWrapper.setVars();
-                programCFGWrapper.getScopeVars().size.should.eql(2);
+                programCFGWrapper.getScopeVars().size.should.eql(3);
                 /// before adding any child
                 aInProgram = programCFGWrapper.getScopeVars().get('a');
                 bInProgram = programCFGWrapper.getScopeVars().get('b');
+                dInProgram = programCFGWrapper.getScopeVars().get('d');
                 should.exist(aInProgram);
                 should.exist(bInProgram);
+                should.exist(dInProgram);
                 aInProgram.getScope().toString().should.eql('Program');
                 bInProgram.getScope().toString().should.eql('Program');
+                dInProgram.getScope().toString().should.eql('Program');
 
                 funCFGWrapper.setVars();
                 /// not including params
@@ -141,9 +147,10 @@ describe('CFGWrapper', function () {
                 var variables;
                 programCFGWrapper.setVars();
                 variables = programCFGWrapper.getScopeVars();
-                variables.size.should.eql(2);
+                variables.size.should.eql(3);
                 should(variables.has('a')).eql(true);
                 should(variables.has('b')).eql(true);
+                should(variables.has('d')).eql(true);
 
                 var globalVars = new Map();
                 globalVars.set(
@@ -152,9 +159,10 @@ describe('CFGWrapper', function () {
                 );
                 programCFGWrapper.setVars(globalVars);
                 variables = programCFGWrapper.getScopeVars();
-                variables.size.should.eql(3);
+                variables.size.should.eql(4);
                 should(variables.has('a')).eql(true);
                 should(variables.has('b')).eql(true);
+                should(variables.has('d')).eql(true);
                 should(variables.has('ga')).eql(true);
             });
         });
@@ -182,25 +190,41 @@ describe('CFGWrapper', function () {
         describe('initRDs', function () {
             it('should find correct intra-procedural definitions', function () {
                 programCFGWrapper.addChild(funCFGWrapper);
-                programCFGWrapper.addChild(
-                    anonymousFunCFGWrapper,
-                    new Var('d', [59,78], programScope, null)
-                );
+                programCFGWrapper.addChild(anonymousFunCFGWrapper);
                 programCFGWrapper.setVars();
                 programCFGWrapper.initRDs();
 
-                var rds = programCFGWrapper.getReachIns();
+                var rds = programCFGWrapper.getReachIns(),
+                    reachOuts = programCFGWrapper.getReachOuts();
                 /// size equals to CFG nodes
                 rds.size.should.eql(4);
+                reachOuts.size.should.eql(4);
                 rds.get(programCFGWrapper.getCFG()[0]).values().length.should.eql(1);
+                reachOuts.get(programCFGWrapper.getCFG()[0]).values().length.should.eql(1);
+                /// VariableDeclaration node
+                /// In: {fun}, Out: {fun, a, b}
+                rds.get(programCFGWrapper.getCFG()[2][1]).values().length.should.eql(1);
+                reachOuts.get(programCFGWrapper.getCFG()[2][1]).values().length.should.eql(3);
+
+                /// FunctionExpression node
+                /// In: {fun, a, b}, Out: {fun, a, b, d}
                 rds.get(programCFGWrapper.getCFG()[2][2]).values().length.should.eql(3);
-                rds.get(programCFGWrapper.getCFG()[2][3]).values().length.should.eql(3);
+                reachOuts.get(programCFGWrapper.getCFG()[2][2]).values().length.should.eql(4);
+                /// exit node
+                rds.get(programCFGWrapper.getCFG()[2][3]).values().length.should.eql(4);
+                reachOuts.get(programCFGWrapper.getCFG()[2][3]).values().length.should.eql(4);
 
                 /// RDs of entry node
                 rds.get(programCFGWrapper.getCFG()[0]).values()[0]
                     .variable.toString()
                     .should.eql(programCFGWrapper.getVarByName('fun').toString());
                 rds.get(programCFGWrapper.getCFG()[0]).values()[0]
+                    .definition.should.eql(funCFGWrapper.getDef());
+                /// ReachOuts of entry node
+                reachOuts.get(programCFGWrapper.getCFG()[0]).values()[0]
+                    .variable.toString()
+                    .should.eql(programCFGWrapper.getVarByName('fun').toString());
+                reachOuts.get(programCFGWrapper.getCFG()[0]).values()[0]
                     .definition.should.eql(funCFGWrapper.getDef());
 
                 /// ReachIns of 2nd declaration node
@@ -252,6 +276,81 @@ describe('CFGWrapper', function () {
                 reachInsOfFun.get(funCFGWrapper.getCFG()[2][1]).values()[1]
                     .variable.toString()
                     .should.eql(funCFGWrapper.getScopeVars().get('b').toString());
+            });
+        });
+
+        describe('validate', function () {
+            it('should not throw with valid value', function () {
+                (function () {
+                    CFGWrapper.validate(scopeCFGs[0], Scope.PROGRAM_SCOPE, null);
+                }).should.not.throw();
+            });
+
+            it('should throw an error when CFG invalid', function () {
+                (function () {
+                    CFGWrapper.validate({}, Scope.PROGRAM_SCOPE, null);
+                    CFGWrapper.validate([1,2,3], Scope.PROGRAM_SCOPE, null);
+                }).should.throw('Invalid CFGWrapper value (CFG)');
+
+                (function () {
+                    CFGWrapper.validate({}, Scope.PROGRAM_SCOPE, null, 'Error occurred');
+                    CFGWrapper.validate([1,2,3], Scope.PROGRAM_SCOPE, null, 'Error occurred');
+                }).should.throw('Error occurred');
+            });
+
+            it('should throw an error when parent invalid', function () {
+                (function () {
+                    CFGWrapper.validate(scopeCFGs[0], Scope.PROGRAM_SCOPE, {});
+                }).should.throw('Invalid CFGWrapper value (parent scope)');
+            });
+
+            it('should throw an error when scope invalid', function () {
+                (function () {
+                    CFGWrapper.validate(scopeCFGs[0], null, programCFGWrapper);
+                }).should.throw('Invalid CFGWrapper value (scope)');
+            });
+        });
+
+        describe('validateType', function () {
+            it('should not throw with valid value', function () {
+                (function () {
+                    CFGWrapper.validateType(programCFGWrapper);
+                    CFGWrapper.validateType(funCFGWrapper);
+                    CFGWrapper.validateType(anonymousFunCFGWrapper);
+                }).should.not.throw();
+            });
+
+            it('should throw an error when the parameter is not a CFGWrapper', function () {
+                (function () {
+                    CFGWrapper.validateType({});
+                }).should.throw('Not a CFGWrapper');
+                (function () {
+                    CFGWrapper.validateType();
+                }).should.throw('Not a CFGWrapper');
+                (function () {
+                    CFGWrapper.validateType({}, 'Error occurred');
+                }).should.throw('Error occurred');
+            });
+        });
+
+        describe('hasVarWithName', function () {
+            it('should check the name of a variable is existed or not', function () {
+                should(programCFGWrapper.hasVarWithName('a')).equal(false);
+                programCFGWrapper.setVars();
+                should(programCFGWrapper.hasVarWithName('a')).equal(true);
+                should(programCFGWrapper.hasVarWithName({})).equal(false);
+            });
+        });
+
+        describe('getFunctionParams', function () {
+            it('should get parameters correctly', function () {
+                funCFGWrapper.setParams([new Var('va', [0,1], Scope.PROGRAM_SCOPE)]);
+                funCFGWrapper.getFunctionParams().size.should.equal(1);
+                should.exist(funCFGWrapper.getFunctionParams().get('va'));
+                anonymousFunCFGWrapper.setParams(new Set([new Var('va', [0,2], Scope.PROGRAM_SCOPE), new Var('vb', [2,4], Scope.PROGRAM_SCOPE)]));
+                anonymousFunCFGWrapper.getFunctionParams().size.should.equal(2);
+                should.exist(anonymousFunCFGWrapper.getFunctionParams().get('va'));
+                should.exist(anonymousFunCFGWrapper.getFunctionParams().get('vb'));
             });
         });
     });
