@@ -3,17 +3,19 @@
  */
 var FunctionScopeTree = require('../../lib/dujs').FunctionScopeTree,
     CFGExt = require('../../lib/dujs').CFGExt,
+    Range = require('../../lib/dujs').Range,
     should = require('should');
 
 describe('FunctionScopeTree', function () {
     'use strict';
-    var code = 'function foo(x) {\n' +
-            'function inner() {}\n' +
-            '}\n' +
-            'var foo2 = function (a, b) {};',
+    var code,
         tree;
 
     beforeEach(function () {
+        code = 'function foo(x) {\n' +
+        'function inner() {}\n' +
+        '}\n' +
+        'var foo2 = function (a, b) {};';
         tree = new FunctionScopeTree(CFGExt.parseAST(code));
     });
 
@@ -79,6 +81,7 @@ describe('FunctionScopeTree', function () {
             descendentScope.getFunctionParams().size.should.eql(0);
         });
     });
+
     describe('methods', function () {
         describe('toString', function () {
             it('should represent by string correctly', function () {
@@ -90,6 +93,41 @@ describe('FunctionScopeTree', function () {
                     '    +-' + functionScopes[2].getScope() + '@' + functionScopes[2].getRange() + '\n' +
                     '  +-' + functionScopes[3].getScope() + '@' + functionScopes[3].getRange()
                 );
+            });
+        });
+
+        describe('findRDs', function () {
+            it('should have correct definitions of formal argument', function () {
+                code += '\nfoo(1);';
+                tree = new FunctionScopeTree(CFGExt.parseAST(code));
+                tree.findVars();
+                tree.findRDs();
+
+                var rootScope = tree.getRoot(),
+                    fooScope = tree.getFunctionScopeByRange(new Range(16, 39));
+                rootScope.getScope().toString().should.eql('Program');
+                fooScope.getScope().toString().should.eql('Function["foo"]');
+
+                /// ReachIns at the entry point of function 'foo'
+                var reachInFooEntry = fooScope.getReachIns().get(fooScope.getCFG()[0]),
+                    reachOutFooEntry = fooScope.getReachOuts().get(fooScope.getCFG()[0]);
+                reachInFooEntry.size.should.eql(4);
+                reachOutFooEntry.size.should.eql(4);
+
+                rootScope.getReachIns().get(rootScope.getCFG()[1]).size.should.eql(2);
+                rootScope.getReachIns().get(rootScope.getCFG()[1]).values()[0].variable.getName().toString().should.eql('foo');
+                rootScope.getReachIns().get(rootScope.getCFG()[1]).values()[1].variable.getName().toString().should.eql('foo2');
+                rootScope.getCFG()[2].length.should.eql(4);
+                rootScope.getReachIns().get(rootScope.getCFG()[2][1]).size.should.eql(1);
+                rootScope.getReachIns().get(rootScope.getCFG()[2][1]).values()[0].variable.getName().should.eql('foo');
+                rootScope.getReachIns().get(rootScope.getCFG()[2][2]).size.should.eql(2);
+                rootScope.getReachIns().get(rootScope.getCFG()[2][2]).values()[1].variable.getName().should.eql('foo2');
+                rootScope.getReachIns().get(rootScope.getCFG()[2][3]).values()[1].variable.getName().should.eql('foo2');
+
+                reachInFooEntry.values()[0].variable.getName().should.eql('inner');
+                reachInFooEntry.values()[1].variable.getName().should.eql('foo');
+                reachInFooEntry.values()[2].variable.getName().should.eql('foo2');
+                reachInFooEntry.values()[3].variable.getName().should.eql('x');
             });
         });
     });
