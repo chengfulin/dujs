@@ -26,6 +26,7 @@ describe('CFGWrapper', function () {
         anonymousFunCFGWrapper;
 
     beforeEach(function () {
+        CfgExt.resetCounter();
         code = 'var a = 0, b = 1;\n' +
         'function fun(a,b) {\n' +
             'var c = a + b;\n' +
@@ -259,23 +260,13 @@ describe('CFGWrapper', function () {
                     .should.eql(programCFGWrapper.getVarByName('ga').toString());
             });
 
-            it('should support parameters', function () {
+            it('should not add definitions to parameters yet', function () {
                 /// function parameters
                 funCFGWrapper.setParams(funParams);
                 funCFGWrapper.setVars();
                 funCFGWrapper.initRDs();
                 var reachInsOfFun = funCFGWrapper.getReachIns();
-                /// size equals to CFG nodes
-                reachInsOfFun.size.should.eql(3);
-                /// ReachIns of entry node
-                reachInsOfFun.get(funCFGWrapper.getCFG()[0]).values().length.should.eql(2);
-                reachInsOfFun.get(funCFGWrapper.getCFG()[2][1]).values().length.should.eql(2);
-                reachInsOfFun.get(funCFGWrapper.getCFG()[2][1]).values()[0]
-                    .variable.toString()
-                    .should.eql(funCFGWrapper.getScopeVars().get('a').toString());
-                reachInsOfFun.get(funCFGWrapper.getCFG()[2][1]).values()[1]
-                    .variable.toString()
-                    .should.eql(funCFGWrapper.getScopeVars().get('b').toString());
+                reachInsOfFun.get(funCFGWrapper.getCFG()[0]).size.should.eql(0);
             });
         });
 
@@ -351,6 +342,46 @@ describe('CFGWrapper', function () {
                 anonymousFunCFGWrapper.getFunctionParams().size.should.equal(2);
                 should.exist(anonymousFunCFGWrapper.getFunctionParams().get('va'));
                 should.exist(anonymousFunCFGWrapper.getFunctionParams().get('vb'));
+            });
+        });
+
+        describe('nodeReachInsToString', function () {
+            it('should convert to string correctly', function () {
+                programCFGWrapper.addChild(funCFGWrapper);
+                programCFGWrapper.setVars();
+                programCFGWrapper.initRDs();
+
+                programCFGWrapper.nodeReachInsToString(
+                    programCFGWrapper.getCFG()[0]
+                ).should.eql(
+                    'ReachIn(n0) = [' +
+                    '{' + programCFGWrapper.getVarByName('fun').toString() + ': [' +
+                    funCFGWrapper.getDef().toString() + ']}' +
+                    ']'
+                );
+
+                programCFGWrapper.nodeReachInsToString(
+                    programCFGWrapper.getCFG()[2][2]
+                ).should.eql(
+                    'ReachIn(n2) = [' +
+                    '{' + programCFGWrapper.getVarByName('fun').toString() + ': [' +
+                    funCFGWrapper.getDef().toString() + ']}, ' +
+                    '{' + programCFGWrapper.getVarByName('a').toString() + ': [Def@n1@[8,9]_Program]}, ' +
+                    '{' + programCFGWrapper.getVarByName('b').toString() + ': [Def@n1@[15,16]_Program]}' +
+                    ']'
+                );
+            });
+        });
+
+        describe('reachInsToString', function () {
+            it('should convert to string correctly', function () {
+                /// TODO: test method reachInsToString
+            });
+        });
+
+        describe('cfgToString', function () {
+            it('should convert to string correctly', function () {
+                /// TODO: test method cfgToString
             });
         });
     });
