@@ -354,20 +354,19 @@ describe('CFGWrapper', function () {
                 programCFGWrapper.nodeReachInsToString(
                     programCFGWrapper.getCFG()[0]
                 ).should.eql(
-                    'ReachIn(n0) = [' +
+                    'ReachIn(entry) = [\n' +
                     '{' + programCFGWrapper.getVarByName('fun').toString() + ': [' +
-                    funCFGWrapper.getDef().toString() + ']}' +
+                    funCFGWrapper.getDef().toString() + ']}\n' +
                     ']'
                 );
 
                 programCFGWrapper.nodeReachInsToString(
                     programCFGWrapper.getCFG()[2][2]
                 ).should.eql(
-                    'ReachIn(n2) = [' +
-                    '{' + programCFGWrapper.getVarByName('fun').toString() + ': [' +
-                    funCFGWrapper.getDef().toString() + ']}, ' +
-                    '{' + programCFGWrapper.getVarByName('a').toString() + ': [Def@n1@[8,9]_Program]}, ' +
-                    '{' + programCFGWrapper.getVarByName('b').toString() + ': [Def@n1@[15,16]_Program]}' +
+                    'ReachIn(2) = [\n' +
+                    '{' + programCFGWrapper.getVarByName('fun').toString() + ': [' + funCFGWrapper.getDef().toString() + ']},\n' +
+                    '{' + programCFGWrapper.getVarByName('a').toString() + ': [Def@n1@[8,9]_Program]},\n' +
+                    '{' + programCFGWrapper.getVarByName('b').toString() + ': [Def@n1@[15,16]_Program]}\n' +
                     ']'
                 );
             });
