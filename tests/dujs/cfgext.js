@@ -41,7 +41,7 @@ describe('CFGExt', function () {
                 CFGExt.resetCounter();
                 var code = 'var a = 3;',
                     cfg = CFGExt.getCFG(CFGExt.parseAST(code)),
-                    output = CFGExt.toDot(cfg, true);
+                    output = CFGExt.toDotWithLabelId(cfg);
                 output.should.eql(
                     'n0 [label="entry", style="rounded"]\n' +
                     'n1 [label="1"]\n' +
@@ -81,7 +81,7 @@ describe('CFGExt', function () {
                         '--a;\n' +
                         '}',
                     cfg = CFGExt.getCFG(CFGExt.parseAST(code)),
-                    output = CFGExt.toDot(cfg, true);
+                    output = CFGExt.toDotWithLabelId(cfg);
                 output.should.eql(
                     'n0 [label="entry", style="rounded"]\n' +
                     'n1 [label="1"]\n' +
