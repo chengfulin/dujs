@@ -35,4 +35,8 @@ process.stdin.on('end', function () {
         console.log(scope.reachInsToString());
         console.log('\n');
     });
+
+    scopeTree.findDUpairs();
+    console.log('=== DUpairs ===');
+    console.log(scopeTree.dupairsToString());
 });
