@@ -11,6 +11,8 @@
   "dependencies": {
     "core-js": "^0.8.4",
     "esgraph": "*",
+    "graphviz": "0.0.8",
+    "open": "0.0.5",
     "walkes": "*"
   },
   "peerDependencies": {
