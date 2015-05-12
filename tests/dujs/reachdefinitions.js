@@ -1,270 +1,82 @@
 /**
  * Created by chengfulin on 2015/4/10.
  */
-var ReachDefinitions = require('../../lib/dujs/index').ReachDefinitions,
-    Set = require('../../lib/analyses/index').Set,
-    Def = require('../../lib/dujs/index').Def,
-    cfgext = require('../../lib/dujs/index').CFGExt,
+var ReachDefinitions = require('../../lib/dujs').ReachDefinitions,
+    Set = require('../../lib/analyses').Set,
+    Var = require('../../lib/dujs').Var,
+    Def = require('../../lib/dujs').Def,
+    cfgext = require('../../lib/dujs').CFGExt,
+    CFGWrapper = require('../../lib/dujs').CFGWrapper,
+    Scope = require('../../lib/dujs').Scope,
+    VarDef = require('../../lib/dujs').VarDef,
     should = require('should');
 
-/**
- * Do reach definitions analysis
- * @param cfg CFG of the source code
- * @returns reach definitions of all nodes
- */
-function doAnalysis(cfg) {
-    return ReachDefinitions(cfg);
-}
-
-/**
- * Test suites
- */
-describe('Reach Definitions', function () {
-    it('should work for declaration only', function () {
-        var cfg = cfgext.getCFG(
-                'var x = 55, y = 10, tmp = 0;\n' +
-                'expr;'
-            ),
-            output = doAnalysis(cfg);
-        /// RD(entry)
-        output.get(cfg[0]).values().should.be.empty;
-        /// RD(n1)
-        output.get(cfg[2][1]).values().should.empty;
-        /// RD(n2)
-        output.get(cfg[2][2]).values().should.containDeep([
-            new Def('x', 1),
-            new Def('y', 1),
-            new Def('tmp', 1)
-        ]);
+describe('Reach Definitions (dependent on CFGWrapper)', function () {
+    'use strict';
+    beforeEach(function () {
+        cfgext.resetCounter();
     });
+    describe('with initial RDs', function () {
+        it('should work well', function () {
+            var code = 'var a, b, c;',
+                functionScope = new CFGWrapper(cfgext.getCFG(cfgext.parseAST(code)), Scope.PROGRAM_SCOPE);
+            functionScope.setVars();
+            var rds = ReachDefinitions.findReachDefinitions(functionScope,
+                    new Set([
+                        new VarDef(
+                            new Var(
+                                'Class',
+                                [0, 1],
+                                Scope.GLOBAL_SCOPE
+                            ),
+                            new Def(
+                                0,
+                                Def.OBJECT_TYPE,
+                                [0, 1],
+                                Scope.GLOBAL_SCOPE
+                            )
+                        )
+                    ])
+                );
 
-    it('should work for redefinition', function () {
-        var cfg = cfgext.getCFG(
-                'var x = 55, y = 10, tmp = 0;\n' +
-                'x = 66;\n' +
-                'y = tmp = 1;\n' +
-                'expr;'
-            ),
-            output = doAnalysis(cfg);
-        /// RD(n1)
-        output.get(cfg[2][1]).values().should.empty;
-        /// RD(n2)
-        var n2RD = output.get(cfg[2][2]).values();
-        n2RD.length.should.eql(3);
-        n2RD.should.containDeep([
-            new Def('x', 1),
-            new Def('y', 1),
-            new Def('tmp', 1)
-        ]);
-        /// RD(n3)
-        var n3RD = output.get(cfg[2][3]).values();
-        n3RD.length.should.eql(3);
-        n3RD.should.containDeep([
-            new Def('x', 2),
-            new Def('y', 1),
-            new Def('tmp', 1)
-        ]);
-        /// RD(n4)
-        var n4RD = output.get(cfg[2][4]).values();
-        n4RD.length.should.eql(3);
-        n4RD.should.containDeep([
-            new Def('x', 2),
-            new Def('y', 3),
-            new Def('tmp', 3)
-        ]);
+            rds.inputs.size.should.eql(3);
+            /// RDs at n0
+            rds.inputs.get(functionScope.getCFG()[2][0]).size.should.eql(1);
+            rds.inputs.get(functionScope.getCFG()[2][0]).values()[0]
+                .toString()
+                .should.eql('(Class@[0,1]_Global,Def@n0@[0,1]_Global)');
+        });
     });
+    describe('without branch', function () {
+        it('should support for CFG without branch', function () {
+            var code = 'var a, b, c;' +
+                    'a = 0;' +
+                    'b = a++;' +
+                    'c = a * b;',
+                functionScope = new CFGWrapper(cfgext.getCFG(cfgext.parseAST(code)), Scope.PROGRAM_SCOPE);
+            functionScope.setVars();
+            var rds = ReachDefinitions.findReachDefinitions(functionScope);
 
-    it('should work for update expression', function () {
-        var cfg = cfgext.getCFG(
-                'var x = 5;\n' +
-                '++x;\n' +
-                'expr;'
-            ),
-            output = doAnalysis(cfg);
-        /// RD(n2)
-        var n2RD = output.get(cfg[2][2]).values();
-        n2RD.length.should.eql(1);
-        n2RD.should.containDeep([new Def('x', 1)]);
-        /// RD(n3)
-        var n3RD = output.get(cfg[2][3]).values();
-        n3RD.length.should.eql(1);
-        n3RD.should.containDeep([new Def('x', 2)]);
-    });
+            rds.inputs.size.should.eql(6);
+            functionScope.getCFG()[2][5].type.should.eql('exit');
+            rds.inputs.get(functionScope.getCFG()[2][1]).size.should.eql(0);
+            rds.inputs.get(functionScope.getCFG()[2][2]).size.should.eql(0);
+            rds.inputs.get(functionScope.getCFG()[2][3]).size.should.eql(1);
+            rds.inputs.get(functionScope.getCFG()[2][4]).size.should.eql(2);
+            rds.inputs.get(functionScope.getCFG()[2][5]).size.should.eql(3);
 
-    it('should work for obj', function () {
-       var cfg = cfgext.getCFG(
-               'var obj = {};\n' +
-               'obj.prop = 123;\n' +
-               'expr;'
-           ),
-           output = doAnalysis(cfg);
-        /// RD(n2)
-        var n2RD = output.get(cfg[2][2]).values();
-        n2RD.length.should.eql(1);
-        n2RD.should.containDeep([new Def('obj', 1)]);
-        /// RD(n3)
-        var n3RD = output.get(cfg[2][3]).values();
-        n3RD.length.should.eql(1);
-        n3RD.should.containDeep([new Def('obj', 2)]);
-    });
-
-    it('should work for branches', function () {
-        var cfg = cfgext.getCFG(
-                'var x = 20, y = 5;\n' +
-                'if (x > y) {\n' +
-                    'var z = 10;\n' +
-                    'x = x % y;\n' +
-                '} else {\n' +
-                    'y = x;\n' +
-                '}\n' +
-                'expr;'
-            ),
-            output = doAnalysis(cfg);
-        /// RD(n2)
-        var n2RD = output.get(cfg[2][2]).values();
-        n2RD.length.should.eql(2);
-        n2RD.should.containDeep([
-            new Def('x', 1),
-            new Def('y', 1)
-        ]);
-        /// RD(n3)
-        var n3RD = output.get(cfg[2][3]).values();
-        n3RD.length.should.eql(2);
-        n3RD.should.containDeep([
-            new Def('x', 1),
-            new Def('y', 1)
-        ]);
-        /// RD(n4)
-        var n4RD = output.get(cfg[2][4]).values();
-        n4RD.length.should.eql(3);
-        n4RD.should.containDeep([
-            new Def('x', 1),
-            new Def('y', 1),
-            new Def('z', 3)
-        ]);
-        /// RD(n5) n5: 'expr;'
-        var n5RD = output.get(cfg[2][5]).values();
-        n5RD.length.should.eql(5);
-        n5RD.should.containDeep([
-            new Def('x', 1),
-            new Def('x', 4),
-            new Def('y', 1),
-            new Def('y', 6),
-            new Def('z', 3)
-        ]);
-        /// RD(n6) n6: 'y = x;'
-        var n6RD = output.get(cfg[2][6]).values();
-        n6RD.length.should.eql(2);
-        n6RD.should.containDeep([
-            new Def('x', 1),
-            new Def('y', 1)
-        ]);
-    });
-
-    it('should work for loops', function () {
-        var cfg = cfgext.getCFG(
-                'var x = 5, y = 0;\n' +
-                'while(x > 0) {\n' +
-                    'y += x;\n' +
-                    '--x;\n' +
-                    'var z = x;\n' +
-                '}\n' +
-                'expr;'
-            ),
-            output = doAnalysis(cfg);
-        /// RD(n2)
-        var n2RD = output.get(cfg[2][2]).values();
-        n2RD.length.should.eql(5);
-        n2RD.should.containDeep([
-            new Def('x', 1),
-            new Def('x', 4),
-            new Def('y', 1),
-            new Def('y', 3),
-            new Def('z', 5)
-        ]);
-        /// RD(n3)
-        var n3RD = output.get(cfg[2][3]).values();
-        n3RD.length.should.eql(5);
-        n3RD.should.containDeep([
-            new Def('x', 1),
-            new Def('x', 4),
-            new Def('y', 1),
-            new Def('y', 3),
-            new Def('z', 5)
-        ]);
-        /// RD(n4)
-        var n4RD = output.get(cfg[2][4]).values();
-        n4RD.length.should.eql(4);
-        n4RD.should.containDeep([
-            new Def('x', 1),
-            new Def('x', 4),
-            new Def('y', 3),
-            new Def('z', 5)
-        ]);
-        /// RD(n5)
-        var n5RD = output.get(cfg[2][5]).values();
-        n5RD.length.should.eql(3);
-        n5RD.should.containDeep([
-            new Def('x', 4),
-            new Def('y', 3),
-            new Def('z', 5)
-        ]);
-    });
-
-    it('should work with switch', function () {
-        var cfg = cfgext.getCFG(
-                'var test = 3, out;\n' +
-                'switch (test) {\n' +
-                'case 1:\n' +
-                    'out = test;\n' +
-                    'break;\n' +
-                'case 2:\n' +
-                    'out = test * test;\n' +
-                    'break;\n' +
-                'case 3:\n' +
-                    'out = test * test * test;\n' +
-                    'break;\n' +
-                'case 4:\n' +
-                'case 5:\n' +
-                    'out = 0;\n' +
-                    'break;\n' +
-                'default:\n' +
-                    'out = -1;\n' +
-                '}\n' +
-                'var tmp = out;'
-            ),
-            output = doAnalysis(cfg);
-        /// RD(n3) n3: 'out = test;'
-        var n3RD = output.get(cfg[2][3]).values();
-        n3RD.length.should.eql(2);
-        n3RD.should.containDeep([
-            new Def('test', 1),
-            new Def('out', 1)
-        ]);
-        /// RD(n4) n4: 'var tmp = out;'
-        var n4RD = output.get(cfg[2][4]).values();
-        n4RD.length.should.eql(6);
-        n4RD.should.containDeep([
-            new Def('test', 1),
-            new Def('out', 3),
-            new Def('out', 7),
-            new Def('out', 9),
-            new Def('out', 11),
-            new Def('out', 14)
-        ]);
-        /// RD(n7) n7: 'out = test * test;'
-        var n7RD = output.get(cfg[2][7]).values();
-        n7RD.length.should.eql(2);
-        n7RD.should.containDeep([
-            new Def('test', 1),
-            new Def('out', 1)
-        ]);
-        /// RD(n11) n7: 'out = test * test;'
-        var n11RD = output.get(cfg[2][11]).values();
-        n11RD.length.should.eql(2);
-        n11RD.should.containDeep([
-            new Def('test', 1),
-            new Def('out', 1)
-        ]);
+            rds.inputs.get(functionScope.getCFG()[2][3]).values()[0]
+                .variable.toString().should.eql('a@[4,5]_Program');
+            rds.inputs.get(functionScope.getCFG()[2][3]).values()[0]
+                .definition.toString().should.eql('Def@n2@[16,17]_Program');
+            rds.inputs.get(functionScope.getCFG()[2][4]).values()[1]
+                .variable.toString().should.eql('b@[7,8]_Program');
+            rds.inputs.get(functionScope.getCFG()[2][4]).values()[1]
+                .definition.toString().should.eql('Def@n3@[22,25]_Program');
+            rds.inputs.get(functionScope.getCFG()[2][5]).values()[2]
+                .variable.toString().should.eql('c@[10,11]_Program');
+            rds.inputs.get(functionScope.getCFG()[2][5]).values()[2]
+                .definition.toString().should.eql('Def@n4@[30,35]_Program');
+        });
     });
 });
