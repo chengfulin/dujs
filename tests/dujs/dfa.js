@@ -9,13 +9,13 @@ var DFA = require('../../lib/dujs/index').DFA,
     Scope = require('../../lib/dujs').Scope,
     should = require('should');
 
-describe('DFA', function () {
+describe('DFA (dependent on CFGWrapper)', function () {
     'use strict';
     beforeEach(function () {
         cfgext.resetCounter();
     });
 
-    describe('KILL set (dependent on CFGWrapper)', function () {
+    describe('KILL set', function () {
         it('should work for single literal assignment', function () {
             var code = 'var a;' +
                     'a = 1;',
@@ -214,5 +214,57 @@ describe('DFA', function () {
     });
 
     describe('USE set', function () {
+        it('should work for single variable assignment', function () {
+            var code = 'var a, b;' +
+                    'a = b;',
+                cfgWrapper = new CFGWrapper(cfgext.getCFG(cfgext.parseAST(code)), Scope.PROGRAM_SCOPE);
+            cfgWrapper.setVars();
+            cfgWrapper.getCFG()[2][2].astNode.type.should.eql('AssignmentExpression');
+
+            var useSet = DFA.USE(cfgWrapper.getCFG()[2][2], cfgWrapper);
+            useSet.cuse.size.should.eql(1);
+            useSet.puse.size.should.eql(0);
+            useSet.cuse.values()[0].toString().should.eql('b@[7,8]_Program');
+        });
+
+        it('should work for sequential assignment', function () {
+            var code = 'var a, b, c;' +
+                    'a = b = c;',
+                cfgWrapper = new CFGWrapper(cfgext.getCFG(cfgext.parseAST(code)), Scope.PROGRAM_SCOPE);
+            cfgWrapper.setVars();
+            cfgWrapper.getCFG()[2][2].astNode.type.should.eql('AssignmentExpression');
+
+            var useSet = DFA.USE(cfgWrapper.getCFG()[2][2], cfgWrapper);
+            useSet.cuse.size.should.eql(2);
+            useSet.puse.size.should.eql(0);
+            useSet.cuse.values()[0].toString().should.eql('b@[7,8]_Program');
+            useSet.cuse.values()[1].toString().should.eql('c@[10,11]_Program');
+        });
+
+        it('should work for call expression assignment', function () {
+            var code = 'var a, foo = function () {};' +
+                    'a = foo();',
+                cfgWrapper = new CFGWrapper(cfgext.getCFG(cfgext.parseAST(code)), Scope.PROGRAM_SCOPE);
+            cfgWrapper.setVars();
+            cfgWrapper.getCFG()[2][2].astNode.type.should.eql('AssignmentExpression');
+
+            var useSet = DFA.USE(cfgWrapper.getCFG()[2][2], cfgWrapper);
+            useSet.cuse.size.should.eql(1);
+            useSet.puse.size.should.eql(0);
+            useSet.cuse.values()[0].toString().should.eql('foo@[7,10]_Program');
+        });
+
+        it('should work for new expression assignment', function () {
+            var code = 'var a, Class = {};' +
+                    'a = new Class();',
+                cfgWrapper = new CFGWrapper(cfgext.getCFG(cfgext.parseAST(code)), Scope.PROGRAM_SCOPE);
+            cfgWrapper.setVars();
+            cfgWrapper.getCFG()[2][2].astNode.type.should.eql('AssignmentExpression');
+
+            var useSet = DFA.USE(cfgWrapper.getCFG()[2][2], cfgWrapper);
+            useSet.cuse.size.should.eql(1);
+            useSet.puse.size.should.eql(0);
+            useSet.cuse.values()[0].toString().should.eql('Class@[7,12]_Program');
+        });
     });
 });
