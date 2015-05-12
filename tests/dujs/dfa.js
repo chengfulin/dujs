@@ -493,7 +493,7 @@ describe('DFA (dependent on CFGWrapper)', function () {
             useSet.puse.values()[0].toString().should.eql('a@[4,5]_Program');
         });
 
-        /// TODO: current in esgraph, conditional expression modeled as a single node, but not if-else like
+        /// conditional expression modeled as a single node
         it('should work for conditional expression', function () {
             var code = 'var a;' +
                     '(a > 0)? a++ : --a;',
