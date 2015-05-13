@@ -22,28 +22,10 @@ process.stdin.on('end', function () {
     'use strict';
     var source = data,
         scopeTree = new FunctionScopeTree(CFGExt.parseAST(source));
-    //console.log('====== Tree ======');
-    //console.log(scopeTree.toString());
-    //console.log('\n');
-
-    //scopeTree.getFunctionScopes().forEach(function (scope) {
-    //    console.log('=== CFG(' + scope.toString() + ') ===');
-    //    console.log(scope.cfgToString());
-    //    console.log('\n');
-    //});
 
     scopeTree.findVars();
     scopeTree.findRDs();
-
-    //scopeTree.getFunctionScopes().forEach(function (scope) {
-    //    console.log('=== ReachIns(' + scope.toString() + ') ===');
-    //    console.log(scope.reachInsToString());
-    //    console.log('\n');
-    //});
-
     scopeTree.findDUpairs();
-    //console.log('=== DUpairs ===');
-    //console.log(scopeTree.dupairsToString());
 
     /// output intra-CFGs
     fs.writeFile('cfgs.dot', Graphics.cfgs(scopeTree), function (err) {
@@ -82,12 +64,18 @@ process.stdin.on('end', function () {
     fs.writeFile(
         'result.html',
         '<html>' +
-            '<head><title>Def-Use Analysis Report</title></head>' +
+            '<head><meta charset="utf-8"><title>Def-Use Analysis Report</title>' +
+                '<script>var cfgImgSrc = "cfgs.png", dupairsImgSrc = "dupairs.png";' +
+                'window.onload = function () {' +
+                'document.querySelector("#cfgImg").src = cfgImgSrc;' +
+                'document.querySelector("#dupairsImg").src = dupairsImgSrc;}' +
+                '</script>' +
+            '</head>' +
             '<body><h1>Def-Use Analysis Report</h1>' +
             '<h2>CFG</h2>' +
-            '<img src="cfgs.png">' +
+            '<img id="cfgImg">' +
             '<h2>Def-Use pairs</h2>' +
-            '<img src="dupairs.png">' +
+            '<img id="dupairsImg">' +
         '</html>'
     );
 
