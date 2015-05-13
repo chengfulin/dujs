@@ -41,10 +41,14 @@ describe('Reach Definitions (dependent on CFGWrapper)', function () {
 
             rds.inputs.size.should.eql(3);
             /// RDs at n0
-            rds.inputs.get(functionScope.getCFG()[2][0]).size.should.eql(1);
-            rds.inputs.get(functionScope.getCFG()[2][0]).values()[0]
+            rds.inputs.get(functionScope.getCFG()[0]).size.should.eql(1);
+            rds.outputs.get(functionScope.getCFG()[0]).size.should.eql(1);
+            rds.inputs.get(functionScope.getCFG()[0]).values()[0]
                 .toString()
                 .should.eql('(Class@[0,1]_Global,Def@n0@[0,1]_Global)');
+            /// RDs (in & out) at exit node
+            rds.inputs.get(functionScope.getCFG()[1]).size.should.eql(1);
+            rds.outputs.get(functionScope.getCFG()[1]).size.should.eql(0);
         });
     });
     describe('without branch', function () {
