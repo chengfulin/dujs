@@ -9,6 +9,7 @@ var CFGWrapper = require('../../lib/dujs').CFGWrapper,
     CfgExt = require('../../lib/dujs').CFGExt,
     Map = require('core-js/es6/map'),
     Set = require('../../lib/analyses').Set,
+    vardefFactory = require('../../lib/dujs').factoryVarDef,
     should = require('should');
 
 describe('CFGWrapper', function () {
@@ -153,12 +154,9 @@ describe('CFGWrapper', function () {
                 should(variables.has('b')).eql(true);
                 should(variables.has('d')).eql(true);
 
-                var globalVars = new Map();
-                globalVars.set(
-                    new Var('ga', [0,1], Scope.GLOBAL_SCOPE),
-                    new Def(0, Def.OBJECT_TYPE, [0,1], Scope.GLOBAL_SCOPE)
-                );
-                programCFGWrapper.setVars(globalVars);
+                programCFGWrapper.setVars([
+                    vardefFactory.createGlobalVarDef('ga', Def.OBJECT_TYPE)
+                ]);
                 variables = programCFGWrapper.getScopeVars();
                 variables.size.should.eql(4);
                 should(variables.has('a')).eql(true);
@@ -213,7 +211,7 @@ describe('CFGWrapper', function () {
                 reachOuts.get(programCFGWrapper.getCFG()[2][2]).values().length.should.eql(4);
                 /// exit node
                 rds.get(programCFGWrapper.getCFG()[2][3]).values().length.should.eql(4);
-                reachOuts.get(programCFGWrapper.getCFG()[2][3]).values().length.should.eql(4);
+                reachOuts.get(programCFGWrapper.getCFG()[2][3]).values().length.should.eql(0);
 
                 /// RDs of entry node
                 rds.get(programCFGWrapper.getCFG()[0]).values()[0]
@@ -241,16 +239,10 @@ describe('CFGWrapper', function () {
             });
 
             it('should support initial gloval Vars', function () {
-                var globalVars = new Map();
-                globalVars.set(
-                    new Var('ga', [0,1], Scope.GLOBAL_SCOPE),
-                    new Def(0, Def.OBJECT_TYPE, [0,1], Scope.GLOBAL_SCOPE)
-                );
-                globalVars.set(
-                    new Var('gb', [0,1], Scope.GLOBAL_SCOPE),
-                    new Def(0, Def.LITERAL_TYPE, [0,1], Scope.GLOBAL_SCOPE)
-                );
-                programCFGWrapper.setVars(globalVars);
+                programCFGWrapper.setVars([
+                    vardefFactory.createGlobalVarDef('ga', Def.OBJECT_TYPE),
+                    vardefFactory.createGlobalVarDef('gb', Def.LITERAL_TYPE)
+                ]);
                 programCFGWrapper.initRDs();
 
                 var rds = programCFGWrapper.getReachIns();
