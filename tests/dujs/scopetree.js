@@ -17,6 +17,7 @@ describe('FunctionScopeTree', function () {
         '}\n' +
         'var foo2 = function (a, b) {};';
         tree = new FunctionScopeTree(CFGExt.parseAST(code));
+        CFGExt.resetCounter();
     });
 
     describe('constructor', function () {
@@ -59,7 +60,7 @@ describe('FunctionScopeTree', function () {
                 innerVar = childScope1.getScopeVars().get('inner'),
                 xVar = childScope1.getScopeVars().get('x');
             should(childScope1.doesVarReachIn(childScope1EntryNode, innerVar)).eql(true);
-            should(childScope1.doesVarReachIn(childScope1EntryNode, xVar)).eql(false);
+            should(childScope1.doesVarReachIn(childScope1EntryNode, xVar)).eql(true);
 
             should.exist(childScope2.getParent());
             childScope2.getParent().getScope().toString().should.eql('Program');
@@ -70,8 +71,8 @@ describe('FunctionScopeTree', function () {
             var childScope2EntryNode = childScope2.getCFG()[0],
                 aVar = childScope2.getScopeVars().get('a'),
                 bVar = childScope2.getScopeVars().get('b');
-            should(childScope2.doesVarReachIn(childScope2EntryNode, aVar)).eql(false);
-            should(childScope2.doesVarReachIn(childScope2EntryNode, bVar)).eql(false);
+            should(childScope2.doesVarReachIn(childScope2EntryNode, aVar)).eql(true);
+            should(childScope2.doesVarReachIn(childScope2EntryNode, bVar)).eql(true);
             /// params don't get the def yet
             childScope2.getVarDefsReachIn(childScope2, aVar).values().length.should.eql(0);
 
@@ -124,10 +125,16 @@ describe('FunctionScopeTree', function () {
                 rootScope.getReachIns().get(rootScope.getCFG()[2][2]).values()[1].variable.getName().should.eql('foo2');
                 rootScope.getReachIns().get(rootScope.getCFG()[2][3]).values()[1].variable.getName().should.eql('foo2');
 
-                reachInFooEntry.values()[0].variable.getName().should.eql('inner');
-                reachInFooEntry.values()[1].variable.getName().should.eql('foo');
-                reachInFooEntry.values()[2].variable.getName().should.eql('foo2');
-                reachInFooEntry.values()[3].variable.getName().should.eql('x');
+                var rdTextsOfFooEntry = [];
+                reachInFooEntry.forEach(function (rd) {
+                    rdTextsOfFooEntry.push(rd.toString());
+                });
+                rdTextsOfFooEntry.should.containDeep([
+                    '(inner@[35,37]_Function["foo"],Def@n4@[35,37]_Function["foo"])',
+                    '(x@[13,14]_Function["foo"],Def@n4@[13,14]_Function["foo"])',
+                    '(foo@[16,39]_Program,Def@n0@[16,39]_Program)',
+                    '(foo2@[44,48]_Program,Def@n1@[51,69]_Program)'
+                ]);
             });
         });
     });
