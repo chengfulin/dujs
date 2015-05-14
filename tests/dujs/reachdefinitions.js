@@ -48,7 +48,8 @@ describe('Reach Definitions (dependent on CFGWrapper)', function () {
                 .should.eql('(Class@[0,1]_Global,Def@n0@[0,1]_Global)');
             /// RDs (in & out) at exit node
             rds.inputs.get(functionScope.getCFG()[1]).size.should.eql(1);
-            rds.outputs.get(functionScope.getCFG()[1]).size.should.eql(0);
+            rds.outputs.get(functionScope.getCFG()[1]).size.should.eql(1);
+            rds.outputs.get(functionScope.getCFG()[1]).values()[0].toString().should.eql('(Class@[0,1]_Global,Def@n0@[0,1]_Global)');
         });
     });
     describe('without branch', function () {
