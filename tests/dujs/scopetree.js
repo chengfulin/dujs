@@ -136,6 +136,30 @@ describe('FunctionScopeTree', function () {
                     '(foo2@[44,48]_Program,Def@n1@[51,69]_Program)'
                 ]);
             });
+
+            it('should have correct reach definitions', function () {
+                var ast = CFGExt.parseAST(
+                        'var a = 0, b = 1;' +
+                        'function foo(x) {' +
+                        '++a;' +
+                        '}' +
+                        'foo(b);' +
+                        'b = a;'
+                    ),
+                    tree = new FunctionScopeTree(ast);
+                tree.findVars();
+
+                tree.findRDs();
+
+                var rootScope = tree.getRoot(),
+                    fooScope = tree.getFunctionScopeByScopeName('Function["foo"]');
+                rootScope.getScope().toString().should.eql('Program');
+                fooScope.getScope().toString().should.eql('Function["foo"]');
+
+                fooScope.getReachOuts().get(fooScope.getCFG()[1]).values().forEach(function (elem) {
+                    console.log(elem.toString());
+                });
+            });
         });
     });
 });
