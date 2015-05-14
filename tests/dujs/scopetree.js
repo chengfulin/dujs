@@ -98,6 +98,7 @@ describe('FunctionScopeTree', function () {
         });
 
         describe('findRDs', function () {
+            /// TODO: should be modified
             it('should have correct definitions of formal argument', function () {
                 code += '\nfoo(1);';
                 tree = new FunctionScopeTree(CFGExt.parseAST(code));
@@ -121,7 +122,7 @@ describe('FunctionScopeTree', function () {
                 rootScope.getCFG()[2].length.should.eql(4);
                 rootScope.getReachIns().get(rootScope.getCFG()[2][1]).size.should.eql(1);
                 rootScope.getReachIns().get(rootScope.getCFG()[2][1]).values()[0].variable.getName().should.eql('foo');
-                rootScope.getReachIns().get(rootScope.getCFG()[2][2]).size.should.eql(2);
+                rootScope.getReachIns().get(rootScope.getCFG()[2][2]).size.should.eql(1);
                 rootScope.getReachIns().get(rootScope.getCFG()[2][2]).values()[1].variable.getName().should.eql('foo2');
                 rootScope.getReachIns().get(rootScope.getCFG()[2][3]).values()[1].variable.getName().should.eql('foo2');
 
@@ -148,7 +149,6 @@ describe('FunctionScopeTree', function () {
                     ),
                     tree = new FunctionScopeTree(ast);
                 tree.findVars();
-
                 tree.findRDs();
 
                 var rootScope = tree.getRoot(),
@@ -156,9 +156,31 @@ describe('FunctionScopeTree', function () {
                 rootScope.getScope().toString().should.eql('Program');
                 fooScope.getScope().toString().should.eql('Function["foo"]');
 
-                fooScope.getReachOuts().get(fooScope.getCFG()[1]).values().forEach(function (elem) {
-                    console.log(elem.toString());
-                });
+                fooScope.getReachOuts().get(fooScope.getCFG()[1]).size.should.eql(4);
+                rootScope.getReachIns().get(rootScope.getCFG()[2][3]).size.should.eql(4);
+
+                var fooReachOutsOfExit = [];
+                //console.log('=== ReachIn(foo.exit) ===');
+                //fooScope.getReachIns().get(fooScope.getCFG()[1]).forEach(function (elem) {
+                //    console.log(elem.toString());
+                //});
+                //console.log('=== ReachIn(call site) ===');
+                //rootScope.getReachIns().get(rootScope.getCFG()[2][2]).forEach(function (elem) {
+                //    console.log(elem.toString());
+                //});
+                //console.log('=== ReachOut(foo.exit) ===');
+                //fooScope.getReachOuts().get(fooScope.getCFG()[1]).forEach(function (elem) {
+                //    console.log(elem.toString());
+                //});
+                //console.log('=== ReachOut(call site) ===');
+                //rootScope.getReachOuts().get(rootScope.getCFG()[2][2]).forEach(function (elem) {
+                //    console.log(elem.toString());
+                //});
+                //console.log('=== ReachIn(b = a) ===');
+                //rootScope.getReachIns().get(rootScope.getCFG()[2][3]).forEach(function (elem) {
+                //    console.log(elem.toString());
+                //});
+                //console.log(CFGExt.toDot(rootScope.getCFG()));
             });
         });
     });
