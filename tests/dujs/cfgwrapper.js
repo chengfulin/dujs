@@ -252,13 +252,13 @@ describe('CFGWrapper', function () {
                     .should.eql(programCFGWrapper.getVarByName('ga').toString());
             });
 
-            it('should not add definitions to parameters yet', function () {
+            it('should add definitions to parameters', function () {
                 /// function parameters
                 funCFGWrapper.setParams(funParams);
                 funCFGWrapper.setVars();
                 funCFGWrapper.initRDs();
                 var reachInsOfFun = funCFGWrapper.getReachIns();
-                reachInsOfFun.get(funCFGWrapper.getCFG()[0]).size.should.eql(0);
+                reachInsOfFun.get(funCFGWrapper.getCFG()[0]).size.should.eql(2);
             });
         });
 
