@@ -253,8 +253,64 @@ describe('FunctionScopeTree', function () {
 
 
         describe('findRDs', function () {
-            it('should have correct definitions of formal argument', function () {
-                throw new Error('should be tested');
+            var ast, tree;
+            beforeEach(function () {
+                ast = CFGExt.parseAST(
+                    'var a = 0;' +
+                    'function foo() {' +
+                    'a = 1;' +
+                    '}' +
+                    'foo();' +
+                    '++a;'
+                );
+                tree = new FunctionScopeTree(ast);
+            });
+
+            it('should have correct reach definitions', function () {
+                tree.findRDs();
+
+                var programScope = tree.getFunctionScopes()[0],
+                    fooScope = tree.getFunctionScopes()[1];
+                programScope.getScope().toString().should.eql('Program');
+                fooScope.getScope().toString().should.eql('Function["foo"]');
+
+                /// ReachIn at entry node
+                var reachInsNode0 = programScope.getReachIns().get(programScope.getCFG()[0]);
+                reachInsNode0.size.should.eql(1);
+                reachInsNode0.values()[0].toString().should.eql('(foo@[25,33]_Program,Def@n0@[25,33]_Program)');
+
+                /// ReachIn at node 1:
+                /// var a = 0;
+                var reachInsNode1 = programScope.getReachIns().get(programScope.getCFG()[2][1]);
+                reachInsNode1.size.should.eql(1);
+                reachInsNode1.values()[0].toString().should.eql('(foo@[25,33]_Program,Def@n0@[25,33]_Program)');
+
+                /// ReachIn at node 2:
+                /// foo();
+                var reachInsNode2 = programScope.getReachIns().get(programScope.getCFG()[2][2]);
+                reachInsNode2.size.should.eql(2);
+                var reachInTextsNode2 = [];
+                reachInsNode2.forEach(function (rd) {
+                    reachInTextsNode2.push(rd.toString());
+                });
+                reachInTextsNode2.should.containDeep([
+                    '(foo@[25,33]_Program,Def@n0@[25,33]_Program)',
+                    '(a@[4,5]_Program,Def@n1@[8,9]_Program)'
+                ]);
+
+                /// ReachIn at node 3:
+                /// ++a;
+                var reachInsNode3 = programScope.getReachIns().get(programScope.getCFG()[2][3]);
+                reachInsNode3.size.should.eql(3);
+                var reachInTextsNode3 = [];
+                reachInsNode3.forEach(function (rd) {
+                    reachInTextsNode3.push(rd.toString());
+                });
+                reachInTextsNode3.should.containDeep([
+                    '(foo@[25,33]_Program,Def@n0@[25,33]_Program)',
+                    '(a@[4,5]_Program,Def@n1@[8,9]_Program)',
+                    '(a@[4,5]_Program,Def@n6@[30,31]_Program)'
+                ]);
             });
         });
     });
