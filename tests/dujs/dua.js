@@ -9,12 +9,14 @@ var cfgext = require('../../lib/dujs').CFGExt,
     CFGWrapper = require('../../lib/dujs').CFGWrapper,
     Scope = require('../../lib/dujs').Scope,
     vardefFactory = require('../../lib/dujs').factoryVarDef,
+    varFactory = require('../../lib/dujs').factoryVar,
     should = require('should');
 
 describe('Def-Use Analysis', function () {
     'use strict';
     beforeEach(function () {
         cfgext.resetCounter();
+        varFactory.resetGlobalsCounter();
     });
 
     describe('find DU pairs of c-use', function () {
@@ -278,6 +280,30 @@ describe('Def-Use Analysis', function () {
             });
             dupairsTexts_obj.should.containDeep([
                 '(2,3)'
+            ]);
+        });
+
+        it('should find the Def-Use paris of declared functions correctly', function () {
+            var cfg = cfgext.getCFG(cfgext.parseAST(
+                    'foo();'
+                )),
+                cfgwrapper = new CFGWrapper(cfg, Scope.PROGRAM_SCOPE);
+            cfgwrapper.setVars([vardefFactory.createGlobalVarDef('foo', Def.FUNCTION_TYPE)]);
+            cfgwrapper.initRDs();
+
+            var dupairs = DUA.findDUPairs(cfgwrapper),
+                dupairsText_foo = [];
+
+            cfgwrapper.getScopeVars().size.should.eql(1);
+            cfgwrapper.getScopeVars().get('foo').toString().should.eql('foo@[0,1]_Global');
+
+            dupairs.size.should.eql(1);
+            should.exist(dupairs.get(cfgwrapper.getVarByName('foo')));
+            dupairs.get(cfgwrapper.getVarByName('foo')).forEach(function (pair) {
+                dupairsText_foo.push(pair.toString());
+            });
+            dupairsText_foo.should.containDeep([
+                '(0,1)'
             ]);
         });
     });
