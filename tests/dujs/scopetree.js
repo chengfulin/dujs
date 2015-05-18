@@ -4,19 +4,16 @@
 var FunctionScopeTree = require('../../lib/dujs').FunctionScopeTree,
     CFGExt = require('../../lib/dujs').CFGExt,
     Range = require('../../lib/dujs').Range,
+    rangeFactory = require('../../lib/dujs').factoryRange,
+    Def = require('../../lib/dujs').Def,
+    defFactory = require('../../lib/dujs').factoryDef,
+    Scope = require('../../lib/dujs').Scope,
     should = require('should');
 
 describe('FunctionScopeTree', function () {
     'use strict';
-    var code,
-        tree;
-
     beforeEach(function () {
-        code = 'function foo(x) {\n' +
-        'function inner() {}\n' +
-        '}\n' +
-        'var foo2 = function (a, b) {};';
-        tree = new FunctionScopeTree(CFGExt.parseAST(code));
+
         CFGExt.resetCounter();
     });
 
@@ -25,7 +22,13 @@ describe('FunctionScopeTree', function () {
             var rootScope,
                 childScope1,
                 childScope2,
-                descendentScope;
+                descendentScope,
+                code = 'function foo(x) {\n' +
+                    'function inner() {}\n' +
+                    '}\n' +
+                    'var foo2 = function (a, b) {};',
+                tree;
+            tree = new FunctionScopeTree(CFGExt.parseAST(code));
             tree.getFunctionScopes().length.should.eql(4);
 
             rootScope = tree.getRoot();
@@ -86,7 +89,12 @@ describe('FunctionScopeTree', function () {
     describe('methods', function () {
         describe('toString', function () {
             it('should represent by string correctly', function () {
-                var functionScopes = tree.getFunctionScopes();
+                var code = 'function foo(x) {\n' +
+                        'function inner() {}\n' +
+                        '}\n' +
+                        'var foo2 = function (a, b) {};',
+                    tree = new FunctionScopeTree(CFGExt.parseAST(code)),
+                    functionScopes = tree.getFunctionScopes();
                 functionScopes.length.should.eql(4);
                 tree.toString().should.eql(
                     '+-' + functionScopes[0].getScope() + '@' + functionScopes[0].getRange() + '\n' +
@@ -97,90 +105,156 @@ describe('FunctionScopeTree', function () {
             });
         });
 
-        describe('findRDs', function () {
-            /// TODO: should be modified
-            it('should have correct definitions of formal argument', function () {
-                code += '\nfoo(1);';
-                tree = new FunctionScopeTree(CFGExt.parseAST(code));
-                tree.findVars();
-                tree.findRDs();
-
-                var rootScope = tree.getRoot(),
-                    fooScope = tree.getFunctionScopeByRange(new Range(16, 39));
-                rootScope.getScope().toString().should.eql('Program');
-                fooScope.getScope().toString().should.eql('Function["foo"]');
-
-                /// ReachIns at the entry point of function 'foo'
-                var reachInFooEntry = fooScope.getReachIns().get(fooScope.getCFG()[0]),
-                    reachOutFooEntry = fooScope.getReachOuts().get(fooScope.getCFG()[0]);
-                reachInFooEntry.size.should.eql(4);
-                reachOutFooEntry.size.should.eql(4);
-
-                rootScope.getReachIns().get(rootScope.getCFG()[1]).size.should.eql(2);
-                rootScope.getReachIns().get(rootScope.getCFG()[1]).values()[0].variable.getName().toString().should.eql('foo');
-                rootScope.getReachIns().get(rootScope.getCFG()[1]).values()[1].variable.getName().toString().should.eql('foo2');
-                rootScope.getCFG()[2].length.should.eql(4);
-                rootScope.getReachIns().get(rootScope.getCFG()[2][1]).size.should.eql(1);
-                rootScope.getReachIns().get(rootScope.getCFG()[2][1]).values()[0].variable.getName().should.eql('foo');
-                rootScope.getReachIns().get(rootScope.getCFG()[2][2]).size.should.eql(1);
-                rootScope.getReachIns().get(rootScope.getCFG()[2][2]).values()[1].variable.getName().should.eql('foo2');
-                rootScope.getReachIns().get(rootScope.getCFG()[2][3]).values()[1].variable.getName().should.eql('foo2');
-
-                var rdTextsOfFooEntry = [];
-                reachInFooEntry.forEach(function (rd) {
-                    rdTextsOfFooEntry.push(rd.toString());
-                });
-                rdTextsOfFooEntry.should.containDeep([
-                    '(inner@[35,37]_Function["foo"],Def@n4@[35,37]_Function["foo"])',
-                    '(x@[13,14]_Function["foo"],Def@n4@[13,14]_Function["foo"])',
-                    '(foo@[16,39]_Program,Def@n0@[16,39]_Program)',
-                    '(foo2@[44,48]_Program,Def@n1@[51,69]_Program)'
-                ]);
+        describe('validate', function () {
+            it('should throw when a value is invalid', function () {
+                (function () {
+                    FunctionScopeTree.validate({});
+                }).should.throw('Invalid start point for a FunctionScopeTree');
             });
 
-            it('should have correct reach definitions', function () {
-                var ast = CFGExt.parseAST(
-                        'var a = 0, b = 1;' +
-                        'function foo(x) {' +
-                        '++a;' +
-                        '}' +
-                        'foo(b);' +
-                        'b = a;'
-                    ),
-                    tree = new FunctionScopeTree(ast);
-                tree.findVars();
-                tree.findRDs();
+            it('should throw when the ast is not the valid entry points', function () {
+                var cfg = CFGExt.getCFG(CFGExt.parseAST(
+                    'var a = 0;'
+                ));
+                (function () {
+                    FunctionScopeTree.validate(cfg[2][1].astNode);
+                }).should.throw('Invalid start point for a FunctionScopeTree');
+            });
 
-                var rootScope = tree.getRoot(),
-                    fooScope = tree.getFunctionScopeByScopeName('Function["foo"]');
-                rootScope.getScope().toString().should.eql('Program');
-                fooScope.getScope().toString().should.eql('Function["foo"]');
+            it('should support custom error message', function () {
+                (function () {
+                    FunctionScopeTree.validate({}, 'Custom error');
+                }).should.throw('Custom error');
+            });
+        });
 
-                fooScope.getReachOuts().get(fooScope.getCFG()[1]).size.should.eql(4);
-                rootScope.getReachIns().get(rootScope.getCFG()[2][3]).size.should.eql(4);
+        describe('getFunctionScopesBy', function () {
+            var ast, tree;
+            beforeEach(function () {
+                ast = CFGExt.parseAST(
+                    'function foo1() {' +
+                    'expr;' +
+                    '}' +
+                    'function foo2() {' +
+                    'expr;' +
+                    '}'
+                );
+                tree = new FunctionScopeTree(ast);
+            });
 
-                var fooReachOutsOfExit = [];
-                //console.log('=== ReachIn(foo.exit) ===');
-                //fooScope.getReachIns().get(fooScope.getCFG()[1]).forEach(function (elem) {
-                //    console.log(elem.toString());
-                //});
-                //console.log('=== ReachIn(call site) ===');
-                //rootScope.getReachIns().get(rootScope.getCFG()[2][2]).forEach(function (elem) {
-                //    console.log(elem.toString());
-                //});
-                //console.log('=== ReachOut(foo.exit) ===');
-                //fooScope.getReachOuts().get(fooScope.getCFG()[1]).forEach(function (elem) {
-                //    console.log(elem.toString());
-                //});
-                //console.log('=== ReachOut(call site) ===');
-                //rootScope.getReachOuts().get(rootScope.getCFG()[2][2]).forEach(function (elem) {
-                //    console.log(elem.toString());
-                //});
-                //console.log('=== ReachIn(b = a) ===');
-                //rootScope.getReachIns().get(rootScope.getCFG()[2][3]).forEach(function (elem) {
-                //    console.log(elem.toString());
-                //});
-                //console.log(CFGExt.toDot(rootScope.getCFG()));
+            describe('Range', function () {
+                it('should get the function scope by the text of its range correctly', function () {
+                    tree.getFunctionScopes().length.should.eql(3);
+
+                    /// foo1Scope
+                    var foo1Scope = tree.getFunctionScopes()[1];
+                    foo1Scope.getScope().getValue().should.eql('foo1');
+                    foo1Scope.getRange().toString().should.eql('[16,23]');
+                    should.exist(tree.getFunctionScopeByRange('[16,23]'));
+                    tree.getFunctionScopeByRange('[16,23]').should.eql(foo1Scope);
+
+                    /// foo2Scope
+                    var foo2Scope = tree.getFunctionScopes()[2];
+                    foo2Scope.getScope().getValue().should.eql('foo2');
+                    foo2Scope.getRange().toString().should.eql('[39,46]');
+                    should.exist(tree.getFunctionScopeByRange('[39,46]'));
+                    tree.getFunctionScopeByRange('[39,46]').should.eql(foo2Scope);
+                });
+
+                it('should get the function scope by the value of its range correctly', function () {
+                    tree.getFunctionScopes().length.should.eql(3);
+
+                    /// foo1Scope
+                    var foo1Scope = tree.getFunctionScopes()[1];
+                    foo1Scope.getScope().getValue().should.eql('foo1');
+                    should.exist(tree.getFunctionScopeByRange(rangeFactory.create(16,23)));
+                    tree.getFunctionScopeByRange(rangeFactory.create(16,23)).should.eql(foo1Scope);
+
+                    /// foo2Scope
+                    var foo2Scope = tree.getFunctionScopes()[2];
+                    foo2Scope.getScope().getValue().should.eql('foo2');
+                    should.exist(tree.getFunctionScopeByRange(rangeFactory.create(39,46)));
+                    tree.getFunctionScopeByRange(rangeFactory.create(39,46)).should.eql(foo2Scope);
+                });
+            });
+
+            describe('Def', function () {
+                it('should get the function scope by the text of its Def correctly', function () {
+                    tree.getFunctionScopes().length.should.eql(3);
+
+                    /// foo1Scope
+                    var foo1Scope = tree.getFunctionScopes()[1];
+                    foo1Scope.getScope().getValue().should.eql('foo1');
+                    foo1Scope.getDef().toString().should.eql('Def@n0@[16,23]_Program');
+                    should.exist(tree.getFunctionScopeByDef('Def@n0@[16,23]_Program'));
+                    tree.getFunctionScopeByDef('Def@n0@[16,23]_Program').should.eql(foo1Scope);
+
+                    /// foo2Scope
+                    var foo2Scope = tree.getFunctionScopes()[2];
+                    foo2Scope.getScope().getValue().should.eql('foo2');
+                    foo2Scope.getDef().toString().should.eql('Def@n0@[39,46]_Program');
+                    should.exist(tree.getFunctionScopeByDef('Def@n0@[39,46]_Program'));
+                    tree.getFunctionScopeByDef('Def@n0@[39,46]_Program').should.eql(foo2Scope);
+                });
+
+                it('should get the function scope by the value of its Def correctly', function () {
+                    tree.getFunctionScopes().length.should.eql(3);
+
+                    /// foo1Scope
+                    var foo1Scope = tree.getFunctionScopes()[1];
+                    foo1Scope.getScope().getValue().should.eql('foo1');
+                    should.exist(tree.getFunctionScopeByDef(defFactory.create(0, Def.FUNCTION_TYPE, [16,23], Scope.PROGRAM_SCOPE)));
+                    tree.getFunctionScopeByDef(defFactory.create(0, Def.FUNCTION_TYPE, [16,23], Scope.PROGRAM_SCOPE)).should.eql(foo1Scope);
+
+                    /// foo2Scope
+                    var foo2Scope = tree.getFunctionScopes()[2];
+                    foo2Scope.getScope().getValue().should.eql('foo2');
+                    should.exist(tree.getFunctionScopeByDef(defFactory.create(0, Def.FUNCTION_TYPE, [39,46], Scope.PROGRAM_SCOPE)));
+                    tree.getFunctionScopeByDef(defFactory.create(0, Def.FUNCTION_TYPE, [39,46], Scope.PROGRAM_SCOPE)).should.eql(foo2Scope);
+                });
+            });
+
+            describe('ScopeName', function () {
+                it('should get the function scope by the text of its Scope correctly', function () {
+                    tree.getFunctionScopes().length.should.eql(3);
+
+                    /// foo1Scope
+                    var foo1Scope = tree.getFunctionScopes()[1];
+                    foo1Scope.getScope().getValue().should.eql('foo1');
+                    foo1Scope.getScope().toString().should.eql('Function["foo1"]');
+                    should.exist(tree.getFunctionScopeByScopeName('Function["foo1"]'));
+                    tree.getFunctionScopeByScopeName('Function["foo1"]').should.eql(foo1Scope);
+
+                    /// foo2Scope
+                    var foo2Scope = tree.getFunctionScopes()[2];
+                    foo2Scope.getScope().getValue().should.eql('foo2');
+                    foo2Scope.getScope().toString().should.eql('Function["foo2"]');
+                    should.exist(tree.getFunctionScopeByScopeName('Function["foo2"]'));
+                    tree.getFunctionScopeByScopeName('Function["foo2"]').should.eql(foo2Scope);
+                });
+
+                it('should get the function scope by the value of its Scope correctly', function () {
+                    tree.getFunctionScopes().length.should.eql(3);
+
+                    /// foo1Scope
+                    var foo1Scope = tree.getFunctionScopes()[1];
+                    foo1Scope.getScope().getValue().should.eql('foo1');
+                    should.exist(tree.getFunctionScopeByScopeName(new Scope('foo1')));
+                    tree.getFunctionScopeByScopeName(new Scope('foo1')).should.eql(foo1Scope);
+
+                    /// foo2Scope
+                    var foo2Scope = tree.getFunctionScopes()[2];
+                    foo2Scope.getScope().getValue().should.eql('foo2');
+                    should.exist(tree.getFunctionScopeByScopeName(new Scope('foo2')));
+                    tree.getFunctionScopeByScopeName(new Scope('foo2')).should.eql(foo2Scope);
+                });
+            });
+        });
+
+
+        describe('findRDs', function () {
+            it('should have correct definitions of formal argument', function () {
+                throw new Error('should be tested');
             });
         });
     });
