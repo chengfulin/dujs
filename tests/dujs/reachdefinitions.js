@@ -215,7 +215,7 @@ describe('Reach Definitions (dependent on CFGWrapper)', function () {
         });
     });
 
-    before(function () {
+    beforeEach(function () {
         varFactory.resetGlobalsCounter();
     });
     describe('with init entry RDs', function () {
@@ -345,6 +345,37 @@ describe('Reach Definitions (dependent on CFGWrapper)', function () {
             var reachOutExit = rds.outputs.get(cfgwrapper.getCFG()[1]);
             reachOutExit.size.should.eql(1);
             reachOutExit.values()[0].toString().should.eql('(outer@[0,1]_Global,Def@n0@[0,1]_Global)');
+        });
+    });
+
+    describe('with additional definition at other point expect exit node', function () {
+        it('should contain the additional definition and keep the originals', function () {
+            var cfg = cfgext.getCFG(cfgext.parseAST(
+                    'var a, b, c;' +
+                    'a = 0;' +
+                    'b = a++;' +
+                    'c = a * b;'
+                )),
+                cfgwrapper = new CFGWrapper(cfg, Scope.PROGRAM_SCOPE);
+            cfgwrapper.setVars();
+
+            var rds = ReachDefinitions.findReachDefinitions(cfgwrapper),
+                extraRDs = new Set();
+            extraRDs.add(vardefFactory.createGlobalVarDef('extra', Def.LITERAL_TYPE));
+            var updatedRDs = ReachDefinitions.findReachDefinitions(cfgwrapper, Set.union(rds.inputs.get(cfgwrapper.getCFG()[2][3]), extraRDs), cfgwrapper.getCFG()[2][3]);
+
+
+            /// ReachIn(node 3)
+            var reachInNode3 = updatedRDs.inputs.get(cfgwrapper.getCFG()[2][3]);
+            reachInNode3.size.should.eql(2);
+            var reachInNode3Texts = [];
+            reachInNode3.forEach(function (rd) {
+                reachInNode3Texts.push(rd.toString());
+            });
+            reachInNode3Texts.should.containDeep([
+                '(a@[4,5]_Program,Def@n2@[16,17]_Program)',
+                '(extra@[0,1]_Global,Def@n0@[0,1]_Global)'
+            ]);
         });
     });
 });
