@@ -255,5 +255,30 @@ describe('Def-Use Analysis', function () {
                 '(1,(2,4))'
             ]);
         });
+
+        it('should find the Def-Use pairs of objects', function () {
+            var cfg = cfgext.getCFG(cfgext.parseAST(
+                    'var obj = {}, b;' +
+                    'obj.a = 1;' +
+                    'b = obj.a;'
+                )),
+                cfgWrapper = new CFGWrapper(cfg, Scope.PROGRAM_SCOPE);
+            cfgWrapper.setVars();
+            cfgWrapper.initRDs();
+
+            var dupairs = DUA.findDUPairs(cfgWrapper),
+                dupairsTexts_obj = [];
+
+            dupairs.size.should.eql(1);
+            should.exist(dupairs.get(cfgWrapper.getVarByName('obj')));
+
+            dupairs.get(cfgWrapper.getVarByName('obj')).size.should.eql(1);
+            dupairs.get(cfgWrapper.getVarByName('obj')).forEach(function (pair) {
+                dupairsTexts_obj.push(pair.toString());
+            });
+            dupairsTexts_obj.should.containDeep([
+                '(2,3)'
+            ]);
+        });
     });
 });
