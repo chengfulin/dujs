@@ -26,7 +26,23 @@ describe('CFGExt', function () {
             });
         });
 
-        describe('toDot', function () {
+        describe('toDotWithLabelLoc', function () {
+            it('should convert simple code to Dot language with default label well', function () {
+                var cfg = CFGExt.getCFG(CFGExt.parseAST(
+                        'var a = 3;'
+                    )),
+                    output = CFGExt.toDotWithLabelLoc(cfg);
+                output.should.eql(
+                    'n0 [label="entry", style="rounded"]\n' +
+                    'n1 [label="1:0"]\n' +
+                    'n2 [label="exit", style="rounded"]\n' +
+                    'n0 -> n1 []\n' +
+                    'n1 -> n2 []\n'
+                );
+            });
+        });
+
+        describe('toDotWithLabelId', function () {
             it('should convert simple code to Dot language with default label well', function () {
                 var code = 'var a = 3;',
                     cfg = CFGExt.getCFG(CFGExt.parseAST(code)),
