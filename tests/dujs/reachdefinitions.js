@@ -9,6 +9,8 @@ var ReachDefinitions = require('../../lib/dujs').ReachDefinitions,
     CFGWrapper = require('../../lib/dujs').CFGWrapper,
     Scope = require('../../lib/dujs').Scope,
     VarDef = require('../../lib/dujs').VarDef,
+    vardefFactory = require('../../lib/dujs').factoryVarDef,
+    varFactory = require('../../lib/dujs').factoryVar,
     should = require('should');
 
 describe('Reach Definitions (dependent on CFGWrapper)', function () {
@@ -68,20 +70,66 @@ describe('Reach Definitions (dependent on CFGWrapper)', function () {
             rds.inputs.get(functionScope.getCFG()[2][2]).size.should.eql(0);
             rds.inputs.get(functionScope.getCFG()[2][3]).size.should.eql(1);
             rds.inputs.get(functionScope.getCFG()[2][4]).size.should.eql(2);
-            rds.inputs.get(functionScope.getCFG()[2][5]).size.should.eql(3);
+            rds.inputs.get(functionScope.getCFG()[2][5]).size.should.eql(4);
 
-            rds.inputs.get(functionScope.getCFG()[2][3]).values()[0]
-                .variable.toString().should.eql('a@[4,5]_Program');
-            rds.inputs.get(functionScope.getCFG()[2][3]).values()[0]
-                .definition.toString().should.eql('Def@n2@[16,17]_Program');
-            rds.inputs.get(functionScope.getCFG()[2][4]).values()[1]
-                .variable.toString().should.eql('b@[7,8]_Program');
-            rds.inputs.get(functionScope.getCFG()[2][4]).values()[1]
-                .definition.toString().should.eql('Def@n3@[22,25]_Program');
-            rds.inputs.get(functionScope.getCFG()[2][5]).values()[2]
-                .variable.toString().should.eql('c@[10,11]_Program');
-            rds.inputs.get(functionScope.getCFG()[2][5]).values()[2]
-                .definition.toString().should.eql('Def@n4@[30,35]_Program');
+            rds.outputs.get(functionScope.getCFG()[2][1]).size.should.eql(0);
+            rds.outputs.get(functionScope.getCFG()[2][2]).size.should.eql(1);
+            rds.outputs.get(functionScope.getCFG()[2][3]).size.should.eql(2);
+            rds.outputs.get(functionScope.getCFG()[2][4]).size.should.eql(3);
+            rds.outputs.get(functionScope.getCFG()[2][5]).size.should.eql(0);
+
+            /// node 3: b = a++;
+            /// ReachIn(node 3)
+            var reachInNode3 = rds.inputs.get(functionScope.getCFG()[2][3]);
+            reachInNode3.values()[0].toString().should.eql('(a@[4,5]_Program,Def@n2@[16,17]_Program)');
+
+            /// ReachOut(node 3)
+            var reachOutNode3 = rds.outputs.get(functionScope.getCFG()[2][3]),
+                reachOutNode3Texts = [];
+            reachOutNode3.forEach(function (rd) {
+                reachOutNode3Texts.push(rd.toString());
+            });
+            reachOutNode3Texts.should.containDeep([
+                '(b@[7,8]_Program,Def@n3@[22,25]_Program)',
+                '(a@[4,5]_Program,Def@n3@[22,25]_Program)'
+            ]);
+
+            /// node 4: c = a * b;
+            /// ReachIn(node 4)
+            var reachInNode4 = rds.inputs.get(functionScope.getCFG()[2][4]),
+                reachInNode4Texts = [];
+            reachInNode4.forEach(function (rd) {
+                reachInNode4Texts.push(rd.toString());
+            });
+            reachInNode4Texts.should.containDeep([
+                '(b@[7,8]_Program,Def@n3@[22,25]_Program)',
+                '(a@[4,5]_Program,Def@n3@[22,25]_Program)'
+            ]);
+
+            /// ReachOut(node 4)
+            var reachOutNode4 = rds.outputs.get(functionScope.getCFG()[2][4]),
+                reachOutNode4Text = [];
+            reachOutNode4.forEach(function (rd) {
+                reachOutNode4Text.push(rd.toString());
+            });
+            reachOutNode4Text.should.containDeep([
+                '(b@[7,8]_Program,Def@n3@[22,25]_Program)',
+                '(a@[4,5]_Program,Def@n3@[22,25]_Program)',
+                '(c@[10,11]_Program,Def@n4@[30,35]_Program)'
+            ]);
+
+            /// ReachIn(exit)
+            var reachInExit = rds.inputs.get(functionScope.getCFG()[1]),
+                reachInExitTexts = [];
+            reachInExit.forEach(function (rd) {
+                reachInExitTexts.push(rd.toString());
+            });
+            reachInExitTexts.should.containDeep([
+                '(a@[4,5]_Program,Def@n2@[16,17]_Program)',
+                '(b@[7,8]_Program,Def@n3@[22,25]_Program)',
+                '(a@[4,5]_Program,Def@n3@[22,25]_Program)',
+                '(c@[10,11]_Program,Def@n4@[30,35]_Program)'
+            ]);
         });
     });
 
@@ -164,6 +212,139 @@ describe('Reach Definitions (dependent on CFGWrapper)', function () {
                 '(a@[4,5]_Program,Def@n1@[8,9]_Program)',
                 '(b@[11,12]_Program,Def@n1@[15,16]_Program)'
             ]);
+        });
+    });
+
+    before(function () {
+        varFactory.resetGlobalsCounter();
+    });
+    describe('with init entry RDs', function () {
+        it('should has init entry RDs and original RDs', function () {
+            var cfg = cfgext.getCFG(cfgext.parseAST(
+                    'var a, b, c;' +
+                    'a = 0;' +
+                    'b = a++;' +
+                    'c = a * b;'
+                )),
+                cfgwrapper = new CFGWrapper(cfg, Scope.PROGRAM_SCOPE);
+            cfgwrapper.setVars();
+
+            var initRDs = new Set();
+            initRDs.add(vardefFactory.createGlobalVarDef('outer', Def.LITERAL_TYPE));
+            var rds = ReachDefinitions.findReachDefinitions(cfgwrapper, initRDs);
+
+            /// ReachIn(entry)
+            var reachInEntry = rds.inputs.get(cfgwrapper.getCFG()[0]);
+            reachInEntry.size.should.eql(1);
+            reachInEntry.values()[0].toString().should.eql('(outer@[0,1]_Global,Def@n0@[0,1]_Global)');
+
+            /// ReachOut(entry)
+            var reachOutEntry = rds.outputs.get(cfgwrapper.getCFG()[0]);
+            reachOutEntry.size.should.eql(1);
+            reachOutEntry.values()[0].toString().should.eql('(outer@[0,1]_Global,Def@n0@[0,1]_Global)');
+
+            /// node 1: var a, b, c;
+            /// ReachIn(node 1):
+            var reachInNode1 = rds.inputs.get(cfgwrapper.getCFG()[2][1]);
+            reachInNode1.size.should.eql(1);
+            reachInNode1.values()[0].toString().should.eql('(outer@[0,1]_Global,Def@n0@[0,1]_Global)');
+
+            /// ReachOut(node 1)
+            var reachOutNode1 = rds.outputs.get(cfgwrapper.getCFG()[2][1]);
+            reachOutNode1.size.should.eql(1);
+            reachOutNode1.values()[0].toString().should.eql('(outer@[0,1]_Global,Def@n0@[0,1]_Global)');
+
+            /// node 2: a = 0;
+            /// ReachIn(node 2)
+            var reachInNode2 = rds.inputs.get(cfgwrapper.getCFG()[2][2]);
+            reachInNode2.size.should.eql(1);
+            reachInNode2.values()[0].toString().should.eql('(outer@[0,1]_Global,Def@n0@[0,1]_Global)');
+
+            /// ReachOut(node 2)
+            var reachOutNode2 = rds.outputs.get(cfgwrapper.getCFG()[2][2]);
+            reachOutNode2.size.should.eql(2);
+            var reachOutNode2Texts = [];
+            reachOutNode2.values().forEach(function (rd) {
+                reachOutNode2Texts.push(rd.toString());
+            });
+            reachOutNode2Texts.should.containDeep([
+                '(outer@[0,1]_Global,Def@n0@[0,1]_Global)',
+                '(a@[4,5]_Program,Def@n2@[16,17]_Program)'
+            ]);
+
+            /// node 3: b = a++;
+            /// ReachIn(node 3)
+            var reachInNode3 = rds.inputs.get(cfgwrapper.getCFG()[2][3]);
+            reachInNode3.size.should.eql(2);
+            var reachInNode3Texts = [];
+            reachInNode3.forEach(function (rd) {
+                reachInNode3Texts.push(rd.toString());
+            });
+            reachInNode3Texts.should.containDeep([
+                '(outer@[0,1]_Global,Def@n0@[0,1]_Global)',
+                '(a@[4,5]_Program,Def@n2@[16,17]_Program)'
+            ]);
+
+            /// ReachOut(node 3)
+            var reachOutNode3 = rds.outputs.get(cfgwrapper.getCFG()[2][3]);
+            reachOutNode3.size.should.eql(3);
+            var reachOutNode3Texts = [];
+            reachOutNode3.forEach(function (rd) {
+                reachOutNode3Texts.push(rd.toString());
+            });
+            reachOutNode3Texts.should.containDeep([
+                '(outer@[0,1]_Global,Def@n0@[0,1]_Global)',
+                '(a@[4,5]_Program,Def@n3@[22,25]_Program)',
+                '(b@[7,8]_Program,Def@n3@[22,25]_Program)'
+            ]);
+
+            /// node 4: c = a * b;
+            /// ReachIn(node 4)
+            var reachInNode4 = rds.inputs.get(cfgwrapper.getCFG()[2][4]);
+            reachInNode4.size.should.eql(3);
+            var reachInNode4Texts = [];
+            reachInNode4.forEach(function (rd) {
+                reachInNode4Texts.push(rd.toString());
+            });
+            reachInNode4Texts.should.containDeep([
+                '(outer@[0,1]_Global,Def@n0@[0,1]_Global)',
+                '(a@[4,5]_Program,Def@n3@[22,25]_Program)',
+                '(b@[7,8]_Program,Def@n3@[22,25]_Program)'
+            ]);
+
+            /// ReachOut(node 4)
+            var reachOutNode4 = rds.outputs.get(cfgwrapper.getCFG()[2][4]);
+            reachOutNode4.size.should.eql(4);
+            var reachOutNode4Texts = [];
+            reachOutNode4.forEach(function (rd) {
+                reachOutNode4Texts.push(rd.toString());
+            });
+            reachOutNode4Texts.should.containDeep([
+                '(outer@[0,1]_Global,Def@n0@[0,1]_Global)',
+                '(a@[4,5]_Program,Def@n3@[22,25]_Program)',
+                '(b@[7,8]_Program,Def@n3@[22,25]_Program)',
+                '(c@[10,11]_Program,Def@n4@[30,35]_Program)'
+            ]);
+
+            /// ReachIn(exit)
+            var reachInExit = rds.inputs.get(cfgwrapper.getCFG()[1]);
+            reachInExit.size.should.eql(5);
+            var reachInExitTexts = [];
+            reachInExit.forEach(function (rd) {
+                reachInExitTexts.push(rd.toString());
+            });
+            reachInExitTexts.should.containDeep([
+                '(outer@[0,1]_Global,Def@n0@[0,1]_Global)',
+                '(a@[4,5]_Program,Def@n2@[16,17]_Program)',
+                '(a@[4,5]_Program,Def@n3@[22,25]_Program)',
+                '(b@[7,8]_Program,Def@n3@[22,25]_Program)',
+                '(c@[10,11]_Program,Def@n4@[30,35]_Program)'
+            ]);
+
+            /// ReachOut(exit);
+            var reachOutExit = rds.outputs.get(cfgwrapper.getCFG()[1]);
+            reachOutExit.size.should.eql(1);
+            reachOutExit.values()[0].toString().should.eql('(outer@[0,1]_Global,Def@n0@[0,1]_Global)');
         });
     });
 });
