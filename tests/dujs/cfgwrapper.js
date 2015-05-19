@@ -10,6 +10,7 @@ var CFGWrapper = require('../../lib/dujs').CFGWrapper,
     Map = require('core-js/es6/map'),
     Set = require('../../lib/analyses').Set,
     vardefFactory = require('../../lib/dujs').factoryVarDef,
+    varFactory = require('../../lib/dujs').factoryVar,
     should = require('should');
 
 describe('CFGWrapper', function () {
@@ -28,6 +29,8 @@ describe('CFGWrapper', function () {
 
     beforeEach(function () {
         CfgExt.resetCounter();
+        varFactory.resetGlobalsCounter();
+
         code = 'var a = 0, b = 1;\n' +
         'function fun(a,b) {\n' +
             'var c = a + b;\n' +
@@ -191,6 +194,7 @@ describe('CFGWrapper', function () {
                 programCFGWrapper.addChild(funCFGWrapper);
                 programCFGWrapper.addChild(anonymousFunCFGWrapper);
                 programCFGWrapper.setVars();
+                funCFGWrapper.setVars();
                 programCFGWrapper.initRDs();
 
                 var rds = programCFGWrapper.getReachIns(),
@@ -259,6 +263,176 @@ describe('CFGWrapper', function () {
                 funCFGWrapper.initRDs();
                 var reachInsOfFun = funCFGWrapper.getReachIns();
                 reachInsOfFun.get(funCFGWrapper.getCFG()[0]).size.should.eql(2);
+            });
+        });
+
+        describe('updateRDs', function () {
+            it('should support update at entry node', function () {
+                programCFGWrapper.addChild(funCFGWrapper);
+                programCFGWrapper.addChild(anonymousFunCFGWrapper);
+                programCFGWrapper.setVars();
+                funCFGWrapper.setVars();
+
+                programCFGWrapper.initRDs();
+                funCFGWrapper.initRDs();
+
+                var extraRDs = new Set();
+                extraRDs.add(vardefFactory.createGlobalVarDef('extra', Def.LITERAL_TYPE));
+                programCFGWrapper.updateRDs(programCFGWrapper.getCFG()[0], extraRDs);
+
+                /// ReachIn(entry)
+                var reachInEntry = programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[0]);
+                reachInEntry.size.should.eql(2);
+                var reachInEntryTexts = [];
+                reachInEntry.forEach(function (rd) {
+                    reachInEntryTexts.push(rd.toString());
+                });
+                reachInEntryTexts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)',
+                    '(extra@[0,1]_Global,Def@n0@[0,1]_Global)'
+                ]);
+
+                /// ReachOut(entry)
+                var reachOutEntry = programCFGWrapper.getReachOuts().get(programCFGWrapper.getCFG()[0]);
+                reachOutEntry.size.should.eql(2);
+                var reachOutEntryTexts = [];
+                reachOutEntry.forEach(function (rd) {
+                    reachOutEntryTexts.push(rd.toString());
+                });
+                reachOutEntryTexts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)',
+                    '(extra@[0,1]_Global,Def@n0@[0,1]_Global)'
+                ]);
+
+                /// ReachIn(node 1)
+                var reachInNode1 = programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[2][1]);
+                reachInNode1.size.should.eql(2);
+                var reachInNode1Texts = [];
+                reachInNode1.forEach(function (rd) {
+                    reachInNode1Texts.push(rd.toString());
+                });
+                reachInNode1Texts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)',
+                    '(extra@[0,1]_Global,Def@n0@[0,1]_Global)'
+                ]);
+
+                /// ReachOut(node 1)
+                var reachOutNode1 = programCFGWrapper.getReachOuts().get(programCFGWrapper.getCFG()[2][1]);
+                reachOutNode1.size.should.eql(4);
+                var reachOutNode1Texts = [];
+                reachOutNode1.forEach(function (rd) {
+                    reachOutNode1Texts.push(rd.toString());
+                });
+                reachOutNode1Texts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)',
+                    '(extra@[0,1]_Global,Def@n0@[0,1]_Global)',
+                    '(a@[4,5]_Program,Def@n1@[8,9]_Program)',
+                    '(b@[11,12]_Program,Def@n1@[15,16]_Program)'
+                ]);
+
+                /// ReachIn(exit)
+                var reachInExit = programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[1]);
+                reachInExit.size.should.eql(5);
+                var reachInExitTexts = [];
+                reachInExit.forEach(function (rd) {
+                    reachInExitTexts.push(rd.toString());
+                });
+                reachInExitTexts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)',
+                    '(extra@[0,1]_Global,Def@n0@[0,1]_Global)',
+                    '(a@[4,5]_Program,Def@n1@[8,9]_Program)',
+                    '(b@[11,12]_Program,Def@n1@[15,16]_Program)',
+                    '(d@[59,60]_Program,Def@n2@[63,77]_Program)'
+                ]);
+
+                /// ReachOut(exit)
+                var reachOutExit = programCFGWrapper.getReachOuts().get(programCFGWrapper.getCFG()[1]);
+                reachOutExit.size.should.eql(1);
+                reachOutExit.values()[0].toString().should.eql('(extra@[0,1]_Global,Def@n0@[0,1]_Global)');
+            });
+
+            it('should support update at the other node expect the exit node and keep the originals', function () {
+                programCFGWrapper.addChild(funCFGWrapper);
+                programCFGWrapper.addChild(anonymousFunCFGWrapper);
+                programCFGWrapper.setVars();
+                funCFGWrapper.setVars();
+
+                programCFGWrapper.initRDs();
+                funCFGWrapper.initRDs();
+
+                var extraRDs = new Set();
+                extraRDs.add(vardefFactory.createGlobalVarDef('extra', Def.LITERAL_TYPE));
+
+                console.log(programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[2][1]).size);
+                programCFGWrapper.updateRDs(programCFGWrapper.getCFG()[2][1], extraRDs);
+                console.log(programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[2][1]).size);
+
+                /// ReachIn(entry)
+                var reachInEntry = programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[0]);
+                reachInEntry.size.should.eql(1);
+                var reachInEntryTexts = [];
+                reachInEntry.forEach(function (rd) {
+                    reachInEntryTexts.push(rd.toString());
+                });
+                reachInEntryTexts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)'
+                ]);
+
+                /// ReachOut(entry)
+                var reachOutEntry = programCFGWrapper.getReachOuts().get(programCFGWrapper.getCFG()[0]);
+                reachOutEntry.size.should.eql(1);
+                var reachOutEntryTexts = [];
+                reachOutEntry.forEach(function (rd) {
+                    reachOutEntryTexts.push(rd.toString());
+                });
+                reachOutEntryTexts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)'
+                ]);
+
+                /// ReachIn(node 1)
+                var reachInNode1 = programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[2][1]);
+                reachInNode1.size.should.eql(1);
+                var reachInNode1Texts = [];
+                reachInNode1.forEach(function (rd) {
+                    reachInNode1Texts.push(rd.toString());
+                });
+                reachInNode1Texts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)'
+                ]);
+
+                /// ReachOut(node 1)
+                var reachOutNode1 = programCFGWrapper.getReachOuts().get(programCFGWrapper.getCFG()[2][1]);
+                reachOutNode1.size.should.eql(4);
+                var reachOutNode1Texts = [];
+                reachOutNode1.forEach(function (rd) {
+                    reachOutNode1Texts.push(rd.toString());
+                });
+                reachOutNode1Texts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)',
+                    '(a@[4,5]_Program,Def@n1@[8,9]_Program)',
+                    '(b@[11,12]_Program,Def@n1@[15,16]_Program)',
+                    '(extra@[0,1]_Global,Def@n0@[0,1]_Global)'
+                ]);
+
+                /// ReachIn(exit)
+                var reachInExit = programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[1]);
+                reachInExit.size.should.eql(5);
+                var reachInExitTexts = [];
+                reachInExit.forEach(function (rd) {
+                    reachInExitTexts.push(rd.toString());
+                });
+                reachInExitTexts.should.containDeep([
+                    '(fun@[36,54]_Program,Def@n0@[36,54]_Program)',
+                    '(extra@[0,1]_Global,Def@n0@[0,1]_Global)',
+                    '(a@[4,5]_Program,Def@n1@[8,9]_Program)',
+                    '(b@[11,12]_Program,Def@n1@[15,16]_Program)',
+                    '(d@[59,60]_Program,Def@n2@[63,77]_Program)'
+                ]);
+
+                /// ReachOut(exit)
+                var reachOutExit = programCFGWrapper.getReachOuts().get(programCFGWrapper.getCFG()[1]);
+                reachOutExit.size.should.eql(1);
+                reachOutExit.values()[0].toString().should.eql('(extra@[0,1]_Global,Def@n0@[0,1]_Global)');
             });
         });
 
