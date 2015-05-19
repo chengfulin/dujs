@@ -267,6 +267,7 @@ describe('FunctionScopeTree', function () {
             });
 
             it('should have correct reach definitions', function () {
+                tree.findVars();
                 tree.findRDs();
 
                 var programScope = tree.getFunctionScopes()[0],
@@ -274,19 +275,31 @@ describe('FunctionScopeTree', function () {
                 programScope.getScope().toString().should.eql('Program');
                 fooScope.getScope().toString().should.eql('Function["foo"]');
 
-                /// ReachIn at entry node
+                /// ReachIn(entry)
                 var reachInsNode0 = programScope.getReachIns().get(programScope.getCFG()[0]);
                 reachInsNode0.size.should.eql(1);
                 reachInsNode0.values()[0].toString().should.eql('(foo@[25,33]_Program,Def@n0@[25,33]_Program)');
 
-                /// ReachIn at node 1:
-                /// var a = 0;
+                /// node 1: var a = 0;
+                /// ReachIn(node 1):
                 var reachInsNode1 = programScope.getReachIns().get(programScope.getCFG()[2][1]);
                 reachInsNode1.size.should.eql(1);
                 reachInsNode1.values()[0].toString().should.eql('(foo@[25,33]_Program,Def@n0@[25,33]_Program)');
 
-                /// ReachIn at node 2:
-                /// foo();
+                /// ReachOut(node 1)
+                var reachOutNode1 = programScope.getReachOuts().get(programScope.getCFG()[2][1]);
+                reachOutNode1.size.should.eql(2);
+                var reachOutNode1Texts = [];
+                reachOutNode1.forEach(function (rd) {
+                    reachOutNode1Texts.push(rd.toString());
+                });
+                reachOutNode1Texts.should.containDeep([
+                    '(foo@[25,33]_Program,Def@n0@[25,33]_Program)',
+                    '(a@[4,5]_Program,Def@n1@[8,9]_Program)'
+                ]);
+
+                /// node 2: foo();
+                /// ReachIn(node 2)
                 var reachInsNode2 = programScope.getReachIns().get(programScope.getCFG()[2][2]);
                 reachInsNode2.size.should.eql(2);
                 var reachInTextsNode2 = [];
@@ -298,8 +311,44 @@ describe('FunctionScopeTree', function () {
                     '(a@[4,5]_Program,Def@n1@[8,9]_Program)'
                 ]);
 
-                /// ReachIn at node 3:
-                /// ++a;
+                /// ReachIn(foo.entry)
+                var reachInEntryFoo = fooScope.getReachIns().get(fooScope.getCFG()[0]);
+                reachInEntryFoo.size.should.eql(2);
+                var reachInEntryFooTexts = [];
+                reachInEntryFoo.forEach(function (rd) {
+                    reachInEntryFooTexts.push(rd.toString());
+                });
+                reachInEntryFooTexts.should.containDeep([
+                    '(foo@[25,33]_Program,Def@n0@[25,33]_Program)',
+                    '(a@[4,5]_Program,Def@n1@[8,9]_Program)'
+                ]);
+
+                /// ReachOut(foo.entry)
+                var reachOutEntryFoo = fooScope.getReachOuts().get(fooScope.getCFG()[0]);
+                reachOutEntryFoo.size.should.eql(2);
+                var reachOutEntryFooTexts = [];
+                reachOutEntryFoo.forEach(function (rd) {
+                    reachOutEntryFooTexts.push(rd.toString());
+                });
+                reachOutEntryFooTexts.should.containDeep([
+                    '(foo@[25,33]_Program,Def@n0@[25,33]_Program)',
+                    '(a@[4,5]_Program,Def@n1@[8,9]_Program)'
+                ]);
+
+                /// ReachOut(foo.exit)
+                var reachOutExitFoo = fooScope.getReachOuts().get(fooScope.getCFG()[1]);
+                reachOutExitFoo.size.should.eql(2);
+                var reachOutExitFooTexts = [];
+                reachOutExitFoo.forEach(function (rd) {
+                    reachOutExitFooTexts.push(rd.toString());
+                });
+                reachOutExitFooTexts.should.containDeep([
+                    '(foo@[25,33]_Program,Def@n0@[25,33]_Program)',
+                    '(a@[4,5]_Program,Def@n6@[30,31]_Function["foo"])'
+                ]);
+
+                /// node 3: ++a;
+                /// ReachIn(node 3):
                 var reachInsNode3 = programScope.getReachIns().get(programScope.getCFG()[2][3]);
                 reachInsNode3.size.should.eql(3);
                 var reachInTextsNode3 = [];
@@ -309,8 +358,11 @@ describe('FunctionScopeTree', function () {
                 reachInTextsNode3.should.containDeep([
                     '(foo@[25,33]_Program,Def@n0@[25,33]_Program)',
                     '(a@[4,5]_Program,Def@n1@[8,9]_Program)',
-                    '(a@[4,5]_Program,Def@n6@[30,31]_Program)'
+                    '(a@[4,5]_Program,Def@n6@[30,31]_Function["foo"])'
                 ]);
+
+                var reachOutNode3 = programScope.getReachOuts().get(programScope.getCFG()[2][3]);
+                //reachOutNode3.size.should.eql(4);
             });
         });
     });
