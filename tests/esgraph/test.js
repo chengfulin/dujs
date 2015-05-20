@@ -4,12 +4,14 @@
  * @author Swatinem (arpad.borsos@googlemail.com)
  */
 var esgraph = require('../../lib/esgraph');
-var espree = require('espree');
+var esprima = require('esprima');
 var fs = require('fs');
+var should = require('should');
 
 function createTest(dir, file) {
+	'use strict';
 	var contents = fs.readFileSync(dir + file, 'utf8');
-	var ast = espree.parse(contents, {comment: true, range: true});
+	var ast = esprima.parse(contents, {comment: true, range: true});
 	var comments = ast.comments;
 	delete ast.comments;
 	it(comments[0].value.trim() + ' (' + file + ')', function () {
@@ -25,6 +27,7 @@ function createTest(dir, file) {
 }
 
 describe('esgraph', function () {
+	'use strict';
 	var dir = __dirname + '/tests/';
 	var files = fs.readdirSync(dir);
 	files.forEach(function (file) {
@@ -35,15 +38,16 @@ describe('esgraph', function () {
 
 	it('should handle long graphs', function () {
 		var source = Array(1e4).join('stmt;');
-		var ast = espree.parse(source);
+		var ast = esprima.parse(source);
 		var cfg = esgraph(ast);
 		esgraph.dot(cfg);
 	});
 });
 
 describe('esgraph.dot', function () {
+	'use strict';
 	it('should number the nodes starting at `counter`', function () {
-		var out = esgraph.dot(esgraph(espree.parse('var a;')), {counter: 10});
+		var out = esgraph.dot(esgraph(esprima.parse('var a;')), {counter: 10});
 		out.should.not.containEql('n0');
 		out.should.containEql('n10');
 	});
