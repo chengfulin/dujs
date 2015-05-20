@@ -363,9 +363,7 @@ describe('CFGWrapper', function () {
                 var extraRDs = new Set();
                 extraRDs.add(vardefFactory.createGlobalVarDef('extra', Def.LITERAL_TYPE));
 
-                console.log(programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[2][1]).size);
                 programCFGWrapper.updateRDs(programCFGWrapper.getCFG()[2][1], extraRDs);
-                console.log(programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[2][1]).size);
 
                 /// ReachIn(entry)
                 var reachInEntry = programCFGWrapper.getReachIns().get(programCFGWrapper.getCFG()[0]);
