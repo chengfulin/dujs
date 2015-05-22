@@ -31,6 +31,7 @@ describe('FlowNode', function () {
                 should(FlowNode.isValidNodeType('loop')).eql(true);
                 should(FlowNode.isValidNodeType('call')).eql(true);
                 should(FlowNode.isValidNodeType('return')).eql(true);
+                should(FlowNode.isValidNodeType('branch')).eql(true);
             });
 
             it('should return false as the type is invalid', function () {
@@ -49,6 +50,7 @@ describe('FlowNode', function () {
                 should(FlowNode.isValidConnectionType('exception')).eql(true);
                 should(FlowNode.isValidConnectionType('call')).eql(true);
                 should(FlowNode.isValidConnectionType('return')).eql(true);
+                should(FlowNode.isValidConnectionType('onEvent')).eql(true);
             });
 
             it('shoudl return false as the type is invalid', function () {
@@ -114,6 +116,10 @@ describe('FlowNode', function () {
                 should(function () {
                     FlowNode.validateType('return');
                 }).not.throw();
+
+                should(function () {
+                    FlowNode.validateType('branch');
+                }).not.throw();
             });
 
             it('should support throwing custom error', function () {
@@ -125,6 +131,58 @@ describe('FlowNode', function () {
     });
 
     describe('methods', function () {
+        var nodeA, nodeB;
 
+        beforeEach(function () {
+            FlowNode.resetCounter();
+            nodeA = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
+            nodeB = new FlowNode();
+        });
+
+        describe('hasPrev', function () {
+            it('should return false asa the node is not a previous node of this node', function () {
+                nodeB.hasPrev(nodeA).should.eql(false);
+                nodeA.hasPrev(nodeB).should.eql(false);
+            });
+
+            it('should return true as the node exists in the collection of the node', function () {
+                nodeB._testonly_._prev.push(nodeA);
+                nodeB.hasPrev(nodeA).should.eql(true);
+                nodeA._testonly_._prev.push(nodeB);
+                nodeA.hasPrev(nodeB).should.eql(true);
+            });
+        });
+
+        describe('hasNext', function () {
+            it('should return false asa the node is not a next node of this node', function () {
+                nodeB.hasNext(nodeA).should.eql(false);
+                nodeA.hasNext(nodeB).should.eql(false);
+            });
+
+            it('should return true as the node exists in the collection of the node', function () {
+                nodeA._testonly_._next.push(nodeB);
+                nodeA.hasNext(nodeB).should.eql(true);
+                nodeB._testonly_._next.push(nodeA);
+                nodeB.hasNext(nodeA).should.eql(true);
+            });
+        });
+
+        describe('isConnectedTo', function () {
+            it('should return false as there is no connection between these two nodes', function () {
+                nodeA.isConnectedTo(nodeB).should.eql(false);
+                nodeB.isConnectedTo(nodeA).should.eql(false);
+            });
+
+            it('should return true as there is any connection between there two nodes', function () {
+                should.not.exist(nodeA._testonly_.normal);
+                should.exist(nodeA._testonly_.onEvent);
+                should(nodeA._testonly_.onEvent instanceof Array).eql(true);
+                nodeA._testonly_.normal = nodeB;
+                nodeA.isConnectedTo(nodeB).should.eql(true);
+                nodeB._testonly_.onEvent.push(nodeA);
+                nodeB._testonly_.onEvent.length.should.eql(1);
+                nodeB.isConnectedTo(nodeA).should.eql(true);
+            });
+        });
     });
 });
