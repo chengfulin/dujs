@@ -10,11 +10,95 @@ describe('FlowNode', function () {
         it('should resetCounter correctly', function () {
             var node1 = new FlowNode(),
                 node2 = new FlowNode();
-            node1.cfgId.should.eql(0);
-            node2.cfgId.should.eql(1);
+            node1._testonly_._cfgId.should.eql(0);
+            node2._testonly_._cfgId.should.eql(1);
             FlowNode.numOfFlowNodes.should.eql(2);
             FlowNode.resetCounter();
             FlowNode.numOfFlowNodes.should.eql(0);
+        });
+    });
+
+    describe('constructor', function () {
+        beforeEach(function () {
+            FlowNode.resetCounter();
+        });
+
+        describe('create object with node type', function () {
+            it('should create with default type correctly', function () {
+                var node = new FlowNode();
+                node._testonly_._type.should.eql('normal');
+            });
+
+            it('should create with specified type correctly', function () {
+                var node = new FlowNode(FlowNode.EXIT_NODE_TYPE);
+                node._testonly_._type.should.eql('exit');
+
+                node = new FlowNode(FlowNode.CALL_NODE_TYPE);
+                node._testonly_._type.should.eql('call');
+
+                node = new FlowNode(FlowNode.BRANCH_NODE_TYPE);
+                node._testonly_._type.should.eql('branch');
+
+                node = new FlowNode(FlowNode.NORMAL_NODE_TYPE);
+                node._testonly_._type.should.eql('normal');
+            });
+
+            it('should support to create with type, astNode and parent', function () {
+                var node = new FlowNode(FlowNode.ENTRY_NODE_TYPE, {type: 'AssignmentExpression'}, {type: 'Program'});
+                should.exist(node._testonly_._astNode);
+                should.exist(node._testonly_._parent);
+
+                node._testonly_._astNode.type.should.eql('AssignmentExpression');
+                node._testonly_._parent.type.should.eql('Program');
+            });
+
+            var single;
+            beforeEach(function () {
+                single = new FlowNode();
+            });
+            describe('default values', function () {
+                it('should not have astNode', function () {
+                    should.not.exist(single._testonly_._astNode);
+                });
+
+                it('should not have parent', function () {
+                    should.not.exist(single._testonly_._parent);
+                });
+
+                it('should not have kill set', function () {
+                    should.not.exist(single._testonly_._kill);
+                });
+
+                it('should not have generate set', function () {
+                    should.not.exist(single._testonly_._generate);
+                });
+
+                it('should not have c-use set', function () {
+                    should.not.exist(single._testonly_._cuse);
+                });
+
+                it('should not have p-use set', function () {
+                    should.not.exist(single._testonly_._puse);
+                });
+
+                it('should have empty array of previous nodes', function () {
+                    single._testonly_._prev.length.should.eql(0);
+                });
+
+                it('should have empty array of next nodes', function () {
+                    single._testonly_._next.length.should.eql(0);
+                });
+
+                it('should not have any connections', function () {
+                    should.not.exist(single._testonly_.normal);
+                    should.not.exist(single._testonly_.true);
+                    should.not.exist(single._testonly_.false);
+                    should.not.exist(single._testonly_.exception);
+                    should.not.exist(single._testonly_.call);
+                    should.not.exist(single._testonly_.return);
+                    single._testonly_.onEvent.length.should.eql(0);
+                });
+            });
         });
     });
 
@@ -76,55 +160,55 @@ describe('FlowNode', function () {
         describe('validateType', function () {
             it('should throw as the type of a FlowNode is invalid', function () {
                 should(function () {
-                    FlowNode.validateType('invalidType');
+                    FlowNode.validateTypeValue('invalidType');
                 }).throw('Invalid type of FlowNode');
 
                 should(function () {
-                    FlowNode.validateType('');
+                    FlowNode.validateTypeValue('');
                 }).throw('Invalid type of FlowNode');
 
                 should(function () {
-                    FlowNode.validateType({});
+                    FlowNode.validateTypeValue({});
                 }).throw('Invalid type of FlowNode');
 
                 should(function () {
-                    FlowNode.validateType();
+                    FlowNode.validateTypeValue();
                 }).throw('Invalid type of FlowNode');
             });
 
             it('should not throw as the type of a FlowNode is valid', function () {
                 should(function () {
-                    FlowNode.validateType('normal');
+                    FlowNode.validateTypeValue('normal');
                 }).not.throw();
 
                 should(function () {
-                    FlowNode.validateType('entry');
+                    FlowNode.validateTypeValue('entry');
                 }).not.throw();
 
                 should(function () {
-                    FlowNode.validateType('exit');
+                    FlowNode.validateTypeValue('exit');
                 }).not.throw();
 
                 should(function () {
-                    FlowNode.validateType('loop');
+                    FlowNode.validateTypeValue('loop');
                 }).not.throw();
 
                 should(function () {
-                    FlowNode.validateType('call');
+                    FlowNode.validateTypeValue('call');
                 }).not.throw();
 
                 should(function () {
-                    FlowNode.validateType('return');
+                    FlowNode.validateTypeValue('return');
                 }).not.throw();
 
                 should(function () {
-                    FlowNode.validateType('branch');
+                    FlowNode.validateTypeValue('branch');
                 }).not.throw();
             });
 
             it('should support throwing custom error', function () {
                 should(function () {
-                    FlowNode.validateType('', 'Custom error');
+                    FlowNode.validateTypeValue('', 'Custom error');
                 }).throw('Custom error');
             });
         });
@@ -174,9 +258,6 @@ describe('FlowNode', function () {
             });
 
             it('should return true as there is any connection between there two nodes', function () {
-                should.not.exist(nodeA._testonly_.normal);
-                should.exist(nodeA._testonly_.onEvent);
-                should(nodeA._testonly_.onEvent instanceof Array).eql(true);
                 nodeA._testonly_.normal = nodeB;
                 nodeA.isConnectedTo(nodeB).should.eql(true);
                 nodeB._testonly_.onEvent.push(nodeA);
@@ -187,7 +268,6 @@ describe('FlowNode', function () {
 
         describe('addPrev', function () {
             it('should not add as the node is not a FlowNode', function () {
-                nodeA._testonly_._prev.length.should.eql(0);
                 FlowNode._testonly_.addPrev(nodeA, {});
                 nodeA._testonly_._prev.length.should.eql(0);
 
@@ -207,7 +287,6 @@ describe('FlowNode', function () {
             });
 
             it('should add successfully as the node is not a previous node of this node', function () {
-                nodeA._testonly_._prev.length.should.eql(0);
                 FlowNode._testonly_.addPrev(nodeA, nodeB);
                 nodeA._testonly_._prev.length.should.eql(1);
                 nodeA._testonly_._prev[0].should.eql(nodeB);
@@ -216,7 +295,6 @@ describe('FlowNode', function () {
 
         describe('addNext', function () {
             it('should not add as the node is not a FlowNode', function () {
-                nodeA._testonly_._next.length.should.eql(0);
                 FlowNode._testonly_.addNext(nodeA, {});
                 nodeA._testonly_._next.length.should.eql(0);
 
@@ -236,7 +314,6 @@ describe('FlowNode', function () {
             });
 
             it('should add successfully as the node is not a next node of this node', function () {
-                nodeA._testonly_._next.length.should.eql(0);
                 FlowNode._testonly_.addNext(nodeA, nodeB);
                 nodeA._testonly_._next.length.should.eql(1);
                 nodeA._testonly_._next[0].should.eql(nodeB);
@@ -245,7 +322,6 @@ describe('FlowNode', function () {
 
         describe('removePrev', function () {
             it('should not remove as the node is not a FlowNode', function () {
-                nodeA._testonly_._prev.length.should.eql(0);
                 FlowNode._testonly_.removePrev(nodeA, {});
                 nodeA._testonly_._prev.length.should.eql(0);
 
@@ -272,7 +348,6 @@ describe('FlowNode', function () {
 
         describe('removeNext', function () {
             it('should not remove as the node is not a FlowNode', function () {
-                nodeA._testonly_._next.length.should.eql(0);
                 FlowNode._testonly_.removeNext(nodeA, {});
                 nodeA._testonly_._next.length.should.eql(0);
 
@@ -299,11 +374,6 @@ describe('FlowNode', function () {
 
         describe('connect', function () {
             it('should connect two nodes with ON_EVENT_CONNECTION_TYPE correctly', function () {
-                should.exist(nodeA._testonly_.onEvent);
-                nodeA._testonly_.onEvent.length.should.eql(0);
-                nodeA._testonly_._next.length.should.eql(0);
-                nodeB._testonly_._prev.length.should.eql(0);
-
                 nodeA.connect(nodeB, FlowNode.ON_EVENT_CONNECTION_TYPE);
                 nodeA._testonly_.onEvent.length.should.eql(1);
                 nodeA._testonly_.onEvent[0].should.eql(nodeB);
