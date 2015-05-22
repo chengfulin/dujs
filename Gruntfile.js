@@ -9,7 +9,9 @@ module.exports = function (grunt) {
                 start_comment: 'start-test-block',
                 end_comment: 'end-test-block'
             },
-            src: ['lib/**/*.js']
+            your_target: {
+                src: ['lib/**/*.js']
+            }
         },
         mochaTest: {
             test: {
@@ -33,5 +35,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-strip-code');
     grunt.loadNpmTasks('grunt-mocha-test');
 
-    grunt.registerTask('default', ['strip_code', 'mochaTest']);
+    grunt.registerTask('default', ['mochaTest']);
+    grunt.registerTask('deploy', ['strip_code']);
+    grunt.registerTask('test', ['mochaTest']);
 };
