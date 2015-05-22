@@ -184,5 +184,132 @@ describe('FlowNode', function () {
                 nodeB.isConnectedTo(nodeA).should.eql(true);
             });
         });
+
+        describe('addPrev', function () {
+            it('should not add as the node is not a FlowNode', function () {
+                nodeA._testonly_._prev.length.should.eql(0);
+                FlowNode._testonly_.addPrev(nodeA, {});
+                nodeA._testonly_._prev.length.should.eql(0);
+
+                nodeA._testonly_._prev.push(nodeB);
+                nodeA._testonly_._prev.length.should.eql(1);
+                FlowNode._testonly_.addPrev(nodeA, {});
+                nodeA._testonly_._prev.length.should.eql(1);
+                nodeA._testonly_._prev[0].should.eql(nodeB);
+            });
+
+            it('should not add as the node is already in the collection', function () {
+                nodeA._testonly_._prev.push(nodeB);
+                nodeA._testonly_._prev.length.should.eql(1);
+                FlowNode._testonly_.addPrev(nodeA, nodeB);
+                nodeA._testonly_._prev.length.should.eql(1);
+                nodeA._testonly_._prev[0].should.eql(nodeB);
+            });
+
+            it('should add successfully as the node is not a previous node of this node', function () {
+                nodeA._testonly_._prev.length.should.eql(0);
+                FlowNode._testonly_.addPrev(nodeA, nodeB);
+                nodeA._testonly_._prev.length.should.eql(1);
+                nodeA._testonly_._prev[0].should.eql(nodeB);
+            });
+        });
+
+        describe('addNext', function () {
+            it('should not add as the node is not a FlowNode', function () {
+                nodeA._testonly_._next.length.should.eql(0);
+                FlowNode._testonly_.addNext(nodeA, {});
+                nodeA._testonly_._next.length.should.eql(0);
+
+                nodeA._testonly_._next.push(nodeB);
+                nodeA._testonly_._next.length.should.eql(1);
+                FlowNode._testonly_.addNext(nodeA, {});
+                nodeA._testonly_._next.length.should.eql(1);
+                nodeA._testonly_._next[0].should.eql(nodeB);
+            });
+
+            it('should not add as the node is already in the collection', function () {
+                nodeA._testonly_._next.push(nodeB);
+                nodeA._testonly_._next.length.should.eql(1);
+                FlowNode._testonly_.addNext(nodeA, nodeB);
+                nodeA._testonly_._next.length.should.eql(1);
+                nodeA._testonly_._next[0].should.eql(nodeB);
+            });
+
+            it('should add successfully as the node is not a next node of this node', function () {
+                nodeA._testonly_._next.length.should.eql(0);
+                FlowNode._testonly_.addNext(nodeA, nodeB);
+                nodeA._testonly_._next.length.should.eql(1);
+                nodeA._testonly_._next[0].should.eql(nodeB);
+            });
+        });
+
+        describe('removePrev', function () {
+            it('should not remove as the node is not a FlowNode', function () {
+                nodeA._testonly_._prev.length.should.eql(0);
+                FlowNode._testonly_.removePrev(nodeA, {});
+                nodeA._testonly_._prev.length.should.eql(0);
+
+                nodeA._testonly_._prev.push(nodeB);
+                nodeA._testonly_._prev.length.should.eql(1);
+                FlowNode._testonly_.removePrev(nodeA, {});
+                nodeA._testonly_._prev.length.should.eql(1);
+                nodeA._testonly_._prev[0].should.eql(nodeB);
+            });
+
+            it('should not remove as the node is not a previous node of this node', function () {
+                nodeA._testonly_._next.push(nodeB);
+                FlowNode._testonly_.removePrev(nodeA, nodeB);
+                nodeA._testonly_._prev.length.should.eql(0);
+            });
+
+            it('should remove successfully as the node is in the collection', function () {
+                nodeA._testonly_._prev.push(nodeB);
+                nodeA._testonly_._prev.length.should.eql(1);
+                FlowNode._testonly_.removePrev(nodeA, nodeB);
+                nodeA._testonly_._prev.length.should.eql(0);
+            });
+        });
+
+        describe('removeNext', function () {
+            it('should not remove as the node is not a FlowNode', function () {
+                nodeA._testonly_._next.length.should.eql(0);
+                FlowNode._testonly_.removeNext(nodeA, {});
+                nodeA._testonly_._next.length.should.eql(0);
+
+                nodeA._testonly_._next.push(nodeB);
+                nodeA._testonly_._next.length.should.eql(1);
+                FlowNode._testonly_.removeNext(nodeA, {});
+                nodeA._testonly_._next.length.should.eql(1);
+                nodeA._testonly_._next[0].should.eql(nodeB);
+            });
+
+            it('should not remove as the node is not a previous node of this node', function () {
+                nodeA._testonly_._prev.push(nodeB);
+                FlowNode._testonly_.removeNext(nodeA, nodeB);
+                nodeA._testonly_._next.length.should.eql(0);
+            });
+
+            it('should remove successfully as the node is in the collection', function () {
+                nodeA._testonly_._next.push(nodeB);
+                nodeA._testonly_._next.length.should.eql(1);
+                FlowNode._testonly_.removeNext(nodeA, nodeB);
+                nodeA._testonly_._next.length.should.eql(0);
+            });
+        });
+
+        describe('connect', function () {
+            it('should connect two nodes with ON_EVENT_CONNECTION_TYPE correctly', function () {
+                should.exist(nodeA._testonly_.onEvent);
+                nodeA._testonly_.onEvent.length.should.eql(0);
+                nodeA._testonly_._next.length.should.eql(0);
+                nodeB._testonly_._prev.length.should.eql(0);
+
+                nodeA.connect(nodeB, FlowNode.ON_EVENT_CONNECTION_TYPE);
+                nodeA._testonly_.onEvent.length.should.eql(1);
+                nodeA._testonly_.onEvent[0].should.eql(nodeB);
+                nodeA._testonly_._next[0].should.eql(nodeB);
+                nodeB._testonly_._prev[0].should.eql(nodeA);
+            });
+        });
     });
 });
