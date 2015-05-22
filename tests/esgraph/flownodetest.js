@@ -1,7 +1,7 @@
 /**
  * Created by ChengFuLin on 2015/5/20.
  */
-var FlowNode = require('../../lib/esgraph').FlowNode,
+var FlowNode = require('../../lib/esgraph/flownode'),
     should = require('should');
 
 describe('FlowNode', function () {
@@ -379,6 +379,109 @@ describe('FlowNode', function () {
                 nodeA._testonly_.onEvent[0].should.eql(nodeB);
                 nodeA._testonly_._next[0].should.eql(nodeB);
                 nodeB._testonly_._prev[0].should.eql(nodeA);
+            });
+
+            it('should support without specified connection type', function () {
+                nodeA.connect(nodeB);
+                nodeA._testonly_.normal.should.eql(nodeB);
+            });
+        });
+
+        describe('Access properties', function () {
+            it('should support to assign and retrieve astNode and parent', function () {
+                nodeA.parent = {type: 'Program'};
+                nodeA.astNode = {type: 'AssignmentExpression'};
+
+                nodeA._testonly_._parent.should.eql(nodeA.parent);
+                nodeA._testonly_._astNode.should.eql(nodeA.astNode);
+
+                nodeA.parent.type.should.eql('Program');
+                nodeA.astNode.type.should.eql('AssignmentExpression');
+            });
+
+            it('should support to assign and retrieve type', function () {
+                nodeA.type.should.eql('entry');
+                nodeA.type = FlowNode.EXIT_NODE_TYPE;
+                nodeA.type.should.eql('exit');
+
+                nodeB.type.should.eql('normal');
+                nodeB.type = '';
+                nodeB.type.should.eql('normal');
+            });
+
+            it('should ignore assigning invalid type', function () {
+                nodeA.type = '';
+                nodeA.type.should.eql('entry');
+            });
+
+            it('should get previous nodes collection', function () {
+                nodeA._testonly_._prev.push(nodeB);
+                nodeA.prev.length.should.eql(1);
+                nodeA.prev[0].should.eql(nodeB);
+                should(nodeA.prev === nodeA._testonly_._prev).eql(false);
+            });
+
+            it('should get next nodes collection', function () {
+                nodeA._testonly_._next.push(nodeB);
+                nodeA.next.length.should.eql(1);
+                nodeA.next[0].should.eql(nodeB);
+                should(nodeA.next === nodeA._testonly_._next).eql(false);
+            });
+
+            it('should get normal connection well', function () {
+                nodeA.connect(nodeB);
+                should.exist(nodeA.normal);
+
+                nodeA._testonly_.normal.should.eql(nodeA.normal);
+                nodeA.normal.should.eql(nodeB);
+            });
+
+            it('should get true branch connection well', function () {
+                nodeA.connect(nodeB, FlowNode.TRUE_BRANCH_CONNECTION_TYPE);
+                should.exist(nodeA.true);
+
+                nodeA._testonly_.true.should.eql(nodeA.true);
+                nodeA.true.should.eql(nodeB);
+            });
+
+            it('should get false branch connection well', function () {
+                nodeA.connect(nodeB, FlowNode.FALSE_BRANCH_CONNECTION_TYPE);
+                should.exist(nodeA.false);
+
+                nodeA._testonly_.false.should.eql(nodeA.false);
+                nodeA.false.should.eql(nodeB);
+            });
+
+            it('should get exception connection well', function () {
+                nodeA.connect(nodeB, FlowNode.EXCEPTION_CONNECTION_TYPE);
+                should.exist(nodeA.exception);
+
+                nodeA._testonly_.exception.should.eql(nodeA.exception);
+                nodeA.exception.should.eql(nodeB);
+            });
+
+            it('should get call connection well', function () {
+                nodeA.connect(nodeB, FlowNode.CALL_CONNECTION_TYPE);
+                should.exist(nodeA.call);
+
+                nodeA._testonly_.call.should.eql(nodeA.call);
+                nodeA.call.should.eql(nodeB);
+            });
+
+            it('should get return connection well', function () {
+                nodeA.connect(nodeB, FlowNode.RETURN_CONNECTION_TYPE);
+                should.exist(nodeA.return);
+
+                nodeA._testonly_.return.should.eql(nodeA.return);
+                nodeA.return.should.eql(nodeB);
+            });
+
+            it('should get onEvent connection well', function () {
+                nodeA.connect(nodeB, FlowNode.ON_EVENT_CONNECTION_TYPE);
+
+                nodeA._testonly_.onEvent.should.eql(nodeA.onEvent);
+                nodeA.onEvent.length.should.eql(1);
+                nodeA.onEvent[0].should.eql(nodeB);
             });
         });
     });
