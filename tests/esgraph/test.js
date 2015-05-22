@@ -7,6 +7,7 @@ var esgraph = require('../../lib/esgraph');
 var esprima = require('esprima');
 var fs = require('fs');
 var should = require('should');
+var FlowNode = require('../../lib/esgraph/flownode');
 
 function createTest(dir, file) {
 	'use strict';
@@ -28,6 +29,10 @@ function createTest(dir, file) {
 
 describe('esgraph', function () {
 	'use strict';
+	beforeEach(function () {
+		FlowNode.resetCounter();
+	});
+
 	var dir = __dirname + '/tests/';
 	var files = fs.readdirSync(dir);
 	files.forEach(function (file) {
