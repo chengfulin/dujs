@@ -65,6 +65,10 @@ describe('FlowNode', function () {
                     should.not.exist(single._testonly_._parent);
                 });
 
+                it('should not have nextSibling', function () {
+                    should.not.exist(single._testonly_._nextSibling);
+                });
+
                 it('should not have kill set', function () {
                     should.not.exist(single._testonly_._kill);
                 });
@@ -412,6 +416,17 @@ describe('FlowNode', function () {
             it('should ignore assigning invalid type', function () {
                 nodeA.type = '';
                 nodeA.type.should.eql('entry');
+            });
+
+            it('should support to assign and retrieve next sibling', function () {
+                nodeA.nextSibling = nodeB;
+                nodeA.nextSibling.should.eql(nodeB);
+                should(nodeA._testonly_._nextSibling === nodeA.nextSibling).eql(true);
+            });
+
+            it('should ignore assigning non-FlowNode as next sibling', function () {
+                nodeA.nextSibling = {};
+                should.not.exist(nodeA._testonly_._nextSibling);
             });
 
             it('should get previous nodes collection', function () {
