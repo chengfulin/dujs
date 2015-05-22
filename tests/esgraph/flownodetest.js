@@ -6,6 +6,10 @@ var FlowNode = require('../../lib/esgraph').FlowNode,
 
 describe('FlowNode', function () {
     "use strict";
+    beforeEach(function () {
+        FlowNode.resetCounter();
+    });
+
     describe('resetCounter', function () {
         it('should resetCounter correctly', function () {
             var node1 = new FlowNode(),
@@ -19,10 +23,6 @@ describe('FlowNode', function () {
     });
 
     describe('constructor', function () {
-        beforeEach(function () {
-            FlowNode.resetCounter();
-        });
-
         describe('create object with node type', function () {
             it('should create with default type correctly', function () {
                 var node = new FlowNode();
