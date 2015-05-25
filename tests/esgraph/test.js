@@ -16,23 +16,21 @@ function createTest(dir, file) {
 	var comments = ast.comments;
 	delete ast.comments;
 	it(comments[0].value.trim() + ' (' + file + ')', function () {
-		if (ast.body[0].type === 'FunctionDeclaration')
+		if (ast.body[0].type === 'FunctionDeclaration') {
 			ast = ast.body[0].body;
+		}
 		var cfg = esgraph(ast);
 		var expected = comments[1].value.trim();
 		var actual = esgraph.dot(cfg, {source: contents}).trim();
-		if (actual !== expected)
+		if (actual !== expected) {
 			console.log(actual);
+		}
 		actual.should.eql(expected);
 	});
 }
 
 describe('esgraph', function () {
 	'use strict';
-	beforeEach(function () {
-		FlowNode.resetCounter();
-	});
-
 	var dir = __dirname + '/tests/';
 	var files = fs.readdirSync(dir);
 	files.forEach(function (file) {

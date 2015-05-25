@@ -6,21 +6,6 @@ var FlowNode = require('../../lib/esgraph/flownode'),
 
 describe('FlowNode', function () {
     "use strict";
-    beforeEach(function () {
-        FlowNode.resetCounter();
-    });
-
-    describe('resetCounter', function () {
-        it('should resetCounter correctly', function () {
-            var node1 = new FlowNode(),
-                node2 = new FlowNode();
-            node1._testonly_._cfgId.should.eql(0);
-            node2._testonly_._cfgId.should.eql(1);
-            FlowNode.numOfFlowNodes.should.eql(2);
-            FlowNode.resetCounter();
-            FlowNode.numOfFlowNodes.should.eql(0);
-        });
-    });
 
     describe('constructor', function () {
         describe('create object with node type', function () {
@@ -57,6 +42,10 @@ describe('FlowNode', function () {
                 single = new FlowNode();
             });
             describe('default values', function () {
+                it('should not have cfgId yet', function () {
+                    should.not.exist(single._testonly_._cfgId);
+                });
+
                 it('should not have astNode', function () {
                     should.not.exist(single._testonly_._astNode);
                 });
@@ -126,10 +115,6 @@ describe('FlowNode', function () {
     });
 
     describe('static members', function () {
-        beforeEach(function () {
-            FlowNode.resetCounter();
-        });
-
         describe('isValidNodeType', function () {
             it('should return true as the type is valid', function () {
                 should(FlowNode.isValidNodeType('normal')).eql(true);
@@ -241,7 +226,6 @@ describe('FlowNode', function () {
         var nodeA, nodeB;
 
         beforeEach(function () {
-            FlowNode.resetCounter();
             nodeA = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
             nodeB = new FlowNode();
         });
@@ -411,6 +395,12 @@ describe('FlowNode', function () {
         });
 
         describe('Access properties', function () {
+            it('should support to assign and retrieve cfgIds', function () {
+                nodeA.cfgId = 0;
+                nodeA._testonly_._cfgId.should.eql(0);
+                nodeA.cfgId.should.eql(nodeA._testonly_._cfgId);
+            });
+
             it('should support to assign and retrieve astNode and parent', function () {
                 nodeA.parent = {type: 'Program'};
                 nodeA.astNode = {type: 'AssignmentExpression'};
