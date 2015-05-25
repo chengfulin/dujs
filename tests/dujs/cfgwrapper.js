@@ -13,7 +13,7 @@ var CFGWrapper = require('../../lib/dujs').CFGWrapper,
     varFactory = require('../../lib/dujs').factoryVar,
     should = require('should');
 
-describe('Scope', function () {
+describe('CFGWrapper', function () {
     'use strict';
     var code,
         scopeASTs,
@@ -445,7 +445,7 @@ describe('Scope', function () {
                 (function () {
                     CFGWrapper.validate({}, Scope.PROGRAM_SCOPE, null);
                     CFGWrapper.validate([1,2,3], Scope.PROGRAM_SCOPE, null);
-                }).should.throw('Invalid Scope value (CFG)');
+                }).should.throw('Invalid CFGWrapper value (CFG)');
 
                 (function () {
                     CFGWrapper.validate({}, Scope.PROGRAM_SCOPE, null, 'Error occurred');
@@ -456,13 +456,13 @@ describe('Scope', function () {
             it('should throw an error when parent invalid', function () {
                 (function () {
                     CFGWrapper.validate(scopeCFGs[0], Scope.PROGRAM_SCOPE, {});
-                }).should.throw('Invalid Scope value (parent scope)');
+                }).should.throw('Invalid CFGWrapper value (parent scope)');
             });
 
             it('should throw an error when scope invalid', function () {
                 (function () {
                     CFGWrapper.validate(scopeCFGs[0], null, programCFGWrapper);
-                }).should.throw('Invalid Scope value (scope)');
+                }).should.throw('Invalid CFGWrapper value (scope)');
             });
         });
 
@@ -475,13 +475,13 @@ describe('Scope', function () {
                 }).should.not.throw();
             });
 
-            it('should throw an error when the parameter is not a Scope', function () {
+            it('should throw an error when the parameter is not a CFGWrapper', function () {
                 (function () {
                     CFGWrapper.validateType({});
-                }).should.throw('Not a Scope');
+                }).should.throw('Not a CFGWrapper');
                 (function () {
                     CFGWrapper.validateType();
-                }).should.throw('Not a Scope');
+                }).should.throw('Not a CFGWrapper');
                 (function () {
                     CFGWrapper.validateType({}, 'Error occurred');
                 }).should.throw('Error occurred');

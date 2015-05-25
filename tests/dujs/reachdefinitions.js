@@ -13,7 +13,7 @@ var ReachDefinitions = require('../../lib/dujs').ReachDefinitions,
     varFactory = require('../../lib/dujs').factoryVar,
     should = require('should');
 
-describe('Reach Definitions (dependent on Scope)', function () {
+describe('Reach Definitions (dependent on CFGWrapper)', function () {
     'use strict';
     beforeEach(function () {
         cfgext.resetCounter();

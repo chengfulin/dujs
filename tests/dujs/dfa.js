@@ -9,7 +9,7 @@ var DFA = require('../../lib/dujs/index').DFA,
     Scope = require('../../lib/dujs').Scope,
     should = require('should');
 
-describe('DFA (dependent on Scope)', function () {
+describe('DFA (dependent on CFGWrapper)', function () {
     'use strict';
     beforeEach(function () {
         cfgext.resetCounter();
