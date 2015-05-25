@@ -2,27 +2,153 @@
  * Created by ChengFuLin on 2015/5/7.
  */
 var CFGExt = require('../../lib/dujs').CFGExt,
+    FlowNode = require('../../lib/esgraph/flownode'),
     should = require('should');
 
 describe('CFGExt', function () {
     'use strict';
     describe('methods', function () {
+        describe('resetCounter', function () {
+            it('should reset the counter correctly', function () {
+                CFGExt._testonly_._lastCFGId.should.eql(0);
+                CFGExt._testonly_._lastCFGId = 1;
+                CFGExt.resetCounter();
+                CFGExt._testonly_._lastCFGId.should.eql(0);
+            });
+        });
+
         beforeEach(function () {
             CFGExt.resetCounter();
         });
 
+        describe('parseAST', function ()  {
+            it('should convert to AST with default options correctly', function () {
+                var ast = CFGExt.parseAST(
+                    'var a;' +
+                    'a = 0;'
+                );
+
+                should.exist(ast.range);
+                should.exist(ast.loc);
+                ast.range.should.eql([0,12]);
+                ast.loc.start.should.containEql({line: 1, column: 0});
+            });
+
+            it('should convert to AST with custom options correctly', function () {
+                var ast = CFGExt.parseAST(
+                    'var a;' +
+                    'a = 0;' +
+                    '/// comment',
+                    {
+                        comment: true
+                    }
+                );
+
+                should.exist(ast.range);
+                should.exist(ast.loc);
+                should.exist(ast.comments);
+                ast.range.should.eql([0,12]);
+                ast.loc.start.should.containEql({line: 1, column: 0});
+            });
+        });
+
         describe('getCFG', function () {
-            it('should have continuous cfgIds', function () {
+            it('should have correct cfgIds as the flow of CFG nodes', function () {
                 var code1 = 'var a, b;',
-                    code2 = 'fun();',
-                    cfg1 = CFGExt.getCFG(CFGExt.parseAST(code1)),
-                    cfg2 = CFGExt.getCFG(CFGExt.parseAST(code2));
+                    cfg1 = CFGExt.getCFG(CFGExt.parseAST(code1));
+
                 cfg1[2].length.should.eql(3);
-                cfg1[2][0].cfgId.should.eql(0);
-                cfg1[2][2].cfgId.should.eql(2);
-                cfg2[2].length.should.eql(3);
-                cfg2[2][0].cfgId.should.eql(3);
-                cfg2[2][2].cfgId.should.eql(5);
+                cfg1[0].cfgId.should.eql(0);
+                cfg1[1].cfgId.should.eql(2);
+                cfg1[2][1].cfgId.should.eql(1);
+            });
+        });
+
+        describe('findScopes', function () {
+            it('should support single scope', function () {
+                var ast = CFGExt.parseAST(
+                        'var a = 0;'
+                    ),
+                    scope = CFGExt.findScopes(ast);
+
+                scope.length.should.eql(1);
+                scope[0].type.should.eql('Program');
+            });
+
+            it('should support named functions', function () {
+                var ast = CFGExt.parseAST(
+                        'function foo() { expr;}' +
+                        'function foo2() { expr;}'
+                    ),
+                    scopes = CFGExt.findScopes(ast);
+
+                scopes.length.should.eql(3);
+                scopes[1].type.should.eql('FunctionDeclaration');
+                scopes[2].type.should.eql('FunctionDeclaration');
+            });
+
+            it('should support for anonymous functions', function () {
+                var ast = CFGExt.parseAST(
+                        'var a = function () { expr;};' +
+                        'var b = function () { expr;};'
+                    ),
+                    scopes = CFGExt.findScopes(ast);
+
+                scopes.length.should.eql(3);
+                scopes[1].type.should.eql('FunctionExpression');
+                scopes[2].type.should.eql('FunctionExpression');
+            });
+
+            it('should support for multiple functions', function () {
+                var ast = CFGExt.parseAST(
+                        'var a = function () { expr;};' +
+                        'function foo() { expr;}'
+                    ),
+                    scopes = CFGExt.findScopes(ast);
+
+                scopes.length.should.eql(3);
+                scopes[1].type.should.eql('FunctionExpression');
+                scopes[2].type.should.eql('FunctionDeclaration');
+            });
+        });
+
+        describe('toDot', function () {
+            var code = 'var a = 0, b = 1;' +
+                '++a;' +
+                'b = a - 1;';
+
+            it('should convert correctly to dot with default options', function () {
+                var ast = CFGExt.parseAST(code),
+                    dot = CFGExt.toDot(CFGExt.getCFG(ast));
+
+                dot.should.eql(
+                    'n0 [label="entry", style="rounded"]\n' +
+                    'n1 [label="VariableDeclaration"]\n' +
+                    'n2 [label="UpdateExpression"]\n' +
+                    'n3 [label="AssignmentExpression"]\n' +
+                    'n4 [label="exit", style="rounded"]\n' +
+                    'n0 -> n1 []\n' +
+                    'n1 -> n2 []\n' +
+                    'n2 -> n3 []\n' +
+                    'n3 -> n4 []\n' +
+                    'n3 -> n4 [color="red", label="exception"]\n');
+            });
+
+            it('should convert correctly to dot with source option', function () {
+                var ast = CFGExt.parseAST(code),
+                    dot = CFGExt.toDot(CFGExt.getCFG(ast), code);
+
+                dot.should.eql(
+                    'n0 [label="entry", style="rounded"]\n' +
+                    'n1 [label="var a = 0, b = 1;"]\n' +
+                    'n2 [label="++a"]\n' +
+                    'n3 [label="b = a - 1"]\n' +
+                    'n4 [label="exit", style="rounded"]\n' +
+                    'n0 -> n1 []\n' +
+                    'n1 -> n2 []\n' +
+                    'n2 -> n3 []\n' +
+                    'n3 -> n4 []\n' +
+                    'n3 -> n4 [color="red", label="exception"]\n');
             });
         });
 
@@ -111,50 +237,6 @@ describe('CFGExt', function () {
                     'n2 -> n4 [color="red", label="exception"]\n' +
                     'n3 -> n2 []\n'
                 );
-            });
-        });
-
-        describe('connect', function () {
-            it('should do connection of call type well', function () {
-                var code1 = 'var a, b;',
-                    code2 = 'var c;',
-                    cfg1 = CFGExt.getCFG(CFGExt.parseAST(code1)),
-                    cfg2 = CFGExt.getCFG(CFGExt.parseAST(code2));
-
-                /// Before connection
-                cfg1[2][1].cfgId.should.eql(1);
-                cfg2[0].cfgId.should.eql(3);
-                should.not.exist(cfg1[2][1].call);
-                cfg1[2][1].next.length.should.eql(1);
-                cfg2[0].prev.length.should.eql(0);
-
-                /// After connection
-                CFGExt.connect(cfg1[2][1], cfg2[0], CFGExt.CALL_CONNECT_TYPE);
-                should.exist(cfg1[2][1].call);
-                cfg1[2][1].call.cfgId.should.eql(3);
-                cfg1[2][1].next.length.should.eql(2);
-                cfg2[0].prev.length.should.eql(1);
-            });
-
-            it('should do connection of return type well', function () {
-                var code1 = 'var a, b;',
-                    code2 = 'var c;',
-                    cfg1 = CFGExt.getCFG(CFGExt.parseAST(code1)),
-                    cfg2 = CFGExt.getCFG(CFGExt.parseAST(code2));
-
-                /// Before connection
-                cfg1[2][1].cfgId.should.eql(1);
-                cfg2[0].cfgId.should.eql(3);
-                should.not.exist(cfg1[2][1].return);
-                cfg1[2][1].next.length.should.eql(1);
-                cfg2[0].prev.length.should.eql(0);
-
-                /// After connection
-                CFGExt.connect(cfg1[2][1], cfg2[0], CFGExt.RETURN_CONNECT_TYPE);
-                should.exist(cfg1[2][1].return);
-                cfg1[2][1].return.cfgId.should.eql(3);
-                cfg1[2][1].next.length.should.eql(2);
-                cfg2[0].prev.length.should.eql(1);
             });
         });
     });
