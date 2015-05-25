@@ -102,6 +102,25 @@ describe('FlowNode', function () {
                     should.not.exist(single._testonly_.return);
                     single._testonly_.onEvent.length.should.eql(0);
                 });
+
+                it('should not have label yet except for the entry and exit node', function () {
+                    var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
+                        exit = new FlowNode(FlowNode.EXIT_NODE_TYPE);
+                    should.not.exist(single._testonly_._label);
+                    should.exist(entry._testonly_._label);
+                    should.exist(exit._testonly_._label);
+
+                    entry._testonly_._label.should.eql('entry');
+                    exit._testonly_._label.should.eql('exit');
+                });
+
+                it('should not set line property yet', function () {
+                    should.not.exist(single._testonly_._line);
+                });
+
+                it('should not set col property yet', function () {
+                    should.not.exist(single._testonly_._col);
+                });
             });
         });
     });
@@ -497,6 +516,40 @@ describe('FlowNode', function () {
                 nodeA._testonly_.onEvent.should.eql(nodeA.onEvent);
                 nodeA.onEvent.length.should.eql(1);
                 nodeA.onEvent[0].should.eql(nodeB);
+            });
+
+            it('should support assign and retrieve label', function () {
+                nodeA.label.should.eql('entry');
+                nodeA.label = 'none';
+                nodeA._testonly_._label.should.eql('none');
+                nodeA.label.should.eql(nodeA._testonly_._label);
+            });
+
+            it('should ignore non string assignment to label', function () {
+                nodeA.label = 1;
+                nodeA._testonly_._label.should.eql('entry');
+            });
+
+            it('should support assign and retrieve line number', function () {
+                nodeA.line = 0;
+                nodeA._testonly_._line.should.eql(0);
+                nodeA.line.should.eql(nodeA._testonly_._line);
+            });
+
+            it('should ignore NaN assignment to line number', function () {
+                nodeA.line = '0';
+                should.not.exist(nodeA._testonly_._line);
+            });
+
+            it('should support assign and retrieve column offset', function () {
+                nodeA.col = 1;
+                nodeA._testonly_._col.should.eql(1);
+                nodeA.col.should.eql(nodeA._testonly_._col);
+            });
+
+            it('should ignore NaN assignment to column offset', function () {
+                nodeA.col = '1';
+                should.not.exist(nodeA._testonly_._col);
             });
         });
     });
