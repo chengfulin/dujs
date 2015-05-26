@@ -6,3 +6,4 @@ coverage
 cfgs.png
 dupairs.png
 result.html
+tests/esgraph/tests
