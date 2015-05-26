@@ -12,7 +12,6 @@
     "core-js": "^0.8.4",
     "esgraph": "*",
     "espree": "^2.0.2",
-    "graphviz": "0.0.8",
     "open": "0.0.5",
     "walkes": "*"
   },
