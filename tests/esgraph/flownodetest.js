@@ -399,6 +399,32 @@ describe('FlowNode', function () {
             });
         });
 
+        describe('disconnect', function () {
+            it('should disconnect two nodes of ON_EVENT_CONNECTION_TYPE correctly', function () {
+                nodeA._testonly_.onEvent.push(nodeB);
+                nodeA._testonly_._next.push(nodeB);
+                nodeB._testonly_._prev.push(nodeA);
+
+                nodeA.disconnect(nodeB);
+
+                nodeA._testonly_.onEvent.length.should.eql(0);
+                nodeA._testonly_._next.length.should.eql(0);
+                nodeB._testonly_._prev.length.should.eql(0);
+            });
+
+            it('should disconnect two node of other connection types correctly', function () {
+                nodeA._testonly_.call = nodeB;
+                nodeA._testonly_._next.push(nodeB);
+                nodeB._testonly_._prev.push(nodeA);
+
+                nodeA.disconnect(nodeB);
+
+                should.not.exist(nodeA._testonly_.call);
+                nodeA._testonly_._next.length.should.eql(0);
+                nodeB._testonly_._prev.length.should.eql(0);
+            });
+        });
+
         describe('Access properties', function () {
             it('should support to assign and retrieve cfgIds', function () {
                 nodeA.cfgId = 0;
