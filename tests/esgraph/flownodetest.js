@@ -122,7 +122,8 @@ describe('FlowNode', function () {
                 should(FlowNode.isValidNodeType('exit')).eql(true);
                 should(FlowNode.isValidNodeType('loop')).eql(true);
                 should(FlowNode.isValidNodeType('call')).eql(true);
-                should(FlowNode.isValidNodeType('return')).eql(true);
+                should(FlowNode.isValidNodeType('callReturn')).eql(true);
+                should(FlowNode.isValidNodeType('loopReturn')).eql(true);
                 should(FlowNode.isValidNodeType('branch')).eql(true);
             });
 
@@ -206,7 +207,11 @@ describe('FlowNode', function () {
                 }).not.throw();
 
                 should(function () {
-                    FlowNode.validateTypeValue('return');
+                    FlowNode.validateTypeValue('callReturn');
+                }).not.throw();
+
+                should(function () {
+                    FlowNode.validateTypeValue('loopReturn');
                 }).not.throw();
 
                 should(function () {
