@@ -51,4 +51,46 @@ describe('AnalyzedCFGBuilder', function () {
             analyzedCFGs.length.should.eql(3);
         });
     });
+
+    describe('connectCallerCalleeCFGs', function () {
+        it('should connect two CFGs correctly', function () {
+            var cfg1 = CFGExt.getCFG(CFGExt.parseAST(
+                    'foo();'
+                )),
+                cfg2 = CFGExt.getCFG(CFGExt.parseAST(
+                    'var b = 1;'
+                )),
+                connectedCFG = builder._testonly_.connectCallerCalleeCFGs(cfg1, cfg2, cfg1[2][1]);
+
+            connectedCFG.length.should.eql(3);
+            connectedCFG[0].should.eql(cfg1[0]);
+            connectedCFG[1].should.eql(cfg1[1]);
+            connectedCFG[2].length.should.eql(7);
+
+            /// All nodes of connected CFG
+            connectedCFG[2][0]._testonly_._type.should.eql('entry');
+            connectedCFG[2][1]._testonly_._type.should.eql('call');
+            should.not.exist(connectedCFG[2][1]._testonly_._astNode);
+            connectedCFG[2][2]._testonly_._type.should.eql('entry');
+            connectedCFG[2][4]._testonly_._type.should.eql('exit');
+            connectedCFG[2][5]._testonly_._type.should.eql('callReturn');
+            should.exist(connectedCFG[2][5]._testonly_._astNode);
+            connectedCFG[2][5]._testonly_._astNode.type.should.eql('CallExpression');
+            connectedCFG[2][6]._testonly_._type.should.eql('exit');
+
+            /// Call connection
+            connectedCFG[2][1]._testonly_.call.should.eql(connectedCFG[2][2]);
+            connectedCFG[2][1]._testonly_._next.length.should.eql(1);
+            connectedCFG[2][1]._testonly_._next[0].should.eql(connectedCFG[2][2]);
+            connectedCFG[2][2]._testonly_._prev.length.should.eql(1);
+            connectedCFG[2][2]._testonly_._prev[0].should.eql(connectedCFG[2][1]);
+
+            /// Return connection
+            connectedCFG[2][4]._testonly_.return.should.eql(connectedCFG[2][5]);
+            connectedCFG[2][4]._testonly_._next.length.should.eql(1);
+            connectedCFG[2][4]._testonly_._next[0].should.eql(connectedCFG[2][5]);
+            connectedCFG[2][5]._testonly_._prev.length.should.eql(1);
+            connectedCFG[2][5]._testonly_._prev[0].should.eql(connectedCFG[2][4]);
+        });
+    });
 });
