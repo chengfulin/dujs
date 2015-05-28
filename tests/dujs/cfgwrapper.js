@@ -11,6 +11,7 @@ var CFGWrapper = require('../../lib/dujs').CFGWrapper,
     Set = require('../../lib/analyses').Set,
     vardefFactory = require('../../lib/dujs').factoryVarDef,
     varFactory = require('../../lib/dujs').factoryVar,
+    FlowNode = require('../../lib/esgraph/flownode'),
     should = require('should');
 
 describe('CFGWrapper', function () {
@@ -112,12 +113,18 @@ describe('CFGWrapper', function () {
                 should.exist(rdsOfEntry);
                 /// not find RDs yet
                 reachOutsOfEntry.size.should.eql(0);
-                should(rdsOfEntry.values()).containDeep([
-                    {
-                        variable: programCFGWrapper.getScopeVars().get('fun'),
-                        definition: funCFGWrapper.getDef()
-                    }
-                ]);
+                /// Found child's Def reaches in the entry
+                var foundChildDefReachInEntry = false;
+                programCFGWrapper._testonly_.reachIns
+                    .get(programCFGWrapper._testonly_.cfg[0])
+                    .values()
+                    .forEach(function (rd) {
+                        if (rd.variable === programCFGWrapper._testonly_.vars.get('fun') &&
+                            rd.definition === funCFGWrapper._testonly_.def) {
+                            foundChildDefReachInEntry = true;
+                        }
+                    });
+                foundChildDefReachInEntry.should.eql(true);
             });
         });
 
@@ -157,8 +164,11 @@ describe('CFGWrapper', function () {
                 should(variables.has('b')).eql(true);
                 should(variables.has('d')).eql(true);
 
+                var globalNode = new FlowNode(FlowNode.GLOBAL_NODE_TYPE);
+                globalNode.cfgId = 0;
+
                 programCFGWrapper.setVars([
-                    vardefFactory.createGlobalVarDef('ga', Def.OBJECT_TYPE)
+                    vardefFactory.createGlobalVarDef(globalNode, 'ga', Def.OBJECT_TYPE)
                 ]);
                 variables = programCFGWrapper.getScopeVars();
                 variables.size.should.eql(4);
@@ -191,55 +201,82 @@ describe('CFGWrapper', function () {
 
         describe('initRDs', function () {
             it('should find correct intra-procedural definitions', function () {
-                programCFGWrapper.addChild(funCFGWrapper);
-                programCFGWrapper.addChild(anonymousFunCFGWrapper);
-                programCFGWrapper.setVars();
-                funCFGWrapper.setVars();
+                programCFGWrapper._testonly_.children.set(funCFGWrapper._testonly_.range, funCFGWrapper);
+                programCFGWrapper._testonly_.children.set(anonymousFunCFGWrapper._testonly_.range, anonymousFunCFGWrapper);
+                /// Set vars in program scope
+                programCFGWrapper._testonly_.vars.set(
+                    'fun',
+                    varFactory.create('fun', [36,54], programCFGWrapper._testonly_.scope)
+                );
+                programCFGWrapper._testonly_.vars.set(
+                    'a',
+                    varFactory.create('a', [4,5], programCFGWrapper._testonly_.scope)
+                );
+                programCFGWrapper._testonly_.vars.set(
+                    'b',
+                    varFactory.create('b', [11,12], programCFGWrapper._testonly_.scope)
+                );
+                /// Set reach in definitions at entry point
+                programCFGWrapper._testonly_.reachIns.set(
+                    programCFGWrapper._testonly_.cfg[0],
+                    new Set([
+                        vardefFactory.create(
+                            programCFGWrapper._testonly_.vars.get('fun'),
+                            funCFGWrapper._testonly_.def
+                        )
+                    ])
+                );
+                /// Set vars in fun scope
+                funCFGWrapper._testonly_.vars.set(
+                    'c',
+                    varFactory.create('c', [42,43], funCFGWrapper._testonly_.scope)
+                );
                 programCFGWrapper.initRDs();
 
-                var rds = programCFGWrapper.getReachIns(),
-                    reachOuts = programCFGWrapper.getReachOuts();
+                var rds = programCFGWrapper._testonly_.reachIns,
+                    reachOuts = programCFGWrapper._testonly_.reachOuts;
                 /// size equals to CFG nodes
                 rds.size.should.eql(4);
                 reachOuts.size.should.eql(4);
-                rds.get(programCFGWrapper.getCFG()[0]).values().length.should.eql(1);
-                reachOuts.get(programCFGWrapper.getCFG()[0]).values().length.should.eql(1);
+                rds.get(programCFGWrapper._testonly_.cfg[0]).values().length.should.eql(1);
+                reachOuts.get(programCFGWrapper._testonly_.cfg[0]).values().length.should.eql(1);
                 /// VariableDeclaration node
                 /// In: {fun}, Out: {fun, a, b}
-                rds.get(programCFGWrapper.getCFG()[2][1]).values().length.should.eql(1);
-                reachOuts.get(programCFGWrapper.getCFG()[2][1]).values().length.should.eql(3);
+                rds.get(programCFGWrapper._testonly_.cfg[2][1]).values().length.should.eql(1);
+                programCFGWrapper._testonly_.cfg[2][1].generate.size.should.eql(2);
+                reachOuts.get(programCFGWrapper._testonly_.cfg[2][1]).values().length.should.eql(3);
 
                 /// FunctionExpression node
                 /// In: {fun, a, b}, Out: {fun, a, b, d}
-                rds.get(programCFGWrapper.getCFG()[2][2]).values().length.should.eql(3);
-                reachOuts.get(programCFGWrapper.getCFG()[2][2]).values().length.should.eql(4);
+                rds.get(programCFGWrapper._testonly_.cfg[2][2]).values().length.should.eql(3);
+                reachOuts.get(programCFGWrapper._testonly_.cfg[2][2]).values().length.should.eql(4);
                 /// exit node
-                rds.get(programCFGWrapper.getCFG()[2][3]).values().length.should.eql(4);
-                reachOuts.get(programCFGWrapper.getCFG()[2][3]).values().length.should.eql(0);
+                rds.get(programCFGWrapper._testonly_.cfg[2][3]).values().length.should.eql(4);
+                reachOuts.get(programCFGWrapper._testonly_.cfg[2][3]).values().length.should.eql(0);
 
                 /// RDs of entry node
-                rds.get(programCFGWrapper.getCFG()[0]).values()[0]
+                rds.get(programCFGWrapper._testonly_.cfg[0]).values()[0]
                     .variable.toString()
-                    .should.eql(programCFGWrapper.getVarByName('fun').toString());
-                rds.get(programCFGWrapper.getCFG()[0]).values()[0]
-                    .definition.should.eql(funCFGWrapper.getDef());
+                    .should.eql(programCFGWrapper._testonly_.vars.get('fun').toString());
+                rds.get(programCFGWrapper._testonly_.cfg[0]).values()[0]
+                    .definition.should.eql(funCFGWrapper._testonly_.def);
                 /// ReachOuts of entry node
-                reachOuts.get(programCFGWrapper.getCFG()[0]).values()[0]
+                reachOuts.get(programCFGWrapper._testonly_.cfg[0]).values()[0]
                     .variable.toString()
-                    .should.eql(programCFGWrapper.getVarByName('fun').toString());
-                reachOuts.get(programCFGWrapper.getCFG()[0]).values()[0]
-                    .definition.should.eql(funCFGWrapper.getDef());
+                    .should.eql(programCFGWrapper._testonly_.vars.get('fun').toString());
+                reachOuts.get(programCFGWrapper._testonly_.cfg[0]).values()[0]
+                    .definition.should.eql(funCFGWrapper._testonly_.def);
 
                 /// ReachIns of 2nd declaration node
-                rds.get(programCFGWrapper.getCFG()[2][2]).values()[0]
+                rds.get(programCFGWrapper._testonly_.cfg[2][2]).values()[0]
                     .variable.toString()
-                    .should.eql(programCFGWrapper.getScopeVars().get('fun').toString());
-                rds.get(programCFGWrapper.getCFG()[2][2]).values()[1]
+                    .should.eql(programCFGWrapper._testonly_.vars.get('fun').toString());
+                rds.get(programCFGWrapper._testonly_.cfg[2][2]).values()[1]
                     .variable.toString()
-                    .should.eql(programCFGWrapper.getScopeVars().get('a').toString());
-                rds.get(programCFGWrapper.getCFG()[2][2]).values()[2]
+                    .should.eql(programCFGWrapper._testonly_.vars.get('a').toString());
+                rds.get(programCFGWrapper._testonly_.cfg[2][2]).values()[2]
                     .variable.toString()
-                    .should.eql(programCFGWrapper.getScopeVars().get('b').toString());
+                    .should.eql(programCFGWrapper._testonly_.vars.get('b').toString());
             });
 
             it('should support initial gloval Vars', function () {

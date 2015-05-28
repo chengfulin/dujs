@@ -11,6 +11,7 @@ var ReachDefinitions = require('../../lib/dujs').ReachDefinitions,
     VarDef = require('../../lib/dujs').VarDef,
     vardefFactory = require('../../lib/dujs').factoryVarDef,
     varFactory = require('../../lib/dujs').factoryVar,
+    FlowNode = require('../../lib/esgraph/flownode'),
     should = require('should');
 
 describe('Reach Definitions (dependent on CFGWrapper)', function () {
@@ -23,23 +24,25 @@ describe('Reach Definitions (dependent on CFGWrapper)', function () {
             var code = 'var a, b, c;',
                 functionScope = new CFGWrapper(cfgext.getCFG(cfgext.parseAST(code)), Scope.PROGRAM_SCOPE);
             functionScope.setVars();
+            var globalNode = new FlowNode(FlowNode.GLOBAL_NODE_TYPE);
+            globalNode.cfgId = 0;
             var rds = ReachDefinitions.findReachDefinitions(functionScope,
-                    new Set([
-                        new VarDef(
-                            new Var(
-                                'Class',
-                                [0, 1],
-                                Scope.GLOBAL_SCOPE
-                            ),
-                            new Def(
-                                0,
-                                Def.OBJECT_TYPE,
-                                [0, 1],
-                                Scope.GLOBAL_SCOPE
-                            )
+                new Set([
+                    new VarDef(
+                        new Var(
+                            'Class',
+                            [0, 1],
+                            Scope.GLOBAL_SCOPE
+                        ),
+                        new Def(
+                            globalNode,
+                            Def.OBJECT_TYPE,
+                            [0, 1],
+                            Scope.GLOBAL_SCOPE
                         )
-                    ])
-                );
+                    )
+                ])
+            );
 
             rds.inputs.size.should.eql(3);
             /// RDs at n0
