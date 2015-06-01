@@ -14,6 +14,8 @@ describe('Def', function () {
             Def.OBJECT_TYPE.should.eql('object');
             Def.FUNCTION_TYPE.should.eql('function');
             Def.LITERAL_TYPE.should.eql('literal');
+            Def.UNDEFINED_TYPE.should.eql('undefined');
+            Def.HTML_DOM_TYPE.should.eql('htmlDOM');
 
             /// cannot modified
             (function () {
@@ -24,6 +26,12 @@ describe('Def', function () {
             }).should.throw();
             (function () {
                 Def.LITERAL_TYPE = 'non-literal';
+            }).should.throw();
+            (function () {
+                Def.LITERAL_TYPE = 'not-undefined';
+            }).should.throw();
+            (function () {
+                Def.LITERAL_TYPE = 'not-HTML-DOM';
             }).should.throw();
         });
     });
