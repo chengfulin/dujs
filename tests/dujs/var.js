@@ -11,16 +11,18 @@ describe('Var', function () {
         it('should construct well', function () {
             var normal = new Var('ga', [0, 1], Scope.GLOBAL_SCOPE),
                 property = new Var('prop', [10, 12], Scope.PROGRAM_SCOPE, new Var('obj', [4, 5],  Scope.PROGRAM_SCOPE));
-            normal.getName().should.eql('ga');
-            normal.getRange().toString().should.eql('[0,1]');
-            normal.getScope().toString().should.eql('Global');
-            should.not.exist(normal.getVarLivingWith());
+            normal._testonly_._name.should.eql('ga');
+            normal._testonly_._range._testonly_._start.should.eql(0);
+            normal._testonly_._range._testonly_._end.should.eql(1);
+            normal._testonly_._scope._testonly_._type.should.eql('Global');
+            should.not.exist(normal._testonly_._liveWith);
 
-            property.getName().should.eql('prop');
-            property.getRange().toString().should.eql('[10,12]');
-            property.getScope().toString().should.eql('Program');
-            property.getVarLivingWith().getName().should.eql('obj');
-            property.getVarLivingWith().getScope().toString().should.eql('Program');
+            property._testonly_._name.should.eql('prop');
+            property._testonly_._range._testonly_._start.should.eql(10);
+            property._testonly_._range._testonly_._end.should.eql(12);
+            property._testonly_._scope._testonly_._type.should.eql('Program');
+            property._testonly_._liveWith._testonly_._name.should.eql('obj');
+            property._testonly_._liveWith._testonly_._scope._testonly_._type.should.eql('Program');
 
             (function () {
                 var invalid = new Var('!invalid', Scope.PROGRAM_SCOPE);
@@ -98,15 +100,17 @@ describe('Var', function () {
                 }).should.throw('Not a Var');
 
                 notProp.live(obj);
-                notProp.getVarLivingWith().getName().should.eql('obj');
-                notProp.getVarLivingWith().getRange().toString().should.eql('[0,1]');
-                notProp.getVarLivingWith().getScope().toString().should.eql('Global');
+                notProp._testonly_._liveWith._testonly_._name.should.eql('obj');
+                notProp._testonly_._liveWith._testonly_._range._testonly_._start.should.eql(0);
+                notProp._testonly_._liveWith._testonly_._range._testonly_._end.should.eql(1);
+                notProp._testonly_._liveWith._testonly_._scope._testonly_._type.should.eql('Global');
 
-                prop.getVarLivingWith().getName().should.eql('obj');
+                prop._testonly_._liveWith._testonly_._name.should.eql('obj');
                 prop.live(objX);
-                prop.getVarLivingWith().getName().should.eql('objX');
-                prop.getVarLivingWith().getRange().toString().should.eql('[5,11]');
-                prop.getVarLivingWith().getScope().toString().should.eql('Program');
+                prop._testonly_._liveWith._testonly_._name.should.eql('objX');
+                prop._testonly_._liveWith._testonly_._range._testonly_._start.should.eql(5);
+                prop._testonly_._liveWith._testonly_._range._testonly_._end.should.eql(11);
+                prop._testonly_._liveWith._testonly_._scope._testonly_._type.should.eql('Program');
             });
         });
     });
