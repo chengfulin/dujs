@@ -9,5 +9,6 @@
   "eqeqeq":true,
   "strict":true,
   "undef":true,
-  "bitwise":true
+  "bitwise":true,
+  "unused": true
 }
