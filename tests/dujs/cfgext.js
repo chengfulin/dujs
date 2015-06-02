@@ -239,5 +239,24 @@ describe('CFGExt', function () {
                 );
             });
         });
+
+        describe('isValidCFG', function () {
+            it('should return false as the input is invalid', function () {
+                CFGExt.isValidCFG([1,2]).should.eql(false);
+                CFGExt.isValidCFG([1,2,3]).should.eql(false);
+
+                var node1 = new FlowNode(FlowNode.NORMAL_NODE_TYPE),
+                    node2 = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
+                CFGExt.isValidCFG([node1, 0, []]).should.eql(false);
+                CFGExt.isValidCFG([node1, node2, []]);
+                CFGExt.isValidCFG([node1, node2, [node1]]);
+            });
+
+            it('should return true as the input is valid', function () {
+                var node1 = new FlowNode(FlowNode.NORMAL_NODE_TYPE),
+                    node2 = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
+                CFGExt.isValidCFG([node1, node2, [node1, node2]]).should.eql(true);
+            });
+        });
     });
 });
