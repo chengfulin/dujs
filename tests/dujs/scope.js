@@ -16,16 +16,16 @@ describe('Scope', function () {
                 normalFun = new Scope('fun'),
                 anonymousFun = new Scope(0),
                 anotherScope = new Scope(new Scope('foo'));
-            global.getValue().should.eql('!GLOBAL');
-            global.getType().should.eql('Global');
-            program.getValue().should.eql('!PROGRAM');
-            program.getType().should.eql('Program');
-            normalFun.getValue().should.eql('fun');
-            normalFun.getType().should.eql('Function');
-            anonymousFun.getValue().should.eql(0);
-            anonymousFun.getType().should.eql('AnonymousFunction');
-            anotherScope.getValue().should.eql('foo');
-            anotherScope.getType().should.eql('Function');
+            global._testonly_._value.should.eql('!GLOBAL');
+            global._testonly_._type.should.eql('Global');
+            program._testonly_._value.should.eql('!PROGRAM');
+            program._testonly_._type.should.eql('Program');
+            normalFun._testonly_._value.should.eql('fun');
+            normalFun._testonly_._type.should.eql('Function');
+            anonymousFun._testonly_._value.should.eql(0);
+            anonymousFun._testonly_._type.should.eql('AnonymousFunction');
+            anotherScope._testonly_._value.should.eql('foo');
+            anotherScope._testonly_._type.should.eql('Function');
         });
     });
     describe('static members', function () {
@@ -39,10 +39,10 @@ describe('Scope', function () {
         it('should have global Scope objects', function () {
             should(Scope.GLOBAL_SCOPE instanceof Scope).equal(true);
             should(Scope.PROGRAM_SCOPE instanceof Scope).equal(true);
-            Scope.GLOBAL_SCOPE.getValue().should.eql('!GLOBAL');
-            Scope.GLOBAL_SCOPE.getType().should.eql('Global');
-            Scope.PROGRAM_SCOPE.getValue().should.eql('!PROGRAM');
-            Scope.PROGRAM_SCOPE.getType().should.eql('Program');
+            Scope.GLOBAL_SCOPE.value.should.eql('!GLOBAL');
+            Scope.GLOBAL_SCOPE.type.should.eql('Global');
+            Scope.PROGRAM_SCOPE.value.should.eql('!PROGRAM');
+            Scope.PROGRAM_SCOPE.type.should.eql('Program');
         });
 
         var tmpScope,
@@ -139,21 +139,21 @@ describe('Scope', function () {
             });
         });
 
-        describe('getValue', function () {
+        describe('getter of value', function () {
             it('should getting the value correctly', function () {
-                global.getValue().should.eql('!GLOBAL');
-                program.getValue().should.eql('!PROGRAM');
-                fun.getValue().should.eql('fun');
-                anonymous.getValue().should.eql(0);
+                global.value.should.eql('!GLOBAL');
+                program.value.should.eql('!PROGRAM');
+                fun.value.should.eql('fun');
+                anonymous.value.should.eql(0);
             });
         });
 
-        describe('getType', function () {
+        describe('getter of type', function () {
             it('should get the type correctly', function () {
-                global.getType().should.eql('Global');
-                program.getType().should.eql('Program');
-                fun.getType().should.eql('Function');
-                anonymous.getType().should.eql('AnonymousFunction');
+                global.type.should.eql('Global');
+                program.type.should.eql('Program');
+                fun.type.should.eql('Function');
+                anonymous.type.should.eql('AnonymousFunction');
             });
         });
     });
