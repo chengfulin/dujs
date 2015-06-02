@@ -12,12 +12,12 @@ describe('Range', function () {
                 initRange = new Range(tmp),
                 initArr = new Range([1, 3]),
                 initPairs = new Range(0, 10);
-            initRange.getStart().should.eql(0);
-            initRange.getEnd().should.eql(1);
-            initArr.getStart().should.eql(1);
-            initArr.getEnd().should.eql(3);
-            initPairs.getStart().should.eql(0);
-            initPairs.getEnd().should.eql(10);
+            initRange._testonly_._start.should.eql(0);
+            initRange._testonly_._end.should.eql(1);
+            initArr._testonly_._start.should.eql(1);
+            initArr._testonly_._end.should.eql(3);
+            initPairs._testonly_._start.should.eql(0);
+            initPairs._testonly_._end.should.eql(10);
 
             (function () {
                 var invalid = new Range();
