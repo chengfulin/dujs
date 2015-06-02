@@ -4,7 +4,7 @@
 var Def = require('../../lib/dujs').Def,
     Range = require('../../lib/dujs').Range,
     Scope = require('../../lib/dujs').Scope,
-    FlowNode = require('../../lib/esgraph/flownode'),
+    FlowNode = require('../../lib/esgraph').FlowNode,
     should = require('should');
 
 describe('Def', function () {
@@ -159,12 +159,12 @@ describe('Def', function () {
                 new Range(0, 1),
                 new Scope('fun')
             );
-            valid._testonly_.fromCFGNode.should.eql(node);
-            valid._testonly_.fromCFGNode._testonly_._cfgId.should.eql(0);
-            valid._testonly_.type.should.eql('object');
-            valid._testonly_.range._testonly_.start.should.eql(0);
-            valid._testonly_.range._testonly_.end.should.eql(1);
-            valid._testonly_.scope._testonly_.value.should.eql('fun');
+            valid._testonly_._fromCFGNode.should.eql(node);
+            valid._testonly_._fromCFGNode._testonly_._cfgId.should.eql(0);
+            valid._testonly_._type.should.eql('object');
+            valid._testonly_._range._testonly_._start.should.eql(0);
+            valid._testonly_._range._testonly_._end.should.eql(1);
+            valid._testonly_._scope._testonly_._value.should.eql('fun');
         });
     });
 });
