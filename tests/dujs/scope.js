@@ -1,159 +1,223 @@
 /**
- * Created by chengfulin on 2015/4/24.
+ * Created by chengfulin on 2015/4/20.
  */
-var Scope = require('../../lib/dujs/index').Scope,
+var Scope = require('../../lib/dujs').Scope,
+    Var = require('../../lib/dujs').Var,
+    Map = require('core-js/es6/map'),
+    Set = require('../../lib/analyses').Set,
+    varFactory = require('../../lib/dujs').factoryVar,
+    FlowNode = require('../../lib/esgraph').FlowNode,
     should = require('should');
 
 describe('Scope', function () {
-    'use strict';
-    describe('constructor', function () {
-        it('should construct well', function () {
-            (function () {
-                var invalid = new Scope('!invalid');
-            }).should.throw('Invalid Scope value');
-            var global = new Scope('!GLOBAL'),
-                program = new Scope('!PROGRAM'),
-                normalFun = new Scope('fun'),
-                anonymousFun = new Scope(0),
-                anotherScope = new Scope(new Scope('foo'));
-            global.getValue().should.eql('!GLOBAL');
-            global.getType().should.eql('Global');
-            program.getValue().should.eql('!PROGRAM');
-            program.getType().should.eql('Program');
-            normalFun.getValue().should.eql('fun');
-            normalFun.getType().should.eql('Function');
-            anonymousFun.getValue().should.eql(0);
-            anonymousFun.getType().should.eql('AnonymousFunction');
-            anotherScope.getValue().should.eql('foo');
-            anotherScope.getType().should.eql('Function');
-        });
-    });
-    describe('static members', function () {
-        it('should have correct global constants', function () {
-            Scope.GLOBAL_TYPE.should.eql('Global');
-            Scope.PROGRAM_TYPE.should.eql('Program');
-            Scope.FUNCTION_TYPE.should.eql('Function');
-            Scope.ANONYMOUS_FUN_TYPE.should.eql('AnonymousFunction');
-        });
+    "use strict";
+    describe('Static Methods', function () {
+        describe('isScope', function () {
+            it('should return true as the object is a Scope', function () {
+                var scope = new Scope('Function', null, 'foo');
+                Scope.isScope(scope).should.eql(true);
+            });
 
-        it('should have global Scope objects', function () {
-            should(Scope.GLOBAL_SCOPE instanceof Scope).equal(true);
-            should(Scope.PROGRAM_SCOPE instanceof Scope).equal(true);
-            Scope.GLOBAL_SCOPE.getValue().should.eql('!GLOBAL');
-            Scope.GLOBAL_SCOPE.getType().should.eql('Global');
-            Scope.PROGRAM_SCOPE.getValue().should.eql('!PROGRAM');
-            Scope.PROGRAM_SCOPE.getType().should.eql('Program');
-        });
-
-        var tmpScope,
-            globalScopeValue,
-            programScopeValue,
-            functionScopeValue,
-            anonymousFunScopeValue,
-            negativeNumber,
-            invalidIdentifier;
-        beforeEach(function () {
-            tmpScope = new Scope('tmp');
-            globalScopeValue = '!GLOBAL';
-            programScopeValue = '!PROGRAM';
-            functionScopeValue = 'fun';
-            anonymousFunScopeValue = 0;
-            negativeNumber = -1;
-            invalidIdentifier = '!invalid';
-        });
-
-        describe('getType', function () {
-            it('should support for getting the type of Scope with its value', function () {
-                Scope.getType(tmpScope).should.eql('Function');
-                Scope.getType(globalScopeValue).should.eql('Global');
-                Scope.getType(programScopeValue).should.eql('Program');
-                Scope.getType(functionScopeValue).should.eql('Function');
-                Scope.getType(anonymousFunScopeValue).should.eql('AnonymousFunction');
-                should.not.exist(Scope.getType(negativeNumber));
-                should.not.exist(Scope.getType(invalidIdentifier));
+            it('should return false as the object is not a Scope', function () {
+                Scope.isScope().should.eql(false);
+                Scope.isScope(null).should.eql(false);
+                Scope.isScope({}).should.eql(false);
             });
         });
 
-        describe('isValidValue', function () {
-            it('should support for checking valid scope value', function () {
-                Scope.isValidValue(tmpScope).should.equal(true);
-                Scope.isValidValue(globalScopeValue).should.equal(true);
-                Scope.isValidValue(programScopeValue).should.equal(true);
-                Scope.isValidValue(functionScopeValue).should.equal(true);
-                Scope.isValidValue(anonymousFunScopeValue).should.equal(true);
-                Scope.isValidValue(negativeNumber).should.equal(false);
-                Scope.isValidValue(invalidIdentifier).should.equal(false);
+        describe('isValidParent', function () {
+            it('should return true as the parent is a Scope or null', function () {
+                var scope = new Scope('Function', null, 'foo');
+                Scope.isValidParent(null).should.eql(true);
+                Scope.isValidParent(scope).should.eql(true);
+            });
+
+            it('should return false as the parent is not a Scope or null', function () {
+                Scope.isValidParent({}).should.eql(false);
+            });
+        });
+
+        describe('isValidScopeType', function () {
+            it('should return true as the type value is valid', function () {
+                Scope.isValidScopeType('Function').should.eql(true);
+                Scope.isValidScopeType('AnonymousFunction').should.eql(true);
+                Scope.isValidScopeType('Program').should.eql(true);
+                Scope.isValidScopeType('Global').should.eql(true);
+            });
+
+            it('should return false as the type value is invalid', function () {
+                Scope.isValidScopeType().should.eql(false);
+                Scope.isValidScopeType('invalid').should.eql(false);
+                Scope.isValidScopeType({}).should.eql(false);
+            });
+        });
+
+        describe('isValidScopeValue', function () {
+            it('should return true as the default value of Program and Global type', function () {
+                Scope.isValidScopeValue('!PROGRAM').should.eql(true);
+                Scope.isValidScopeValue('!GLOBAL').should.eql(true);
+            });
+
+            it('should return true as the value is an number not less than 0', function () {
+                Scope.isValidScopeValue(0).should.eql(true);
+                Scope.isValidScopeValue(1).should.eql(true);
+            });
+
+            it('should return true as the value is a valid identifier', function () {
+                Scope.isValidScopeValue('valid').should.eql(true);
+                Scope.isValidScopeValue('_valid').should.eql(true);
+                Scope.isValidScopeValue('_valid0').should.eql(true);
+            });
+
+            it('should return false as the value is an negative number', function () {
+                Scope.isValidScopeValue(-1).should.eql(false);
+            });
+
+            it('should return false as the value is an invalid identifier', function () {
+                Scope.isValidScopeValue('3').should.eql(false);
+                Scope.isValidScopeValue('3invalid').should.eql(false);
+                Scope.isValidScopeValue('!invalid').should.eql(false);
             });
         });
 
         describe('validate', function () {
-            it('should support for validating scope value', function () {
-                (function () {
-                    Scope.validate(globalScopeValue);
-                }).should.not.throw();
-                (function () {
-                    Scope.validate(negativeNumber);
-                }).should.throw('Invalid Scope value');
-                (function () {
-                    Scope.validate(invalidIdentifier);
-                }).should.throw('Invalid Scope value');
-                (function () {
-                    Scope.validate();
-                }).should.throw('Invalid Scope value');
+            it('should throw as the type is invalid', function () {
+                should(function () {
+                    Scope.validate('invalid', null, 'foo');
+                }).throw('Invalid type for a Scope');
+            });
+
+            it('should throw as the parent is invalid', function () {
+                should(function () {
+                    Scope.validate('Function', {}, 'foo');
+                }).throw('Invalid parent for a Scope');
+            });
+
+            it('should throw as the value is invalid', function () {
+                should(function () {
+                    Scope.validate('Function', null, '0');
+                }).throw('Invalid value for a Scope');
+            });
+
+            it('should support custom error message', function () {
+                should(function () {
+                    Scope.validate(null, null, null, 'Custom Error');
+                }).throw('Custom Error');
             });
         });
 
         describe('validateType', function () {
-            it('should support for validating Scope type', function () {
-                (function () {
-                    Scope.validateType(tmpScope);
-                }).should.not.throw();
-                (function () {
-                    Scope.validateType('text');
-                }).should.throw('Not a Scope');
-                (function () {
-                    Scope.validateType();
-                }).should.throw('Not a Scope');
+            it('should throw as the object is not a Scope', function () {
+                should(function () {
+                    Scope.validateType({});
+                }).throw('Not a Scope');
+            });
+
+            it('should not throw as the object is a Scope', function () {
+                should(function () {
+                    Scope.validateType(new Scope('Function', null, 'foo'));
+                }).not.throw();
             });
         });
     });
 
-    describe('methods', function () {
-        var global,
-            program,
-            fun,
-            anonymous;
-        beforeEach(function () {
-            global = new Scope('!GLOBAL');
-            program = new Scope('!PROGRAM');
-            fun = new Scope('fun');
-            anonymous = new Scope(0);
-        });
+    describe('Properties', function () {
+        describe('PROGRAM_SCOPE_TYPE', function () {
+            it('should have correct value', function () {
+                Scope.PROGRAM_SCOPE_TYPE.should.eql('Program');
+            });
 
-        describe('toString', function () {
-            it('should converting to string well', function () {
-                global.toString().should.eql('Global');
-                program.toString().should.eql('Program');
-                fun.toString().should.eql('Function["fun"]');
-                anonymous.toString().should.eql('AnonymousFunction[0]');
+            it('should not be modified', function () {
+                should(function () {
+                    Scope.PROGRAM_SCOPE_TYPE = 'new value';
+                }).throw();
             });
         });
 
-        describe('getValue', function () {
-            it('should getting the value correctly', function () {
-                global.getValue().should.eql('!GLOBAL');
-                program.getValue().should.eql('!PROGRAM');
-                fun.getValue().should.eql('fun');
-                anonymous.getValue().should.eql(0);
+        describe('GLOBAL_SCOPE_TYPE', function () {
+            it('should have correct value', function () {
+                Scope.GLOBAL_SCOPE_TYPE.should.eql('Global');
+            });
+
+            it('should not be modified', function () {
+                should(function () {
+                    Scope.GLOBAL_SCOPE_TYPE = 'new value';
+                }).throw();
             });
         });
 
-        describe('getType', function () {
-            it('should get the type correctly', function () {
-                global.getType().should.eql('Global');
-                program.getType().should.eql('Program');
-                fun.getType().should.eql('Function');
-                anonymous.getType().should.eql('AnonymousFunction');
+        describe('FUNCTION_SCOPE_TYPE', function () {
+            it('should have correct value', function () {
+                Scope.FUNCTION_SCOPE_TYPE.should.eql('Function');
+            });
+
+            it('should not be modified', function () {
+                should(function () {
+                    Scope.FUNCTION_SCOPE_TYPE = 'new value';
+                }).throw();
+            });
+        });
+
+        describe('ANONYMOUS_FUNCTION_SCOPE_TYPE', function () {
+            it('should have correct value', function () {
+                Scope.ANONYMOUS_FUNCTION_SCOPE_TYPE.should.eql('AnonymousFunction');
+            });
+
+            it('should not be modified', function () {
+                should(function () {
+                    Scope.ANONYMOUS_FUNCTION_SCOPE_TYPE = 'new value';
+                }).throw();
+            });
+        });
+
+        describe('PROGRAM_SCOPE_VALUE', function () {
+            it('should have correct value', function () {
+                Scope.PROGRAM_SCOPE_VALUE.should.eql('!PROGRAM');
+            });
+
+            it('should not be modified', function () {
+                should(function () {
+                    Scope.PROGRAM_SCOPE_VALUE = 'new value';
+                }).throw();
+            });
+        });
+
+        describe('GLOBAL_SCOPE_VALUE', function () {
+            it('should have correct value', function () {
+                Scope.GLOBAL_SCOPE_VALUE.should.eql('!GLOBAL');
+            });
+
+            it('should not be modified', function () {
+                should(function () {
+                    Scope.GLOBAL_SCOPE_VALUE = 'new value';
+                }).throw();
+            });
+        });
+
+        describe('TYPES', function () {
+            it('should contain all types', function () {
+                Scope.TYPES.length.should.eql(4);
+                Scope.TYPES.indexOf('Function').should.not.eql(-1);
+                Scope.TYPES.indexOf('AnonymousFunction').should.not.eql(-1);
+                Scope.TYPES.indexOf('Program').should.not.eql(-1);
+                Scope.TYPES.indexOf('Global').should.not.eql(-1);
+            });
+        });
+    });
+
+    describe('Methods', function () {
+        describe('hasVarWithName', function () {
+            var scope,
+                variable;
+            beforeEach(function () {
+                scope = new Scope('Function', null, 'foo');
+                variable = varFactory.create('name', scope);
+            });
+
+            it('should return false as the argument is not a string', function () {
+                scope._testonly_._vars.set('name', variable);
+                scope.hasVarWithName({}).should.eql(false);
+                scope.hasVarWithName(0).should.eql(false);
             });
         });
     });
