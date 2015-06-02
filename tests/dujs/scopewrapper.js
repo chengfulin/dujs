@@ -14,7 +14,7 @@ var CFGWrapper = require('../../lib/dujs').CFGWrapper,
     FlowNode = require('../../lib/esgraph/flownode'),
     should = require('should');
 
-describe('CFGWrapper', function () {
+describe('ScopeWrapper', function () {
     'use strict';
     var code,
         scopeASTs,
@@ -482,7 +482,7 @@ describe('CFGWrapper', function () {
                 (function () {
                     CFGWrapper.validate({}, Scope.PROGRAM_SCOPE, null);
                     CFGWrapper.validate([1,2,3], Scope.PROGRAM_SCOPE, null);
-                }).should.throw('Invalid CFGWrapper value (CFG)');
+                }).should.throw('Invalid ScopeWrapper value (CFG)');
 
                 (function () {
                     CFGWrapper.validate({}, Scope.PROGRAM_SCOPE, null, 'Error occurred');
@@ -493,13 +493,13 @@ describe('CFGWrapper', function () {
             it('should throw an error when parent invalid', function () {
                 (function () {
                     CFGWrapper.validate(scopeCFGs[0], Scope.PROGRAM_SCOPE, {});
-                }).should.throw('Invalid CFGWrapper value (parent scope)');
+                }).should.throw('Invalid ScopeWrapper value (parent scope)');
             });
 
             it('should throw an error when scope invalid', function () {
                 (function () {
                     CFGWrapper.validate(scopeCFGs[0], null, programCFGWrapper);
-                }).should.throw('Invalid CFGWrapper value (scope)');
+                }).should.throw('Invalid ScopeWrapper value (scope)');
             });
         });
 
@@ -512,13 +512,13 @@ describe('CFGWrapper', function () {
                 }).should.not.throw();
             });
 
-            it('should throw an error when the parameter is not a CFGWrapper', function () {
+            it('should throw an error when the parameter is not a ScopeWrapper', function () {
                 (function () {
                     CFGWrapper.validateType({});
-                }).should.throw('Not a CFGWrapper');
+                }).should.throw('Not a ScopeWrapper');
                 (function () {
                     CFGWrapper.validateType();
-                }).should.throw('Not a CFGWrapper');
+                }).should.throw('Not a ScopeWrapper');
                 (function () {
                     CFGWrapper.validateType({}, 'Error occurred');
                 }).should.throw('Error occurred');
