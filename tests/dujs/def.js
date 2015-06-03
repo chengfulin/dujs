@@ -4,7 +4,7 @@
 var Def = require('../../lib/dujs').Def,
     Range = require('../../lib/dujs').Range,
     Scope = require('../../lib/dujs').Scope,
-    FlowNode = require('../../lib/esgraph').FlowNode,
+    flownodeFactory = require('../../lib/esgraph').factoryFlowNode,
     should = require('should');
 
 describe('Def', function () {
@@ -16,6 +16,7 @@ describe('Def', function () {
             Def.LITERAL_TYPE.should.eql('literal');
             Def.UNDEFINED_TYPE.should.eql('undefined');
             Def.HTML_DOM_TYPE.should.eql('htmlDOM');
+            Def.LOCAL_STORAGE_TYPE.should.eql('localStorage');
 
             /// cannot modified
             (function () {
@@ -28,10 +29,13 @@ describe('Def', function () {
                 Def.LITERAL_TYPE = 'non-literal';
             }).should.throw();
             (function () {
-                Def.LITERAL_TYPE = 'not-undefined';
+                Def.UNDEFINED_TYPE = 'not-undefined';
             }).should.throw();
             (function () {
-                Def.LITERAL_TYPE = 'not-HTML-DOM';
+                Def.HTML_DOM_TYPE = 'not-HTML-DOM';
+            }).should.throw();
+            (function () {
+                Def.LOCAL_STORAGE_TYPE = 'not-local-storage';
             }).should.throw();
         });
     });
@@ -39,7 +43,7 @@ describe('Def', function () {
     describe('methods', function () {
         describe('fromValidNode', function () {
             it('should return true as the node is a FlowNode', function () {
-                var node = new FlowNode(FlowNode.NORMAL_NODE_TYPE);
+                var node = flownodeFactory.createNormalNode();
                 node.cfgId = 0;
                 Def.fromValidNode(node).should.eql(true);
             });
@@ -49,7 +53,7 @@ describe('Def', function () {
             });
 
             it('should return false as the node does not have cfgId', function () {
-                Def.fromValidNode(new FlowNode(FlowNode.NORMAL_NODE_TYPE)).should.eql(false);
+                Def.fromValidNode(flownodeFactory.createNormalNode()).should.eql(false);
             });
         });
 
@@ -67,7 +71,7 @@ describe('Def', function () {
 
             it('should throw as the type is invalid', function () {
                 should(function () {
-                    var node = new FlowNode(FlowNode.NORMAL_NODE_TYPE);
+                    var node = flownodeFactory.createNormalNode();
                     node.cfgId = 0;
                     Def.validate(
                         node,
@@ -80,7 +84,7 @@ describe('Def', function () {
 
             it('should throw as the range is invalid', function () {
                 should(function () {
-                    var node = new FlowNode(FlowNode.NORMAL_NODE_TYPE);
+                    var node = flownodeFactory.createNormalNode();
                     node.cfgId = 0;
                     Def.validate(
                         node,
@@ -93,7 +97,7 @@ describe('Def', function () {
 
             it('should throw as the scope value is invalid', function () {
                 should(function () {
-                    var node = new FlowNode(FlowNode.NORMAL_NODE_TYPE);
+                    var node = flownodeFactory.createNormalNode();
                     node.cfgId = 0;
                     Def.validate(
                         node,
@@ -106,7 +110,7 @@ describe('Def', function () {
 
             it('should not throw as the value is valid', function () {
                 should(function () {
-                    var node = new FlowNode(FlowNode.NORMAL_NODE_TYPE);
+                    var node = flownodeFactory.createNormalNode();
                     node.cfgId = 0;
                     Def.validate(
                         node,
@@ -127,7 +131,7 @@ describe('Def', function () {
                     Def.validateType({});
                 }).should.throw('Not a Def');
                 (function () {
-                    var node = new FlowNode(FlowNode.NORMAL_NODE_TYPE);
+                    var node = flownodeFactory.createNormalNode();
                     node.cfgId = 0;
                     Def.validateType(new Def(node, 'object', [0,1], Scope.PROGRAM_SCOPE));
                 }).should.not.throw();
@@ -136,8 +140,8 @@ describe('Def', function () {
 
         describe('toString', function () {
             it('should convert to string correctly', function () {
-                var node1 = new FlowNode(FlowNode.NORMAL_NODE_TYPE),
-                    node2 = new FlowNode(FlowNode.NORMAL_NODE_TYPE);
+                var node1 = flownodeFactory.createNormalNode(),
+                    node2 = flownodeFactory.createNormalNode();
                 node1.cfgId = 0;
                 node2.cfgId = 1;
 
@@ -151,7 +155,7 @@ describe('Def', function () {
 
     describe('constructor', function () {
         it('should construct well', function () {
-            var node = new FlowNode(FlowNode.NORMAL_NODE_TYPE);
+            var node = flownodeFactory.createNormalNode();
             node.cfgId = 0;
             var valid = new Def(
                 node,
@@ -165,6 +169,49 @@ describe('Def', function () {
             valid._testonly_._range._testonly_._start.should.eql(0);
             valid._testonly_._range._testonly_._end.should.eql(1);
             valid._testonly_._scope._testonly_._value.should.eql('fun');
+        });
+    });
+
+    describe('Properties', function () {
+        var node, def;
+        beforeEach(function () {
+            node = flownodeFactory.createNormalNode();
+            node.cfgId = 0;
+            def = new Def(node, Def.LITERAL_TYPE, [0,1], Scope.PROGRAM_SCOPE);
+        });
+
+        describe('fromCFGNode', function () {
+            it('should support to retrieve the value correctly', function () {
+                should.exist(def.fromCFGNode);
+                def.fromCFGNode._testonly_._cfgId.should.eql(0);
+                def.fromCFGNode._testonly_._type.should.eql('normal');
+                def._testonly_._fromCFGNode.should.eql(def.fromCFGNode);
+            });
+        });
+
+        describe('range', function () {
+            it('should support to retrieve the value correctly', function () {
+                should.exist(def.range);
+                def.range._testonly_._start.should.eql(0);
+                def.range._testonly_._end.should.eql(1);
+                def._testonly_._range.should.eql(def.range);
+            });
+        });
+
+        describe('scope', function () {
+            it('should support to retrieve the value correctly', function () {
+                should.exist(def.scope);
+                def.scope._testonly_._type.should.eql('Program');
+                def._testonly_._scope.should.eql(def.scope);
+            });
+        });
+
+        describe('type', function () {
+            it('should support to retrieve the value correctly', function () {
+                should.exist(def.type);
+                def.type.should.eql('literal');
+                def._testonly_._type.should.eql(def.type);
+            });
         });
     });
 });
