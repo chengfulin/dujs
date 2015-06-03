@@ -6,7 +6,7 @@ var ScopeWrapper = require('../../lib/dujs').ScopeWrapper,
     Def = require('../../lib/dujs').Def,
     Scope = require('../../lib/dujs').Scope,
     //Range = require('../../lib/dujs').Range,
-    //CfgExt = require('../../lib/dujs').CFGExt,
+    CfgExt = require('../../lib/dujs').CFGExt,
     //Map = require('core-js/es6/map'),
     Set = require('../../lib/analyses').Set,
     vardefFactory = require('../../lib/dujs').factoryVarDef,
@@ -366,6 +366,147 @@ describe('ScopeWrapper', function () {
                 wrapper._testonly_._initialVars.size.should.eql(2);
                 wrapper._testonly_._initialVars.get('var1').should.eql(var1);
                 wrapper._testonly_._initialVars.get('var2').should.eql(var2);
+            });
+        });
+
+        describe('setVars', function () {
+            it('should support to function names', function () {
+                var cfg = CfgExt.getCFG(CfgExt.parseAST(
+                        'function foo() { expr;}' +
+                        'function fun(a, b) { expr;}'
+                    )),
+                    wrapper = new ScopeWrapper(cfg, Scope.PROGRAM_SCOPE);
+                wrapper.setVars();
+                wrapper._testonly_._vars.size.should.eql(2);
+                wrapper._testonly_._vars.has('foo').should.eql(true);
+                wrapper._testonly_._vars.has('fun').should.eql(true);
+
+                wrapper._testonly_._vars.get('foo')._testonly_._range._testonly_._start.should.eql(0);
+                wrapper._testonly_._vars.get('fun')._testonly_._range._testonly_._start.should.eql(23);
+            });
+
+            it('should support to variable declaration', function () {
+                var cfg = CfgExt.getCFG(CfgExt.parseAST(
+                        'var a;' +
+                        'var b = 0, c = {};'
+                    )),
+                    wrapper = new ScopeWrapper(cfg, Scope.PROGRAM_SCOPE);
+                wrapper.setVars();
+                wrapper._testonly_._vars.size.should.eql(3);
+                wrapper._testonly_._vars.has('a').should.eql(true);
+                wrapper._testonly_._vars.has('b').should.eql(true);
+                wrapper._testonly_._vars.has('c').should.eql(true);
+
+                wrapper._testonly_._vars.get('a')._testonly_._range._testonly_._start.should.eql(4);
+                wrapper._testonly_._vars.get('b')._testonly_._range._testonly_._start.should.eql(10);
+                wrapper._testonly_._vars.get('c')._testonly_._range._testonly_._start.should.eql(17);
+            });
+        });
+
+        describe('setParams', function () {
+            var node1, node2, cfg, wrapper, param1, param2;
+            beforeEach(function () {
+                node1 = factoryFlowNode.createEntryNode();
+                node1.cfgId = 0;
+                node2 = factoryFlowNode.createExitNode();
+                node2.cfgId = 1;
+                cfg = [node1, node2, [node1, node2]];
+                wrapper = new ScopeWrapper(cfg, Scope.PROGRAM_SCOPE);
+                param1 = varFactory.createGlobalVar('param1');
+                param2 = varFactory.createGlobalVar('param2');
+                varFactory.resetGlobalsCounter();
+            });
+
+            it('should set parameters with array of Vars well', function () {
+                var vars = [param1, param2];
+                wrapper.setParams(vars);
+                wrapper._testonly_._vars.size.should.eql(2);
+                wrapper._testonly_._vars.get('param1').should.eql(param1);
+                wrapper._testonly_._vars.get('param2').should.eql(param2);
+                wrapper._testonly_._params.size.should.eql(2);
+                wrapper._testonly_._params.get('param1').should.eql(param1);
+                wrapper._testonly_._params.get('param2').should.eql(param2);
+
+                wrapper._testonly_._paramNames.length.should.eql(2);
+                wrapper._testonly_._paramNames.should.containDeepOrdered([
+                    'param1',
+                    'param2'
+                ]);
+            });
+
+            it('should set initial Vars with set of Vars well', function () {
+                var vars = new Set([param1, param2]);
+                wrapper.setParams(vars);
+                wrapper._testonly_._vars.size.should.eql(2);
+                wrapper._testonly_._vars.get('param1').should.eql(param1);
+                wrapper._testonly_._vars.get('param2').should.eql(param2);
+                wrapper._testonly_._params.size.should.eql(2);
+                wrapper._testonly_._params.get('param1').should.eql(param1);
+                wrapper._testonly_._params.get('param2').should.eql(param2);
+
+                wrapper._testonly_._paramNames.length.should.eql(2);
+                wrapper._testonly_._paramNames.should.containDeepOrdered([
+                    'param1',
+                    'param2'
+                ]);
+            });
+
+            it('should support to set initial Vars with VarDefs', function () {
+                var def1 = defFactory.createLiteralDef(node1, param1._testonly_._range, param1._testonly_._scope),
+                    def2 = defFactory.createLiteralDef(node2, param2._testonly_._range, param2._testonly_._scope),
+                    vardef1 = vardefFactory.create(param1, def1),
+                    vardef2 = vardefFactory.create(param2, def2),
+                    params = new Set([vardef1, vardef2]);
+
+                wrapper.setParams(params);
+                wrapper._testonly_._vars.size.should.eql(2);
+                wrapper._testonly_._vars.get('param1').should.eql(param1);
+                wrapper._testonly_._vars.get('param2').should.eql(param2);
+                wrapper._testonly_._params.size.should.eql(2);
+                wrapper._testonly_._params.get('param1').should.eql(param1);
+                wrapper._testonly_._params.get('param2').should.eql(param2);
+
+                wrapper._testonly_._paramNames.length.should.eql(2);
+                wrapper._testonly_._paramNames.should.containDeepOrdered([
+                    'param1',
+                    'param2'
+                ]);
+            });
+        });
+
+        describe('getParamNameWithIndex', function () {
+            var node1, node2, wrapper;
+            beforeEach(function () {
+                node1 = factoryFlowNode.createEntryNode();
+                node2 = factoryFlowNode.createExitNode();
+                wrapper = new ScopeWrapper([node1, node2, [node1, node2]], Scope.PROGRAM_SCOPE);
+            });
+
+            it('should return empty as the index is invalid', function () {
+                should.not.exist(wrapper.getParamNameWithIndex(0));
+                wrapper._testonly_._paramNames.push('param1');
+                should.not.exist(wrapper.getParamNameWithIndex(1));
+            });
+
+            it('should get the correct parameter name with index', function () {
+                wrapper._testonly_._paramNames.push('param1');
+                wrapper._testonly_._paramNames.push('param2');
+                wrapper.getParamNameWithIndex(0).should.eql('param1');
+                wrapper.getParamNameWithIndex(1).should.eql('param2');
+            });
+        });
+
+        describe('toString', function () {
+            it('should represent as string correctly', function () {
+                var node1 = factoryFlowNode.createNormalNode(),
+                    node2 = factoryFlowNode.createExitNode();
+                node1.cfgId = 0;
+                node2.cfgId = 1;
+                var wrapper = new ScopeWrapper([node1, node2, [node1, node2]], Scope.PROGRAM_SCOPE),
+                    anotherWrapper = new ScopeWrapper([node1, node2, [node1, node2]], new Scope('foo'));
+
+                wrapper.toString().should.eql('Program_Entry@n0');
+                anotherWrapper.toString().should.eql('Function["foo"]_Entry@n0');
             });
         });
     });
