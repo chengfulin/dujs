@@ -2,78 +2,95 @@
  * Created by chengfulin on 2015/4/16.
  */
 var DUPair = require('../../lib/dujs').DUPair,
-    Pair = require('../../lib/dujs').Pair,
+    factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
     should = require('should');
 
 describe('DUPair', function () {
     'use strict';
-    describe('constructor', function () {
-        it('should be constructed with two numbers well', function () {
-            (function () {
-                var pair = new DUPair(1,2);
-            }).should.not.throw();
-            var pair = new DUPair(1,2);
-            pair.def.should.eql(1);
-            pair.use.should.eql(2);
+    describe('Static Methods', function () {
+        describe('isValidDUPair', function () {
+            it('should return false as both def and use are not FlowNodes', function () {
+                DUPair.isValidDUPair(null, null).should.eql(false);
+                DUPair.isValidDUPair({}, {}).should.eql(false);
+            });
+
+            it('should return false as def or use is not a FlowNode', function () {
+                DUPair.isValidDUPair(factoryFlowNode.createNormalNode(), null).should.eql(false);
+                DUPair.isValidDUPair(null, factoryFlowNode.createNormalNode()).should.eql(false);
+            });
+
+            it('should return true as both def and use are FlowNodes', function () {
+                DUPair.isValidDUPair(factoryFlowNode.createNormalNode(), factoryFlowNode.createNormalNode()).should.eql(true);
+                DUPair.isValidDUPair(factoryFlowNode.createEntryNode(), factoryFlowNode.createExitNode()).should.eql(true);
+            });
         });
 
-        it('should be constructed with two string well', function () {
-            (function () {
-                var pair = new DUPair('a', 'b');
-            }).should.not.throw();
-            var pair = new DUPair('a', 'b');
-            pair.def.should.eql('a');
-            pair.use.should.eql('b');
-        });
+        describe('validate', function () {
+            it('should throw as def or use is invalid', function () {
+                should(function () {
+                    DUPair.validate(null, {});
+                }).throw('Invalid DUPair');
 
-        it('should be constructed with number and a Pair well', function () {
-            (function () {
-                var pair = new DUPair(0, new Pair(1,2));
-            }).should.not.throw();
-            var pair = new DUPair(0, new Pair(1,2));
-            pair.def.should.eql(0);
-            pair.use.first.should.eql(1);
-            pair.use.second.should.eql(2);
-        });
-    });
+                should(function () {
+                    DUPair.validate(factoryFlowNode.createNormalNode(), null);
+                }).throw('Invalid DUPair');
+            });
 
-    describe('validate', function () {
-        it('should validate the value correctly', function () {
-            (function () {
-                DUPair.validate(1, 'a');
-            }).should.throw('Invalid DUPair');
+            it('should support custom error message', function () {
+                should(function () {
+                    DUPair.validate(null, null, 'Custom Error');
+                }).throw('Custom Error');
+            });
 
-            (function () {
-                DUPair.validate('a', 1);
-            }).should.throw('Invalid DUPair');
-
-            (function () {
-                DUPair.validate(new Pair(0,1), new Pair(1,2));
-            }).should.throw('Invalid DUPair');
-
-            (function () {
-                DUPair.validate({}, new Pair(1,2));
-            }).should.throw('Invalid DUPair');
-
-            (function () {
-                DUPair.validate(0, {});
-            }).should.throw('Invalid DUPair');
+            it('should not throw as def and use are valid', function () {
+                should(function () {
+                    DUPair.validate(factoryFlowNode.createCallNode(), factoryFlowNode.createCallReturnNode());
+                }).not.throw();
+            });
         });
     });
 
-    describe('toString', function () {
-        it('should convert c-use to string correctly', function () {
-            var cUseNumber = new DUPair(0,1),
-                cUseString = new DUPair('a','b');
-            cUseNumber.toString().should.eql('(0,1)');
-            cUseString.toString().should.eql('(a,b)');
+    describe('Properties', function () {
+        var pair;
+        beforeEach(function () {
+            pair = new DUPair(factoryFlowNode.createNormalNode(), factoryFlowNode.createEntryNode());
         });
 
-        it('should convert p-use to string correctly', function () {
-            var pUseNumber = new DUPair(0,new Pair(1,2)),
-                pUseString = new DUPair('a', new Pair('b','c'));
-            pUseNumber.toString().should.eql('(0,(1,2))');
-            pUseString.toString().should.eql('(a,(b,c))');
+        describe('def', function () {
+            it('should support to retrieve value', function () {
+                should.exist(pair.def);
+                pair._testonly_._def.should.eql(pair.def);
+            });
+
+            it('should not be modified', function () {
+                should(function () {
+                    pair.def = null;
+                }).throw();
+            });
+        });
+
+        describe('use', function () {
+            it('should support to retrieve value', function () {
+                should.exist(pair.use);
+                pair._testonly_._use.should.eql(pair.use);
+            });
+
+            it('should not be modified', function () {
+                should(function () {
+                    pair.use = null;
+                }).throw();
+            });
+        });
+    });
+
+    describe('Constructor', function () {
+        it('should assign value correctly', function () {
+            var defNode = factoryFlowNode.createNormalNode(),
+                useNode = factoryFlowNode.createExitNode(),
+                pair = new DUPair(defNode, useNode);
+
+            pair._testonly_._def.should.eql(defNode);
+            pair._testonly_._use.should.eql(useNode);
         });
     });
 });
