@@ -38,7 +38,7 @@ describe('Range', function () {
                     Range.validate(-1, 0);
                 }).should.throw('Invalid Range value');
                 (function () {
-                    Range.validate(0, 0);
+                    Range.validate(1, 1);
                 }).should.throw('Invalid Range value');
                 (function () {
                     Range.validate(1, 0);
@@ -48,6 +48,10 @@ describe('Range', function () {
                 }).should.throw('Invalid Range value');
                 (function () {
                     Range.validate(0, 1);
+                }).should.not.throw();
+
+                (function () {
+                    Range.validate(0, 0);
                 }).should.not.throw();
             });
 
@@ -59,7 +63,7 @@ describe('Range', function () {
                     Range.validate([-1, 0]);
                 }).should.throw('Invalid Range value');
                 (function () {
-                    Range.validate([0, 0]);
+                    Range.validate([1, 1]);
                 }).should.throw('Invalid Range value');
                 (function () {
                     Range.validate([1, 0]);
@@ -69,6 +73,9 @@ describe('Range', function () {
                 }).should.throw('Invalid Range value');
                 (function () {
                     Range.validate([0, 1]);
+                }).should.not.throw();
+                (function () {
+                    Range.validate([0, 0]);
                 }).should.not.throw();
             });
 
@@ -114,6 +121,31 @@ describe('Range', function () {
                     another = new Range(1, 10);
                 aRange.toString().should.eql('[0,1]');
                 another.toString().should.eql('[1,10]');
+            });
+        });
+
+        describe('equals', function () {
+            it('should return true as the values of two Ranges are the same', function () {
+                var range1 = new Range(0,1),
+                    range2 = new Range(0,1);
+                Range.equals(range1, range2).should.eql(true);
+            });
+
+            it('should return true as comparing to itself', function () {
+                var range = new Range(1,2);
+                Range.equals(range, range).should.eql(true);
+            });
+
+            it('should return false as two different range values', function () {
+                var range1 = new Range(0, 1),
+                    range2 = new Range(1, 2);
+                Range.equals(range1, range2).should.eql(false);
+            });
+
+            it('should return false as comparing non-Range object', function () {
+                var range = new Range(0,1),
+                    nonRange = {};
+                Range.equals(range, nonRange).should.eql(false);
             });
         });
     });
