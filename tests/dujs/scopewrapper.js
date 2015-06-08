@@ -5,7 +5,7 @@ var ScopeWrapper = require('../../lib/dujs').ScopeWrapper,
     //Var = require('../../lib/dujs').Var,
     Def = require('../../lib/dujs').Def,
     Scope = require('../../lib/dujs').Scope,
-    //Range = require('../../lib/dujs').Range,
+    Range = require('../../lib/dujs').Range,
     CfgExt = require('../../lib/dujs').CFGExt,
     //Map = require('core-js/es6/map'),
     Set = require('../../lib/analyses').Set,
@@ -151,6 +151,22 @@ describe('ScopeWrapper', function () {
                 should(function () {
                     wrapper.cfg = [];
                 }).throw();
+            });
+        });
+
+        describe('range', function () {
+            it('should retrieve the value correctly', function () {
+                should.not.exist(wrapper.range);
+                wrapper._testonly_._range = new Range(1,2);
+                should.exist(wrapper.range);
+                wrapper.range._testonly_._start.should.eql(1);
+                wrapper.range._testonly_._end.should.eql(2);
+            });
+
+            it('should support to modify value', function () {
+                wrapper.range = new Range(2,3);
+                wrapper._testonly_._range._testonly_._start.should.eql(2);
+                wrapper._testonly_._range._testonly_._end.should.eql(3);
             });
         });
 
