@@ -10,7 +10,7 @@ var FunctionScopeTree = require('../../lib/dujs').FunctionScopeTree,
     Scope = require('../../lib/dujs').Scope,
     should = require('should');
 
-describe('FunctionScopeTree', function () {
+describe('ScopeTree', function () {
     'use strict';
     beforeEach(function () {
 
@@ -109,7 +109,7 @@ describe('FunctionScopeTree', function () {
             it('should throw when a value is invalid', function () {
                 (function () {
                     FunctionScopeTree.validate({});
-                }).should.throw('Invalid start point for a FunctionScopeTree');
+                }).should.throw('Invalid start point for a ScopeTree');
             });
 
             it('should throw when the ast is not the valid entry points', function () {
@@ -118,7 +118,7 @@ describe('FunctionScopeTree', function () {
                 ));
                 (function () {
                     FunctionScopeTree.validate(cfg[2][1].astNode);
-                }).should.throw('Invalid start point for a FunctionScopeTree');
+                }).should.throw('Invalid start point for a ScopeTree');
             });
 
             it('should support custom error message', function () {
