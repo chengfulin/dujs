@@ -7,6 +7,32 @@ var CFGExt = require('../../lib/dujs').CFGExt,
 
 describe('CFGExt', function () {
     'use strict';
+    beforeEach(function () {
+        CFGExt._testonly_._lastCFGId = 0;
+    });
+
+    describe('Properties', function () {
+        describe('lastCFGId', function () {
+            it('should support to retrieve value correctly', function () {
+                CFGExt.lastCFGId.should.eql(0);
+                CFGExt._testonly_._lastCFGId = 1;
+                CFGExt.lastCFGId.should.eql(1);
+            });
+
+            it('should support to modify value', function () {
+                CFGExt.lastCFGId = 2;
+                CFGExt._testonly_._lastCFGId.should.eql(2);
+            });
+
+            it('should ignore non-numbers and numbers less than 0', function () {
+                CFGExt.lastCFGId = '1';
+                CFGExt._testonly_._lastCFGId.should.eql(0);
+                CFGExt.lastCFGId = -1;
+                CFGExt._testonly_._lastCFGId.should.eql(0);
+            });
+        });
+    });
+
     describe('methods', function () {
         describe('resetCounter', function () {
             it('should reset the counter correctly', function () {
@@ -15,10 +41,6 @@ describe('CFGExt', function () {
                 CFGExt.resetCounter();
                 CFGExt._testonly_._lastCFGId.should.eql(0);
             });
-        });
-
-        beforeEach(function () {
-            CFGExt.resetCounter();
         });
 
         describe('parseAST', function ()  {
