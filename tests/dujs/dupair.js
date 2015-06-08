@@ -59,7 +59,7 @@ describe('DUPair', function () {
         describe('def', function () {
             it('should support to retrieve value', function () {
                 should.exist(pair.def);
-                pair._testonly_._def.should.eql(pair.def);
+                pair._testonly_._first.should.eql(pair.def);
             });
 
             it('should not be modified', function () {
@@ -72,7 +72,7 @@ describe('DUPair', function () {
         describe('use', function () {
             it('should support to retrieve value', function () {
                 should.exist(pair.use);
-                pair._testonly_._use.should.eql(pair.use);
+                pair._testonly_._second.should.eql(pair.use);
             });
 
             it('should not be modified', function () {
@@ -89,8 +89,8 @@ describe('DUPair', function () {
                 useNode = factoryFlowNode.createExitNode(),
                 pair = new DUPair(defNode, useNode);
 
-            pair._testonly_._def.should.eql(defNode);
-            pair._testonly_._use.should.eql(useNode);
+            pair._testonly_._first.should.eql(defNode);
+            pair._testonly_._second.should.eql(useNode);
         });
     });
 });
