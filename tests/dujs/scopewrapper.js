@@ -14,6 +14,7 @@ var ScopeWrapper = require('../../lib/dujs').ScopeWrapper,
     varFactory = require('../../lib/dujs').factoryVar,
     //FlowNode = require('../../lib/esgraph').FlowNode,
     factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
+    factoryRange = require('../../lib/dujs').factoryRange,
     should = require('should');
 
 describe('ScopeWrapper', function () {
@@ -124,7 +125,7 @@ describe('ScopeWrapper', function () {
             wrapper._testonly_._params.size.should.eql(0);
             wrapper._testonly_._paramNames.length.should.eql(0);
             wrapper._testonly_._initialVars.size.should.eql(0);
-            wrapper._testonly_._children.length.should.eql(0);
+            wrapper._testonly_._children.size.should.eql(0);
             should.not.exist(wrapper._testonly_._def);
         });
     });
@@ -269,9 +270,10 @@ describe('ScopeWrapper', function () {
                 var node1 = factoryFlowNode.createNormalNode(),
                     node2 = factoryFlowNode.createNormalNode(),
                     childWrapper = new ScopeWrapper([node1, node2, [node1, node2]], Scope.PROGRAM_SCOPE);
-                wrapper._testonly_._children.push(childWrapper);
-                wrapper.children.length.should.eql(1);
-                wrapper.children[0].should.eql(childWrapper);
+                wrapper._testonly_._children.set(factoryRange.create(0,1).toString(), childWrapper);
+                wrapper.children.size.should.eql(1);
+                should.exist(wrapper.children.get('[0,1]'));
+                wrapper.children.get('[0,1]').should.eql(childWrapper);
             });
         });
     });
@@ -312,13 +314,13 @@ describe('ScopeWrapper', function () {
                 parentWrapper = new ScopeWrapper([node3, node4, [node3, node4]], Scope.GLOBAL_SCOPE);
 
                 var1 = varFactory.create('var1', [1,2], Scope.PROGRAM_SCOPE);
-                var2 = varFactory.create('var2', [0,1], Scope.GLOBAL_SCOPE);
+                var2 = varFactory.create('var2', factoryRange.createGlobalRange(), Scope.GLOBAL_SCOPE);
 
                 childWrapper._testonly_._vars.set('var1', var1);
                 parentWrapper._testonly_._vars.set('var2', var2);
 
                 childWrapper._testonly_._parent = parentWrapper;
-                parentWrapper._testonly_._children.push(childWrapper);
+                parentWrapper._testonly_._children.set(factoryRange.create(0,1).toString(), childWrapper);
             });
 
             it('should support to find the var in the current scope', function () {
@@ -521,6 +523,69 @@ describe('ScopeWrapper', function () {
 
                 wrapper.toString().should.eql('Program_Entry@n0');
                 anotherWrapper.toString().should.eql('Function["foo"]_Entry@n0');
+            });
+        });
+
+        describe('addChild', function () {
+            var node1, node2, wrapper;
+            beforeEach(function () {
+                node1 = factoryFlowNode.createEntryNode();
+                node2 = factoryFlowNode.createExitNode();
+                wrapper = new ScopeWrapper([node1, node2, [node1, node2]], Scope.PROGRAM_SCOPE);
+            });
+
+            it('should ignore as the input is not a ScopeWrapper', function () {
+                wrapper.addChild({});
+                wrapper._testonly_._children.size.should.eql(0);
+            });
+
+            it('should ignore as the child is existed', function () {
+                var childWrapper = new ScopeWrapper([node2, node1, [node2, node1]], new Scope('foo'));
+                childWrapper._testonly_._range = factoryRange.create(0,1);
+                wrapper._testonly_._children.set('[0,1]', childWrapper);
+                wrapper.addChild(childWrapper);
+                wrapper._testonly_._children.size.should.eql(1);
+            });
+
+            it('should ignore as the input ScopeWrapper does not have range property', function () {
+                var childWrapper = new ScopeWrapper([node2, node1, [node2, node1]], new Scope('foo'));
+                wrapper.addChild(childWrapper);
+                wrapper._testonly_._children.size.should.eql(0);
+            });
+
+            it('should add a ScopeWrapper with range as a child', function () {
+                var childWrapper = new ScopeWrapper([node2, node1, [node2, node1]], new Scope('foo'));
+                childWrapper._testonly_._range = factoryRange.create(0,1);
+                wrapper.addChild(childWrapper);
+                wrapper._testonly_._children.size.should.eql(1);
+                should.exist(wrapper._testonly_._children.get('[0,1]'));
+                wrapper._testonly_._children.get('[0,1]').should.eql(childWrapper);
+                /// check relation
+                childWrapper.parent.should.eql(wrapper);
+            });
+        });
+
+        describe('getChildByRange', function () {
+            var node1, node2, parentWrapper, childWrapper;
+            beforeEach(function () {
+                node1 = factoryFlowNode.createNormalNode();
+                node2 = factoryFlowNode.createNormalNode();
+                parentWrapper = new ScopeWrapper([node1, node2, [node1, node2]], Scope.PROGRAM_SCOPE);
+                childWrapper = new ScopeWrapper([node2, node1, [node2, node1]], new Scope('foo'));
+                childWrapper._testonly_._range = factoryRange.create(0,1);
+                parentWrapper._testonly_._children.set('[0,1]', childWrapper);
+                childWrapper._testonly_._parent = parentWrapper;
+            });
+
+            it('should get child by valid range value correctly', function () {
+                parentWrapper.getChildByRange([0,1]).should.eql(childWrapper);
+                parentWrapper.getChildByRange(factoryRange.create(0,1)).should.eql(childWrapper);
+            });
+
+            it('should get nothing as the range value is invalid', function () {
+                should.not.exist(parentWrapper.getChildByRange([0,2]));
+                should.not.exist(parentWrapper.getChildByRange({}));
+                should.not.exist(parentWrapper.getChildByRange());
             });
         });
     });
