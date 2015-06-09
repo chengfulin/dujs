@@ -124,7 +124,6 @@ describe('ScopeWrapper', function () {
             wrapper._testonly_._vars.size.should.eql(0);
             wrapper._testonly_._params.size.should.eql(0);
             wrapper._testonly_._paramNames.length.should.eql(0);
-            wrapper._testonly_._initialVars.size.should.eql(0);
             wrapper._testonly_._children.size.should.eql(0);
             should.not.exist(wrapper._testonly_._def);
         });
@@ -335,54 +334,54 @@ describe('ScopeWrapper', function () {
         });
 
         describe('setInitVars', function () {
-            var node1, node2, cfg, wrapper, var1, var2;
+            var node1, node2, wrapper, vardef1, vardef2;
             beforeEach(function () {
+                var programScope = Scope.PROGRAM_SCOPE;
                 node1 = factoryFlowNode.createEntryNode();
-                node1.cfgId = 0;
                 node2 = factoryFlowNode.createExitNode();
-                node2.cfgId = 1;
-                cfg = [node1, node2, [node1, node2]];
-                wrapper = new ScopeWrapper(cfg, Scope.PROGRAM_SCOPE);
-                var1 = varFactory.createGlobalVar('var1');
-                var2 = varFactory.createGlobalVar('var2');
+                node1._testonly_._cfgId = 0;
+                node2._testonly_._cfgId = 1;
+                wrapper = new ScopeWrapper([node1, node2, [node1, node2]], programScope);
+
+                var variable1 = varFactory.create('var1', [0,1], programScope, null),
+                    def1 = defFactory.createLiteralDef(node1, [1,2], programScope),
+                    variable2 = varFactory.create('var2', [2,3], programScope, null),
+                    def2 = defFactory.createLiteralDef(node1, [3,4], programScope);
+                vardef1 = vardefFactory.create(variable1, def1);
+                vardef2 = vardefFactory.create(variable2, def2);
             });
 
-            it('should set initial Vars with array of Vars well', function () {
-                var vars = [var1, var2];
-                wrapper.setInitVars(vars);
+            it('should support non-empty array of VarDefs', function () {
+                var varDefs = [vardef1, vardef2];
+                wrapper.setInitVarDefs(varDefs);
                 wrapper._testonly_._vars.size.should.eql(2);
-                wrapper._testonly_._vars.get('var1').should.eql(var1);
-                wrapper._testonly_._vars.get('var2').should.eql(var2);
-                wrapper._testonly_._initialVars.size.should.eql(2);
-                wrapper._testonly_._initialVars.get('var1').should.eql(var1);
-                wrapper._testonly_._initialVars.get('var2').should.eql(var2);
+                wrapper._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef1).should.eql(true);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef2).should.eql(true);
             });
 
-            it('should set initial Vars with set of Vars well', function () {
-                var vars = new Set([var1, var2]);
-                wrapper.setInitVars(vars);
+            it('should support non-empty set of VarDefs', function () {
+                var varDefs = new Set([vardef1, vardef2]);
+                wrapper.setInitVarDefs(varDefs);
                 wrapper._testonly_._vars.size.should.eql(2);
-                wrapper._testonly_._vars.get('var1').should.eql(var1);
-                wrapper._testonly_._vars.get('var2').should.eql(var2);
-                wrapper._testonly_._initialVars.size.should.eql(2);
-                wrapper._testonly_._initialVars.get('var1').should.eql(var1);
-                wrapper._testonly_._initialVars.get('var2').should.eql(var2);
+                wrapper._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef1).should.eql(true);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef2).should.eql(true);
             });
 
-            it('should support to set initial Vars with VarDefs', function () {
-                var def1 = defFactory.createLiteralDef(node1, var1._testonly_._range, var1._testonly_._scope),
-                    def2 = defFactory.createLiteralDef(node2, var2._testonly_._range, var2._testonly_._scope),
-                    vardef1 = vardefFactory.create(var1, def1),
-                    vardef2 = vardefFactory.create(var2, def2),
-                    initials = new Set([vardef1, vardef2]);
+            it('should ignore as empty set of VarDefs', function () {
+                var varDefs = new Set();
+                wrapper.setInitVarDefs(varDefs);
+                wrapper._testonly_._vars.size.should.eql(0);
+                should.not.exist(wrapper._testonly_._cfg[0]._testonly_._generate);
+            });
 
-                wrapper.setInitVars(initials);
-                wrapper._testonly_._vars.size.should.eql(2);
-                wrapper._testonly_._vars.get('var1').should.eql(var1);
-                wrapper._testonly_._vars.get('var2').should.eql(var2);
-                wrapper._testonly_._initialVars.size.should.eql(2);
-                wrapper._testonly_._initialVars.get('var1').should.eql(var1);
-                wrapper._testonly_._initialVars.get('var2').should.eql(var2);
+            it('should add only valid VarDefs', function () {
+                var varDefs = new Set([vardef1, {}]);
+                wrapper.setInitVarDefs(varDefs);
+                wrapper._testonly_._vars.size.should.eql(1);
+                wrapper._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef1).should.eql(true);
             });
         });
 
