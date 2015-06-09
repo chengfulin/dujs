@@ -10,6 +10,7 @@ var ScopeTree = require('../../lib/dujs').ScopeTree,
     Scope = require('../../lib/dujs').Scope,
     scopeWrapperFactory = require('../../lib/dujs').factoryScopeWrapper,
     flowNodeFactory = require('../../lib/esgraph').factoryFlowNode,
+    Map = require('core-js/es6/map'),
     should = require('should');
 
 describe('ScopeTree', function () {
@@ -18,25 +19,13 @@ describe('ScopeTree', function () {
         CFGExt.resetCounter();
     });
 
-    describe('Constructor', function () {
-        it('should have default values', function () {
-            var tree = new ScopeTree();
-            tree._testonly_._scopes.length.should.eql(0);
-            tree._testonly_._mapFromRangeToScope.size.should.eql(0);
-            tree._testonly_._mapFromDefToScope.size.should.eql(0);
-            tree._testonly_._mapFromScopeNameToScope.size.should.eql(0);
-            should.not.exist(tree._testonly_._globalScope);
-            should.not.exist(tree._testonly_._root);
-        });
-    });
-
-    describe('Methods', function () {
+    describe('Private Methods', function () {
         describe('addScope', function () {
             it('should add a ScopeWrapper into the tree', function () {
                 var node1 = flowNodeFactory.createEntryNode(),
                     node2 = flowNodeFactory.createExitNode();
-                node1.cfgId = 0;
-                node2.cfgId = 1;
+                node1.cfgId = 1;
+                node2.cfgId = 2;
                 var wrapper = scopeWrapperFactory.createFunctionScopeWrapper([node1, node2, [node1, node2]], 'foo'),
                     wrapperRange = rangeFactory.create(0,1),
                     wrapperDef = defFactory.createFunctionDef(node1, rangeFactory.create(0,1), Scope.PROGRAM_SCOPE),
@@ -44,19 +33,19 @@ describe('ScopeTree', function () {
                 wrapper.range = wrapperRange;
                 wrapper.def = wrapperDef;
 
-                tree.addScope(wrapper);
-                tree._testonly_._scopes.length.should.eql(1);
-                tree._testonly_._scopes[0].should.eql(wrapper);
+                ScopeTree._testonly_._addScope(tree, wrapper);
+                tree._testonly_._scopes.length.should.eql(2);
+                tree._testonly_._scopes[1].should.eql(wrapper);
 
-                tree._testonly_._mapFromRangeToScope.size.should.eql(1);
+                tree._testonly_._mapFromRangeToScope.size.should.eql(2);
                 should.exist(tree._testonly_._mapFromRangeToScope.get('[0,1]'));
                 tree._testonly_._mapFromRangeToScope.get('[0,1]').should.eql(wrapper);
 
-                tree._testonly_._mapFromDefToScope.size.should.eql(1);
+                tree._testonly_._mapFromDefToScope.size.should.eql(2);
                 should.exist(tree._testonly_._mapFromDefToScope.get(wrapperDef));
                 tree._testonly_._mapFromDefToScope.get(wrapperDef).should.eql(wrapper);
 
-                tree._testonly_._mapFromScopeNameToScope.size.should.eql(1);
+                tree._testonly_._mapFromScopeNameToScope.size.should.eql(2);
                 should.exist(tree._testonly_._mapFromScopeNameToScope.get('Function["foo"]'));
                 tree._testonly_._mapFromScopeNameToScope.get('Function["foo"]').should.eql(wrapper);
             });
@@ -64,7 +53,13 @@ describe('ScopeTree', function () {
 
         describe('setGlobalScope', function () {
             var tree = new ScopeTree();
-            var globalScope = tree.setGlobalScope();
+            CFGExt.resetCounter();
+            tree._testonly_._scopes = [];
+            tree._testonly_._mapFromRangeToScope = new Map();
+            tree._testonly_._mapFromDefToScope = new Map();
+            tree._testonly_._mapFromScopeToScope = new Map();
+
+            var globalScope = ScopeTree._testonly_._setGlobalScope(tree);
 
             globalScope._testonly_._range._testonly_._start.should.eql(0);
             globalScope._testonly_._range._testonly_._end.should.eql(0);
@@ -85,6 +80,19 @@ describe('ScopeTree', function () {
             tree._testonly_._mapFromRangeToScope.get('[0,0]').should.eql(globalScope);
             tree._testonly_._mapFromDefToScope.get(globalScope._testonly_._def).should.eql(globalScope);
             tree._testonly_._mapFromScopeNameToScope.get('Global').should.eql(globalScope);
+        });
+    });
+
+    describe('Constructor', function () {
+        it('should have default values', function () {
+            var tree = new ScopeTree();
+            tree._testonly_._scopes.length.should.eql(1);
+            tree._testonly_._mapFromRangeToScope.size.should.eql(1);
+            tree._testonly_._mapFromDefToScope.size.should.eql(1);
+            tree._testonly_._mapFromScopeNameToScope.size.should.eql(1);
+            should.exist(tree._testonly_._globalScope);
+            should.exist(tree._testonly_._root);
+            tree._testonly_._root.should.eql(tree._testonly_._globalScope);
         });
     });
 });
