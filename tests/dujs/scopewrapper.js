@@ -343,7 +343,6 @@ describe('ScopeWrapper', function () {
                 wrapper = new ScopeWrapper(cfg, Scope.PROGRAM_SCOPE);
                 var1 = varFactory.createGlobalVar('var1');
                 var2 = varFactory.createGlobalVar('var2');
-                varFactory.resetGlobalsCounter();
             });
 
             it('should set initial Vars with array of Vars well', function () {
@@ -430,7 +429,6 @@ describe('ScopeWrapper', function () {
                 wrapper = new ScopeWrapper(cfg, Scope.PROGRAM_SCOPE);
                 param1 = varFactory.createGlobalVar('param1');
                 param2 = varFactory.createGlobalVar('param2');
-                varFactory.resetGlobalsCounter();
             });
 
             it('should set parameters with array of Vars well', function () {
