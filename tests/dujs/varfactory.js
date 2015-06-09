@@ -8,10 +8,6 @@ var Range = require('../../lib/dujs').Range,
 
 describe('VarFactory', function () {
     'use strict';
-    beforeEach(function () {
-        varFactory.resetGlobalsCounter();
-    });
-
     describe('create', function () {
         it('should create normal Var well', function () {
             var normal = varFactory.create('normal', new Range(0,1), Scope.PROGRAM_SCOPE);
@@ -30,8 +26,8 @@ describe('VarFactory', function () {
         it('should create global Var well', function () {
             var global = varFactory.createGlobalVar('global'),
                 another = varFactory.createGlobalVar('another');
-            global.toString().should.eql('global@[0,1]_Global');
-            another.toString().should.eql('another@[1,2]_Global');
+            global.toString().should.eql('global@[0,0]_Global');
+            another.toString().should.eql('another@[0,0]_Global');
         });
     });
 });
