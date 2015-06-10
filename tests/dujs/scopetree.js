@@ -132,6 +132,23 @@ describe('ScopeTree', function () {
                 tree._testonly_._mapFromDefToScope.has(tree._testonly_._scopes[1]._testonly_._def).should.eql(true);
                 tree._testonly_._mapFromScopeNameToScope.has('AnonymousFunction[0]').should.eql(true);
             });
+
+            it('should support multilevel scopes', function () {
+                var ast = CFGExt.parseAST(
+                        'function foo() {' +
+                        'function fun() {' +
+                        'expr;}' +
+                        '}'
+                    ),
+                    tree = new ScopeTree();
+                tree.buildScopeTree(ast);
+
+                tree._testonly_._scopes.length.should.eql(3);
+                tree._testonly_._scopes[0]._testonly_._vars.has('foo').should.eql(true);
+                tree._testonly_._scopes[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
+                tree._testonly_._scopes[1]._testonly_._vars.has('fun').should.eql(true);
+                tree._testonly_._scopes[1]._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
+            });
         });
     });
 });
