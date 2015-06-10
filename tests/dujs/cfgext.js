@@ -86,18 +86,6 @@ describe('CFGExt', function () {
             });
         });
 
-        describe('getGlobalCFG', function () {
-            it('should create CFG for global scope correctly', function () {
-                var cfg = CFGExt.getGlobalCFG();
-                cfg.length.should.eql(3);
-                cfg[0].should.eql(cfg[1]);
-                cfg[0].should.eql(cfg[2][0]);
-                cfg[0]._testonly_._cfgId.should.eql(0);
-                cfg[0]._testonly_._line.should.eql(0);
-                cfg[0]._testonly_._col.should.eql(0);
-            });
-        });
-
         describe('findScopes', function () {
             it('should support single scope', function () {
                 var ast = CFGExt.parseAST(

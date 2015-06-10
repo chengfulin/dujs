@@ -125,7 +125,6 @@ describe('FlowNode', function () {
                 should(FlowNode.isValidNodeType('callReturn')).eql(true);
                 should(FlowNode.isValidNodeType('loopReturn')).eql(true);
                 should(FlowNode.isValidNodeType('branch')).eql(true);
-                should(FlowNode.isValidNodeType('global')).eql(true);
             });
 
             it('should return false as the type is invalid', function () {
