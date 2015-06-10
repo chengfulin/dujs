@@ -386,21 +386,6 @@ describe('ScopeWrapper', function () {
         });
 
         describe('setVars', function () {
-            it('should support to function names', function () {
-                var cfg = CfgExt.getCFG(CfgExt.parseAST(
-                        'function foo() { expr;}' +
-                        'function fun(a, b) { expr;}'
-                    )),
-                    wrapper = new ScopeWrapper(cfg, Scope.PROGRAM_SCOPE);
-                wrapper.setVars();
-                wrapper._testonly_._vars.size.should.eql(2);
-                wrapper._testonly_._vars.has('foo').should.eql(true);
-                wrapper._testonly_._vars.has('fun').should.eql(true);
-
-                wrapper._testonly_._vars.get('foo')._testonly_._range._testonly_._start.should.eql(0);
-                wrapper._testonly_._vars.get('fun')._testonly_._range._testonly_._start.should.eql(23);
-            });
-
             it('should support to variable declaration', function () {
                 var cfg = CfgExt.getCFG(CfgExt.parseAST(
                         'var a;' +
