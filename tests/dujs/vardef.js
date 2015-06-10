@@ -12,6 +12,10 @@ var VarDef = require('../../lib/dujs').VarDef,
 
 describe('VarDef', function () {
     'use strict';
+    beforeEach(function () {
+        factoryFlowNode.resetCounter();
+    });
+
     describe('Static Methods', function () {
         describe('validate', function () {
             it('should throw as Var or Def is invalid', function () {

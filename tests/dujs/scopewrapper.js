@@ -2,23 +2,24 @@
  * Created by chengfulin on 2015/4/20.
  */
 var ScopeWrapper = require('../../lib/dujs').ScopeWrapper,
-    //Var = require('../../lib/dujs').Var,
     Def = require('../../lib/dujs').Def,
     Scope = require('../../lib/dujs').Scope,
     Range = require('../../lib/dujs').Range,
     CfgExt = require('../../lib/dujs').CFGExt,
-    //Map = require('core-js/es6/map'),
     Set = require('../../lib/analyses').Set,
     vardefFactory = require('../../lib/dujs').factoryVarDef,
     defFactory = require('../../lib/dujs').factoryDef,
     varFactory = require('../../lib/dujs').factoryVar,
-    //FlowNode = require('../../lib/esgraph').FlowNode,
     factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
     factoryRange = require('../../lib/dujs').factoryRange,
     should = require('should');
 
 describe('ScopeWrapper', function () {
     'use strict';
+    beforeEach(function () {
+        factoryFlowNode.resetCounter();
+    });
+
     describe('Static Methods', function () {
         describe('isValidParent', function () {
             it('should return false as the input is not a ScopeWrapper or null', function () {

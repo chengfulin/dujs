@@ -9,6 +9,10 @@ var Def = require('../../lib/dujs').Def,
 
 describe('Def', function () {
     'use strict';
+    beforeEach(function () {
+        flownodeFactory.resetCounter();
+    });
+
     describe('static constants', function () {
         it('should have correct constants', function () {
             Def.OBJECT_TYPE.should.eql('object');
@@ -53,7 +57,9 @@ describe('Def', function () {
             });
 
             it('should return false as the node does not have cfgId', function () {
-                Def.fromValidNode(flownodeFactory.createNormalNode()).should.eql(false);
+                var node = flownodeFactory.createNormalNode();
+                node._testonly_._cfgId = null;
+                Def.fromValidNode(node).should.eql(false);
             });
         });
 

@@ -2,9 +2,6 @@
  * Created by ChengFuLin on 2015/6/10.
  */
 var factoryAnalyzedCFG = require('../../lib/dujs').factoryAnalyzedCFG,
-    factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
-    factoryScopeWrapper = require('../../lib/dujs').factoryScopeWrapper,
-    Scope = require('../../lib/dujs').Scope,
     should = require('should');
 
 describe('AnalyzedCFGFactory', function () {

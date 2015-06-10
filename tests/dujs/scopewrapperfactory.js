@@ -10,6 +10,7 @@ describe('ScopeWrapperFactory', function () {
     "use strict";
     beforeEach(function () {
         factoryScopeWrapper._testonly_._numOfAnonymousFunctionScopes = 0;
+        factoryFlowNode.resetCounter();
     });
 
     describe('Properties', function () {

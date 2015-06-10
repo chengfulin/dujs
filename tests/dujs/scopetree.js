@@ -3,23 +3,20 @@
  */
 var ScopeTree = require('../../lib/dujs').ScopeTree,
     CFGExt = require('../../lib/dujs').CFGExt,
-    Range = require('../../lib/dujs').Range,
     rangeFactory = require('../../lib/dujs').factoryRange,
-    Def = require('../../lib/dujs').Def,
     defFactory = require('../../lib/dujs').factoryDef,
     Scope = require('../../lib/dujs').Scope,
     scopeWrapperFactory = require('../../lib/dujs').factoryScopeWrapper,
     flowNodeFactory = require('../../lib/esgraph').factoryFlowNode,
     vardefFactory = require('../../lib/dujs').factoryVarDef,
-    varFactory = require('../../lib/dujs').factoryVar,
-    Map = require('core-js/es6/map'),
     Set = require('../../lib/analyses').Set,
     should = require('should');
 
 describe('ScopeTree', function () {
     'use strict';
     beforeEach(function () {
-        CFGExt.resetCounter();
+        flowNodeFactory.resetCounter();
+        scopeWrapperFactory.resetAnonymousFunctionScopeCounter();
     });
 
     describe('Private Methods', function () {

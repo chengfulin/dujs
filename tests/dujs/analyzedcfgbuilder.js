@@ -82,8 +82,9 @@ describe('AnalyzedCFGBuilder', function () {
         });
 
         describe('buildInterProceduralCFGs', function () {
-            var entry1, exit1, entry2, exit2, normal1, cfg1, cfg2;
+            var entry1, exit1, entry2, exit2, normal1;
             beforeEach(function () {
+                factoryFlowNode.resetCounter();
                 entry1 = factoryFlowNode.createEntryNode();
                 exit1 = factoryFlowNode.createExitNode();
                 entry2 = factoryFlowNode.createEntryNode();

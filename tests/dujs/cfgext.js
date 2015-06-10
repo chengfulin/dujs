@@ -2,45 +2,14 @@
  * Created by ChengFuLin on 2015/5/7.
  */
 var CFGExt = require('../../lib/dujs').CFGExt,
-    FlowNode = require('../../lib/esgraph/flownode'),
+    factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
     should = require('should');
 
 describe('CFGExt', function () {
     'use strict';
-    beforeEach(function () {
-        CFGExt._testonly_._lastCFGId = 0;
-    });
-
-    describe('Properties', function () {
-        describe('lastCFGId', function () {
-            it('should support to retrieve value correctly', function () {
-                CFGExt.lastCFGId.should.eql(0);
-                CFGExt._testonly_._lastCFGId = 1;
-                CFGExt.lastCFGId.should.eql(1);
-            });
-
-            it('should support to modify value', function () {
-                CFGExt.lastCFGId = 2;
-                CFGExt._testonly_._lastCFGId.should.eql(2);
-            });
-
-            it('should ignore non-numbers and numbers less than 0', function () {
-                CFGExt.lastCFGId = '1';
-                CFGExt._testonly_._lastCFGId.should.eql(0);
-                CFGExt.lastCFGId = -1;
-                CFGExt._testonly_._lastCFGId.should.eql(0);
-            });
-        });
-    });
-
     describe('methods', function () {
-        describe('resetCounter', function () {
-            it('should reset the counter correctly', function () {
-                CFGExt._testonly_._lastCFGId.should.eql(0);
-                CFGExt._testonly_._lastCFGId = 1;
-                CFGExt.resetCounter();
-                CFGExt._testonly_._lastCFGId.should.eql(0);
-            });
+        beforeEach(function () {
+            factoryFlowNode.resetCounter();
         });
 
         describe('parseAST', function ()  {
@@ -267,16 +236,16 @@ describe('CFGExt', function () {
                 CFGExt.isValidCFG([1,2]).should.eql(false);
                 CFGExt.isValidCFG([1,2,3]).should.eql(false);
 
-                var node1 = new FlowNode(FlowNode.NORMAL_NODE_TYPE),
-                    node2 = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
+                var node1 = factoryFlowNode.createNormalNode(),
+                    node2 = factoryFlowNode.createEntryNode();
                 CFGExt.isValidCFG([node1, 0, []]).should.eql(false);
                 CFGExt.isValidCFG([node1, node2, []]);
                 CFGExt.isValidCFG([node1, node2, [node1]]);
             });
 
             it('should return true as the input is valid', function () {
-                var node1 = new FlowNode(FlowNode.NORMAL_NODE_TYPE),
-                    node2 = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
+                var node1 = factoryFlowNode.createNormalNode(),
+                    node2 = factoryFlowNode.createEntryNode();
                 CFGExt.isValidCFG([node1, node2, [node1, node2]]).should.eql(true);
             });
         });

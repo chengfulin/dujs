@@ -11,6 +11,7 @@ describe('Factory Methods', function () {
     "use strict";
     var range, scope, node;
     beforeEach(function () {
+        factoryFlowNode.resetCounter();
         range = [0,1];
         scope = Scope.PROGRAM_SCOPE;
         node = factoryFlowNode.createNormalNode();

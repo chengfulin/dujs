@@ -10,6 +10,10 @@ var AnalyzedCFG = require('../../lib/dujs').AnalyzedCFG,
 
 describe('AnalyzedCFG', function () {
     "use strict";
+    beforeEach(function () {
+        factoryFlowNode.resetCounter();
+    });
+
     describe('Static Methods', function () {
         describe('isAnalyzedCFG', function () {
             it('should return false as the object is not an AnalyzedCFG', function () {

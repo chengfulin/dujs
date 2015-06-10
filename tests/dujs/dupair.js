@@ -7,6 +7,10 @@ var DUPair = require('../../lib/dujs').DUPair,
 
 describe('DUPair', function () {
     'use strict';
+    beforeEach(function () {
+        factoryFlowNode.resetCounter();
+    });
+
     describe('Static Methods', function () {
         describe('isValidDUPair', function () {
             it('should return false as both def and use are not FlowNodes', function () {
