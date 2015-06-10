@@ -333,7 +333,7 @@ describe('ScopeWrapper', function () {
             });
         });
 
-        describe('setInitVars', function () {
+        describe('setInitVarDefs', function () {
             var node1, node2, wrapper, vardef1, vardef2;
             beforeEach(function () {
                 var programScope = Scope.PROGRAM_SCOPE;
@@ -457,6 +457,57 @@ describe('ScopeWrapper', function () {
                 wrapper._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
                 wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef1).should.eql(true);
                 wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef2).should.eql(true);
+            });
+        });
+
+        describe('Both setParam and setInitVarDefs', function () {
+            var node1, node2, wrapper, vardef1, paramVarDef;
+            beforeEach(function () {
+                var programScope = Scope.PROGRAM_SCOPE;
+                node1 = factoryFlowNode.createEntryNode();
+                node2 = factoryFlowNode.createExitNode();
+                node1._testonly_._cfgId = 0;
+                node2._testonly_._cfgId = 1;
+                wrapper = new ScopeWrapper([node1, node2, [node1, node2]], programScope);
+
+                var variable1 = varFactory.create('var1', [0,1], programScope, null),
+                    def1 = defFactory.createLiteralDef(node1, [1,2], programScope),
+                    paramVar = varFactory.create('param', [2,3], wrapper._testonly_._scope, null),
+                    paramDef = defFactory.createLiteralParamDef(wrapper, [3,4]);
+                vardef1 = vardefFactory.create(variable1, def1);
+                paramVarDef = vardefFactory.create(paramVar, paramDef);
+            });
+
+            it('should support do setInitVarDefs first then setParam', function () {
+                wrapper.setInitVarDefs(new Set([vardef1]));
+                wrapper.setParams(new Set([paramVarDef]));
+
+                wrapper._testonly_._vars.size.should.eql(2);
+                wrapper._testonly_._vars.has('var1').should.eql(true);
+                wrapper._testonly_._vars.has('param').should.eql(true);
+
+                wrapper._testonly_._params.size.should.eql(1);
+                wrapper._testonly_._params.has('param').should.eql(true);
+
+                wrapper._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef1).should.eql(true);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(paramVarDef).should.eql(true);
+            });
+
+            it('should support do setParam first then setInitVarDefs', function () {
+                wrapper.setParams(new Set([paramVarDef]));
+                wrapper.setInitVarDefs(new Set([vardef1]));
+
+                wrapper._testonly_._vars.size.should.eql(2);
+                wrapper._testonly_._vars.has('var1').should.eql(true);
+                wrapper._testonly_._vars.has('param').should.eql(true);
+
+                wrapper._testonly_._params.size.should.eql(1);
+                wrapper._testonly_._params.has('param').should.eql(true);
+
+                wrapper._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef1).should.eql(true);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(paramVarDef).should.eql(true);
             });
         });
 
