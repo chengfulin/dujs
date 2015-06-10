@@ -66,6 +66,20 @@ describe('ScopeTree', function () {
         });
     });
 
+    describe('Static Methods', function () {
+        describe('isScopeTree', function () {
+            it('should return true as the object is a ScopeTree', function () {
+                ScopeTree.isScopeTree(new ScopeTree()).should.eql(true);
+            });
+
+            it('should return false as the object is not a ScopeTree', function () {
+                ScopeTree.isScopeTree({}).should.eql(false);
+                ScopeTree.isScopeTree('').should.eql(false);
+                ScopeTree.isScopeTree().should.eql(false);
+            });
+        });
+    });
+
     describe('Methods', function () {
         describe('buildScopeTree', function () {
             it('should support building program scope only', function () {
