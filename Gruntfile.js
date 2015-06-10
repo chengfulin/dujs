@@ -36,6 +36,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-mocha-test');
 
     grunt.registerTask('default', ['mochaTest']);
-    grunt.registerTask('deploy', ['strip_code']);
+    //grunt.registerTask('deploy', ['strip_code']);
     grunt.registerTask('test', ['mochaTest']);
 };
