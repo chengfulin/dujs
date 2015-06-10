@@ -11,7 +11,9 @@ var ScopeTree = require('../../lib/dujs').ScopeTree,
     scopeWrapperFactory = require('../../lib/dujs').factoryScopeWrapper,
     flowNodeFactory = require('../../lib/esgraph').factoryFlowNode,
     vardefFactory = require('../../lib/dujs').factoryVarDef,
+    varFactory = require('../../lib/dujs').factoryVar,
     Map = require('core-js/es6/map'),
+    Set = require('../../lib/analyses').Set,
     should = require('should');
 
 describe('ScopeTree', function () {
@@ -148,6 +150,68 @@ describe('ScopeTree', function () {
                 tree._testonly_._scopes[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
                 tree._testonly_._scopes[1]._testonly_._vars.has('fun').should.eql(true);
                 tree._testonly_._scopes[1]._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
+            });
+        });
+
+        describe('setVars', function () {
+            it('should support setting Vars in program scope without globals', function () {
+                var cfg = CFGExt.getCFG(CFGExt.parseAST(
+                        'var a = 0, b;'
+                    )),
+                    tree = new ScopeTree(),
+                    programScope = scopeWrapperFactory.create(cfg, Scope.PROGRAM_SCOPE);
+                tree._testonly_._root = programScope;
+                tree._testonly_._scopes.push(programScope);
+                tree.setVars();
+
+                programScope._testonly_._vars.size.should.eql(2);
+                programScope._testonly_._vars.has('a').should.eql(true);
+                programScope._testonly_._vars.has('b').should.eql(true);
+            });
+
+            it('should support setting Vars in multilevel scopes without globals', function () {
+                var scopeASTs = CFGExt.findScopes(CFGExt.parseAST(
+                        'var a = 0, b;' +
+                        'function foo(c) { '+
+                        'var d;' +
+                        '}'
+                    )),
+                    programCFG = CFGExt.getCFG(scopeASTs[0]),
+                    functionCFG = CFGExt.getCFG(scopeASTs[1].body),
+                    tree = new ScopeTree(),
+                    programScope = scopeWrapperFactory.create(programCFG, Scope.PROGRAM_SCOPE),
+                    functionScope = scopeWrapperFactory.create(functionCFG, new Scope('foo'));
+
+                functionScope._testonly_._range = rangeFactory.create(13,37);
+                programScope._testonly_._children.set('[13,37]', functionScope);
+                functionScope._testonly_._parent = programScope;
+                tree._testonly_._root = programScope;
+                tree._testonly_._scopes.push(programScope, functionScope);
+                tree.setVars();
+
+                programScope._testonly_._vars.size.should.eql(2);
+                programScope._testonly_._vars.has('a').should.eql(true);
+                programScope._testonly_._vars.has('b').should.eql(true);
+
+                functionScope._testonly_._vars.size.should.eql(1);
+                functionScope._testonly_._vars.has('d').should.eql(true);
+            });
+
+            it('should support setting Vars with globals', function () {
+                var cfg = CFGExt.getCFG(CFGExt.parseAST(
+                        'var a = 0, b;'
+                    )),
+                    tree = new ScopeTree(),
+                    programScope = scopeWrapperFactory.create(cfg, Scope.PROGRAM_SCOPE),
+                    global1 = vardefFactory.createGlobalLiteralVarDef(cfg[0], 'global1'),
+                    global2 = vardefFactory.createGlobalObjectVarDef(cfg[0], 'global2');
+                tree._testonly_._root = programScope;
+                tree._testonly_._scopes.push(programScope);
+                tree.setVars(new Set([global1, global2]));
+
+                programScope._testonly_._vars.size.should.eql(4);
+                programScope._testonly_._vars.has('global1').should.eql(true);
+                programScope._testonly_._vars.has('global2').should.eql(true);
             });
         });
     });
