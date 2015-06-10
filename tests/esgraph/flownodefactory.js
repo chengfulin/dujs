@@ -121,13 +121,4 @@ describe('Factory Methods', function () {
             loopReturn._testonly_._type.should.eql('loopReturn');
         });
     });
-
-    describe('createGlobalNode', function () {
-        it('should create global node well', function () {
-            var globalNode = factoryFlowNode.createGlobalNode();
-            globalNode._testonly_._type.should.eql('global');
-            should.not.exist(globalNode._testonly_._astNode);
-            should.not.exist(globalNode._testonly_._parent);
-        });
-    })
 });
