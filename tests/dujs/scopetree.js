@@ -110,6 +110,10 @@ describe('ScopeTree', function () {
                 tree._testonly_._scopes[1]._testonly_._params.has('c').should.eql(true);
                 tree._testonly_._scopes[1]._testonly_._vars.has('c').should.eql(true);
                 tree._testonly_._scopes[1]._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
+
+                /// function variable and definition
+                tree._testonly_._root._testonly_._vars.has('foo');
+                tree._testonly_._root._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
             });
 
             it('should support building with anonymous function scope', function () {
