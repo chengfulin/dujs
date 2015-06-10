@@ -432,40 +432,6 @@ describe('ScopeWrapper', function () {
                 param2 = varFactory.createGlobalVar('param2');
             });
 
-            it('should set parameters with array of Vars well', function () {
-                var vars = [param1, param2];
-                wrapper.setParams(vars);
-                wrapper._testonly_._vars.size.should.eql(2);
-                wrapper._testonly_._vars.get('param1').should.eql(param1);
-                wrapper._testonly_._vars.get('param2').should.eql(param2);
-                wrapper._testonly_._params.size.should.eql(2);
-                wrapper._testonly_._params.get('param1').should.eql(param1);
-                wrapper._testonly_._params.get('param2').should.eql(param2);
-
-                wrapper._testonly_._paramNames.length.should.eql(2);
-                wrapper._testonly_._paramNames.should.containDeepOrdered([
-                    'param1',
-                    'param2'
-                ]);
-            });
-
-            it('should set initial Vars with set of Vars well', function () {
-                var vars = new Set([param1, param2]);
-                wrapper.setParams(vars);
-                wrapper._testonly_._vars.size.should.eql(2);
-                wrapper._testonly_._vars.get('param1').should.eql(param1);
-                wrapper._testonly_._vars.get('param2').should.eql(param2);
-                wrapper._testonly_._params.size.should.eql(2);
-                wrapper._testonly_._params.get('param1').should.eql(param1);
-                wrapper._testonly_._params.get('param2').should.eql(param2);
-
-                wrapper._testonly_._paramNames.length.should.eql(2);
-                wrapper._testonly_._paramNames.should.containDeepOrdered([
-                    'param1',
-                    'param2'
-                ]);
-            });
-
             it('should support to set initial Vars with VarDefs', function () {
                 var def1 = defFactory.createLiteralDef(node1, param1._testonly_._range, param1._testonly_._scope),
                     def2 = defFactory.createLiteralDef(node2, param2._testonly_._range, param2._testonly_._scope),
@@ -486,6 +452,11 @@ describe('ScopeWrapper', function () {
                     'param1',
                     'param2'
                 ]);
+
+                /// GEN set of start node
+                wrapper._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef1).should.eql(true);
+                wrapper._testonly_._cfg[0]._testonly_._generate.has(vardef2).should.eql(true);
             });
         });
 
