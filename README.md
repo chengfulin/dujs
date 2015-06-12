@@ -13,5 +13,5 @@ Aim to find the intra-procedural, inter-procedural and intra-page Def-Use pairs 
 
 ##Usage
 ```
-cat source_file | node bin/dujs.js
+node bin/dujs.js [src_file_1] [src_file_2] ... [src_file_i]
 ```

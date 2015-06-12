@@ -1,87 +1,68 @@
 /**
  * Created by ChengFuLin on 2015/5/7.
  */
-var FunctionScopeTree = require('../lib/dujs').FunctionScopeTree,
-    CFGExt = require('../lib/dujs').CFGExt,
-    Graphics = require('../lib/dujs').Graphics,
-    graphviz = require('graphviz'),
-    exec = require('child_process').exec,
-    fs = require('fs'),
+var fs = require('fs'),
     open = require('open'),
-    data = '';
+    dujs = require('../lib/dujs'),
+    filenames = [],
+    sourceCode = '',
+    analysisOutputs = null;
 
-process.stdin.resume();
-process.stdin.setEncoding('utf8');
+function getSourceFromFiles(files, callback) {
+    "use strict";
+    var source = '',
+        currentFileName = '',
+        readFileError = null;
+    function readFileCallback(err, data) {
+        if (!!err) { /// Failed
+            readFileError = new Error('Failed to read the file: ' + currentFileName);
+        } else { /// Succeed
+            if (source !== '') {
+                source += '\n';
+            }
+            source += data;
+        }
+    }
 
-process.stdin.on('data', function (chunk) {
-    'use strict';
-    data += chunk;
+    if (typeof files === 'string') {
+        currentFileName = files;
+        fs.readFile(files, {encoding: 'utf8', flag: 'r'}, readFileCallback);
+    } else if (files instanceof Array) {
+        for (var index = 0; index < files.length; ++index) {
+            if (!!readFileError) {
+                break;
+            }
+            currentFileName = files[index];
+            fs.readFile(currentFileName, {encoding: 'utf8', flag: 'r'}, readFileCallback);
+        }
+    } else {
+        callback(new Error('Invalid input for method getSourceFromFiles'));
+    }
+    callback(readFileError, source);
+}
+
+process.argv.forEach(function (arg, index) {
+    "use strict";
+    if (index > 1) { /// as command line is "node bin/dujs.js [filename]"
+        filenames.push(arg);
+    }
 });
 
-process.stdin.on('end', function () {
-    'use strict';
-    var source = data,
-        scopeTree = new FunctionScopeTree(CFGExt.parseAST(source));
+function dujsCallback(err, outputs) {
+    "use strict";
+    if (!!err) {
+        throw err;
+    }
+    analysisOutputs = outputs;
+}
 
-    scopeTree.findVars();
-    scopeTree.findRDs();
-    scopeTree.findDUpairs();
+function getSourceCallback(err, data) {
+    "use strict";
+    if (!!err) {
+        throw err;
+    }
+    sourceCode = data;
+    dujs(sourceCode, dujsCallback);
+}
 
-    /// output intra-CFGs
-    fs.writeFile('cfgs.dot', Graphics.cfgs(scopeTree), function (err) {
-        if (!!err) {
-            throw err;
-        }
-    });
-    exec('cat cfgs.dot | dot -Tpng > cfgs.png', function (error) {
-        if (!!error) {
-            throw error;
-        }
-        fs.unlink('cfgs.dot', function (err) {
-            if (!!err) {
-                throw err;
-            }
-        });
-    });
-
-    /// output Def-Use pairs
-    fs.writeFile('dupairs.dot', Graphics.dupairs(scopeTree.getDUpairs()), function (err) {
-        if (!!err) {
-            throw err;
-        }
-    });
-    exec('cat dupairs.dot | dot -Tpng > dupairs.png', function (error) {
-        if (!!error) {
-            throw error;
-        }
-        fs.unlink('dupairs.dot', function (err) {
-            if (!!err) {
-                throw err;
-            }
-        });
-    });
-
-    fs.writeFile(
-        'result.html',
-        '<html>' +
-            '<head><meta charset="utf-8"><title>Def-Use Analysis Report</title>' +
-                '<script>var cfgImgSrc = "cfgs.png", dupairsImgSrc = "dupairs.png";' +
-                'window.onload = function () {' +
-                'document.querySelector("#cfgImg").src = cfgImgSrc;' +
-                'document.querySelector("#dupairsImg").src = dupairsImgSrc;}' +
-                '</script>' +
-            '</head>' +
-            '<body><h1>Def-Use Analysis Report</h1>' +
-            '<h2>CFG</h2>' +
-            '<img id="cfgImg">' +
-            '<h2>Def-Use pairs</h2>' +
-            '<img id="dupairsImg">' +
-        '</html>'
-    );
-
-    open('result.html', function (err) {
-        if (!!err) {
-            throw err;
-        }
-    });
-});
+getSourceFromFiles(filenames, getSourceCallback);
