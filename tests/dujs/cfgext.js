@@ -53,6 +53,17 @@ describe('CFGExt', function () {
                 cfg1[1].cfgId.should.eql(2);
                 cfg1[2][1].cfgId.should.eql(1);
             });
+
+            it('should have correct cfgIds as creating two CFG', function () {
+                var code = 'var a, b;',
+                    cfg1 = CFGExt.getCFG(CFGExt.parseAST(code)),
+                    cfg2 = CFGExt.getCFG(CFGExt.parseAST(code));
+
+                factoryFlowNode._testonly_._counter.should.eql(6);
+                cfg2[0]._testonly_._cfgId.should.eql(3);
+                cfg2[1]._testonly_._cfgId.should.eql(5);
+                cfg2[2][1]._testonly_._cfgId.should.eql(4);
+            });
         });
 
         describe('findScopes', function () {
