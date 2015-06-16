@@ -2,9 +2,12 @@
  * Created by ChengFuLin on 2015/5/7.
  */
 var fs = require('fs'),
+    async = require('async'),
+    spawn = require('child_process').spawn,
     open = require('open'),
     dujs = require('../lib/dujs'),
     graphics = require('../lib/dujs').graphics,
+    GRAPHVIZ_DOT_CMD = 'dot',
     OUTPUT_DIR = 'out',
     INTRA_PROCEDURAL_OUTPUTS_DIR = 'intra-procedurals',
     INTER_PROCEDURAL_OUTPUTS_DIR = 'inter-procedurals',
@@ -32,32 +35,17 @@ function getSourceFromFiles(files, callback) {
      */
     function readFileCallback(err, data) {
         if (!!err) {
-            /// On error, log the failed file's name
-            readFileError = new Error('Failed to read the file: ' + currentFileName);
-        } else {
-            /// On success, concat source code from files
-            if (source !== '') {
-                source += '\n';
-            }
-            source += data;
+            callback(err, null);
         }
+        data.forEach(function (content) {
+            source += content + '\n';
+        });
+        fs.writeFile(OUTPUT_DIR + '/' + 'src.js', source, function (err) {
+            callback(err, source);
+        });
     }
 
-    if (typeof files === 'string') {
-        currentFileName = files;
-        fs.readFile(files, {encoding: 'utf8', flag: 'r'}, readFileCallback);
-    } else if (files instanceof Array) {
-        for (var index = 0; index < files.length; ++index) {
-            if (!!readFileError) {
-                break;
-            }
-            currentFileName = files[index];
-            fs.readFile(currentFileName, {encoding: 'utf8', flag: 'r'}, readFileCallback);
-        }
-    } else {
-        callback(new Error('Invalid input for method getSourceFromFiles'));
-    }
-    callback(readFileError, source);
+    async.map(files, fs.readFile, readFileCallback);
 }
 
 /**
@@ -73,7 +61,18 @@ function getSourceCallback(err, data) {
     }
     /// On success, do analysis
     sourceCode = data;
-    analysisOutputs = dujs(sourceCode);
+    analysisOutputs = dujs(data);
+    analysisOutputs.intraProcedurals.forEach(function (item, index) {
+        var dotContent = graphics.analysisItemToCFG(item);
+        var dotFile = OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR + '/' + index + '.dot';
+        var outputFile = OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR + '/' + index + '.png';
+        fs.writeFile(dotFile, dotContent, function (err) {
+            if (!!err) {
+                throw err;
+            }
+            spawn(GRAPHVIZ_DOT_CMD, [dotFile, '-Tpng', '-o', outputFile]);
+        });
+    });
 }
 
 /**
@@ -205,5 +204,5 @@ try {
     getSourceFromFiles(filenames, getSourceCallback);
 
 } catch(err) {
-    console.log('Error');
+    console.log(err.message);
 }
