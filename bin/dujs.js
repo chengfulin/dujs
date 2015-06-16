@@ -4,7 +4,7 @@
 var fs = require('fs'),
     async = require('async'),
     spawn = require('child_process').spawn,
-    open = require('open'),
+    //open = require('open'),
     dujs = require('../lib/dujs'),
     graphics = require('../lib/dujs').graphics,
     GRAPHVIZ_DOT_CMD = 'dot',
@@ -24,9 +24,7 @@ var fs = require('fs'),
  */
 function getSourceFromFiles(files, callback) {
     "use strict";
-    var source = '',
-        currentFileName = '',
-        readFileError = null;
+    var source = '';
 
     /**
      * Callback for reading a file
@@ -37,8 +35,9 @@ function getSourceFromFiles(files, callback) {
         if (!!err) {
             callback(err, null);
         }
-        data.forEach(function (content) {
-            source += content + '\n';
+        data.forEach(function (content, index) {
+            /// Add comments to separate source code from different files
+            source += '/// --- start ' + files[index] + ' ---\n' + content + '\n/// --- end ' + files[index] + ' ---\n';
         });
         fs.writeFile(OUTPUT_DIR + '/' + 'src.js', source, function (err) {
             callback(err, source);
@@ -46,6 +45,27 @@ function getSourceFromFiles(files, callback) {
     }
 
     async.map(files, fs.readFile, readFileCallback);
+}
+
+/**
+ * Output dot files and related image files for the graphs
+ * @param dirPath
+ * @param {AnalyzedCFG} analysisItem
+ * @param {number} index
+ * @private
+ * @function
+ */
+function outputResultFiles(dirPath, analysisItem, index) {
+    "use strict";
+    var dotContent = graphics.analysisItemToCFG(analysisItem);
+    var dotFile = dirPath + '/' + index + '.dot';
+    var outputFile = dirPath + '/' + index + '.png';
+    fs.writeFile(dotFile, dotContent, function (err) {
+        if (!!err) {
+            throw err;
+        }
+        spawn(GRAPHVIZ_DOT_CMD, [dotFile, '-Tpng', '-o', outputFile]);
+    });
 }
 
 /**
@@ -63,15 +83,13 @@ function getSourceCallback(err, data) {
     sourceCode = data;
     analysisOutputs = dujs(data);
     analysisOutputs.intraProcedurals.forEach(function (item, index) {
-        var dotContent = graphics.analysisItemToCFG(item);
-        var dotFile = OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR + '/' + index + '.dot';
-        var outputFile = OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR + '/' + index + '.png';
-        fs.writeFile(dotFile, dotContent, function (err) {
-            if (!!err) {
-                throw err;
-            }
-            spawn(GRAPHVIZ_DOT_CMD, [dotFile, '-Tpng', '-o', outputFile]);
-        });
+        outputResultFiles(OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR, item, index);
+    });
+    analysisOutputs.interProcedurals.forEach(function (item, index) {
+        outputResultFiles(OUTPUT_DIR + '/' + INTER_PROCEDURAL_OUTPUTS_DIR, item, index);
+    });
+    analysisOutputs.intraPages.forEach(function (item, index) {
+        outputResultFiles(OUTPUT_DIR + '/' + INTRA_PAGE_OUTPUTS_DIR, item, index);
     });
 }
 
@@ -93,7 +111,7 @@ function makeIntraPageOutputDirCallback(err) {
  * @param stats
  * @function
  */
-function checkeIntraPageOutputDirCallback(err, stats) {
+function checkeIntraPageOutputDirCallback(err) {
     "use strict";
     if (!!err) {
         fs.mkdir(OUTPUT_DIR + '/' + INTRA_PAGE_OUTPUTS_DIR, makeIntraPageOutputDirCallback);
@@ -119,7 +137,7 @@ function makeInterProceduralOutputDirCallback(err) {
  * @param stats
  * @function
  */
-function checkeInterProceduralOutputDirCallback(err, stats) {
+function checkeInterProceduralOutputDirCallback(err) {
     "use strict";
     if (!!err) {
         fs.mkdir(OUTPUT_DIR + '/' + INTER_PROCEDURAL_OUTPUTS_DIR, makeInterProceduralOutputDirCallback);
@@ -145,7 +163,7 @@ function makeIntraProceduralOutputDirCallback(err) {
  * @param stats
  * @function
  */
-function checkeIntraProceduralOutputDirCallback(err, stats) {
+function checkeIntraProceduralOutputDirCallback(err) {
     "use strict";
     if (!!err) {
         fs.mkdir(OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR, makeIntraProceduralOutputDirCallback);
@@ -171,7 +189,7 @@ function makeOutputDirCallback(err) {
  * @param stats
  * @function
  */
-function checkOutputDirCallback(err, stats) {
+function checkOutputDirCallback(err) {
     "use strict";
     if (!!err) {
         fs.mkdir(OUTPUT_DIR, makeOutputDirCallback);
