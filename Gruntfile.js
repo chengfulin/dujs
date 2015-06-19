@@ -13,29 +13,52 @@ module.exports = function (grunt) {
                 src: ['lib/**/*.js']
             }
         },
-        mochaTest: {
-            test: {
-                options: {
-                    reporter: 'spec',
-                    require: 'coverage/blanket'
-                },
-                src: ['tests/dujs/*.js', 'tests/analyses/*.js', 'tests/esgraph/*.js']
+        mocha_istanbul: {
+            options: {
+                timeout: 3000
             },
             coverage: {
+                src: ['tests/dujs/*.js', 'tests/analyses/*.js', 'tests/esgraph/*.js'], // a folder works nicely
                 options: {
-                    reporter: 'html-cov',
-                    quiet: true,
-                    captureFile: 'coverage/coverage.html'
-                },
-                src: ['tests/dujs/*.js', 'tests/analyses/*.js', 'tests/esgraph/*.js']
+                    mask: '*.js'
+                }
+            },
+            coveralls: {
+                src: ['tests'], // multiple folders also works
+                options: {
+                    coverage: true, // this will make the grunt.event.on('coverage') event listener to be triggered
+                    check: {
+                        lines: 75,
+                        statements: 75
+                    },
+                    root: './lib', // define where the cover task should consider the root of libraries that are covered by tests
+                    reportFormats: ['cobertura', 'lcovonly']
+                }
+            }
+        },
+        istanbul_check_coverage: {
+            default: {
+                options: {
+                    coverageFolder: 'coverage*', // will check both coverage folders and merge the coverage results
+                    check: {
+                        lines: 80,
+                        statements: 80
+                    }
+                }
             }
         }
     });
 
-    grunt.loadNpmTasks('grunt-strip-code');
-    grunt.loadNpmTasks('grunt-mocha-test');
+    grunt.event.on('coverage', function(lcovFileContents, done){
+        // Check below on the section "The coverage event"
+        done();
+    });
 
-    grunt.registerTask('default', ['mochaTest']);
+    grunt.loadNpmTasks('grunt-strip-code');
+    grunt.loadNpmTasks('grunt-mocha-istanbul');
+
+    grunt.registerTask('default', ['mocha_istanbul:coverage']);
     //grunt.registerTask('deploy', ['strip_code']);
-    grunt.registerTask('test', ['mochaTest']);
+    grunt.registerTask('coveralls', ['mocha_istanbul:coveralls']);
+    grunt.registerTask('coverage', ['mocha_istanbul:coverage']);
 };
