@@ -127,6 +127,10 @@ describe('ScopeWrapper', function () {
             wrapper._testonly_._paramNames.length.should.eql(0);
             wrapper._testonly_._children.size.should.eql(0);
             should.not.exist(wrapper._testonly_._def);
+
+            wrapper._testonly_._cfg[2].forEach(function (node) {
+                node._testonly_._scope.should.eql(wrapper);
+            });
         });
     });
 
