@@ -2,6 +2,7 @@
  * Created by ChengFuLin on 2015/5/20.
  */
 var FlowNode = require('../../lib/esgraph/flownode'),
+    Set = require('../../lib/analyses').Set,
     should = require('should');
 
 describe('FlowNode', function () {
@@ -110,11 +111,51 @@ describe('FlowNode', function () {
                 it('should not set col property yet', function () {
                     should.not.exist(single._testonly_._col);
                 });
+
+                it('should not set scope yet', function () {
+                    should.not.exist(single._testonly_._scope);
+                });
+
+                it('should not have extra ReachIns yet', function () {
+                    should.not.exist(single._testonly_._extraReachIns);
+                });
+
+                it('should not have extra ReachOuts yet', function () {
+                    should.not.exist(single._testonly_._extraReachOuts);
+                });
+
+                it('should not have ReachIns yet', function () {
+                    should.not.exist(single._testonly_._reachIns);
+                });
+
+                it('should not have ReachOuts yet', function () {
+                    should.not.exist(single._testonly_._reachOuts);
+                });
             });
         });
     });
 
     describe('static members', function () {
+        describe('validateType', function () {
+            it('should not throw as the input is a FlowNode', function () {
+                should(function () {
+                    FlowNode.validateType(new FlowNode('normal'));
+                }).not.throw();
+            });
+
+            it('should throw as the input is not a FlowNode', function () {
+                should(function () {
+                    FlowNode.validateType({});
+                }).throw('Not a FlowNode');
+            });
+
+            it('should support throwing custom error message', function () {
+                should(function () {
+                    FlowNode.validateType({}, 'Custom Error');
+                }).throw('Custom Error');
+            });
+        });
+
         describe('isValidNodeType', function () {
             it('should return true as the type is valid', function () {
                 should(FlowNode.isValidNodeType('normal')).eql(true);
@@ -125,6 +166,7 @@ describe('FlowNode', function () {
                 should(FlowNode.isValidNodeType('callReturn')).eql(true);
                 should(FlowNode.isValidNodeType('loopReturn')).eql(true);
                 should(FlowNode.isValidNodeType('branch')).eql(true);
+                should(FlowNode.isValidNodeType('halt')).eql(true);
             });
 
             it('should return false as the type is invalid', function () {
@@ -424,153 +466,163 @@ describe('FlowNode', function () {
                 nodeB._testonly_._prev.length.should.eql(0);
             });
         });
+    });
 
-        describe('Access properties', function () {
-            it('should support to assign and retrieve cfgIds', function () {
-                nodeA.cfgId = 0;
-                nodeA._testonly_._cfgId.should.eql(0);
-                nodeA.cfgId.should.eql(nodeA._testonly_._cfgId);
+    describe('Properties', function () {
+        var nodeA, nodeB;
+
+        beforeEach(function () {
+            nodeA = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
+            nodeB = new FlowNode();
+        });
+
+        it('should support to assign and retrieve cfgIds', function () {
+            nodeA.cfgId = 0;
+            nodeA._testonly_._cfgId.should.eql(0);
+            nodeA.cfgId.should.eql(nodeA._testonly_._cfgId);
+        });
+
+        it('should support to assign and retrieve astNode and parent', function () {
+            nodeA.parent = {type: 'Program'};
+            nodeA.astNode = {type: 'AssignmentExpression'};
+
+            nodeA._testonly_._parent.should.eql(nodeA.parent);
+            nodeA._testonly_._astNode.should.eql(nodeA.astNode);
+
+            nodeA.parent.type.should.eql('Program');
+            nodeA.astNode.type.should.eql('AssignmentExpression');
+        });
+
+        it('should support to assign and retrieve type', function () {
+            nodeA.type.should.eql('entry');
+            nodeA.type = FlowNode.EXIT_NODE_TYPE;
+            nodeA.type.should.eql('exit');
+
+            nodeB.type.should.eql('normal');
+            nodeB.type = '';
+            nodeB.type.should.eql('normal');
+        });
+
+        it('should ignore assigning invalid type', function () {
+            nodeA.type = '';
+            nodeA.type.should.eql('entry');
+        });
+
+        it('should support to assign and retrieve next sibling', function () {
+            nodeA.nextSibling = nodeB;
+            nodeA.nextSibling.should.eql(nodeB);
+            should(nodeA._testonly_._nextSibling === nodeA.nextSibling).eql(true);
+        });
+
+        it('should ignore assigning non-FlowNode as next sibling', function () {
+            nodeA.nextSibling = {};
+            should.not.exist(nodeA._testonly_._nextSibling);
+        });
+
+        it('should get previous nodes collection', function () {
+            nodeA._testonly_._prev.push(nodeB);
+            nodeA.prev.length.should.eql(1);
+            nodeA.prev[0].should.eql(nodeB);
+            should(nodeA.prev === nodeA._testonly_._prev).eql(false);
+        });
+
+        it('should get next nodes collection', function () {
+            nodeA._testonly_._next.push(nodeB);
+            nodeA.next.length.should.eql(1);
+            nodeA.next[0].should.eql(nodeB);
+            should(nodeA.next === nodeA._testonly_._next).eql(false);
+        });
+
+        it('should get normal connection well', function () {
+            nodeA._testonly_.normal = nodeB;
+            should.exist(nodeA.normal);
+            nodeA.normal.should.eql(nodeB);
+        });
+
+        it('should get true branch connection well', function () {
+            nodeA._testonly_.true = nodeB;
+            should.exist(nodeA.true);
+            nodeA.true.should.eql(nodeB);
+        });
+
+        it('should get false branch connection well', function () {
+            nodeA._testonly_.false = nodeB;
+            should.exist(nodeA.false);
+            nodeA.false.should.eql(nodeB);
+        });
+
+        it('should get exception connection well', function () {
+            nodeA._testonly_.exception = nodeB;
+            should.exist(nodeA.exception);
+            nodeA.exception.should.eql(nodeB);
+        });
+
+        it('should get call connection well', function () {
+            nodeA._testonly_.call = nodeB;
+            should.exist(nodeA.call);
+            nodeA.call.should.eql(nodeB);
+        });
+
+        it('should get return connection well', function () {
+            nodeA._testonly_.return = nodeB;
+            should.exist(nodeA.return);
+            nodeA.return.should.eql(nodeB);
+        });
+
+        it('should get onEvent connection well', function () {
+            nodeA._testonly_.onEvent.push(nodeB);
+            nodeA.onEvent.length.should.eql(1);
+            nodeA.onEvent[0].should.eql(nodeB);
+        });
+
+        it('should support assign and retrieve label', function () {
+            nodeA.label.should.eql('entry');
+            nodeA.label = 'none';
+            nodeA._testonly_._label.should.eql('none');
+            nodeA.label.should.eql(nodeA._testonly_._label);
+        });
+
+        it('should ignore non string assignment to label', function () {
+            nodeA.label = 1;
+            nodeA._testonly_._label.should.eql('entry');
+        });
+
+        it('should support assign and retrieve line number', function () {
+            nodeA.line = 0;
+            nodeA._testonly_._line.should.eql(0);
+            nodeA.line.should.eql(nodeA._testonly_._line);
+        });
+
+        it('should ignore NaN assignment to line number', function () {
+            nodeA.line = '0';
+            should.not.exist(nodeA._testonly_._line);
+        });
+
+        it('should support assign and retrieve column offset', function () {
+            nodeA.col = 1;
+            nodeA._testonly_._col.should.eql(1);
+            nodeA.col.should.eql(nodeA._testonly_._col);
+        });
+
+        it('should ignore NaN assignment to column offset', function () {
+            nodeA.col = '1';
+            should.not.exist(nodeA._testonly_._col);
+        });
+
+        describe('kill', function () {
+            it('should support to retrieve the kill set', function () {
+                var set = new Set([1]);
+                nodeA._testonly_._kill = set;
+                nodeA.kill.size.should.eql(1);
+                nodeA.kill.has(1).should.eql(true);
             });
 
-            it('should support to assign and retrieve astNode and parent', function () {
-                nodeA.parent = {type: 'Program'};
-                nodeA.astNode = {type: 'AssignmentExpression'};
-
-                nodeA._testonly_._parent.should.eql(nodeA.parent);
-                nodeA._testonly_._astNode.should.eql(nodeA.astNode);
-
-                nodeA.parent.type.should.eql('Program');
-                nodeA.astNode.type.should.eql('AssignmentExpression');
-            });
-
-            it('should support to assign and retrieve type', function () {
-                nodeA.type.should.eql('entry');
-                nodeA.type = FlowNode.EXIT_NODE_TYPE;
-                nodeA.type.should.eql('exit');
-
-                nodeB.type.should.eql('normal');
-                nodeB.type = '';
-                nodeB.type.should.eql('normal');
-            });
-
-            it('should ignore assigning invalid type', function () {
-                nodeA.type = '';
-                nodeA.type.should.eql('entry');
-            });
-
-            it('should support to assign and retrieve next sibling', function () {
-                nodeA.nextSibling = nodeB;
-                nodeA.nextSibling.should.eql(nodeB);
-                should(nodeA._testonly_._nextSibling === nodeA.nextSibling).eql(true);
-            });
-
-            it('should ignore assigning non-FlowNode as next sibling', function () {
-                nodeA.nextSibling = {};
-                should.not.exist(nodeA._testonly_._nextSibling);
-            });
-
-            it('should get previous nodes collection', function () {
-                nodeA._testonly_._prev.push(nodeB);
-                nodeA.prev.length.should.eql(1);
-                nodeA.prev[0].should.eql(nodeB);
-                should(nodeA.prev === nodeA._testonly_._prev).eql(false);
-            });
-
-            it('should get next nodes collection', function () {
-                nodeA._testonly_._next.push(nodeB);
-                nodeA.next.length.should.eql(1);
-                nodeA.next[0].should.eql(nodeB);
-                should(nodeA.next === nodeA._testonly_._next).eql(false);
-            });
-
-            it('should get normal connection well', function () {
-                nodeA.connect(nodeB);
-                should.exist(nodeA.normal);
-
-                nodeA._testonly_.normal.should.eql(nodeA.normal);
-                nodeA.normal.should.eql(nodeB);
-            });
-
-            it('should get true branch connection well', function () {
-                nodeA.connect(nodeB, FlowNode.TRUE_BRANCH_CONNECTION_TYPE);
-                should.exist(nodeA.true);
-
-                nodeA._testonly_.true.should.eql(nodeA.true);
-                nodeA.true.should.eql(nodeB);
-            });
-
-            it('should get false branch connection well', function () {
-                nodeA.connect(nodeB, FlowNode.FALSE_BRANCH_CONNECTION_TYPE);
-                should.exist(nodeA.false);
-
-                nodeA._testonly_.false.should.eql(nodeA.false);
-                nodeA.false.should.eql(nodeB);
-            });
-
-            it('should get exception connection well', function () {
-                nodeA.connect(nodeB, FlowNode.EXCEPTION_CONNECTION_TYPE);
-                should.exist(nodeA.exception);
-
-                nodeA._testonly_.exception.should.eql(nodeA.exception);
-                nodeA.exception.should.eql(nodeB);
-            });
-
-            it('should get call connection well', function () {
-                nodeA.connect(nodeB, FlowNode.CALL_CONNECTION_TYPE);
-                should.exist(nodeA.call);
-
-                nodeA._testonly_.call.should.eql(nodeA.call);
-                nodeA.call.should.eql(nodeB);
-            });
-
-            it('should get return connection well', function () {
-                nodeA.connect(nodeB, FlowNode.RETURN_CONNECTION_TYPE);
-                should.exist(nodeA.return);
-
-                nodeA._testonly_.return.should.eql(nodeA.return);
-                nodeA.return.should.eql(nodeB);
-            });
-
-            it('should get onEvent connection well', function () {
-                nodeA.connect(nodeB, FlowNode.ON_EVENT_CONNECTION_TYPE);
-
-                nodeA._testonly_.onEvent.should.eql(nodeA.onEvent);
-                nodeA.onEvent.length.should.eql(1);
-                nodeA.onEvent[0].should.eql(nodeB);
-            });
-
-            it('should support assign and retrieve label', function () {
-                nodeA.label.should.eql('entry');
-                nodeA.label = 'none';
-                nodeA._testonly_._label.should.eql('none');
-                nodeA.label.should.eql(nodeA._testonly_._label);
-            });
-
-            it('should ignore non string assignment to label', function () {
-                nodeA.label = 1;
-                nodeA._testonly_._label.should.eql('entry');
-            });
-
-            it('should support assign and retrieve line number', function () {
-                nodeA.line = 0;
-                nodeA._testonly_._line.should.eql(0);
-                nodeA.line.should.eql(nodeA._testonly_._line);
-            });
-
-            it('should ignore NaN assignment to line number', function () {
-                nodeA.line = '0';
-                should.not.exist(nodeA._testonly_._line);
-            });
-
-            it('should support assign and retrieve column offset', function () {
-                nodeA.col = 1;
-                nodeA._testonly_._col.should.eql(1);
-                nodeA.col.should.eql(nodeA._testonly_._col);
-            });
-
-            it('should ignore NaN assignment to column offset', function () {
-                nodeA.col = '1';
-                should.not.exist(nodeA._testonly_._col);
+            it('should support to modify the kill set, with any set', function () {
+                var set = new Set([1,2]);
+                nodeB.kill = set;
+                nodeB._testonly_._kill.size.should.eql(2);
+                nodeB._testonly_._kill.has(1).should.eql(true);
+                nodeB._testonly_._kill.has(2).should.eql(true);
             });
         });
     });
