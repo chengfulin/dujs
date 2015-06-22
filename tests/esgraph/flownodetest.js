@@ -167,6 +167,7 @@ describe('FlowNode', function () {
                 should(FlowNode.isValidNodeType('loopReturn')).eql(true);
                 should(FlowNode.isValidNodeType('branch')).eql(true);
                 should(FlowNode.isValidNodeType('halt')).eql(true);
+                should(FlowNode.isValidNodeType('storage')).eql(true);
             });
 
             it('should return false as the type is invalid', function () {
@@ -186,6 +187,8 @@ describe('FlowNode', function () {
                 should(FlowNode.isValidConnectionType('call')).eql(true);
                 should(FlowNode.isValidConnectionType('return')).eql(true);
                 should(FlowNode.isValidConnectionType('onEvent')).eql(true);
+                should(FlowNode.isValidConnectionType('saveStorage')).eql(true);
+                should(FlowNode.isValidConnectionType('loadStorage')).eql(true);
             });
 
             it('shoudl return false as the type is invalid', function () {
