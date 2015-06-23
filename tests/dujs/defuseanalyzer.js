@@ -10,11 +10,14 @@ var analyzer = require('../../lib/dujs').DefUseAnalyzer,
 describe('DefUseAnalyzer', function () {
     "use strict";
     describe('Methods', function () {
+        beforeEach(function () {
+            factoryFlowNode.resetCounter();
+        });
+
         describe('findKILLSet', function () {
             describe('as for Single Variable Assignment', function () {
                 var cfg, scope;
                 beforeEach(function () {
-                    factoryFlowNode.resetCounter();
                     cfg = cfgext.getCFG(cfgext.parseAST(
                         'var a = 0;\n' +
                         'a = 1;\n'
@@ -316,6 +319,352 @@ describe('DefUseAnalyzer', function () {
                     var genSet = analyzer.findGENSet(cfg[2][2]);
                     genSet.size.should.eql(1);
                     genSet.values()[0]._testonly_._var.should.eql(scope._testonly_._vars.get('a'));
+                });
+            });
+        });
+
+        describe('findUSESet', function () {
+            describe('as for single Assignment', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 0, b = 1;\n' +
+                        'a = b;'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var usedVar = analyzer.findUSESet(cfg[2][2]);
+                    usedVar.cuse.size.should.eql(1);
+                    usedVar.puse.size.should.eql(0);
+                    usedVar.cuse.values()[0].should.eql(scope._testonly_._vars.get('b'));
+                });
+            });
+
+            describe('as for multiple Assignment', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 0, b = 1, c = 2;\n' +
+                        'a = b = c;'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var usedVar = analyzer.findUSESet(cfg[2][2]);
+                    usedVar.cuse.size.should.eql(2);
+                    usedVar.puse.size.should.eql(0);
+                    usedVar.cuse.values()[0].should.eql(scope._testonly_._vars.get('b'));
+                    usedVar.cuse.values()[1].should.eql(scope._testonly_._vars.get('c'));
+                });
+            });
+
+            describe('as for Self Assignment with literal value', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 0;\n' +
+                        'a += 1;'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var usedVar = analyzer.findUSESet(cfg[2][2]);
+                    usedVar.cuse.size.should.eql(1);
+                    usedVar.puse.size.should.eql(0);
+                    usedVar.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+                });
+            });
+
+            describe('as for Self Assignment with variable', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 0, b = 1;\n' +
+                        'a += b;'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var usedVar = analyzer.findUSESet(cfg[2][2]);
+                    usedVar.cuse.size.should.eql(2);
+                    usedVar.puse.size.should.eql(0);
+                    usedVar.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+                    usedVar.cuse.values()[1].should.eql(scope._testonly_._vars.get('b'));
+                });
+            });
+
+            describe('as for BinaryExpression', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 0, b = 1, c;\n' +
+                        'c = a + b;'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var usedVar = analyzer.findUSESet(cfg[2][2]);
+                    usedVar.cuse.size.should.eql(2);
+                    usedVar.puse.size.should.eql(0);
+                    usedVar.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+                    usedVar.cuse.values()[1].should.eql(scope._testonly_._vars.get('b'));
+                });
+            });
+
+            describe('as for CallExpression', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var call = function () {}, a;\n' +
+                        'a = call();'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var callee = analyzer.findUSESet(cfg[2][2]);
+
+                    callee.cuse.size.should.eql(1);
+                    callee.puse.size.should.eql(0);
+                    callee.cuse.values()[0].should.eql(scope._testonly_._vars.get('call'));
+                });
+            });
+
+            describe('as for CallExpression with argument', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var call = function (x) {}, a, b = 1;\n' +
+                        'a = call(b);'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var used = analyzer.findUSESet(cfg[2][2]);
+
+                    used.cuse.size.should.eql(2);
+                    used.puse.size.should.eql(0);
+                    used.cuse.values()[0].should.eql(scope._testonly_._vars.get('call'));
+                    used.cuse.values()[1].should.eql(scope._testonly_._vars.get('b'));
+                });
+            });
+
+            describe('as for VariableDeclaration initialized by variable', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 0;\n' +
+                        'var b = a;\n'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var initialize = analyzer.findUSESet(cfg[2][2]);
+                    initialize.cuse.size.should.eql(1);
+                    initialize.puse.size.should.eql(0);
+                    initialize.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+                });
+            });
+
+            describe('as for UpdateExpression', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 0, b = 1;\n' +
+                        '++a;\n' +
+                        'b--;\n'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var prefixUpdate = analyzer.findUSESet(cfg[2][2]),
+                        postfixUpdate = analyzer.findUSESet(cfg[2][3]);
+
+                    prefixUpdate.cuse.size.should.eql(1);
+                    prefixUpdate.puse.size.should.eql(0);
+                    prefixUpdate.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+
+                    postfixUpdate.cuse.size.should.eql(1);
+                    postfixUpdate.puse.size.should.eql(0);
+                    postfixUpdate.cuse.values()[0].should.eql(scope._testonly_._vars.get('b'));
+                });
+            });
+
+            describe('as for New Expression', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a, c = function () {};\n' +
+                        'a = new c();'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find used variable', function () {
+                    var used = analyzer.findUSESet(cfg[2][2]);
+                    used.cuse.size.should.eql(1);
+                    used.puse.size.should.eql(0);
+                    used.cuse.values()[0].should.eql(scope._testonly_._vars.get('c'));
+                });
+            });
+
+            describe('as for Unary Expression', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 0, b;\n' +
+                        'b = ~a;'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var used = analyzer.findUSESet(cfg[2][2]);
+
+                    used.cuse.size.should.eql(1);
+                    used.puse.size.should.eql(0);
+                    used.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+                });
+            });
+
+            describe('as for if statement', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = false;\n' +
+                        'if (!a) {}'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var used = analyzer.findUSESet(cfg[2][2]);
+
+                    used.cuse.size.should.eql(0);
+                    used.puse.size.should.eql(1);
+                    used.puse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+                });
+            });
+
+            describe('as for while statement', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 5;\n' +
+                        'while (a > 0) {}'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var used = analyzer.findUSESet(cfg[2][2]);
+
+                    used.cuse.size.should.eql(0);
+                    used.puse.size.should.eql(1);
+                    used.puse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+                });
+            });
+
+            describe('as for for loop statement', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'for (var a = 5; a > 0; --a) {}'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var initialPart = analyzer.findUSESet(cfg[2][1]),
+                        conditionalPart = analyzer.findUSESet(cfg[2][2]),
+                        changePart = analyzer.findUSESet(cfg[2][3]);
+
+                    initialPart.cuse.size.should.eql(0);
+                    initialPart.puse.size.should.eql(0);
+
+                    conditionalPart.cuse.size.should.eql(0);
+                    conditionalPart.puse.size.should.eql(1);
+                    conditionalPart.puse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+
+                    changePart.cuse.size.should.eql(1);
+                    changePart.puse.size.should.eql(0);
+                    changePart.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+                });
+            });
+
+            describe('as for Switch Statement', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 1, b = 0;\n' +
+                        'switch (a) {\n' +
+                        'case 1: b = a;\n' +
+                        'break;\n' +
+                        'default: break;}'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find used variables', function () {
+                    var conditional = analyzer.findUSESet(cfg[2][2]),
+                        firstCase = analyzer.findUSESet(cfg[2][3]),
+                        defaultCase = analyzer.findUSESet(cfg[2][5]);
+
+                    conditional.cuse.size.should.eql(0);
+                    conditional.puse.size.should.eql(1);
+                    conditional.puse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+
+                    firstCase.cuse.size.should.eql(1);
+                    firstCase.puse.size.should.eql(0);
+                    firstCase.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+
+                    defaultCase.cuse.size.should.eql(0);
+                    defaultCase.puse.size.should.eql(0);
+                });
+            });
+
+            describe('as for Member Expression', function () {
+                var cfg, scope;
+                beforeEach(function () {
+                    cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = {v: 0}, b;\n' +
+                        'b = a.v;'
+                    ));
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                    scope.setVars();
+                });
+
+                it('should find the used variable', function () {
+                    var used = analyzer.findUSESet(cfg[2][2]);
+
+                    used.cuse.size.should.eql(1);
+                    used.puse.size.should.eql(0);
+                    used.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
+
                 });
             });
         });
