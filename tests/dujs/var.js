@@ -7,6 +7,32 @@ var Var = require('../../lib/dujs').Var,
 
 describe('Var', function () {
     'use strict';
+    describe('Properties', function () {
+        describe('RETURN_VAR_NAME', function () {
+            it('should have correct value', function () {
+                Var.RETURN_VAR_NAME.should.eql('!RETURN');
+            });
+
+            it('should not be modified', function () {
+                should(function () {
+                    Var.RETURN_VAR_NAME = 'NAME';
+                }).throw();
+            });
+        });
+
+        describe('DEFAULT_RETURN_VAR_NAME', function () {
+            it('should have correct value', function () {
+                Var.DEFAULT_RETURN_VAR_NAME.should.eql('!DEFAULT_RETURN');
+            });
+
+            it('should not be modified', function () {
+                should(function () {
+                    Var.DEFAULT_RETURN_VAR_NAME = 'name';
+                }).throw();
+            });
+        });
+    });
+
     describe('constructor', function () {
         it('should construct well', function () {
             var normal = new Var('ga', [0, 1], Scope.GLOBAL_SCOPE),
