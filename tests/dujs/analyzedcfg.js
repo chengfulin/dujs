@@ -6,6 +6,9 @@ var AnalyzedCFG = require('../../lib/dujs').AnalyzedCFG,
     Scope = require('../../lib/dujs').Scope,
     factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
     factoryDUPair = require('../../lib/dujs').factoryDUPair,
+    factoryVar = require('../../lib/dujs').factoryVar,
+    Set = require('../../lib/analyses').Set,
+    Map = require('core-js/es6/map'),
     should = require('should');
 
 describe('AnalyzedCFG', function () {
@@ -96,83 +99,67 @@ describe('AnalyzedCFG', function () {
                     node2 = factoryFlowNode.createNormalNode();
                 node1.cfgId = 0;
                 node2.cfgId = 1;
-                var pair = factoryDUPair.create(node1,node2);
-                analyzed._testonly_._dupairs.push(pair);
+                var pair = factoryDUPair.create(node1,node2),
+                    variable = factoryVar.create('var', [0,1], Scope.PROGRAM_SCOPE);
+                analyzed._testonly_._dupairs.set(variable, new Set([pair]));
 
-                analyzed.dupairs.length.should.eql(1);
-                analyzed.dupairs[0]._testonly_._first.should.eql(node1);
-                analyzed.dupairs[0]._testonly_._second.should.eql(node2);
+                analyzed.dupairs.size.should.eql(1);
+                analyzed.dupairs.get(variable).size.should.eql(1);
+                analyzed.dupairs.get(variable).values()[0]._testonly_._first.should.eql(node1);
+                analyzed.dupairs.get(variable).values()[0]._testonly_._second.should.eql(node2);
             });
 
-            it('should not be modified', function () {
-                should(function () {
-                    analyzed.dupairs = null;
-                }).throw();
+            it('should support to modify value', function () {
+                var node1 = factoryFlowNode.createNormalNode(),
+                    node2 = factoryFlowNode.createNormalNode();
+                node1.cfgId = 0;
+                node2.cfgId = 1;
+                var pair = factoryDUPair.create(node1,node2),
+                    variable = factoryVar.create('var', [0,1], Scope.PROGRAM_SCOPE),
+                    pairs = new Map();
+                pairs.set(variable, new Set([pair]));
+                analyzed.dupairs = pairs;
+
+                analyzed.dupairs.size.should.eql(1);
+                analyzed.dupairs.get(variable).size.should.eql(1);
             });
         });
     });
 
     describe('Methods', function () {
-        var analyzed, node1, node2;
+        var analyzed, node1, node2, variable;
         beforeEach(function () {
             analyzed = new AnalyzedCFG();
             node1 = factoryFlowNode.createNormalNode();
             node2 = factoryFlowNode.createNormalNode();
             node1.cfgId = 0;
             node2.cfgId = 1;
+            variable = factoryVar.create('var', [0,1], Scope.PROGRAM_SCOPE);
         });
 
         describe('hasDUPair', function () {
             it('should found the reference of pair', function () {
                 var pair = factoryDUPair.create(node1,node2);
-                analyzed._testonly_._dupairs.push(pair);
+                analyzed._testonly_._dupairs.set(variable, new Set([pair]));
                 analyzed.hasDUPair(pair).should.eql(true);
             });
 
             it('should found the pair has same elements', function () {
                 var pair = factoryDUPair.create(node1,node2);
-                analyzed._testonly_._dupairs.push(pair);
+                analyzed._testonly_._dupairs.set(variable, new Set([pair]));
                 analyzed.hasDUPair(factoryDUPair.create(node1, node2)).should.eql(true);
             });
 
             it('should return false as the input is not a DUPair', function () {
-                analyzed._testonly_._dupairs.push(factoryDUPair.create(node1, node2));
+                analyzed._testonly_._dupairs.set(variable, new Set([factoryDUPair.create(node1, node2)]));
                 analyzed.hasDUPair([0,1]).should.eql(false);
                 analyzed.hasDUPair({}).should.eql(false);
             });
 
             it('should return false as the pair value is not existed', function () {
                 var pair = factoryDUPair.create(node1,node2);
-                analyzed._testonly_._dupairs.push(pair);
+                analyzed._testonly_._dupairs.set(variable, new Set([pair]));
                 analyzed.hasDUPair(factoryDUPair.create(node2, node1)).should.eql(false);
-            });
-        });
-
-        describe('addDUPair', function () {
-            it('should add a pair as the pair is a non-existed DUPair', function () {
-                var pair1 = factoryDUPair.create(node1, node2);
-                analyzed.addDUPair(pair1);
-                analyzed._testonly_._dupairs.length.should.eql(1);
-                analyzed._testonly_._dupairs[0]._testonly_._first.should.eql(node1);
-                analyzed._testonly_._dupairs[0]._testonly_._second.should.eql(node2);
-
-                var pair2 = factoryDUPair.create(node2, node1);
-                analyzed.addDUPair(pair2);
-                analyzed._testonly_._dupairs.length.should.eql(2);
-                analyzed._testonly_._dupairs[1]._testonly_._first.should.eql(node2);
-                analyzed._testonly_._dupairs[1]._testonly_._second.should.eql(node1);
-            });
-
-            it('should ignore non-DUPair', function () {
-                analyzed.addDUPair({});
-                analyzed._testonly_._dupairs.length.should.eql(0);
-            });
-
-            it('should ignore existed DUPair', function () {
-                var pair1 = factoryDUPair.create(node1, node2);
-                analyzed.addDUPair(pair1);
-                analyzed.addDUPair(pair1);
-                analyzed._testonly_._dupairs.length.should.eql(1);
             });
         });
     });
