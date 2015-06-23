@@ -174,7 +174,11 @@ describe('DefUseAnalyzer', function () {
                     /// it would generate from left to right
                     genSet.values()[0]._testonly_._var.should.eql(scope._testonly_._vars.get('b'));
                     genSet.values()[1]._testonly_._var.should.eql(scope._testonly_._vars.get('a'));
-                    genSet.values()[0]._testonly_._def.should.eql(genSet.values()[0]._testonly_._def);
+                    genSet.values()[0]._testonly_._def._testonly_._type.should.eql('literal');
+                    genSet.values()[0]._testonly_._def._testonly_._range._testonly_._start.should.eql(19);
+                    genSet.values()[0]._testonly_._def._testonly_._range._testonly_._end.should.eql(24);
+                    genSet.values()[1]._testonly_._def._testonly_._range._testonly_._start.should.eql(23);
+                    genSet.values()[1]._testonly_._def._testonly_._range._testonly_._end.should.eql(24);
                 });
             });
 
@@ -232,9 +236,8 @@ describe('DefUseAnalyzer', function () {
                     var genSet = analyzer.findGENSet(cfg[2][2]);
                     genSet.size.should.eql(2);
                     genSet.values()[0]._testonly_._var.should.eql(scope._testonly_._vars.get('a'));
-                    genSet.values()[0]._testonly_._def._testonly_._range._testonly_._start.should.eql(26);
+                    genSet.values()[0]._testonly_._def._testonly_._range._testonly_._start.should.eql(22);
                     genSet.values()[0]._testonly_._def._testonly_._range._testonly_._end.should.eql(27);
-                    genSet.values()[0]._testonly_._def.should.eql(genSet.values()[1]._testonly_._def);
                 });
             });
 
