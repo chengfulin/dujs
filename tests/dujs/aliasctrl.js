@@ -1,7 +1,7 @@
 /**
  * Created by ChengFuLin on 2015/6/23.
  */
-var aliasCtrl = require('../../lib/aliasctrl'),
+var aliasCtrl = require('../../lib/dujs').aliasCtrl,
     Set = require('../../lib/analyses').Set,
     Map = require('core-js/es6/map');
 require('should');
