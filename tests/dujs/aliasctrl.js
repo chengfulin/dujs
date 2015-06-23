@@ -79,7 +79,7 @@ describe('AliasCtrl', function () {
                 aliasCtrl._testonly_._aliasMap.get(pointed).has(alias3).should.eql(true);
             });
 
-            it('should remove the last alias correctly', function () {
+            it('should remove the 3rd alias correctly', function () {
                 aliasCtrl.removeAlias(pointed, alias3);
                 aliasCtrl._testonly_._aliasMap.get(pointed).size.should.eql(2);
                 aliasCtrl._testonly_._aliasMap.get(pointed).has(alias1).should.eql(true);
@@ -96,6 +96,13 @@ describe('AliasCtrl', function () {
                 aliasCtrl.removeAlias({name: 'pointed'}, alias1);
                 aliasCtrl._testonly_._aliasMap.size.should.eql(1);
                 aliasCtrl._testonly_._aliasMap.get(pointed).size.should.eql(3);
+            });
+
+            it('should remove all alias then the pointed object also', function () {
+                aliasCtrl.removeAlias(pointed, alias1);
+                aliasCtrl.removeAlias(pointed, alias2);
+                aliasCtrl.removeAlias(pointed, alias3);
+                aliasCtrl._testonly_._aliasMap.size.should.eql(0);
             });
         });
     });
