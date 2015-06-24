@@ -120,5 +120,17 @@ describe('AliasMap', function () {
                 aliasMap._testonly_._aliasMap.size.should.eql(0);
             });
         });
+
+        describe('get', function () {
+            it('should get the existed aliases', function () {
+                var pointed = {name: 'pointed'},
+                    alias = {name: 'alias'};
+                aliasMap._testonly_._aliasMap.set(pointed, new Set([alias]));
+
+                var aliases = aliasMap.get(pointed);
+                aliases.size.should.eql(1);
+                aliases.has(alias).should.eql(true);
+            });
+        });
     });
 });
