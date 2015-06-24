@@ -13,7 +13,7 @@ describe('AnalyzedCFGFactory', function () {
             should.exist(analyzedCFG._testonly_._scopeWrappers);
             analyzedCFG._testonly_._scopeWrappers.length.should.eql(0);
             should.exist(analyzedCFG._testonly_._dupairs);
-            analyzedCFG._testonly_._dupairs.length.should.eql(0);
+            analyzedCFG._testonly_._dupairs.size.should.eql(0);
         });
     });
 });
