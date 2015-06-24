@@ -2,9 +2,10 @@
  * Created by ChengFuLin on 2015/6/22.
  */
 var analyzer = require('../../lib/dujs').DefUseAnalyzer,
-    factoryScopeWrapper = require('../../lib/dujs').factoryScopeWrapper,
     cfgext = require('../../lib/dujs').CFGExt,
+    factoryScopeWrapper = require('../../lib/dujs').factoryScopeWrapper,
     factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
+    factoryAnalyzedCFG = require('../../lib/dujs').factoryAnalyzedCFG,
     should = require('should');
 
 describe('DefUseAnalyzer', function () {
@@ -666,6 +667,57 @@ describe('DefUseAnalyzer', function () {
                     used.cuse.values()[0].should.eql(scope._testonly_._vars.get('a'));
 
                 });
+            });
+        });
+
+        describe('doAnalysis', function () {
+            it('should find reachIns and reachOuts of intra-procedural CFG', function () {
+                var cfg = cfgext.getCFG(cfgext.parseAST(
+                        'var a = 0, b = 1;\n' +
+                        'if (a > b) {\n' +
+                        'a = b;\n' +
+                        '}\n' +
+                        'var c = a;'
+                    )),
+                    scope = factoryScopeWrapper.createProgramScopeWrapper(cfg);
+                scope.setVars();
+                var analysisItem = factoryAnalyzedCFG.create();
+                analysisItem.cfg = cfg;
+                analysisItem.scope = scope;
+
+                analyzer.doAnalysis(analysisItem);
+                /// entry
+                cfg[2][0]._testonly_._reachIns.size.should.eql(0);
+                cfg[2][0]._testonly_._reachOuts.size.should.eql(0);
+
+                /// var a = 0, b = 1;
+                cfg[2][1]._testonly_._reachIns.size.should.eql(0);
+                cfg[2][1]._testonly_._reachOuts.size.should.eql(2);
+                cfg[2][1]._testonly_._reachOuts.values()[0]._testonly_._var.should.eql(scope._testonly_._vars.get('a'));
+                cfg[2][1]._testonly_._reachOuts.values()[1]._testonly_._var.should.eql(scope._testonly_._vars.get('b'));
+
+                /// if (a > b) {
+                cfg[2][2]._testonly_._reachIns.size.should.eql(2);
+                cfg[2][2]._testonly_._reachOuts.size.should.eql(2);
+
+                /// a = b;
+                cfg[2][3]._testonly_._reachIns.size.should.eql(2);
+                cfg[2][3]._testonly_._reachOuts.size.should.eql(2);
+
+                /// var c = a;
+                cfg[2][4]._testonly_._reachIns.size.should.eql(3);
+                cfg[2][4]._testonly_._reachOuts.size.should.eql(4);
+                cfg[2][4]._testonly_._reachIns.values()[0]._testonly_._var.should.eql(scope._testonly_._vars.get('b'));
+                cfg[2][4]._testonly_._reachIns.values()[1]._testonly_._var.should.eql(scope._testonly_._vars.get('a'));
+                cfg[2][4]._testonly_._reachIns.values()[2]._testonly_._var.should.eql(scope._testonly_._vars.get('a'));
+                cfg[2][4]._testonly_._reachIns.values()[1]._testonly_._def.toString().should.not.eql(
+                    cfg[2][4]._testonly_._reachIns.values()[2]._testonly_._def.toString()
+                );
+                cfg[2][4]._testonly_._reachOuts.values()[3]._testonly_._var.should.eql(scope._testonly_._vars.get('c'));
+
+                /// entry
+                cfg[2][5]._testonly_._reachIns.size.should.eql(4);
+                cfg[2][5]._testonly_._reachOuts.size.should.eql(0);
             });
         });
     });
