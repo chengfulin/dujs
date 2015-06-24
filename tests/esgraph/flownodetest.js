@@ -89,7 +89,7 @@ describe('FlowNode', function () {
                     should.not.exist(single._testonly_.false);
                     should.not.exist(single._testonly_.exception);
                     should.not.exist(single._testonly_.call);
-                    should.not.exist(single._testonly_.return);
+                    single._testonly_.return.length.should.eql(0);
                     single._testonly_.onEvent.length.should.eql(0);
                 });
 
