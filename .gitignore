@@ -3,7 +3,4 @@ node_modules
 coverage
 !/.gitignore
 !/.jshintrc
-cfgs.png
-dupairs.png
-result.html
-out
+out-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{1,2}-[0-9]{2}-[0-9]{2}
