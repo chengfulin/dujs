@@ -81,10 +81,13 @@ describe('AnalyzedCFG', function () {
                 analyzed.scopeWrappers[0].should.eql(wrapper);
             });
 
-            it('should not be modified', function () {
-                should(function () {
-                    analyzed.scopeWrappers = null;
-                }).throw();
+            it('should support to change value', function () {
+                var node1 = factoryFlowNode.createEntryNode(),
+                    node2 = factoryFlowNode.createExitNode(),
+                    wrapper = new ScopeWrapper([node1, node2, [node1, node2]], Scope.PROGRAM_SCOPE);
+                analyzed.scopeWrappers = [wrapper];
+                analyzed._testonly_._scopeWrappers.length.should.eql(1);
+                analyzed._testonly_._scopeWrappers[0].should.eql(wrapper);
             });
         });
 
