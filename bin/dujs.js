@@ -8,7 +8,7 @@ var fs = require('fs'),
     dujs = require('../lib/dujs'),
     graphics = require('../lib/dujs').graphics,
     GRAPHVIZ_DOT_CMD = 'dot',
-    OUTPUT_DIR = 'out',
+    OUTPUT_DIR = 'out-' + (new Date()).toLocaleDateString() + '-' + (new Date()).getHours() + '-' + (new Date()).getMinutes() + '-' + (new Date()).getSeconds(),
     INTRA_PROCEDURAL_OUTPUTS_DIR = 'intra-procedurals',
     INTER_PROCEDURAL_OUTPUTS_DIR = 'inter-procedurals',
     INTRA_PAGE_OUTPUTS_DIR = 'intra-pages',
@@ -57,14 +57,24 @@ function getSourceFromFiles(files, callback) {
  */
 function outputResultFiles(dirPath, analysisItem, index) {
     "use strict";
-    var dotContent = graphics.analysisItemToCFG(analysisItem);
-    var dotFile = dirPath + '/' + index + '.dot';
-    var outputFile = dirPath + '/' + index + '.png';
-    fs.writeFile(dotFile, dotContent, function (err) {
+    var cfgContent = graphics.analysisItemToCFG(analysisItem),
+        dupairsTable = graphics.dupairsToTable(analysisItem.dupairs);
+    var dotCFG = dirPath + '/' + index + '.cfg.dot',
+        dotDUPairs = dirPath + '/' + index + '.dupairs.dot';
+    var outputCFG = dirPath + '/' + index + '.cfg.png',
+        outputDUPairs = dirPath + '/' + index + '.dupairs.png';
+    fs.writeFile(dotCFG, cfgContent, function (err) {
         if (!!err) {
             throw err;
         }
-        spawn(GRAPHVIZ_DOT_CMD, [dotFile, '-Tpng', '-o', outputFile]);
+        spawn(GRAPHVIZ_DOT_CMD, [dotCFG, '-Tpng', '-o', outputCFG]);
+
+        fs.writeFile(dotDUPairs, dupairsTable, function (err) {
+            if (!!err) {
+                throw err;
+            }
+            spawn(GRAPHVIZ_DOT_CMD, [dotDUPairs, '-Tpng', '-o', outputDUPairs]);
+        });
     });
 }
 
