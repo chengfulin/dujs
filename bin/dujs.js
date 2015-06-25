@@ -2,19 +2,25 @@
  * Created by ChengFuLin on 2015/5/7.
  */
 var fs = require('fs'),
-    async = require('async'),
-    spawn = require('child_process').spawn,
+    spawnSync = require('child_process').spawnSync,
     //open = require('open'),
-    dujs = require('../lib/dujs'),
+    DUJS = require('../lib/dujs'),
     graphics = require('../lib/dujs').graphics,
-    GRAPHVIZ_DOT_CMD = 'dot',
+    Map = require('core-js/es6/map');
+
+var GRAPHVIZ_DOT_CMD = 'dot',
     OUTPUT_DIR = 'out-' + (new Date()).toLocaleDateString() + '-' + (new Date()).getHours() + '-' + (new Date()).getMinutes() + '-' + (new Date()).getSeconds(),
     INTRA_PROCEDURAL_OUTPUTS_DIR = 'intra-procedurals',
     INTER_PROCEDURAL_OUTPUTS_DIR = 'inter-procedurals',
     INTRA_PAGE_OUTPUTS_DIR = 'intra-pages',
-    filenames = [],
-    sourceCode = '',
-    analysisOutputs = null;
+    JS_FILES_FLAG = '-js',
+    jsSourceFileNames = [],
+    intraProceduralCFGOutputs = new Map(),
+    interProceduralCFGOutputs = new Map(),
+    intraPageCFGOutputs = new Map(),
+    intraProceduralDUPairsOutputs = new Map(),
+    interProceduralDUPairsOutputs = new Map(),
+    intraPageDUPairsOutputs = new Map();
 
 /**
  * Get source code from files
@@ -22,29 +28,15 @@ var fs = require('fs'),
  * @param callback
  * @function
  */
-function getSourceFromFiles(files, callback) {
+function getSourceFromFiles(files) {
     "use strict";
     var source = '';
-
-    /**
-     * Callback for reading a file
-     * @param err
-     * @param data
-     */
-    function readFileCallback(err, data) {
-        if (!!err) {
-            callback(err, null);
-        }
-        data.forEach(function (content, index) {
-            /// Add comments to separate source code from different files
-            source += '/// --- start ' + files[index] + ' ---\n' + content + '\n/// --- end ' + files[index] + ' ---\n';
-        });
-        fs.writeFile(OUTPUT_DIR + '/' + 'src.js', source, function (err) {
-            callback(err, source);
-        });
-    }
-
-    async.map(files, fs.readFile, readFileCallback);
+    files.forEach(function (filename) {
+        var content = fs.readFileSync(filename);
+        source += '/// --- start ' + filename + ' ---\n' + content + '\n/// --- end ' + filename + ' ---\n';
+    });
+    fs.writeFileSync(OUTPUT_DIR + '/' + 'src.js', source);
+    return source;
 }
 
 /**
@@ -63,147 +55,57 @@ function outputResultFiles(dirPath, analysisItem, index) {
         dotDUPairs = dirPath + '/' + index + '.dupairs.dot';
     var outputCFG = dirPath + '/' + index + '.cfg.png',
         outputDUPairs = dirPath + '/' + index + '.dupairs.png';
-    fs.writeFile(dotCFG, cfgContent, function (err) {
-        if (!!err) {
-            throw err;
-        }
-        spawn(GRAPHVIZ_DOT_CMD, [dotCFG, '-Tpng', '-o', outputCFG]);
 
-        fs.writeFile(dotDUPairs, dupairsTable, function (err) {
-            if (!!err) {
-                throw err;
-            }
-            spawn(GRAPHVIZ_DOT_CMD, [dotDUPairs, '-Tpng', '-o', outputDUPairs]);
-        });
-    });
+    fs.writeFileSync(dotCFG, cfgContent);
+    spawnSync(GRAPHVIZ_DOT_CMD, [dotCFG, '-Tpng', '-o', outputCFG]);
+    fs.writeFileSync(dotDUPairs, dupairsTable);
+    spawnSync(GRAPHVIZ_DOT_CMD, [dotDUPairs, '-Tpng', '-o', outputDUPairs]);
+
+    if (dirPath.indexOf(INTRA_PROCEDURAL_OUTPUTS_DIR) !== -1) {
+        if (!intraProceduralCFGOutputs.has(index)) {
+            intraProceduralCFGOutputs.set(index, []);
+        }
+        intraProceduralCFGOutputs.set(index, intraProceduralCFGOutputs.get(index).concat(outputCFG));
+        if (!intraProceduralDUPairsOutputs.has(index)) {
+            intraProceduralDUPairsOutputs.set(index, []);
+        }
+        intraProceduralDUPairsOutputs.set(index, intraProceduralDUPairsOutputs.get(index).concat(outputDUPairs));
+    } else if (dirPath.indexOf(INTER_PROCEDURAL_OUTPUTS_DIR) !== -1) {
+        if (!interProceduralCFGOutputs.has(index)) {
+            interProceduralCFGOutputs.set(index, []);
+        }
+        interProceduralCFGOutputs.set(index, interProceduralCFGOutputs.get(index).concat(outputCFG));
+        if (!interProceduralDUPairsOutputs.has(index)) {
+            interProceduralDUPairsOutputs.set(index, []);
+        }
+        interProceduralDUPairsOutputs.set(index, interProceduralDUPairsOutputs.get(index).concat(outputDUPairs));
+    } else if (dirPath.indexOf(INTRA_PAGE_OUTPUTS_DIR) !== -1) {
+        if (!intraPageCFGOutputs.has(index)) {
+            intraPageCFGOutputs.set(index, []);
+        }
+        intraPageCFGOutputs.set(index, intraPageCFGOutputs.get(index).concat(outputCFG));
+        if (!intraPageDUPairsOutputs.has(index)) {
+            intraPageDUPairsOutputs.set(index, []);
+        }
+        intraPageDUPairsOutputs.set(index, intraPageDUPairsOutputs.get(index).concat(outputDUPairs));
+    }
+
 }
 
-/**
- * Callback for read source code from files
- * @param err
- * @param data
- * @function
- */
-function getSourceCallback(err, data) {
+function doIntraProceduralAnalysis(source) {
     "use strict";
-    if (!!err) {
-        throw err;
-    }
-    /// On success, do analysis
-    sourceCode = data;
-    analysisOutputs = dujs(data);
-    analysisOutputs.intraProcedurals.forEach(function (item, index) {
+    var analysisOutputs = DUJS.doIntraProceduralAnalysis(source);
+    analysisOutputs.forEach(function (item, index) {
         outputResultFiles(OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR, item, index);
     });
-    analysisOutputs.interProcedurals.forEach(function (item, index) {
+}
+
+function doInterProceduralAnalysis(source) {
+    "use strict";
+    var analysisOutputs = DUJS.doInterProceduralAnalysis(source);
+    analysisOutputs.forEach(function (item, index) {
         outputResultFiles(OUTPUT_DIR + '/' + INTER_PROCEDURAL_OUTPUTS_DIR, item, index);
     });
-    analysisOutputs.intraPages.forEach(function (item, index) {
-        outputResultFiles(OUTPUT_DIR + '/' + INTRA_PAGE_OUTPUTS_DIR, item, index);
-    });
-}
-
-/**
- * Callback for make the directory for the output of intra-page analysis
- * @param err
- * @function
- */
-function makeIntraPageOutputDirCallback(err) {
-    "use strict";
-    if (!!err) {
-        throw err;
-    }
-}
-
-/**
- * Check the directory for the output of intra-page analysis is existed
- * @param err
- * @param stats
- * @function
- */
-function checkeIntraPageOutputDirCallback(err) {
-    "use strict";
-    if (!!err) {
-        fs.mkdir(OUTPUT_DIR + '/' + INTRA_PAGE_OUTPUTS_DIR, makeIntraPageOutputDirCallback);
-    }
-}
-
-/**
- * Callback for make the directory for the output of inter-procedural analysis
- * @param err
- * @function
- */
-function makeInterProceduralOutputDirCallback(err) {
-    "use strict";
-    if (!!err) {
-        throw err;
-    }
-    fs.lstat(OUTPUT_DIR + '/' + INTRA_PAGE_OUTPUTS_DIR, checkeIntraPageOutputDirCallback);
-}
-
-/**
- * Check the directory for the output of inter-procedural analysis is existed
- * @param err
- * @param stats
- * @function
- */
-function checkeInterProceduralOutputDirCallback(err) {
-    "use strict";
-    if (!!err) {
-        fs.mkdir(OUTPUT_DIR + '/' + INTER_PROCEDURAL_OUTPUTS_DIR, makeInterProceduralOutputDirCallback);
-    }
-}
-
-/**
- * Callback for make the directory for the output of intra-procedural analysis
- * @param err
- * @function
- */
-function makeIntraProceduralOutputDirCallback(err) {
-    "use strict";
-    if (!!err) {
-        throw err;
-    }
-    fs.lstat(OUTPUT_DIR + '/' + INTER_PROCEDURAL_OUTPUTS_DIR, checkeInterProceduralOutputDirCallback);
-}
-
-/**
- * Check the directory for the output of intra-procedural analysis is existed
- * @param err
- * @param stats
- * @function
- */
-function checkeIntraProceduralOutputDirCallback(err) {
-    "use strict";
-    if (!!err) {
-        fs.mkdir(OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR, makeIntraProceduralOutputDirCallback);
-    }
-}
-
-/**
- * Callback for make the root directory for output
- * @param err
- * @function
- */
-function makeOutputDirCallback(err) {
-    "use strict";
-    if (!!err) {
-        throw err;
-    }
-    fs.lstat(OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR, checkeIntraProceduralOutputDirCallback);
-}
-
-/**
- * Check the root directory of output is existed
- * @param err
- * @param stats
- * @function
- */
-function checkOutputDirCallback(err) {
-    "use strict";
-    if (!!err) {
-        fs.mkdir(OUTPUT_DIR, makeOutputDirCallback);
-    }
 }
 
 /**
@@ -211,25 +113,91 @@ function checkOutputDirCallback(err) {
  */
 function createOutputDirectories() {
     "use strict";
-    fs.lstat(OUTPUT_DIR, checkOutputDirCallback);
+    if (!fs.existsSync(OUTPUT_DIR)) { /// root
+        fs.mkdirSync(OUTPUT_DIR);
+    }
+    if (!fs.existsSync(OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR)) { /// intra-procedural outputs
+        fs.mkdirSync(OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR);
+    }
+    if (!fs.existsSync(OUTPUT_DIR + '/' + INTER_PROCEDURAL_OUTPUTS_DIR)) { /// inter-procedural outputs
+        fs.mkdirSync(OUTPUT_DIR + '/' + INTER_PROCEDURAL_OUTPUTS_DIR);
+    }
+    if (!fs.existsSync(OUTPUT_DIR + '/' + INTRA_PAGE_OUTPUTS_DIR)) { /// intra-page outputs
+        fs.mkdirSync(OUTPUT_DIR + '/' + INTRA_PAGE_OUTPUTS_DIR);
+    }
 }
 
-//*********************************************************************************
-/* Main */
-try {
-    /* Get user inputs */
-    process.argv.forEach(function (arg, index) {
-        "use strict";
-        if (index > 1) { /// as command line is "node bin/dujs.js [filename]"
-            filenames.push(arg);
-        }
+function createReport() {
+    "use strict";
+    var reportHTMLContent = '<!DOCTYPE html>' +
+        '<html>' +
+        '<head>' +
+        '<meta charset="utf-8">' +
+        '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+        '<title>dujs analysis result</title>' +
+        '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">' +
+        '<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>' +
+        '<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>' +
+        '</head>' +
+        '<div class="container-fluid">' +
+        '<h2>Source Code</h2>' +
+        '<div class="row">' +
+        '<div class="col-lg-8 col-lg-offset-2 col-sm-12">' +
+        '<code>';
+
+    var source = fs.readFileSync(OUTPUT_DIR + '/src.js');
+    var content = source.toString().replace(/\n/g, "<br>");
+    content = content.toString().replace(/ /g, "&nbsp;");
+    content = content.toString().replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
+    reportHTMLContent += content;
+
+    reportHTMLContent += '</code>' +
+        '</div>' +
+        '</div>' +
+        '<h2>Intra-procedural</h2>' +
+        '<div class="row">';
+
+    intraProceduralCFGOutputs.forEach(function (output, key) {
+        var dupairsOutput = intraProceduralDUPairsOutputs.get(key);
+        reportHTMLContent += '<div class="col-lg-8 col-lg-offset-2 col-sm-12">' +
+            '<img src="../' + output + '" class="img-responsive center-block">' +
+            '</div>' +
+            '<div class="col-lg-12 col-sm-12">' +
+            '<img src="../' + dupairsOutput + '" class="img-responsive center-block">' +
+            '</div>';
     });
 
-    /* Create otuput directories */
-    createOutputDirectories();
+    reportHTMLContent += '</div>' +
+        '</div>' +
+        '<h2>Inter-procedural</h2>' +
+        '<div class="row">';
 
-    /* Get source codes */
-    getSourceFromFiles(filenames, getSourceCallback);
+    interProceduralCFGOutputs.forEach(function (output, key) {
+        var dupairsOutput = interProceduralDUPairsOutputs.get(key);
+        reportHTMLContent += '<div class="col-lg-8 col-lg-offset-2 col-sm-12">' +
+            '<img src="../' + output + '" class="img-responsive center-block">' +
+            '</div>' +
+            '<div class="col-lg-12 col-sm-12">' +
+            '<img src="../' + dupairsOutput + '" class="img-responsive center-block">' +
+            '</div>';
+    });
+
+    reportHTMLContent += '</div>' +
+        '</div>' +
+        '</html>';
+
+    fs.writeFileSync(OUTPUT_DIR + '/' + 'report.html', reportHTMLContent);
+}
+
+/* Main */
+try {
+    var jsFilesIndex = process.argv.indexOf(JS_FILES_FLAG) + 1;
+    jsSourceFileNames = process.argv.slice(jsFilesIndex);
+    createOutputDirectories();
+    var source = getSourceFromFiles(jsSourceFileNames);
+    doIntraProceduralAnalysis(source);
+    doInterProceduralAnalysis(source);
+    createReport();
 
 } catch(err) {
     console.log(err.message);
