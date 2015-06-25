@@ -143,15 +143,12 @@ function createReport() {
         '<h2>Source Code</h2>' +
         '<div class="row">' +
         '<div class="col-lg-8 col-lg-offset-2 col-sm-12">' +
-        '<code>';
+        '<pre>';
 
     var source = fs.readFileSync(OUTPUT_DIR + '/src.js');
-    var content = source.toString().replace(/\n/g, "<br>");
-    content = content.toString().replace(/ /g, "&nbsp;");
-    content = content.toString().replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
-    reportHTMLContent += content;
+    reportHTMLContent += source;
 
-    reportHTMLContent += '</code>' +
+    reportHTMLContent += '</pre>' +
         '</div>' +
         '</div>' +
         '<h2>Intra-procedural</h2>' +
