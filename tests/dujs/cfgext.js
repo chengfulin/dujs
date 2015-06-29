@@ -161,9 +161,9 @@ describe('CFGExt', function () {
                     )),
                     output = CFGExt.toDotWithLabelLoc(cfg);
                 output.should.eql(
-                    'n0 [label="entry", style="rounded"]\n' +
+                    'n0 [label="entry (L1:C0)", style="rounded"]\n' +
                     'n1 [label="L1:C0"]\n' +
-                    'n2 [label="exit", style="rounded"]\n' +
+                    'n2 [label="exit (L1:C1)", style="rounded"]\n' +
                     'n0 -> n1 []\n' +
                     'n1 -> n2 []\n'
                 );
