@@ -124,11 +124,11 @@ describe('CFGExt', function () {
                     dot = CFGExt.toDot(CFGExt.getCFG(ast));
 
                 dot.should.eql(
-                    'n0 [label="entry", style="rounded"]\n' +
-                    'n1 [label="VariableDeclaration"]\n' +
-                    'n2 [label="UpdateExpression"]\n' +
-                    'n3 [label="AssignmentExpression"]\n' +
-                    'n4 [label="exit", style="rounded"]\n' +
+                    'n0 [label="entry (L1:C0)", style="rounded"]\n' +
+                    'n1 [label="L1:C0"]\n' +
+                    'n2 [label="L1:C17"]\n' +
+                    'n3 [label="L1:C21"]\n' +
+                    'n4 [label="exit (L1:C22)", style="rounded"]\n' +
                     'n0 -> n1 []\n' +
                     'n1 -> n2 []\n' +
                     'n2 -> n3 []\n' +
@@ -138,7 +138,7 @@ describe('CFGExt', function () {
 
             it('should convert correctly to dot with source option', function () {
                 var ast = CFGExt.parseAST(code),
-                    dot = CFGExt.toDot(CFGExt.getCFG(ast), code);
+                    dot = CFGExt.toDot(CFGExt.getCFG(ast, {labelWithLoc: false}), code);
 
                 dot.should.eql(
                     'n0 [label="entry", style="rounded"]\n' +
