@@ -181,7 +181,7 @@ function createReport() {
             '<img src="../' + output + '" class="img-responsive center-block">' +
             '</div>' +
             '<div class="col-lg-12 col-sm-12">' +
-            '<img src="../' + dupairsOutput + '" class="img-responsive center-block">' +
+            '<img src="../' + dupairsOutput + '" class="center-block">' +
             '</div>';
     });
     reportHTMLContent += '</div>';
@@ -190,10 +190,10 @@ function createReport() {
     intraPageCFGOutputs.forEach(function (output, key) {
         var dupairsOutput = intraPageDUPairsOutputs.get(key);
         reportHTMLContent += '<div class="col-lg-8 col-lg-offset-2 col-sm-12">' +
-            '<img src="../' + output + '" class="img-responsive center-block">' +
+            '<img src="../' + output + '" class="center-block">' +
             '</div>' +
             '<div class="col-lg-12 col-sm-12">' +
-            '<img src="../' + dupairsOutput + '" class="img-responsive center-block">' +
+            '<img src="../' + dupairsOutput + '" class="center-block">' +
             '</div>';
     });
     reportHTMLContent += '</div></div>';
