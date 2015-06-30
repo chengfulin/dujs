@@ -1,0 +1,16 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="5">Def-Use pairs</td></tr><tr><td>load @ Program</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>fun @ Program</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>show @ Program</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>update @ Program</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>window @ Global</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document @ Global</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>a @ Program</td><td>(L2:C0,L4:C4)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>b @ Program</td><td>(L2:C0,(L7:C8,L8:C8))</td><td>(L2:C0,(L7:C8,L10:C8))</td><td>(L2:C0,L8:C8)</td><td>(L2:C0,L10:C8)</td><td></td></tr>
+<tr><td>c @ Function["load"]</td><td>(L4:C4,L5:C4)</td><td>(L4:C4,(L7:C8,L8:C8))</td><td>(L4:C4,(L7:C8,L10:C8))</td><td>(L8:C8,L12:C4)</td><td>(L10:C8,L12:C4)</td></tr>
+</TABLE>
+>];
+}
