@@ -68,12 +68,12 @@ describe('AnalyzedCFGBuilder', function () {
                     tree = new ScopeTree();
                 tree.buildScopeTree(ast);
 
-                var analyzedCFGs = builder.buildIntraProceduralCFGs(tree);
+                var analyzedCFGs = builder.buildIntraProceduralAnalysisItems(tree);
                 analyzedCFGs.length.should.eql(3);
             });
 
             it('should be empty as the input is not a ScopeTree',function () {
-                var analyzedCFGs = builder.buildIntraProceduralCFGs({});
+                var analyzedCFGs = builder.buildIntraProceduralAnalysisItems({});
                 analyzedCFGs.length.should.eql(0);
             });
         });

@@ -94,7 +94,7 @@ function outputResultFiles(dirPath, analysisItem, index) {
 
 function doIntraProceduralAnalysis(source) {
     "use strict";
-    var analysisOutputs = DUJS.doIntraProceduralAnalysis(source);
+    var analysisOutputs = DUJS.doIntraProceduralAnalysis(source).intraProceduralAnalysisItems;
     analysisOutputs.forEach(function (item, index) {
         outputResultFiles(OUTPUT_DIR + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR, item, index);
     });
@@ -102,9 +102,17 @@ function doIntraProceduralAnalysis(source) {
 
 function doInterProceduralAnalysis(source) {
     "use strict";
-    var analysisOutputs = DUJS.doInterProceduralAnalysis(source);
+    var analysisOutputs = DUJS.doInterProceduralAnalysis(source).interProceduralAnalysisItems;
     analysisOutputs.forEach(function (item, index) {
         outputResultFiles(OUTPUT_DIR + '/' + INTER_PROCEDURAL_OUTPUTS_DIR, item, index);
+    });
+}
+
+function doIntraPageAnalysis(source) {
+    "use strict";
+    var analysisOutputs = DUJS.doIntraPageAnalysis(source).intraPageAnalysisItems;
+    analysisOutputs.forEach(function (item, index) {
+        outputResultFiles(OUTPUT_DIR + '/' + INTRA_PAGE_OUTPUTS_DIR, item, index);
     });
 }
 
@@ -140,20 +148,21 @@ function createReport() {
         '<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>' +
         '</head>' +
         '<div class="container-fluid">' +
-        '<h2>Source Code</h2>' +
         '<div class="row">' +
+        '<h2>Source Code</h2>' +
         '<div class="col-lg-8 col-lg-offset-2 col-sm-12">' +
         '<pre>';
 
     var source = fs.readFileSync(OUTPUT_DIR + '/src.js');
-    reportHTMLContent += source;
+    reportHTMLContent += source + '</pre></div></div>';
 
-    reportHTMLContent += '</pre>' +
-        '</div>' +
-        '</div>' +
-        '<h2>Intra-procedural</h2>' +
-        '<div class="row">';
+    reportHTMLContent += '<ul class="nav nav-tabs">' +
+        '<li role="presentation"><a id="intraProceduralTab" href="#">Intra-procedural</a></li>'+
+        '<li role="presentation"><a id="interProceduralTab" href="#">Inter-procedural</a></li>' +
+        '<li role="presentation"><a id="intraPageTab" href="#">Intra-page</a></li>' +
+        '</ul>';
 
+    reportHTMLContent += '<div id="intraProceduralOutputs" class="row outputs"><h2>Intra-procedural</h2>';
     intraProceduralCFGOutputs.forEach(function (output, key) {
         var dupairsOutput = intraProceduralDUPairsOutputs.get(key);
         reportHTMLContent += '<div class="col-lg-8 col-lg-offset-2 col-sm-12">' +
@@ -163,12 +172,9 @@ function createReport() {
             '<img src="../' + dupairsOutput + '" class="img-responsive center-block">' +
             '</div>';
     });
+    reportHTMLContent += '</div>';
 
-    reportHTMLContent += '</div>' +
-        '</div>' +
-        '<h2>Inter-procedural</h2>' +
-        '<div class="row">';
-
+    reportHTMLContent += '<div id="interProceduralOutputs" class="row outputs"><h2>Inter-procedural</h2>';
     interProceduralCFGOutputs.forEach(function (output, key) {
         var dupairsOutput = interProceduralDUPairsOutputs.get(key);
         reportHTMLContent += '<div class="col-lg-8 col-lg-offset-2 col-sm-12">' +
@@ -178,9 +184,38 @@ function createReport() {
             '<img src="../' + dupairsOutput + '" class="img-responsive center-block">' +
             '</div>';
     });
+    reportHTMLContent += '</div>';
 
-    reportHTMLContent += '</div>' +
-        '</div>' +
+    reportHTMLContent += '<div id="intraPageOutputs" class="row outputs"><h2>Intra-page</h2>';
+    intraPageCFGOutputs.forEach(function (output, key) {
+        var dupairsOutput = intraPageDUPairsOutputs.get(key);
+        reportHTMLContent += '<div class="col-lg-8 col-lg-offset-2 col-sm-12">' +
+            '<img src="../' + output + '" class="img-responsive center-block">' +
+            '</div>' +
+            '<div class="col-lg-12 col-sm-12">' +
+            '<img src="../' + dupairsOutput + '" class="img-responsive center-block">' +
+            '</div>';
+    });
+    reportHTMLContent += '</div></div>';
+
+    reportHTMLContent += '<script>' +
+        '$(".outputs").hide();' +
+        '$("#intraProceduralTab").click(function () {' +
+        '$("#intraProceduralOutputs").show();' +
+        '$("#interProceduralOutputs").hide();' +
+        '$("#intraPageOutputs").hide();' +
+        '});' +
+        '$("#interProceduralTab").click(function () {' +
+        '$("#intraProceduralOutputs").hide();' +
+        '$("#interProceduralOutputs").show();' +
+        '$("#intraPageOutputs").hide();' +
+        '});' +
+        '$("#intraPageTab").click(function () {' +
+        '$("#intraProceduralOutputs").hide();' +
+        '$("#interProceduralOutputs").hide();' +
+        '$("#intraPageOutputs").show();' +
+        '});' +
+        '</script>' +
         '</html>';
 
     fs.writeFileSync(OUTPUT_DIR + '/' + 'report.html', reportHTMLContent);
@@ -194,8 +229,9 @@ try {
     var source = getSourceFromFiles(jsSourceFileNames);
     doIntraProceduralAnalysis(source);
     doInterProceduralAnalysis(source);
+    doIntraPageAnalysis(source);
     createReport();
 
 } catch(err) {
-    console.log(err.message);
+    throw err;
 }

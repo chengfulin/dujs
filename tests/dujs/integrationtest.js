@@ -23,12 +23,12 @@ describe('Integration Test', function () {
                 });
 
                 it('should construct CFG correctly', function () {
-                    result.length.should.eql(1); /// 1 intra-procedural analysis item
+                    result.intraProceduralAnalysisItems.length.should.eql(1); /// 1 intra-procedural analysis item
 
                     /// Check properties
-                    should.exist(result[0]._testonly_._cfg);
-                    CFGExt.isValidCFG(result[0]._testonly_._cfg).should.eql(true);
-                    var cfg = result[0]._testonly_._cfg;
+                    should.exist(result.intraProceduralAnalysisItems[0]._testonly_._cfg);
+                    CFGExt.isValidCFG(result.intraProceduralAnalysisItems[0]._testonly_._cfg).should.eql(true);
+                    var cfg = result.intraProceduralAnalysisItems[0]._testonly_._cfg;
                     cfg[2].length.should.eql(4);
                     /// cfgIds
                     cfg[0]._testonly_._cfgId.should.eql(0);
@@ -51,9 +51,9 @@ describe('Integration Test', function () {
 
                 it('should set variables well', function () {
                     /// Global VarDefs
-                    should.exist(result[0]._testonly_._cfg[0]._testonly_._generate);
-                    result[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
-                    var globals = result[0]._testonly_._cfg[0]._testonly_._generate;
+                    should.exist(result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate);
+                    result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
+                    var globals = result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate;
                     var globalNames = ['window', 'document'];
                     globals.forEach(function (vardef) {
                         globalNames.indexOf(vardef._testonly_._var._testonly_._name).should.not.eql(-1);
@@ -61,9 +61,9 @@ describe('Integration Test', function () {
                     });
 
                     /// Vars
-                    should.exist(result[0]._testonly_._scopeWrappers[0]._testonly_._vars);
-                    result[0]._testonly_._scopeWrappers[0]._testonly_._vars.size.should.eql(4);
-                    var variables = result[0]._testonly_._scopeWrappers[0]._testonly_._vars;
+                    should.exist(result.intraProceduralAnalysisItems[0]._testonly_._scopeWrappers[0]._testonly_._vars);
+                    result.intraProceduralAnalysisItems[0]._testonly_._scopeWrappers[0]._testonly_._vars.size.should.eql(4);
+                    var variables = result.intraProceduralAnalysisItems[0]._testonly_._scopeWrappers[0]._testonly_._vars;
                     variables.has('window').should.eql(true);
                     variables.has('document').should.eql(true);
                     variables.has('a').should.eql(true);
@@ -81,12 +81,12 @@ describe('Integration Test', function () {
                 });
 
                 it('should construct CFG correctly', function () {
-                    result.length.should.eql(2);
+                    result.intraProceduralAnalysisItems.length.should.eql(2);
 
                     /// Check properties
-                    should.exist(result[1]._testonly_._cfg);
-                    CFGExt.isValidCFG(result[1]._testonly_._cfg).should.eql(true);
-                    var cfg = result[1]._testonly_._cfg;
+                    should.exist(result.intraProceduralAnalysisItems[1]._testonly_._cfg);
+                    CFGExt.isValidCFG(result.intraProceduralAnalysisItems[1]._testonly_._cfg).should.eql(true);
+                    var cfg = result.intraProceduralAnalysisItems[1]._testonly_._cfg;
                     cfg[2].length.should.eql(3);
                     /// cfgIds
                     cfg[0]._testonly_._cfgId.should.eql(4);
@@ -105,33 +105,52 @@ describe('Integration Test', function () {
 
                 it('should set variables well', function () {
                     /// Params VarDef
-                    should.exist(result[1]._testonly_._cfg[0]._testonly_._generate);
-                    result[1]._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
-                    var params = result[1]._testonly_._cfg[0]._testonly_._generate;
+                    should.exist(result.intraProceduralAnalysisItems[1]._testonly_._cfg[0]._testonly_._generate);
+                    result.intraProceduralAnalysisItems[1]._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
+                    var params = result.intraProceduralAnalysisItems[1]._testonly_._cfg[0]._testonly_._generate;
                     var paramNames = ['c'];
                     params.forEach(function (vardef) {
                         paramNames.indexOf(vardef._testonly_._var._testonly_._name).should.not.eql(-1);
                     });
 
                     /// function VarDef
-                    result[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(3);
-                    var programEntryVarDefs = result[0]._testonly_._cfg[0]._testonly_._generate;
+                    result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(3);
+                    var programEntryVarDefs = result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate;
                     var programEntryVarNames = ['window', 'document', 'foo'];
                     programEntryVarDefs.forEach(function (vardef) {
                         programEntryVarNames.indexOf(vardef._testonly_._var._testonly_._name).should.not.eql(-1);
                     });
 
                     /// Vars
-                    should.exist(result[1]._testonly_._scopeWrappers[0]._testonly_._vars);
-                    result[1]._testonly_._scopeWrappers[0]._testonly_._vars.size.should.eql(2);
-                    var variables = result[1]._testonly_._scopeWrappers[0]._testonly_._vars;
+                    should.exist(result.intraProceduralAnalysisItems[1]._testonly_._scopeWrappers[0]._testonly_._vars);
+                    result.intraProceduralAnalysisItems[1]._testonly_._scopeWrappers[0]._testonly_._vars.size.should.eql(2);
+                    var variables = result.intraProceduralAnalysisItems[1]._testonly_._scopeWrappers[0]._testonly_._vars;
                     variables.has('c').should.eql(true);
                     variables.has('d').should.eql(true);
 
                     /// function variable
-                    var programVars = result[0]._testonly_._scopeWrappers[0]._testonly_._vars;
+                    var programVars = result.intraProceduralAnalysisItems[0]._testonly_._scopeWrappers[0]._testonly_._vars;
                     programVars.has('foo').should.eql(true);
                 });
+            });
+        });
+
+        describe('Getting intra-page analysis items', function () {
+            it('should found handler', function () {
+                var code = 'var a = 0, b;\n' +
+                    'b = "text";\n' +
+                    'function foo() {\n' +
+                    'a = 1;\n' +
+                    '}\n' +
+                    'function fun() {\n' +
+                    'a = 2;\n' +
+                    '}\n' +
+                    'window.addEventListener("load",foo);\n' +
+                    'document.addEventListener("load", fun);';
+                var result = dujs.doIntraPageAnalysis(code);
+                result.intraProceduralAnalysisItems.length.should.eql(3);
+                result.interProceduralAnalysisItems.length.should.eql(0);
+                result.intraPageAnalysisItems.length.should.eql(1);
             });
         });
     });
