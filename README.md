@@ -26,4 +26,68 @@ Result files will located under the <strong>out-[year]-[month]-[day]-[hour]-[min
 </ul>
 
 ##Sample
-<a href="sampleOutputs/out-2015-06-30-20-59-1/report.html" target="_blank">Sample Result</a>
+###Source
+<em>At default, add window and document as global variables</em>
+<pre>
+/// --- start sample.js ---
+var a = 0, b = 7;
+function load() {
+    var c = ++a;
+    console.log(c);
+
+    if (c > b) {
+        c = b;
+    } else {
+        c = b + 1;
+    }
+    console.log(c);
+}
+window.addEventListener('load', load);
+function fun() {
+    while (a < b) {
+        a += 2;
+    }
+}
+function show() {
+    console.log('a=' + a);
+    console.log('b=' + b);
+}
+function update() {
+    fun();
+}
+document.getElementById('showBTN').addEventListener('click', show);
+document.getElementById('updateBtn').addEventListener('click', update);
+/// --- end sample.js ---
+
+</pre>
+##Models
+###Intra-procedural dataflow graph
+####1.
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/0.cfg.png">
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/0.dupairs.png">
+<hr>
+####2.
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/1.cfg.png">
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/1.dupairs.png">
+<hr>
+####3.
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/2.cfg.png">
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/2.dupairs.png">
+<hr>
+####4.
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/3.cfg.png">
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/3.dupairs.png">
+<hr>
+####5.
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/4.cfg.png">
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-procedurals/4.dupairs.png">
+<hr>
+###Inter-procedural dataflow graph
+####1.
+<img src="sampleOutputs/out-2015-06-30-20-59-1/inter-procedurals/0.cfg.png">
+<img src="sampleOutputs/out-2015-06-30-20-59-1/inter-procedurals/0.dupairs.png">
+<hr>
+###Intra-page dataflow graph
+####1.
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-pages/0.cfg.png">
+<img src="sampleOutputs/out-2015-06-30-20-59-1/intra-pages/0.dupairs.png">
