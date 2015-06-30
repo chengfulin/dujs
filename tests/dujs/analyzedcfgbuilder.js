@@ -27,12 +27,13 @@ describe('AnalyzedCFGBuilder', function () {
                 /// All nodes of connected CFG
                 connectedCFG[2][0]._testonly_._type.should.eql('entry');
                 connectedCFG[2][1]._testonly_._type.should.eql('call');
-                should.not.exist(connectedCFG[2][1]._testonly_._astNode);
+                /// original call site is modified to be Call Node
+                should.exist(connectedCFG[2][1]._testonly_._astNode);
+                connectedCFG[2][1]._testonly_._astNode.type.should.eql('CallExpression');
                 connectedCFG[2][2]._testonly_._type.should.eql('entry');
                 connectedCFG[2][4]._testonly_._type.should.eql('exit');
                 connectedCFG[2][5]._testonly_._type.should.eql('callReturn');
-                should.exist(connectedCFG[2][5]._testonly_._astNode);
-                connectedCFG[2][5]._testonly_._astNode.type.should.eql('CallExpression');
+                should.not.exist(connectedCFG[2][5]._testonly_._astNode);
                 connectedCFG[2][6]._testonly_._type.should.eql('exit');
 
                 /// Call connection
