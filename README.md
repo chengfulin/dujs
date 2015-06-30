@@ -26,35 +26,4 @@ Result files will located under the <strong>out-[year]-[month]-[day]-[hour]-[min
 </ul>
 
 ##Sample
-###Source
-<pre>
-/// --- start .1.js ---
-var a = 1, b;
-function foo(x) {
-     var c = x;
-           b = c;
-}
-foo(a - 1);
-/// --- end .1.js ---
-/// --- start .2.js ---
-while(a > b) {
-    a--;
-}
-
-/// --- end .2.js ---
-
-</pre>
-
-###Intra-procedural Analysis
-<img src="sampleOutputs/intra-procedurals/0.cfg.png">
-<br>
-<img src="sampleOutputs/intra-procedurals/0.dupairs.png">
-<br>
-<img src="sampleOutputs/intra-procedurals/1.cfg.png">
-<br>
-<img src="sampleOutputs/intra-procedurals/1.dupairs.png">
-
-###Inter-procedural Analysis
-<img src="sampleOutputs/inter-procedurals/0.cfg.png">
-<br>
-<img src="sampleOutputs/inter-procedurals/0.dupairs.png">
+<a href="sampleOutputs/out-2015-06-30-20-59-1/report.html" target="_blank">Sample Result</a>
