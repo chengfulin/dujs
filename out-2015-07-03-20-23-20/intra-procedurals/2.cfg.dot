@@ -1,0 +1,12 @@
+digraph CFG {
+node [shape="box"]
+label = "Function fun"
+n19 [label="entry", style="rounded"]
+n20 [label="L9:C4"]
+n21 [label="L10:C4"]
+n22 [label="exit", style="rounded"]
+n19 -> n20 []
+n20 -> n21 []
+n20 -> n22 [color="red", label="exception"]
+n21 -> n22 []
+}

@@ -1,0 +1,18 @@
+digraph CFG {
+node [shape="box"]
+label = "Program"
+n0 [label="entry", style="rounded"]
+n1 [label="L3:C0"]
+n2 [label="L15:C0"]
+n3 [label="L33:C0"]
+n4 [label="L34:C0"]
+n5 [label="exit", style="rounded"]
+n0 -> n1 []
+n1 -> n2 []
+n2 -> n3 []
+n2 -> n5 [color="red", label="exception"]
+n3 -> n4 []
+n3 -> n5 [color="red", label="exception"]
+n4 -> n5 []
+n4 -> n5 [color="red", label="exception"]
+}

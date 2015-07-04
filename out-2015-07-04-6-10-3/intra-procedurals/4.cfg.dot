@@ -1,0 +1,10 @@
+digraph CFG {
+node [shape="box"]
+label = "Function update"
+n25 [label="entry", style="rounded"]
+n26 [label="L31:C4"]
+n27 [label="exit", style="rounded"]
+n25 -> n26 []
+n26 -> n27 []
+n26 -> n27 [color="red", label="exception"]
+}

@@ -1,0 +1,16 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="2">Def-Use pairs</td></tr><tr><td>load @ Program</td><td>(entry,L15:C0)</td><td></td></tr>
+<tr><td>fun @ Program</td><td></td><td></td></tr>
+<tr><td>show @ Program</td><td>(entry,L33:C0)</td><td></td></tr>
+<tr><td>update @ Program</td><td>(entry,L34:C0)</td><td></td></tr>
+<tr><td>window @ Global</td><td>(entry,L15:C0)</td><td></td></tr>
+<tr><td>document @ Global</td><td>(entry,L33:C0)</td><td>(entry,L34:C0)</td></tr>
+<tr><td>a @ Program</td><td></td><td></td></tr>
+<tr><td>b @ Program</td><td></td><td></td></tr>
+<tr><td>x @ Program</td><td></td><td></td></tr>
+</TABLE>
+>];
+}

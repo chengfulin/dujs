@@ -1,0 +1,37 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>dujs analysis result</title><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script><script src="https://code.jquery.com/jquery-1.11.3.min.js"></script></head><div class="container-fluid"><div class="row"><h2>Source Code</h2><div class="col-lg-8 col-lg-offset-2 col-sm-12"><pre>/// --- start .event.js ---
+/// --- start .event.js ---
+var a = 0, b = 7, x;
+function load() {
+    var c = ++a;
+    console.log(c);
+
+    if (c > b) {
+        c = b;
+    } else {
+        c = b + 1;
+    }
+    console.log(c);
+}
+window.addEventListener('load', load);
+function fun() {
+    while (a < b) {
+        a += 2;
+    }
+    if (!x) {
+        x = 0;
+    } else {
+        x += a;
+    }
+}
+function show() {
+    console.log('a=' + a);
+    console.log('b=' + b);
+}
+function update() {
+    fun();
+}
+document.addEventListener('click', show);
+document.addEventListener('click', update);
+
+/// --- end .event.js ---
+</pre></div></div><ul class="nav nav-tabs"><li role="presentation"><a id="intraProceduralTab" href="#">Intra-procedural</a></li><li role="presentation"><a id="interProceduralTab" href="#">Inter-procedural</a></li><li role="presentation"><a id="intraPageTab" href="#">Intra-page</a></li></ul><div id="intraProceduralOutputs" class="row outputs"><h2>Intra-procedural</h2><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/0.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/0.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/1.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/1.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/2.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/2.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/3.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/3.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/4.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-procedurals/4.dupairs.png" class="img-responsive center-block"></div></div><div id="interProceduralOutputs" class="row outputs"><h2>Inter-procedural</h2><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-04-6-10-3/inter-procedurals/0.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-04-6-10-3/inter-procedurals/0.dupairs.png" class="center-block"></div></div><div id="intraPageOutputs" class="row outputs"><h2>Intra-page</h2><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-pages/0.cfg.png" class="center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-04-6-10-3/intra-pages/0.dupairs.png" class="center-block"></div></div></div><script>$(".outputs").hide();$("#intraProceduralTab").click(function () {$("#intraProceduralOutputs").show();$("#interProceduralOutputs").hide();$("#intraPageOutputs").hide();});$("#interProceduralTab").click(function () {$("#intraProceduralOutputs").hide();$("#interProceduralOutputs").show();$("#intraPageOutputs").hide();});$("#intraPageTab").click(function () {$("#intraProceduralOutputs").hide();$("#interProceduralOutputs").hide();$("#intraPageOutputs").show();});</script></html>
