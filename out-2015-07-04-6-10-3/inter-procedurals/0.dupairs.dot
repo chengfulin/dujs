@@ -1,8 +1,0 @@
-digraph structs {
-node [shape="plaintext"]
-struct1 [label=<
-<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-<tr><td>Variable</td><td COLSPAN="4">Def-Use pairs</td></tr><tr><td>a @ Program</td><td>(L18:C8,(L17:C11,L18:C8))</td><td>(L18:C8,(L17:C11,L20:C8))</td><td>(L18:C8,L18:C8)</td><td>(L18:C8,L23:C8)</td></tr>
-</TABLE>
->];
-}
