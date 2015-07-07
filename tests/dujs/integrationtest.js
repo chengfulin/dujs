@@ -52,13 +52,12 @@ describe('Integration Test', function () {
                 it('should set variables well', function () {
                     /// Global VarDefs
                     should.exist(result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate);
-                    result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
-                    var globals = result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate;
-                    var globalNames = ['window', 'document'];
-                    globals.forEach(function (vardef) {
-                        globalNames.indexOf(vardef._testonly_._var._testonly_._name).should.not.eql(-1);
-                        vardef._testonly_._def._testonly_._type.should.eql('htmlDOM');
-                    });
+                    result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(4);
+                    var genAtEntry = result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate;
+                    var varNames = ['window', 'document', 'a', 'b'];
+                    genAtEntry.values().every(function (vardef) {
+                        return varNames.indexOf(vardef._testonly_._var._testonly_._name) !== -1;
+                    }).should.eql(true);
 
                     /// Vars
                     should.exist(result.intraProceduralAnalysisItems[0]._testonly_._scopeWrappers[0]._testonly_._vars);
@@ -106,20 +105,20 @@ describe('Integration Test', function () {
                 it('should set variables well', function () {
                     /// Params VarDef
                     should.exist(result.intraProceduralAnalysisItems[1]._testonly_._cfg[0]._testonly_._generate);
-                    result.intraProceduralAnalysisItems[1]._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
-                    var params = result.intraProceduralAnalysisItems[1]._testonly_._cfg[0]._testonly_._generate;
-                    var paramNames = ['c'];
-                    params.forEach(function (vardef) {
-                        paramNames.indexOf(vardef._testonly_._var._testonly_._name).should.not.eql(-1);
-                    });
+                    result.intraProceduralAnalysisItems[1]._testonly_._cfg[0]._testonly_._generate.size.should.eql(2);
+                    var genAtEntry = result.intraProceduralAnalysisItems[1]._testonly_._cfg[0]._testonly_._generate;
+                    var varNames = ['c', 'd'];
+                    genAtEntry.values().every(function (vardef) {
+                        return varNames.indexOf(vardef._testonly_._var._testonly_._name) !== -1;
+                    }).should.eql(true);
 
                     /// function VarDef
-                    result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(3);
+                    result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate.size.should.eql(5);
                     var programEntryVarDefs = result.intraProceduralAnalysisItems[0]._testonly_._cfg[0]._testonly_._generate;
-                    var programEntryVarNames = ['window', 'document', 'foo'];
-                    programEntryVarDefs.forEach(function (vardef) {
-                        programEntryVarNames.indexOf(vardef._testonly_._var._testonly_._name).should.not.eql(-1);
-                    });
+                    var programEntryVarNames = ['window', 'document', 'foo', 'a', 'b'];
+                    programEntryVarDefs.every(function (vardef) {
+                        return programEntryVarNames.indexOf(vardef._testonly_._var._testonly_._name) !== -1;
+                    }).should.eql(true);
 
                     /// Vars
                     should.exist(result.intraProceduralAnalysisItems[1]._testonly_._scopeWrappers[0]._testonly_._vars);

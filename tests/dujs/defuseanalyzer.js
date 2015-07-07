@@ -688,7 +688,11 @@ describe('DefUseAnalyzer', function () {
                 analyzer.doAnalysis(analysisItem);
                 /// entry
                 cfg[2][0]._testonly_._reachIns.size.should.eql(0);
-                cfg[2][0]._testonly_._reachOuts.size.should.eql(0);
+                cfg[2][0]._testonly_._reachOuts.size.should.eql(3);
+                /// should contain a, b, c
+                cfg[2][0]._testonly_._generate.forEach(function (vardef) {
+                    vardef._testonly_._def._testonly_._type.should.eql('undefined');
+                });
 
                 /// var a = 0, b = 1;
                 cfg[2][1]._testonly_._reachIns.size.should.eql(0);
