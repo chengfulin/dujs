@@ -162,6 +162,29 @@ describe('ScopeTree', function () {
                 tree._testonly_._scopes[1]._testonly_._vars.has('fun').should.eql(true);
                 tree._testonly_._scopes[1]._testonly_._cfg[0]._testonly_._generate.size.should.eql(1);
             });
+
+            it('should support inner function', function () {
+                var ast = CFGExt.parseAST(
+                    'var a = 0;' +
+                    'function foo() {' +
+                        'a = 1;' +
+                    '}' +
+                    'function foo2() {' +
+                        'a = 2;' +
+                        'function inner() {' +
+                            'a = 3;' +
+                        '}' +
+                    '}'
+                    ),
+                    tree = new ScopeTree();
+                tree.buildScopeTree(ast);
+                tree._testonly_._scopes.length.should.eql(4);
+                tree._testonly_._root._testonly_._children.size.should.eql(2);
+                tree._testonly_._root._testonly_._children.has('[10,33]').should.eql(true);
+                tree._testonly_._root._testonly_._children.has('[33,82]').should.eql(true);
+                tree._testonly_._scopes[2]._testonly_._children.size.should.eql(1);
+                tree._testonly_._scopes[2]._testonly_._children.has('[56,81]').should.eql(true);
+            });
         });
 
         describe('setVars', function () {
