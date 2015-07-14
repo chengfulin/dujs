@@ -1,9 +1,9 @@
 // should handle while loops
 /*
-n0 [label="entry", style="rounded"]
+n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
 n1 [label="true"]
 n2 [label="empty"]
-n3 [label="exit", style="rounded"]
+n3 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
 n0 -> n1 []
 n1 -> n2 [label="true"]
 n1 -> n3 [label="false"]

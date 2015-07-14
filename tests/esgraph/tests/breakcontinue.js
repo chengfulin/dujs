@@ -1,6 +1,6 @@
 // should handle break and continue for loops
 /*
-n0 [label="entry", style="rounded"]
+n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
 n1 [label="t"]
 n2 [label="for (i in i)"]
 n3 [label="whiletest"]
@@ -10,7 +10,7 @@ n6 [label="t"]
 n7 [label="dotest"]
 n8 [label="whiletest"]
 n9 [label="t"]
-n10 [label="exit", style="rounded"]
+n10 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
 n11 [label="update"]
 n0 -> n1 []
 n1 -> n2 [label="true"]

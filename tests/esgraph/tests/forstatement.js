@@ -1,6 +1,6 @@
 // should handle for statements with and without each of the parts
 /*
-n0 [label="entry", style="rounded"]
+n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
 n1 [label="test"]
 n2 [label="empty"]
 n3 [label="test"]
@@ -10,7 +10,7 @@ n6 [label="init"]
 n7 [label="test"]
 n8 [label="empty"]
 n9 [label="update"]
-n10 [label="exit", style="rounded"]
+n10 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
 n0 -> n1 []
 n1 -> n2 [label="true"]
 n1 -> n3 [label="false"]

@@ -1,10 +1,10 @@
 // should handle switch/case with fallthrough and break
 /*
-n0 [label="entry", style="rounded"]
+n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
 n1 [label="case 1:"]
 n2 [label="expr1"]
 n3 [label="expr123"]
-n4 [label="exit", style="rounded"]
+n4 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
 n5 [label="case 2:"]
 n6 [label="case 3:"]
 n7 [label="case 4:"]
