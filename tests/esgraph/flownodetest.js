@@ -167,7 +167,7 @@ describe('FlowNode', function () {
                 should(FlowNode.isValidNodeType('loopReturn')).eql(true);
                 should(FlowNode.isValidNodeType('branch')).eql(true);
                 should(FlowNode.isValidNodeType('halt')).eql(true);
-                should(FlowNode.isValidNodeType('storage')).eql(true);
+                should(FlowNode.isValidNodeType('localStorage')).eql(true);
             });
 
             it('should return false as the type is invalid', function () {
