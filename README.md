@@ -122,10 +122,10 @@ initializeCanvas();
 ```
 ##Result
 ###Intra-procedural Dataflow graph and Def-Use pairs
-<img src="sampleOutputs/report_intraprocedural.svg" alt="Output for intra-procedural dataflow graph and def-use pairs">
+<img src="sampleOutputs/report_intraprocedural.png" alt="Output for intra-procedural dataflow graph and def-use pairs">
 ###Inter-procedural Dataflow graph and Def-Use pairs
-<img src="sampleOutputs/report_interprocedural.svg" alt="Output for inter-procedural dataflow graph and def-use pairs">
+<img src="sampleOutputs/report_interprocedural.png" alt="Output for inter-procedural dataflow graph and def-use pairs">
 ###Intra-page Dataflow graph and Def-Use pairs
-<img src="sampleOutputs/report_intrapage.svg" alt="Output for intra-page dataflow graph and def-use pairs">
+<img src="sampleOutputs/report_intrapage.png" alt="Output for intra-page dataflow graph and def-use pairs">
 ###Inter-page Dataflow graph and Def-Use pairs
-<img src="sampleOutputs/report_interpage.svg" alt="Output for inter-page dataflow graph and def-use pairs">
+<img src="sampleOutputs/report_interpage.png" alt="Output for inter-page dataflow graph and def-use pairs">
