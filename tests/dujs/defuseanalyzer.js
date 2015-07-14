@@ -695,33 +695,71 @@ describe('DefUseAnalyzer', function () {
                 });
 
                 /// var a = 0, b = 1;
-                cfg[2][1]._testonly_._reachIns.size.should.eql(0);
-                cfg[2][1]._testonly_._reachOuts.size.should.eql(2);
-                cfg[2][1]._testonly_._reachOuts.values()[0]._testonly_._var.should.eql(scope._testonly_._vars.get('a'));
-                cfg[2][1]._testonly_._reachOuts.values()[1]._testonly_._var.should.eql(scope._testonly_._vars.get('b'));
+                cfg[2][1]._testonly_._reachIns.size.should.eql(3); /// a, b, c with undefined definition
+                cfg[2][1]._testonly_._reachOuts.size.should.eql(3); /// kill a = undefined, b = undefined, gen a = 0, b = 1, c = undefined
+
+                cfg[2][1]._testonly_._reachOuts.values().some(function (vardef) {
+                    return vardef.variable === scope._testonly_._vars.get('a');
+                }).should.be.true;
+                cfg[2][1]._testonly_._reachOuts.values().some(function (vardef) {
+                    return vardef.variable === scope._testonly_._vars.get('b');
+                }).should.be.true;
+                cfg[2][1]._testonly_._reachOuts.values().some(function (vardef) {
+                    return vardef.variable === scope._testonly_._vars.get('c');
+                }).should.be.true;
 
                 /// if (a > b) {
-                cfg[2][2]._testonly_._reachIns.size.should.eql(2);
-                cfg[2][2]._testonly_._reachOuts.size.should.eql(2);
+                cfg[2][2]._testonly_._reachIns.size.should.eql(3);
+                cfg[2][2]._testonly_._reachOuts.size.should.eql(3);
 
                 /// a = b;
-                cfg[2][3]._testonly_._reachIns.size.should.eql(2);
-                cfg[2][3]._testonly_._reachOuts.size.should.eql(2);
+                cfg[2][3]._testonly_._reachIns.size.should.eql(3);
+                cfg[2][3]._testonly_._reachOuts.size.should.eql(3); /// kill a = 0, gen a = b
 
                 /// var c = a;
-                cfg[2][4]._testonly_._reachIns.size.should.eql(3);
-                cfg[2][4]._testonly_._reachOuts.size.should.eql(4);
-                cfg[2][4]._testonly_._reachIns.values()[0]._testonly_._var.should.eql(scope._testonly_._vars.get('b'));
-                cfg[2][4]._testonly_._reachIns.values()[1]._testonly_._var.should.eql(scope._testonly_._vars.get('a'));
-                cfg[2][4]._testonly_._reachIns.values()[2]._testonly_._var.should.eql(scope._testonly_._vars.get('a'));
-                cfg[2][4]._testonly_._reachIns.values()[1]._testonly_._def.toString().should.not.eql(
-                    cfg[2][4]._testonly_._reachIns.values()[2]._testonly_._def.toString()
-                );
-                cfg[2][4]._testonly_._reachOuts.values()[3]._testonly_._var.should.eql(scope._testonly_._vars.get('c'));
+                cfg[2][4]._testonly_._reachIns.size.should.eql(4); /// a = 0, a = b, c = undefined, b = 1
+                cfg[2][4]._testonly_._reachOuts.size.should.eql(4); /// kill c = undefined, gen c = a
 
-                /// entry
-                cfg[2][5]._testonly_._reachIns.size.should.eql(4);
+                var counter = 0;
+                /// checking the number of definitions of each variable could reach out cfg[2][4]
+                /// variable b
+                cfg[2][4]._testonly_._reachOuts.forEach(function (vardef) {
+                    if (vardef.variable === scope._testonly_._vars.get('b')) {
+                        ++counter;
+                    }
+                });
+                counter.should.eql(1);
+                counter = 0;
+                /// variable a
+                cfg[2][4]._testonly_._reachOuts.forEach(function (vardef) {
+                    if (vardef.variable === scope._testonly_._vars.get('a')) {
+                        ++counter;
+                    }
+                });
+                counter.should.eql(2);
+                counter = 0;
+                /// variable c
+                cfg[2][4]._testonly_._reachOuts.forEach(function (vardef) {
+                    if (vardef.variable === scope._testonly_._vars.get('c')) {
+                        ++counter;
+                    }
+                });
+                counter.should.eql(1);
+                counter = 0;
+
+                /// exit
+                cfg[2][5]._testonly_._reachIns.size.should.eql(5);
                 cfg[2][5]._testonly_._reachOuts.size.should.eql(0);
+
+                /// checking the number of definitions of variable c reaching in exit node
+                /// variable c
+                cfg[2][5]._testonly_._reachIns.forEach(function (vardef) {
+                    if (vardef.variable === scope._testonly_._vars.get('c')) {
+                        ++counter;
+                    }
+                });
+                counter.should.eql(2);
+                counter = 0;
             });
         });
     });
