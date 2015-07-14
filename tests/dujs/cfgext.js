@@ -124,11 +124,11 @@ describe('CFGExt', function () {
                     dot = CFGExt.toDot(CFGExt.getCFG(ast));
 
                 dot.should.eql(
-                    'n0 [label="entry", style="rounded"]\n' +
+                    'n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n1 [label="VariableDeclaration"]\n' +
                     'n2 [label="UpdateExpression"]\n' +
                     'n3 [label="AssignmentExpression"]\n' +
-                    'n4 [label="exit", style="rounded"]\n' +
+                    'n4 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n0 -> n1 []\n' +
                     'n1 -> n2 []\n' +
                     'n2 -> n3 []\n' +
@@ -141,11 +141,11 @@ describe('CFGExt', function () {
                     dot = CFGExt.toDot(CFGExt.getCFG(ast, {labelWithLoc: false}), code);
 
                 dot.should.eql(
-                    'n0 [label="entry", style="rounded"]\n' +
+                    'n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n1 [label="var a = 0, b = 1;"]\n' +
                     'n2 [label="++a"]\n' +
                     'n3 [label="b = a - 1"]\n' +
-                    'n4 [label="exit", style="rounded"]\n' +
+                    'n4 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n0 -> n1 []\n' +
                     'n1 -> n2 []\n' +
                     'n2 -> n3 []\n' +
@@ -161,9 +161,9 @@ describe('CFGExt', function () {
                     )),
                     output = CFGExt.toDotWithLabelLoc(cfg);
                 output.should.eql(
-                    'n0 [label="entry (L1:C0)", style="rounded"]\n' +
+                    'n0 [label="entry (L1:C0)", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n1 [label="L1:C0"]\n' +
-                    'n2 [label="exit (L1:C1)", style="rounded"]\n' +
+                    'n2 [label="exit (L1:C1)", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n0 -> n1 []\n' +
                     'n1 -> n2 []\n'
                 );
@@ -176,9 +176,9 @@ describe('CFGExt', function () {
                     cfg = CFGExt.getCFG(CFGExt.parseAST(code)),
                     output = CFGExt.toDotWithLabelId(cfg);
                 output.should.eql(
-                    'n0 [label="entry", style="rounded"]\n' +
+                    'n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n1 [label="1"]\n' +
-                    'n2 [label="exit", style="rounded"]\n' +
+                    'n2 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n0 -> n1 []\n' +
                     'n1 -> n2 []\n'
                 );
@@ -189,9 +189,9 @@ describe('CFGExt', function () {
                     cfg = CFGExt.getCFG(CFGExt.parseAST(code)),
                     output = CFGExt.toDotWithLabelId(cfg);
                 output.should.eql(
-                    'n0 [label="entry", style="rounded"]\n' +
+                    'n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n1 [label="1"]\n' +
-                    'n2 [label="exit", style="rounded"]\n' +
+                    'n2 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n0 -> n1 []\n' +
                     'n1 -> n2 []\n'
                 );
@@ -205,11 +205,11 @@ describe('CFGExt', function () {
                     cfg = CFGExt.getCFG(CFGExt.parseAST(code)),
                     output = CFGExt.toDotWithLabelId(cfg);
                 output.should.eql(
-                    'n0 [label="entry", style="rounded"]\n' +
+                    'n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n1 [label="1"]\n' +
                     'n2 [label="2"]\n' +
                     'n3 [label="3"]\n' +
-                    'n4 [label="exit", style="rounded"]\n' +
+                    'n4 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n0 -> n1 []\n' +
                     'n1 -> n2 []\n' +
                     'n2 -> n3 [label="true"]\n' +
@@ -227,11 +227,11 @@ describe('CFGExt', function () {
                     cfg = CFGExt.getCFG(CFGExt.parseAST(code)),
                     output = CFGExt.toDotWithLabelId(cfg);
                 output.should.eql(
-                    'n0 [label="entry", style="rounded"]\n' +
+                    'n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n1 [label="1"]\n' +
                     'n2 [label="2"]\n' +
                     'n3 [label="3"]\n' +
-                    'n4 [label="exit", style="rounded"]\n' +
+                    'n4 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]\n' +
                     'n0 -> n1 []\n' +
                     'n1 -> n2 []\n' +
                     'n2 -> n3 [label="true"]\n' +
