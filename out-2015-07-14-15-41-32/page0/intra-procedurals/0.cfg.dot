@@ -1,0 +1,21 @@
+digraph CFG {
+node [shape="box"]
+label = "Program"
+n1 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n2 [label="2"]
+n3 [label="56"]
+n4 [label="57"]
+n5 [label="58"]
+n6 [label="59"]
+n7 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n1 -> n2 []
+n2 -> n3 []
+n3 -> n4 []
+n3 -> n7 [color="red", label="exception"]
+n4 -> n5 []
+n4 -> n7 [color="red", label="exception"]
+n5 -> n6 []
+n5 -> n7 [color="red", label="exception"]
+n6 -> n7 []
+n6 -> n7 [color="red", label="exception"]
+}

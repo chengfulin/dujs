@@ -1,0 +1,92 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>dujs analysis result</title><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"><script src="https://code.jquery.com/jquery-1.11.3.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script></head><div class="container-fluid"><ul class="nav nav-tabs"><li role="presentation"><a id="page0ResultTab" href="#">Page 0</a></li></ul><div id="page0" class="row page-result"><div class="col-lg-12 col-sm-12"><h2>Page 0</h2><div class="row"><h2>Source Code</h2><div class="col-lg-8 col-lg-offset-2 col-sm-12"><pre>/// --- start demo.js ---
+var img, height, width, canvas, context;
+
+function rgb2grayscale(r,g,b) {
+    var gray = Math.floor(r * 0.21 + g * 0.71 + b * 0.07);
+    return [gray,gray,gray];
+}
+  
+function imgOnClick() {
+    context.drawImage(img, 10, 10, width, height);
+}
+
+function canvasOnClick() {
+	var imgData = context.getImageData(10,10,width, height);
+    for (var index = 0; index < imgData.data.length; index += 4) {
+        var pixel = rgb2grayscale(imgData.data[index],
+                                  imgData.data[index+1],
+                                  imgData.data[index+2]);
+        imgData.data[index] = pixel[0];
+        imgData.data[index+1] = pixel[1];
+        imgData.data[index+2] = pixel[2];
+    }
+    context.putImageData(imgData, 10, 10);
+}
+
+function getSourceHeight() {
+    height = window.getComputedStyle(img).getPropertyValue('height');
+    height = height.slice(0, height.indexOf('px'));
+    height = parseInt(height);
+}
+    
+function getSourceWidth() {
+    width = window.getComputedStyle(img).getPropertyValue('width');
+    width = width.slice(0, width.indexOf('px'));
+    width = parseInt(width);
+}
+
+function setCanvasSize() {
+    canvas.width = width + 20;
+    canvas.height = height + 20;
+}
+
+function initializeCanvas() {
+	canvas = document.querySelector('canvas');
+    setCanvasSize();
+    context = canvas.getContext('2d');
+    context.drawImage(img, 10, 10, width, height);
+	canvas.addEventListener('click', canvasOnClick);
+}
+
+function initializeSource() {
+	img=document.querySelector('#srcImg');
+	img.addEventListener('click', imgOnClick);
+}
+
+initializeSource();
+getSourceHeight();
+getSourceWidth();
+initializeCanvas();
+
+/// --- end demo.js ---
+</pre></div></div><ul class="nav nav-tabs"><li role="presentation"><a class="intraProceduralTab" href="#">Intra-procedural</a></li><li role="presentation"><a class="interProceduralTab" href="#">Inter-procedural</a></li><li role="presentation"><a class="intraPageTab" href="#">Intra-page</a></li><li role="presentation"><a class="interPageTab" href="#">Inter-page</a></li></ul><div class="row outputs intraProceduralOutputs"><h2>Intra-procedural</h2><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/0.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/0.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/1.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/1.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/2.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/2.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/3.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/3.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/4.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/4.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/5.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/5.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/6.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/6.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/7.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/7.dupairs.png" class="img-responsive center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/8.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-procedurals/8.dupairs.png" class="img-responsive center-block"></div></div><div class="row outputs interProceduralOutputs"><h2>Inter-procedural</h2><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/inter-procedurals/0.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/inter-procedurals/0.dupairs.png" class="center-block"></div><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/inter-procedurals/1.cfg.png" class="img-responsive center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/inter-procedurals/1.dupairs.png" class="center-block"></div></div><div class="row outputs intraPageOutputs"><h2>Intra-page</h2><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-pages/0.cfg.png" class="center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/page0/intra-pages/0.dupairs.png" class="center-block"></div></div><div class="row outputs interPageOutputs"><h2>Inter-page</h2><div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../out-2015-07-14-15-41-32/inter-page/0.cfg.png" class="center-block"></div><div class="col-lg-12 col-sm-12"><img src="../out-2015-07-14-15-41-32/inter-page/0.dupairs.png" class="center-block"></div></div></div></div></div><script>$(".page-result").hide();
+$("#page0ResultTab").click(function () {
+$(".page-result").hide();
+$("#page0").show();
+});
+$(".outputs").hide();
+$(".intraProceduralTab").click(function () {
+$(".intraProceduralOutputs").show();
+$(".interProceduralOutputs").hide();
+$(".intraPageOutputs").hide();
+$(".interPageOutputs").hide();
+});
+$(".interProceduralTab").click(function () {
+$(".intraProceduralOutputs").hide();
+$(".interProceduralOutputs").show();
+$(".intraPageOutputs").hide();
+$(".interPageOutputs").hide();
+});
+$(".intraPageTab").click(function () {
+$(".intraProceduralOutputs").hide();
+$(".interProceduralOutputs").hide();
+$(".intraPageOutputs").show();
+$(".interPageOutputs").hide();
+});
+$(".interPageTab").click(function () {
+$(".intraProceduralOutputs").hide();
+$(".interProceduralOutputs").hide();
+$(".intraPageOutputs").hide();
+$(".interPageOutputs").show();
+});
+</script></html>

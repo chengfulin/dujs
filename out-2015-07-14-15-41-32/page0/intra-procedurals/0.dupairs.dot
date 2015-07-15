@@ -1,0 +1,22 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="1">Def-Use pairs</td></tr><tr><td>rgb2grayscale</td><td></td></tr>
+<tr><td>imgOnClick</td><td></td></tr>
+<tr><td>canvasOnClick</td><td></td></tr>
+<tr><td>getSourceHeight</td><td>(entry,57)</td></tr>
+<tr><td>getSourceWidth</td><td>(entry,58)</td></tr>
+<tr><td>setCanvasSize</td><td></td></tr>
+<tr><td>initializeCanvas</td><td>(entry,59)</td></tr>
+<tr><td>initializeSource</td><td>(entry,56)</td></tr>
+<tr><td>window</td><td></td></tr>
+<tr><td>document</td><td></td></tr>
+<tr><td>img</td><td></td></tr>
+<tr><td>height</td><td></td></tr>
+<tr><td>width</td><td></td></tr>
+<tr><td>canvas</td><td></td></tr>
+<tr><td>context</td><td></td></tr>
+</TABLE>
+>];
+}

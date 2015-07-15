@@ -1,0 +1,10 @@
+digraph CFG {
+node [shape="box"]
+label = "Function imgOnClick"
+n12 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n13 [label="10"]
+n14 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n12 -> n13 []
+n13 -> n14 []
+n13 -> n14 [color="red", label="exception"]
+}

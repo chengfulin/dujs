@@ -1,0 +1,16 @@
+digraph CFG {
+node [shape="box"]
+label = "Function getSourceWidth"
+n31 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n32 [label="33"]
+n33 [label="34"]
+n34 [label="35"]
+n35 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n31 -> n32 []
+n32 -> n33 []
+n32 -> n35 [color="red", label="exception"]
+n33 -> n34 []
+n33 -> n35 [color="red", label="exception"]
+n34 -> n35 []
+n34 -> n35 [color="red", label="exception"]
+}

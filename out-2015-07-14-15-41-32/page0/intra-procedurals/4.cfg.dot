@@ -1,0 +1,16 @@
+digraph CFG {
+node [shape="box"]
+label = "Function getSourceHeight"
+n26 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n27 [label="27"]
+n28 [label="28"]
+n29 [label="29"]
+n30 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n26 -> n27 []
+n27 -> n28 []
+n27 -> n30 [color="red", label="exception"]
+n28 -> n29 []
+n28 -> n30 [color="red", label="exception"]
+n29 -> n30 []
+n29 -> n30 [color="red", label="exception"]
+}

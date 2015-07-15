@@ -1,0 +1,14 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="6">Def-Use pairs</td></tr><tr><td>imgData</td><td>(14,(15b,call))</td><td>(14,(15b,23))</td><td>(14,call)</td><td>(14,23)</td><td></td><td></td></tr>
+<tr><td>index</td><td>(15c,(15b,call))</td><td>(15c,(15b,23))</td><td>(15a,(15b,call))</td><td>(15a,(15b,23))</td><td>(15c,15c)</td><td>(15a,15c)</td></tr>
+<tr><td>pixel</td><td>(call,19)</td><td>(call,20)</td><td>(call,21)</td><td></td><td></td><td></td></tr>
+<tr><td>r</td><td>(entry_b,5)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>g</td><td>(entry_b,5)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>b</td><td>(entry_b,5)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>gray</td><td>(5,6)</td><td></td><td></td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

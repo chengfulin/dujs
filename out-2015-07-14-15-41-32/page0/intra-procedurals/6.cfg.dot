@@ -1,0 +1,13 @@
+digraph CFG {
+node [shape="box"]
+label = "Function setCanvasSize"
+n36 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n37 [label="39"]
+n38 [label="40"]
+n39 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n36 -> n37 []
+n37 -> n38 []
+n37 -> n39 [color="red", label="exception"]
+n38 -> n39 []
+n38 -> n39 [color="red", label="exception"]
+}

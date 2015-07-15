@@ -1,0 +1,22 @@
+digraph CFG {
+node [shape="box"]
+label = "Function initializeCanvas"
+n40 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n41 [label="44"]
+n42 [label="45"]
+n43 [label="46"]
+n44 [label="47"]
+n45 [label="48"]
+n46 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n40 -> n41 []
+n41 -> n42 []
+n41 -> n46 [color="red", label="exception"]
+n42 -> n43 []
+n42 -> n46 [color="red", label="exception"]
+n43 -> n44 []
+n43 -> n46 [color="red", label="exception"]
+n44 -> n45 []
+n44 -> n46 [color="red", label="exception"]
+n45 -> n46 []
+n45 -> n46 [color="red", label="exception"]
+}

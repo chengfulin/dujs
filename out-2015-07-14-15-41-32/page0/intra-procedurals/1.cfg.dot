@@ -1,0 +1,12 @@
+digraph CFG {
+node [shape="box"]
+label = "Function rgb2grayscale"
+n8 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n9 [label="5"]
+n10 [label="6"]
+n11 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n8 -> n9 []
+n9 -> n10 []
+n9 -> n11 [color="red", label="exception"]
+n10 -> n11 []
+}
