@@ -1,143 +1,140 @@
 /**
  * Created by chengfulin on 2015/4/22.
  */
-var Var = require('../../lib/dujs').Var,
-    Scope = require('../../lib/dujs').Scope,
+var Var = require('../../lib/dujs/var'),
     should = require('should');
 
 describe('Var', function () {
     'use strict';
-    describe('Properties', function () {
-        describe('RETURN_VAR_NAME', function () {
-            it('should have correct value', function () {
-                Var.RETURN_VAR_NAME.should.eql('!RETURN');
-            });
+	var MockVar;
+	beforeEach(function () {
+		MockVar = function (name) {
+			Var.call(this, name);
+		};
+		MockVar.prototype = Object.create(Var.prototype);
+		Object.defineProperty(MockVar.prototype, 'constructor', {
+			value: MockVar
+		});
+	});
 
-            it('should not be modified', function () {
-                should(function () {
-                    Var.RETURN_VAR_NAME = 'NAME';
-                }).throw();
-            });
-        });
+    describe('static methods', function () {
+	    describe('isVar', function () {
+		    it('should return true as the object is a Var', function () {
+				var obj = new MockVar('obj');
+			    Var.isVar(obj).should.eql(true);
+		    });
 
-        describe('DEFAULT_RETURN_VAR_NAME', function () {
-            it('should have correct value', function () {
-                Var.DEFAULT_RETURN_VAR_NAME.should.eql('!DEFAULT_RETURN');
-            });
+		    it('should return false as the object is not a Var', function () {
+			    Var.isVar({name: 'obj'}).should.eql(false);
+		    });
 
-            it('should not be modified', function () {
-                should(function () {
-                    Var.DEFAULT_RETURN_VAR_NAME = 'name';
-                }).throw();
-            });
-        });
+		    it('should return false as the object is not existed', function () {
+			    Var.isVar(null).should.eql(false);
+			    Var.isVar().should.eql(false);
+		    });
+	    });
+
+	    describe('isValidName', function () {
+		    it('should return true as the input has numbers, characters and underscores', function () {
+			    Var.isValidName('abc').should.eql(true);
+			    Var.isValidName('abc123').should.eql(true);
+			    Var.isValidName('ab123c').should.eql(true);
+			    Var.isValidName('abc123_').should.eql(true);
+			    Var.isValidName('abc_123').should.eql(true);
+		    });
+
+		    it('should return true as the input has numbers and characters then leading with underscore', function () {
+			    Var.isValidName('_abc').should.eql(true);
+			    Var.isValidName('_abc123').should.eql(true);
+			    Var.isValidName('_123abc').should.eql(true);
+			    Var.isValidName('_ab123c').should.eql(true);
+		    });
+
+		    it('should return false as the input leading with numbers', function () {
+			    Var.isValidName('123abc').should.eql(false);
+			    Var.isValidName('123456').should.eql(false);
+			    Var.isValidName('123_abc').should.eql(false);
+			    Var.isValidName('123456_').should.eql(false);
+		    });
+
+		    it('should return false as the input has invalid symbols', function () {
+			    Var.isValidName('!invalid').should.eql(false);
+			    Var.isValidName('$doolars').should.eql(false);
+			    Var.isValidName('NO.1').should.eql(false);
+			    Var.isValidName('time02:10').should.eql(false);
+		    });
+	    });
+
+	    describe('validate', function () {
+		    it('should not throw any error as the input name is valid', function () {
+			    should(function () {
+				    Var.validate('valid');
+			    }).not.throw();
+		    });
+
+		    it('should throw an error "Invalid value for a Var" as the input name is invalid', function () {
+			    should(function () {
+				    Var.validate('!invalid');
+			    }).throw('Invalid value for a Var');
+		    });
+
+		    it('should support to throw custom error', function () {
+			    should(function () {
+				    Var.validate('!invalid', 'Custom Error');
+			    }).throw('Custom Error');
+		    });
+	    });
+
+	    describe('validateType', function () {
+		    it('should not throw any error as the input object is a Var', function () {
+			    should(function () {
+				    Var.validateType(new MockVar('name'));
+			    }).not.throw();
+		    });
+
+		    it('should throw an error "Not a Var" as the input object is not a Var', function () {
+			    should(function () {
+				    Var.validateType({name: 'name'});
+			    }).throw('Not a Var');
+		    });
+
+		    it('should support to throw custom error', function () {
+			    should(function () {
+				    Var.validateType({name: 'name'}, 'Custom Error');
+			    }).throw('Custom Error');
+		    });
+	    });
     });
 
-    describe('constructor', function () {
-        it('should construct well', function () {
-            var normal = new Var('ga', [0, 1], Scope.GLOBAL_SCOPE),
-                property = new Var('prop', [10, 12], Scope.PROGRAM_SCOPE, new Var('obj', [4, 5],  Scope.PROGRAM_SCOPE));
-            normal._testonly_._name.should.eql('ga');
-            normal._testonly_._range._testonly_._start.should.eql(0);
-            normal._testonly_._range._testonly_._end.should.eql(1);
-            normal._testonly_._scope._testonly_._type.should.eql('Global');
-            should.not.exist(normal._testonly_._liveWith);
+	describe('public methods', function () {
+		describe('toString', function () {
+			it('should represent a variable with its name only', function () {
+				var var1 = new MockVar('var1');
+				var1.toString().should.eql('var1');
+			});
+		});
 
-            property._testonly_._name.should.eql('prop');
-            property._testonly_._range._testonly_._start.should.eql(10);
-            property._testonly_._range._testonly_._end.should.eql(12);
-            property._testonly_._scope._testonly_._type.should.eql('Program');
-            property._testonly_._liveWith._testonly_._name.should.eql('obj');
-            property._testonly_._liveWith._testonly_._scope._testonly_._type.should.eql('Program');
+		describe('toJSON', function () {
+			it('should convert to JSON with name property', function () {
+				var variable = new MockVar('variable');
+				JSON.stringify(variable.toJSON()).should.eql('{"name":"variable"}');
+			});
+		});
+	});
 
-            (function () {
-                var invalid = new Var('!invalid', Scope.PROGRAM_SCOPE);
-            }).should.throw('Invalid Var value');
-            (function () {
-                var invalid = new Var('valid', {});
-            }).should.throw('Invalid Var value');
-            (function () {
-                var invalid = new Var('valid', Scope.PROGRAM_SCOPE, {});
-            }).should.throw('Invalid Var value');
-        });
-    });
+	describe('public data members', function () {
+		describe('name', function () {
+			it('should support to retrieve the value', function () {
+				var aVar = new MockVar('aVar');
+				aVar.name.should.eql('aVar');
+			});
 
-    describe('methods', function () {
-        describe('validate', function () {
-            it('should validate name', function () {
-                (function () {
-                    Var.validate('', [0, 1], Scope.PROGRAM_SCOPE);
-                }).should.throw('Invalid Var value');
-                (function () {
-                    Var.validate('!invalid', [0, 1], Scope.PROGRAM_SCOPE);
-                }).should.throw('Invalid Var value');
-                (function () {
-                    Var.validate('valid', [0, 1], Scope.PROGRAM_SCOPE);
-                }).should.not.throw();
-            });
-
-            it('should validate the Var living with', function () {
-                (function () {
-                    Var.validate('valid', [0, 1], Scope.PROGRAM_SCOPE, {});
-                }).should.throw('Invalid Var value');
-                (function () {
-                    Var.validate('valid', [0, 1], Scope.PROGRAM_SCOPE, null);
-                }).should.not.throw();
-                (function () {
-                    Var.validate('valid', [0, 1], Scope.PROGRAM_SCOPE);
-                }).should.not.throw();
-            });
-        });
-
-        describe('validateType', function () {
-            it('should validate Var type well', function () {
-                (function () {
-                    Var.validateType();
-                }).should.throw('Not a Var');
-                (function () {
-                    Var.validateType({});
-                }).should.throw('Not a Var');
-                (function () {
-                    Var.validateType(new Var('normal', [1,2], Scope.PROGRAM_SCOPE));
-                }).should.not.throw();
-            });
-        });
-
-        describe('toString', function () {
-            it('should convert to string correctly', function () {
-                var global = new Var('global', [0, 1], Scope.GLOBAL_SCOPE),
-                    normal = new Var('normal', [1, 3], Scope.PROGRAM_SCOPE),
-                    prop = new Var('prop', [5, 10], new Scope('foo'), normal);
-                global.toString().should.eql('global@[0,1]_Global');
-                normal.toString().should.eql('normal@[1,3]_Program');
-                prop.toString().should.eql('prop@[5,10]_Function["foo"]:normal@[1,3]_Program');
-            });
-        });
-
-        describe('live', function () {
-            it('should set the Var living with well', function () {
-                var obj = new Var('obj', [0, 1], Scope.GLOBAL_SCOPE),
-                    notProp = new Var('notProp', [1, 3], Scope.PROGRAM_SCOPE),
-                    prop = new Var('prop', [99, 110], Scope.PROGRAM_SCOPE, obj),
-                    objX = new Var('objX', [5, 11], Scope.PROGRAM_SCOPE);
-
-                (function () {
-                    notProp.live({});
-                }).should.throw('Not a Var');
-
-                notProp.live(obj);
-                notProp._testonly_._liveWith._testonly_._name.should.eql('obj');
-                notProp._testonly_._liveWith._testonly_._range._testonly_._start.should.eql(0);
-                notProp._testonly_._liveWith._testonly_._range._testonly_._end.should.eql(1);
-                notProp._testonly_._liveWith._testonly_._scope._testonly_._type.should.eql('Global');
-
-                prop._testonly_._liveWith._testonly_._name.should.eql('obj');
-                prop.live(objX);
-                prop._testonly_._liveWith._testonly_._name.should.eql('objX');
-                prop._testonly_._liveWith._testonly_._range._testonly_._start.should.eql(5);
-                prop._testonly_._liveWith._testonly_._range._testonly_._end.should.eql(11);
-                prop._testonly_._liveWith._testonly_._scope._testonly_._type.should.eql('Program');
-            });
-        });
-    });
+			it('should not support to modify value', function () {
+				var var123 = new MockVar('var123');
+				should(function () {
+					var123.name = 'a123';
+				}).throw();
+			});
+		});
+	});
 });
