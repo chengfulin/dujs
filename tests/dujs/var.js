@@ -9,14 +9,12 @@ var Var = require('../../lib/dujs/var'),
 describe('Var', function () {
     'use strict';
 	var MockVar;
-	beforeEach(function () {
-		MockVar = function (name) {
-			Var.call(this, name);
-		};
-		MockVar.prototype = Object.create(Var.prototype);
-		Object.defineProperty(MockVar.prototype, 'constructor', {
-			value: MockVar
-		});
+	MockVar = function (name) {
+		Var.call(this, name);
+	};
+	MockVar.prototype = Object.create(Var.prototype);
+	Object.defineProperty(MockVar.prototype, 'constructor', {
+		value: MockVar
 	});
 
     describe('static methods', function () {
@@ -136,6 +134,11 @@ describe('Var', function () {
 				should(function () {
 					var123.name = 'a123';
 				}).throw();
+			});
+
+			it('should be enumerable', function () {
+				var variable = new MockVar('variable');
+				variable.propertyIsEnumerable('name');
 			});
 		});
 	});
