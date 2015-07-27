@@ -283,7 +283,7 @@ describe('Scope', function () {
     });
 
     describe('Methods', function () {
-        describe('hasVarWithName', function () {
+        describe('hasLocalVariable', function () {
             var node1, node2, cfg, wrapper, var1;
             beforeEach(function () {
                 node1 = factoryFlowNode.createNormalNode();
@@ -296,17 +296,17 @@ describe('Scope', function () {
             });
 
             it('should return as the name is valid', function () {
-                wrapper.hasVarWithName('var1').should.eql(true);
+                wrapper.hasLocalVariable('var1').should.eql(true);
             });
 
             it('should return false as the name is invalid', function () {
-                wrapper.hasVarWithName('var2').should.eql(false);
-                wrapper.hasVarWithName().should.eql(false);
-                wrapper.hasVarWithName({}).should.eql(false);
+                wrapper.hasLocalVariable('var2').should.eql(false);
+                wrapper.hasLocalVariable().should.eql(false);
+                wrapper.hasLocalVariable({}).should.eql(false);
             });
         });
 
-        describe('getVarByName', function () {
+        describe('getVariable', function () {
             var node1, node2, node3, node4, childWrapper, parentWrapper, var1, var2;
             beforeEach(function () {
                 node1 = factoryFlowNode.createEntryNode();
@@ -328,13 +328,13 @@ describe('Scope', function () {
             });
 
             it('should support to find the var in the current scope', function () {
-                should.exist(childWrapper.getVarByName('var1'));
-                childWrapper.getVarByName('var1').should.eql(var1);
+                should.exist(childWrapper.getVariable('var1'));
+                childWrapper.getVariable('var1').should.eql(var1);
             });
 
             it('should support to find the var in the outer scope', function () {
-                should.exist(childWrapper.getVarByName('var2'));
-                childWrapper.getVarByName('var2').should.eql(var2);
+                should.exist(childWrapper.getVariable('var2'));
+                childWrapper.getVariable('var2').should.eql(var2);
             });
         });
 
