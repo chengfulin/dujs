@@ -137,8 +137,7 @@ describe('Var', function () {
 			});
 
 			it('should be enumerable', function () {
-				var variable = new MockVar('variable');
-				variable.propertyIsEnumerable('name');
+				Var.prototype.propertyIsEnumerable('name').should.eql(true);
 			});
 		});
 	});
