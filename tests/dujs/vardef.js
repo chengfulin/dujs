@@ -107,7 +107,7 @@ describe('VarDef', function () {
                 factoryDef.createLiteralDef(node, [1,2], Scope.PROGRAM_SCOPE)
             );
             varDef._testonly_._var._testonly_._name.should.eql('a');
-            varDef._testonly_._var._testonly_._scope._testonly_._type.should.eql('Program');
+            varDef._testonly_._var._testonly_._name._testonly_._type.should.eql('Program');
             varDef._testonly_._var._testonly_._range._testonly_._start.should.eql(0);
 
             varDef._testonly_._def._testonly_._type.should.eql('literal');

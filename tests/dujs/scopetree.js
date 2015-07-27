@@ -21,7 +21,7 @@ describe('ScopeTree', function () {
 
     describe('Private Methods', function () {
         describe('addScope', function () {
-            it('should add a ScopeWrapper into the tree', function () {
+            it('should add a Scope into the tree', function () {
                 var node1 = flowNodeFactory.createEntryNode(),
                     node2 = flowNodeFactory.createExitNode();
                 node1.cfgId = 1;
@@ -89,7 +89,7 @@ describe('ScopeTree', function () {
 
                 /// root
                 should.exist(tree._testonly_._root);
-                tree._testonly_._root._testonly_._scope._testonly_._type.should.eql('Program');
+                tree._testonly_._root._testonly_._name._testonly_._type.should.eql('Program');
                 /// scopes
                 tree._testonly_._scopes.length.should.eql(1);
                 tree._testonly_._scopes[0].should.eql(tree._testonly_._root);
@@ -111,8 +111,8 @@ describe('ScopeTree', function () {
 
                 /// scopes
                 tree._testonly_._scopes.length.should.eql(2);
-                tree._testonly_._scopes[1]._testonly_._scope._testonly_._type.should.eql('Function');
-                tree._testonly_._scopes[1]._testonly_._scope._testonly_._value.should.eql('foo');
+                tree._testonly_._scopes[1]._testonly_._name._testonly_._type.should.eql('Function');
+                tree._testonly_._scopes[1]._testonly_._name._testonly_._value.should.eql('foo');
                 tree._testonly_._mapFromRangeToScope.size.should.eql(2);
                 tree._testonly_._mapFromRangeToScope.has('[13,37]').should.eql(true);
                 tree._testonly_._mapFromDefToScope.has(tree._testonly_._scopes[1]._testonly_._def).should.eql(true);
@@ -139,8 +139,8 @@ describe('ScopeTree', function () {
 
                 /// scopes
                 tree._testonly_._scopes.length.should.eql(2);
-                tree._testonly_._scopes[1]._testonly_._scope._testonly_._type.should.eql('AnonymousFunction');
-                tree._testonly_._scopes[1]._testonly_._scope._testonly_._value.should.eql(0);
+                tree._testonly_._scopes[1]._testonly_._name._testonly_._type.should.eql('AnonymousFunction');
+                tree._testonly_._scopes[1]._testonly_._name._testonly_._value.should.eql(0);
                 tree._testonly_._mapFromRangeToScope.has('[17,38]').should.eql(true);
                 tree._testonly_._mapFromDefToScope.has(tree._testonly_._scopes[1]._testonly_._def).should.eql(true);
                 tree._testonly_._mapFromScopeNameToScope.has('AnonymousFunction[0]').should.eql(true);

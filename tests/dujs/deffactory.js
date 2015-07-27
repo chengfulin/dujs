@@ -29,7 +29,7 @@ describe('Factory Methods', function () {
             literalDef._testonly_._fromCFGNode.should.eql(node);
             literalDef._testonly_._range._testonly_._start.should.eql(0);
             literalDef._testonly_._range._testonly_._end.should.eql(1);
-            literalDef._testonly_._scope.should.eql(scope);
+            literalDef._testonly_._name.should.eql(scope);
 
             literalDef._testonly_._type.should.eql('literal');
             objectDef._testonly_._type.should.eql('object');
