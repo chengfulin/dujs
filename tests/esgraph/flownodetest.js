@@ -113,7 +113,7 @@ describe('FlowNode', function () {
                 });
 
                 it('should not set scope yet', function () {
-                    should.not.exist(single._testonly_._scope);
+                    should.not.exist(single._testonly_._name);
                 });
 
                 it('should not have extra ReachIns yet', function () {
