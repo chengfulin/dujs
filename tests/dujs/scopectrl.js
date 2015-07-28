@@ -12,7 +12,7 @@ var ScopeTree = require('../../lib/dujs').ScopeTree,
     Set = require('../../lib/analyses').Set,
     should = require('should');
 
-describe('ScopeTree', function () {
+describe('ScopeCtrl', function () {
     'use strict';
     beforeEach(function () {
         flowNodeFactory.resetCounter();
@@ -65,11 +65,11 @@ describe('ScopeTree', function () {
 
     describe('Static Methods', function () {
         describe('isScopeTree', function () {
-            it('should return true as the object is a ScopeTree', function () {
+            it('should return true as the object is a ScopeCtrl', function () {
                 ScopeTree.isScopeTree(new ScopeTree()).should.eql(true);
             });
 
-            it('should return false as the object is not a ScopeTree', function () {
+            it('should return false as the object is not a ScopeCtrl', function () {
                 ScopeTree.isScopeTree({}).should.eql(false);
                 ScopeTree.isScopeTree('').should.eql(false);
                 ScopeTree.isScopeTree().should.eql(false);

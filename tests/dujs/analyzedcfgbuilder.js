@@ -73,7 +73,7 @@ describe('AnalyzedCFGBuilder', function () {
                 analyzedCFGs.length.should.eql(3);
             });
 
-            it('should be empty as the input is not a ScopeTree',function () {
+            it('should be empty as the input is not a ScopeCtrl',function () {
                 var analyzedCFGs = builder.buildIntraProceduralAnalysisItems({});
                 analyzedCFGs.length.should.eql(0);
             });
