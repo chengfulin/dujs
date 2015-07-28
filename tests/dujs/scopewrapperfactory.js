@@ -6,7 +6,7 @@ var factoryScopeWrapper = require('../../lib/dujs').factoryScopeWrapper,
     factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
     should = require('should');
 
-describe('ScopeWrapperFactory', function () {
+describe('ScopeFactory', function () {
     "use strict";
     beforeEach(function () {
         factoryScopeWrapper._testonly_._numOfAnonymousFunctionScopes = 0;
