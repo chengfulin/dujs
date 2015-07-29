@@ -67,7 +67,7 @@ describe('AnalyzedCFGBuilder', function () {
                         '};'
                     ),
                     tree = new ScopeTree();
-                tree.buildScopeTree(ast);
+                tree.addPageScopeTree(ast);
 
                 var analyzedCFGs = builder.buildIntraProceduralAnalysisItems(tree);
                 analyzedCFGs.length.should.eql(3);

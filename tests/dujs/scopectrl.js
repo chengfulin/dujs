@@ -85,7 +85,7 @@ describe('ScopeCtrl', function () {
                     ),
                     tree = new ScopeTree();
 
-                tree.buildScopeTree(ast);
+                tree.addPageScopeTree(ast);
 
                 /// root
                 should.exist(tree._testonly_._root);
@@ -107,7 +107,7 @@ describe('ScopeCtrl', function () {
                     'function foo(c) { expr;}'
                     ),
                     tree = new ScopeTree();
-                tree.buildScopeTree(ast);
+                tree.addPageScopeTree(ast);
 
                 /// scopes
                 tree._testonly_._scopes.length.should.eql(2);
@@ -135,7 +135,7 @@ describe('ScopeCtrl', function () {
                         'b = function (c) { expr;}'
                     ),
                     tree = new ScopeTree();
-                tree.buildScopeTree(ast);
+                tree.addPageScopeTree(ast);
 
                 /// scopes
                 tree._testonly_._scopes.length.should.eql(2);
@@ -154,7 +154,7 @@ describe('ScopeCtrl', function () {
                         '}'
                     ),
                     tree = new ScopeTree();
-                tree.buildScopeTree(ast);
+                tree.addPageScopeTree(ast);
 
                 tree._testonly_._scopes.length.should.eql(3);
                 tree._testonly_._scopes[0]._testonly_._vars.has('foo').should.eql(true);
@@ -177,7 +177,7 @@ describe('ScopeCtrl', function () {
                     '}'
                     ),
                     tree = new ScopeTree();
-                tree.buildScopeTree(ast);
+                tree.addPageScopeTree(ast);
                 tree._testonly_._scopes.length.should.eql(4);
                 tree._testonly_._root._testonly_._children.size.should.eql(2);
                 tree._testonly_._root._testonly_._children.has('[10,33]').should.eql(true);
