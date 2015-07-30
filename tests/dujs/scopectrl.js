@@ -37,13 +37,13 @@ describe('ScopeCtrl', function () {
                 tree._testonly_._scopes.length.should.eql(1);
                 tree._testonly_._scopes[0].should.eql(wrapper);
 
-                tree._testonly_._mapFromRangeToScope.size.should.eql(1);
-                should.exist(tree._testonly_._mapFromRangeToScope.get('[0,1]'));
-                tree._testonly_._mapFromRangeToScope.get('[0,1]').should.eql(wrapper);
+                tree._testonly_._mapFromScopeNameToScope.size.should.eql(1);
+                should.exist(tree._testonly_._mapFromScopeNameToScope.get('[0,1]'));
+                tree._testonly_._mapFromScopeNameToScope.get('[0,1]').should.eql(wrapper);
 
-                tree._testonly_._mapFromDefToScope.size.should.eql(1);
-                should.exist(tree._testonly_._mapFromDefToScope.get(wrapperDef));
-                tree._testonly_._mapFromDefToScope.get(wrapperDef).should.eql(wrapper);
+                tree._testonly_._mapFromScopeNameToScope.size.should.eql(1);
+                should.exist(tree._testonly_._mapFromScopeNameToScope.get(wrapperDef));
+                tree._testonly_._mapFromScopeNameToScope.get(wrapperDef).should.eql(wrapper);
 
                 tree._testonly_._mapFromScopeNameToScope.size.should.eql(1);
                 should.exist(tree._testonly_._mapFromScopeNameToScope.get('Function["foo"]'));
@@ -56,23 +56,23 @@ describe('ScopeCtrl', function () {
         it('should have default values', function () {
             var tree = new ScopeTree();
             tree._testonly_._scopes.length.should.eql(0);
-            tree._testonly_._mapFromRangeToScope.size.should.eql(0);
-            tree._testonly_._mapFromDefToScope.size.should.eql(0);
+            tree._testonly_._mapFromScopeNameToScope.size.should.eql(0);
+            tree._testonly_._mapFromScopeNameToScope.size.should.eql(0);
             tree._testonly_._mapFromScopeNameToScope.size.should.eql(0);
             should.not.exist(tree._testonly_._root);
         });
     });
 
     describe('Static Methods', function () {
-        describe('isScopeTree', function () {
+        describe('isScopeCtrl', function () {
             it('should return true as the object is a ScopeCtrl', function () {
-                ScopeTree.isScopeTree(new ScopeTree()).should.eql(true);
+                ScopeTree.isScopeCtrl(new ScopeTree()).should.eql(true);
             });
 
             it('should return false as the object is not a ScopeCtrl', function () {
-                ScopeTree.isScopeTree({}).should.eql(false);
-                ScopeTree.isScopeTree('').should.eql(false);
-                ScopeTree.isScopeTree().should.eql(false);
+                ScopeTree.isScopeCtrl({}).should.eql(false);
+                ScopeTree.isScopeCtrl('').should.eql(false);
+                ScopeTree.isScopeCtrl().should.eql(false);
             });
         });
     });
@@ -93,10 +93,10 @@ describe('ScopeCtrl', function () {
                 /// scopes
                 tree._testonly_._scopes.length.should.eql(1);
                 tree._testonly_._scopes[0].should.eql(tree._testonly_._root);
-                tree._testonly_._mapFromRangeToScope.size.should.eql(1);
-                tree._testonly_._mapFromRangeToScope.has('[0,13]').should.eql(true);
-                tree._testonly_._mapFromDefToScope.size.should.eql(1);
-                tree._testonly_._mapFromDefToScope.has(tree._testonly_._root._testonly_._def).should.eql(true);
+                tree._testonly_._mapFromScopeNameToScope.size.should.eql(1);
+                tree._testonly_._mapFromScopeNameToScope.has('[0,13]').should.eql(true);
+                tree._testonly_._mapFromScopeNameToScope.size.should.eql(1);
+                tree._testonly_._mapFromScopeNameToScope.has(tree._testonly_._root._testonly_._def).should.eql(true);
                 tree._testonly_._mapFromScopeNameToScope.size.should.eql(1);
                 tree._testonly_._mapFromScopeNameToScope.has('Program').should.eql(true);
             });
@@ -113,9 +113,9 @@ describe('ScopeCtrl', function () {
                 tree._testonly_._scopes.length.should.eql(2);
                 tree._testonly_._scopes[1]._testonly_._name._testonly_._type.should.eql('Function');
                 tree._testonly_._scopes[1]._testonly_._name._testonly_._value.should.eql('foo');
-                tree._testonly_._mapFromRangeToScope.size.should.eql(2);
-                tree._testonly_._mapFromRangeToScope.has('[13,37]').should.eql(true);
-                tree._testonly_._mapFromDefToScope.has(tree._testonly_._scopes[1]._testonly_._def).should.eql(true);
+                tree._testonly_._mapFromScopeNameToScope.size.should.eql(2);
+                tree._testonly_._mapFromScopeNameToScope.has('[13,37]').should.eql(true);
+                tree._testonly_._mapFromScopeNameToScope.has(tree._testonly_._scopes[1]._testonly_._def).should.eql(true);
                 tree._testonly_._mapFromScopeNameToScope.has('Function["foo"]').should.eql(true);
 
                 /// parameters
@@ -141,8 +141,8 @@ describe('ScopeCtrl', function () {
                 tree._testonly_._scopes.length.should.eql(2);
                 tree._testonly_._scopes[1]._testonly_._name._testonly_._type.should.eql('AnonymousFunction');
                 tree._testonly_._scopes[1]._testonly_._name._testonly_._value.should.eql(0);
-                tree._testonly_._mapFromRangeToScope.has('[17,38]').should.eql(true);
-                tree._testonly_._mapFromDefToScope.has(tree._testonly_._scopes[1]._testonly_._def).should.eql(true);
+                tree._testonly_._mapFromScopeNameToScope.has('[17,38]').should.eql(true);
+                tree._testonly_._mapFromScopeNameToScope.has(tree._testonly_._scopes[1]._testonly_._def).should.eql(true);
                 tree._testonly_._mapFromScopeNameToScope.has('AnonymousFunction[0]').should.eql(true);
             });
 
