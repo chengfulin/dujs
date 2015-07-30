@@ -13,7 +13,7 @@ describe('Scope', function () {
 	describe('static data member', function () {
 		describe('DOMAIN_SCOPE_NAME', function () {
 			it('should have correct value', function () {
-				Scope.DOMAIN_SCOPE_NAME.should.eql('!DOMAIN');
+				Scope.DOMAIN_SCOPE_NAME.should.eql('$DOMAIN');
 			});
 
 			it('should not be modified directly', function () {
@@ -29,7 +29,7 @@ describe('Scope', function () {
 
 		describe('PAGE_SCOPE_NAME', function () {
 			it('should have correct value', function () {
-				Scope.PAGE_SCOPE_NAME.should.eql('!PAGE');
+				Scope.PAGE_SCOPE_NAME.should.eql('$PAGE');
 			});
 
 			it('should not be modified directly', function () {
@@ -45,7 +45,7 @@ describe('Scope', function () {
 
 		describe('ANONYMOUS_FUN_NAME', function () {
 			it('should have correct value', function () {
-				Scope.ANONYMOUS_FUN_NAME.should.eql('!ANONYMOUS_FUN');
+				Scope.ANONYMOUS_FUN_NAME.should.eql('$ANONYMOUS_FUN');
 			});
 
 			it('should not be modified directly', function () {
@@ -154,8 +154,8 @@ describe('Scope', function () {
 			var childAST = esprima.parse('var ca, cb');
 			var otherAST = esprima.parse('var oa, ob');
 
-			rootScope = new Scope(rootAST, '!DOMAIN', 'domain', null);
-			parentScope = new Scope(parentAST, '!PAGE', 'page', rootScope);
+			rootScope = new Scope(rootAST, '$DOMAIN', 'domain', null);
+			parentScope = new Scope(parentAST, '$PAGE', 'page', rootScope);
 			childScope = new Scope(childAST, 'foo', 'function', parentScope);
 			otherScope = new Scope(otherAST, 'other', 'function', parentScope);
 		});
@@ -173,7 +173,7 @@ describe('Scope', function () {
 					'var b = 1;' +
 					'ga = a + b;' +
 					'}');
-				outerScope = new Scope(outerAST, '!PAGE', 'page', null);
+				outerScope = new Scope(outerAST, '$PAGE', 'page', null);
 				innerScope = new Scope(innerAST, 'foo', 'function', outerScope);
 
 				outerScope._testonly_._vars.set('ga', factoryVar.create('ga'));
@@ -245,6 +245,30 @@ describe('Scope', function () {
 
 				otherScope.hasAscendantContainingTheChild(rootScope).should.eql(false);
 				otherScope.hasAscendantContainingTheChild(anotherScope).should.eql(false);
+			});
+		});
+	});
+
+	describe('public data members', function () {
+		describe('name', function () {
+			var oneScope, parentScope, rootScope;
+
+			beforeEach(function () {
+				oneScope = new Scope(esprima.parse('var a;'), 'one', 'function', null);
+				parentScope = new Scope(esprima.parse('var pa;'), '$PAGE', 'page', null);
+				rootScope = new Scope(esprima.parse('var ga;'), '$DOMAIN', 'domain', null);
+			});
+
+			it('should be same as own name since it has no parent scope', function () {
+				oneScope.name.should.eql('one');
+			});
+
+			it('should be composed by ascendants\' names', function () {
+				oneScope._testonly_._parent = parentScope;
+				oneScope.name.should.eql('$PAGE.one');
+
+				parentScope._testonly_._parent = rootScope;
+				oneScope.name.should.eql('$DOMAIN.$PAGE.one');
 			});
 		});
 	});
