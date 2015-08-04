@@ -4,7 +4,8 @@
  * @lastmodifiedDate 2015-08-03
  */
 var should = require('should');
-var FunctionScope = require('../../lib/dujs/functionscope');
+var FunctionScope = require('../../lib/dujs/functionscope'),
+	Scope = require('../../lib/dujs/scope');
 
 describe('FunctionScope', function () {
 	"use strict";
@@ -64,6 +65,15 @@ describe('FunctionScope', function () {
 				should(function () {
 					FunctionScope.validate({}, 'foo', null, 'Custom error');
 				}).throw('Custom error');
+			});
+		});
+
+		describe('constructor', function () {
+			it('should construct well', function () {
+				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				var scope = new FunctionScope(ast, 'foo', null);
+				(scope instanceof FunctionScope).should.eql(true);
+				(scope instanceof Scope).should.eql(true);
 			});
 		});
 	});
