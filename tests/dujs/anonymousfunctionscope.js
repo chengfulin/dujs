@@ -85,12 +85,12 @@ describe('AnonymousFunctionScope', function () {
 			var scope = new AnonymousFunctionScope(ast, null);
 
 			it('should retrieve the value correctly', function () {
-				scope.index.should.eql(0);
+				scope._testonly_._index.should.eql(0);
 			});
 
 			it('should not be modified', function () {
 				should(function () {
-					scope.index = 1;
+					scope._testonly_._index = 1;
 				}).throw();
 			});
 
