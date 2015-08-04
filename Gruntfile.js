@@ -24,6 +24,8 @@ module.exports = function (grunt) {
 	                'tests/dujs/range.js',
 	                'tests/dujs/rangefactory.js',
 	                'tests/dujs/scope.js',
+	                'tests/dujs/domainscope.js',
+	                'tests/dujs/pagescope.js',
                     'tests/dujs/functionscope.js',
 	                'tests/dujs/anonymousfunctionscope.js'
                 ],
