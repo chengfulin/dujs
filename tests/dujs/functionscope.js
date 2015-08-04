@@ -35,41 +35,34 @@ describe('FunctionScope', function () {
 			it('should not throw any error as the inputs are valid', function () {
 				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
 				should(function () {
-					FunctionScope.validate(ast, 'foo', 'function', null);
+					FunctionScope.validate(ast, 'foo', null);
 				}).not.throw();
 			});
 
 			it('should throw an error as the ast is not for a function scope', function () {
 				var ast = {type: 'FunctionExpression', range: [0,1], loc: {line: 1, col: 0}};
 				should(function () {
-					FunctionScope.validate(ast, 'foo', 'function', null);
+					FunctionScope.validate(ast, 'foo', null);
 				}).throw('Invalid value for a FunctionScope');
 			});
 
 			it('should throw an error as the name is invalid', function () {
 				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
 				should(function () {
-					FunctionScope.validate(ast, 'invalid!', 'function', null);
-				}).throw('Invalid value for a FunctionScope');
-			});
-
-			it('should throw an error as the type is invalid', function () {
-				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
-				should(function () {
-					FunctionScope.validate(ast, 'foo', 'anonymousFunction', null);
+					FunctionScope.validate(ast, 'invalid!', null);
 				}).throw('Invalid value for a FunctionScope');
 			});
 
 			it('should throw an error as the parent is invalid', function () {
 				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
 				should(function () {
-					FunctionScope.validate(ast, 'foo', 'function', {});
+					FunctionScope.validate(ast, 'foo', {});
 				}).throw('Invalid value for a FunctionScope');
 			});
 
 			it('should support custom error', function () {
 				should(function () {
-					FunctionScope.validate({}, 'foo', 'function', null, 'Custom error');
+					FunctionScope.validate({}, 'foo', null, 'Custom error');
 				}).throw('Custom error');
 			});
 		});
