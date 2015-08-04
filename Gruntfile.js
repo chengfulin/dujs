@@ -18,10 +18,15 @@ module.exports = function (grunt) {
                 timeout: 3000
             },
             coverage: {
-                src: ['tests/dujs/*.js', 'tests/analyses/*.js', 'tests/esgraph/*.js'], // a folder works nicely
-                options: {
-                    mask: '*.js'
-                }
+                src: [
+	                'tests/dujs/var.js',
+	                'tests/dujs/varfactory.js',
+	                'tests/dujs/range.js',
+	                'tests/dujs/rangefactory.js',
+	                'tests/dujs/scope.js',
+                    'tests/dujs/functionscope.js',
+	                'tests/dujs/anonymousfunctionscope.js'
+                ],
             },
             coveralls: {
                 src: ['tests'], // multiple folders also works
