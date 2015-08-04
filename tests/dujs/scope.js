@@ -43,19 +43,19 @@ describe('Scope', function () {
 			});
 		});
 
-		describe('ANONYMOUS_FUN_NAME', function () {
+		describe('ANONYMOUS_FUN_SCOPE_NAME', function () {
 			it('should have correct value', function () {
-				Scope.ANONYMOUS_FUN_NAME.should.eql('$ANONYMOUS_FUN');
+				Scope.ANONYMOUS_FUN_SCOPE_NAME.should.eql('$ANONYMOUS_FUN');
 			});
 
 			it('should not be modified directly', function () {
 				should(function () {
-					Scope.ANONYMOUS_FUN_NAME = 'invalid';
+					Scope.ANONYMOUS_FUN_SCOPE_NAME = 'invalid';
 				}).throw();
 			});
 
 			it('should be enumerable', function () {
-				Scope.propertyIsEnumerable('ANONYMOUS_FUN_NAME').should.eql(true);
+				Scope.propertyIsEnumerable('ANONYMOUS_FUN_SCOPE_NAME').should.eql(true);
 			});
 		});
 
