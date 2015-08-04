@@ -42,45 +42,26 @@ describe('AnonymousFunctionScope', function () {
 
 			it('should not throw as the inputs are valid', function () {
 				should(function () {
-					AnonymousFunctionScope.validate(validAST, '$ANONYMOUS_FUN_0', 'anonymousFunction', null);
+					AnonymousFunctionScope.validate(validAST, null);
 				}).not.throw();
-			});
-
-			it('should throw an error as the name of anonymous function scope is invalid', function () {
-				should(function () {
-					AnonymousFunctionScope.validate(validAST, 'invalid', 'anonymousFunction', null);
-				}).throw('Invalid value for an AnonymousFunctionScope');
-
-				should(function () {
-					AnonymousFunctionScope.validate(validAST, '$ANONYMOUS_FUN', 'anonymousFunction', null);
-				}).throw('Invalid value for an AnonymousFunctionScope');
-
-				should(function () {
-					AnonymousFunctionScope.validate(validAST, '$ANONYMOUS_FUN0', 'anonymousFunction', null);
-				}).throw('Invalid value for an AnonymousFunctionScope');
 			});
 
 			it('should throw an error as the AST is invalid', function () {
 				should(function () {
-					AnonymousFunctionScope.validate(
-						{type: 'Program', range: [0,1], loc: {line: 1, col: 0}},
-						'$ANONYMOUS_FUN_0',
-						'anonymousFunction',
-						null
-					);
-				}).throw('Invalid value for an AnonymousFunctionScope');
-			});
-
-			it('should throw an error as the type of scope is not an ANONYMOUS_FUN type', function () {
-				should(function () {
-					AnonymousFunctionScope.validate(validAST, '$ANONYMOUS_FUN_0', 'function', null);
+					AnonymousFunctionScope.validate({type: 'Program', range: [0,1], loc: {line: 1, col: 0}}, null);
 				}).throw('Invalid value for an AnonymousFunctionScope');
 			});
 
 			it('should throw an error as the parent of the socpe is invalid', function () {
 				should(function () {
-					AnonymousFunctionScope.validate(validAST, '$ANONYMOUS_FUN_0', 'anonymousFunction', {});
+					AnonymousFunctionScope.validate(validAST, {});
 				}).throw('Invalid value for an AnonymousFunctionScope');
+			});
+
+			it('should support custom error message', function () {
+				should(function () {
+					AnonymousFunctionScope.validate({}, null, 'Custom error');
+				}).throw('Custom error');
 			});
 		});
 	});
@@ -102,6 +83,10 @@ describe('AnonymousFunctionScope', function () {
 		describe('index', function () {
 			var ast = {type: 'FunctionExpression', range: [0,1], loc: {line: 1, col: 0}};
 			var scope = new AnonymousFunctionScope(ast, null);
+
+			it('should retrieve the value correctly', function () {
+				scope.index.should.eql(0);
+			});
 
 			it('should not be modified', function () {
 				should(function () {
