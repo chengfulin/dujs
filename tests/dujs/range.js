@@ -1,7 +1,9 @@
-/**
- * Created by chengfulin on 2015/4/27.
+/*
+ * Test cases for Range module
+ * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
+ * @lastmodifiedDate 2015-08-04
  */
-var Range = require('../../lib/dujs').Range,
+var Range = require('../../lib/dujs/range'),
     should = require('should');
 
 describe('Range', function () {
@@ -22,9 +24,9 @@ describe('Range', function () {
             (function () {
                 var invalid = new Range();
             }).should.throw('Invalid Range value');
-            (function () {
+            should(function () {
                 var invalid = new Range([1]);
-            }).should.throw('Invalid Range value');
+            }).throw('Invalid Range value');
             (function () {
                 var invalid = new Range(1, 0);
             }).should.throw('Invalid Range value');
