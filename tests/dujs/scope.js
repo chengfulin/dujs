@@ -6,6 +6,7 @@
 var should = require('should');
 var esprima = require('esprima');
 var Scope = require('../../lib/dujs/scope'),
+	Range = require('../../lib/dujs/range'),
 	factoryVar = require('../../lib/dujs/varfactory');
 
 describe('Scope', function () {
@@ -437,6 +438,20 @@ describe('Scope', function () {
 			});
 		});
 
+		describe('hasChildScope', function () {
+			beforeEach(function () {
+				connectScopes();
+			});
+
+			it('should return true as the scope is one of the children', function () {
+				rootScope.hasChildScope(parentScope).should.eql(true);
+			});
+
+			it('should return false as the scope is not a child', function () {
+				rootScope.hasChildScope(childScope).should.eql(false);
+			});
+		});
+
 		describe('isSiblingOf', function () {
 			beforeEach(function () {
 				connectScopes();
@@ -450,6 +465,10 @@ describe('Scope', function () {
 				childScope.isSiblingOf(parentScope).should.eql(false);
 				childScope.isSiblingOf(rootScope).should.eql(false);
 			});
+
+			it('should return false as the input is not a Scope', function () {
+				childScope.isSiblingOf({name: 'other', type: 'function'}).should.eql(false);
+			});
 		});
 
 		describe('hasAscendantContainingTheChild', function () {
@@ -461,7 +480,6 @@ describe('Scope', function () {
 				childScope.hasAscendantContainingTheChild(otherScope).should.eql(true);
 				otherScope.hasAscendantContainingTheChild(childScope).should.eql(true);
 				otherScope.hasAscendantContainingTheChild(parentScope).should.eql(true);
-
 			});
 
 			it('should return false otherwise', function () {
@@ -470,11 +488,203 @@ describe('Scope', function () {
 
 				otherScope.hasAscendantContainingTheChild(rootScope).should.eql(false);
 				otherScope.hasAscendantContainingTheChild(anotherScope).should.eql(false);
+				anotherScope.hasAscendantContainingTheChild(otherScope).should.eql(true);
+			});
+
+			it('should return false as the input is not a Scope', function () {
+				otherScope.hasAscendantContainingTheChild({type: 'function', name: 'foo', parent: parentScope}).should.eql(false);
+				otherScope.hasAscendantContainingTheChild(null).should.eql(false);
+			});
+		});
+
+		describe('toString', function () {
+			beforeEach(connectScopes);
+
+			it('should represent a Scope by its "name" property', function () {
+				rootScope.toString().should.eql('$DOMAIN');
+				parentScope.toString().should.eql('$DOMAIN.$PAGE');
+				childScope.toString().should.eql('$DOMAIN.$PAGE.foo');
+				otherScope.toString().should.eql('$DOMAIN.$PAGE.other');
+			});
+		});
+
+		describe('addInnerFunctionVariable', function () {
+			it('should add valid name as function variable', function () {
+				childScope.addInnerFunctionVariable('inner');
+				childScope._testonly_._vars.size.should.eql(1);
+				childScope._testonly_._vars.has('inner').should.eql(true);
+				childScope._testonly_._namedFunctionVars.size.should.eql(1);
+				childScope._testonly_._namedFunctionVars.has('inner').should.eql(true);
+			});
+
+			it('should throw as the name is invalid for a variable', function () {
+				should(function () {
+					childScope.addInnerFunctionVariable('!inner');
+				}).throw('Invalid value for a Var');
+			});
+
+			it('should ignore as the name is existed in one of local variables', function () {
+				var inner = factoryVar.create('inner');
+				childScope._testonly_._vars.set('inner', inner);
+				childScope.addInnerFunctionVariable('inner');
+
+				childScope._testonly_._vars.size.should.eql(1);
+				childScope._testonly_._namedFunctionVars.size.should.eql(0);
+			});
+		});
+
+		describe('addParameter', function () {
+			it('should add valid name as parameter variable', function () {
+				childScope.addParameter('param1');
+				childScope._testonly_._vars.size.should.eql(1);
+				childScope._testonly_._vars.has('param1').should.eql(true);
+				childScope._testonly_._params.size.should.eql(1);
+				childScope._testonly_._params.has('param1').should.eql(true);
+				childScope._testonly_._paramNames.indexOf('param1').should.eql(0);
+			});
+
+			it('should ignore as the name is existed in one of local variables', function () {
+				var param1 = factoryVar.create('param1');
+				childScope._testonly_._vars.set('param1', param1);
+				childScope.addParameter('param1');
+
+				childScope._testonly_._vars.size.should.eql(1);
+				childScope._testonly_._params.size.should.eql(0);
+				childScope._testonly_._paramNames.length.should.eql(0);
+			});
+		});
+
+		describe('addLocalVariable', function () {
+			it('should add a valid name as a local variable', function () {
+				childScope.addLocalVariable('local');
+				childScope._testonly_._vars.size.should.eql(1);
+				childScope._testonly_._vars.has('local').should.eql(true);
+			});
+
+			it('should ignore as the name of local variable is existed', function () {
+				childScope._testonly_._vars.set('local', factoryVar.create('local'));
+				childScope.addLocalVariable('local');
+				childScope._testonly_._vars.size.should.eql(1);
+			});
+		});
+
+		describe('addGlobalVariable', function () {
+			it('should add global variable as current scope is PageScope', function () {
+				parentScope.addGlobalVariable('ga');
+				parentScope._testonly_._vars.size.should.eql(1);
+				parentScope._testonly_._vars.has('ga').should.eql(true);
+			});
+
+			it('should add variable into page scope as current scope is a descendant of the page scope', function () {
+				childScope._testonly_._parent = parentScope;
+				parentScope._testonly_._children.push(childScope);
+
+				childScope.addGlobalVariable('ga');
+				parentScope._testonly_._vars.size.should.eql(1);
+				parentScope._testonly_._vars.has('ga').should.eql(true);
+			});
+
+			it('should ignore as current scope is not a descendant of the page scope', function () {
+				childScope._testonly_._parent = rootScope;
+				rootScope._testonly_._children.push(childScope);
+
+				childScope.addGlobalVariable('ga');
+				rootScope._testonly_._vars.size.should.eql(0);
+				rootScope._testonly_._vars.has('ga').should.eql(false);
 			});
 		});
 	});
 
 	describe('public data members', function () {
+		var ast, scope;
+		beforeEach(function () {
+			ast = {type: 'FunctionDeclaration', range: [0, 1], loc: {line: 1, col: 0}};
+			scope = new Scope(ast, 'foo', 'function', null);
+		});
+
+		describe('ast', function () {
+			it('should retrieve the correct value', function () {
+				scope.ast.should.eql(ast);
+			});
+
+			it('should not be modified directly', function () {
+				should(function () {
+					scope.ast = null;
+				}).throw();
+			});
+
+			it('should be enumerable', function () {
+				Scope.prototype.propertyIsEnumerable('ast').should.eql(true);
+			});
+		});
+
+		describe('range', function () {
+			it('should be initialized with ast', function () {
+				should.exist(scope.range);
+				scope.range._testonly_._start.should.eql(0);
+				scope.range._testonly_._end.should.eql(1);
+			});
+
+			it('should support to be assigned with Range object', function () {
+				var range = new Range(1,2);
+				scope.range = range;
+				scope._testonly_._range._testonly_._start.should.eql(1);
+				scope._testonly_._range._testonly_._end.should.eql(2);
+			});
+
+			it('should support to be assigned with 2-elements Array', function () {
+				scope.range = [1,2];
+				scope._testonly_._range._testonly_._start.should.eql(1);
+				scope._testonly_._range._testonly_._end.should.eql(2);
+			});
+
+			it('should ignore the assignment as the input is invalid', function () {
+				scope.range = {start: 1, end: 2};
+				scope._testonly_._range._testonly_._start.should.eql(0);
+				scope._testonly_._range._testonly_._end.should.eql(1);
+			});
+
+			it('should be null as the ast does not contain range property', function () {
+				scope = new Scope(null, '$DOMAIN', 'domain', null);
+				should.not.exist(scope.range);
+			});
+
+			it('should be enumerable', function () {
+				Scope.prototype.propertyIsEnumerable('range').should.eql(true);
+			});
+		});
+
+		describe('children', function () {
+			var child1, child2, child3;
+			beforeEach(function () {
+				child1 = new Scope(ast, 'child1', 'function');
+				child2 = new Scope(ast, 'child2', 'function');
+				child3 = new Scope(ast, 'child3', 'function');
+
+				child1._testonly_._parent = scope;
+				child2._testonly_._parent = scope;
+				child3._testonly_._parent = scope;
+
+				scope._testonly_._children.push(child1);
+				scope._testonly_._children.push(child2);
+				scope._testonly_._children.push(child3);
+			});
+
+			it('should retrieve the children correctly', function () {
+				var children = scope.children;
+				children.length.should.eql(3);
+				children.indexOf(child1).should.eql(0);
+				children.indexOf(child2).should.eql(1);
+				children.indexOf(child3).should.eql(2);
+			});
+
+			it('should not be modified directly', function () {
+				should(function () {
+					scope.children = [];
+				}).throw();
+			});
+		});
+
 		describe('name', function () {
 			var oneScope, parentScope, rootScope;
 
@@ -494,6 +704,113 @@ describe('Scope', function () {
 
 				parentScope._testonly_._parent = rootScope;
 				oneScope.name.should.eql('$DOMAIN.$PAGE.one');
+			});
+		});
+
+		describe('parent', function () {
+			var ast, scope, parent;
+			beforeEach(function () {
+				ast = {type: 'Program', range: [0,1], loc: {line: 1, col: 0}};
+				scope = new Scope(ast, '$PAGE_0', 'page', null);
+				parent = new Scope(null, '$DOMAIN', 'domain', null);
+			});
+
+			it('should support to set valid Scope as parent', function () {
+				scope.parent = parent;
+				should.exist(scope._testonly_._parent);
+				scope.parent.should.eql(parent);
+			});
+
+			it('should ignore invalid input', function () {
+				scope.parent = {type: 'domain', name: '$DOMAIN'};
+				should.not.exist(scope._testonly_._parent);
+			});
+		});
+
+		describe('vars', function () {
+			var v1, v2, ast, scope;
+			beforeEach(function () {
+				ast = {type: 'Program', range: [0,1], loc: {line: 1, col: 0}};
+				scope = new Scope(ast, '$PAGE_0', 'page', null);
+				v1 = factoryVar.create('v1');
+				v2 = factoryVar.create('v2');
+				scope._testonly_._vars.set('v1', v1);
+				scope._testonly_._vars.set('v2', v2);
+			});
+
+			it('should retrieve a map of local variables', function () {
+				var map = scope.vars;
+				map.size.should.eql(2);
+				map.has('v1').should.eql(true);
+				map.has('v2').should.eql(true);
+				map.get('v1').should.eql(v1);
+				map.get('v2').should.eql(v2);
+			});
+
+			it('should not be modified directly', function () {
+				should(function () {
+					scope.vars = null;
+				}).throw();
+			});
+		});
+
+		describe('params', function () {
+			var p1, p2, ast, scope;
+			beforeEach(function () {
+				ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				scope = new Scope(ast, 'foo', 'function', null);
+				p1 = factoryVar.create('p1');
+				p2 = factoryVar.create('p2');
+				scope._testonly_._vars.set('p1', p1);
+				scope._testonly_._vars.set('p2', p2);
+				scope._testonly_._params.set('p1', p1);
+				scope._testonly_._params.set('p2', p2);
+				scope._testonly_._paramNames.push('p1');
+				scope._testonly_._paramNames.push('p2');
+			});
+
+			it('should retrieve a map of parameters', function () {
+				var map = scope.params;
+				map.size.should.eql(2);
+				map.has('p1').should.eql(true);
+				map.has('p2').should.eql(true);
+				map.get('p1').should.eql(p1);
+				map.get('p2').should.eql(p2);
+			});
+
+			it('should not be modified directly', function () {
+				should(function () {
+					scope.params = null;
+				}).throw();
+			});
+		});
+
+		describe('namedFunctionVars', function () {
+			var f1, f2, ast, scope;
+			beforeEach(function () {
+				ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				scope = new Scope(ast, 'foo', 'function', null);
+				f1 = factoryVar.create('f1');
+				f2 = factoryVar.create('f2');
+				scope._testonly_._vars.set('f1', f1);
+				scope._testonly_._vars.set('f2', f2);
+				scope._testonly_._namedFunctionVars.set('f1', f1);
+				scope._testonly_._namedFunctionVars.set('f2', f2);
+			});
+
+			it('should retrieve a map of inner named function variables', function () {
+				var map = scope.namedFunctionVars;
+				map.size.should.eql(2);
+				map.has('f1').should.eql(true);
+				map.has('f2').should.eql(true);
+				map.get('f1').should.eql(f1);
+				map.get('f2').should.eql(f2);
+			});
+
+			it('should not be modified directly', function () {
+				should(function () {
+					scope.namedFunctionVars = null;
+				}).throw();
 			});
 		});
 	});
