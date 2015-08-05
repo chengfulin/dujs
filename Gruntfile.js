@@ -19,15 +19,19 @@ module.exports = function (grunt) {
             },
             coverage: {
                 src: [
+	                'tests/analyses/*.js',
 	                'tests/dujs/var.js',
 	                'tests/dujs/varfactory.js',
+					'tests/dujs/def.js',
+	                'tests/dujs/deffactory.js',
 	                'tests/dujs/range.js',
 	                'tests/dujs/rangefactory.js',
 	                'tests/dujs/scope.js',
 	                'tests/dujs/domainscope.js',
 	                'tests/dujs/pagescope.js',
                     'tests/dujs/functionscope.js',
-	                'tests/dujs/anonymousfunctionscope.js'
+	                'tests/dujs/anonymousfunctionscope.js',
+	                'tests/esgraph/flownodetest.js'
                 ],
             },
             coveralls: {
