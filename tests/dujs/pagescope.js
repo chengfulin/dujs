@@ -27,25 +27,6 @@ describe('PageScope', function () {
 				PageScope.propertyIsEnumerable('numOfPageScopes').should.eql(true);
 			});
 		});
-
-		describe('buildInObjects', function () {
-			it('should have correct values', function () {
-				PageScope.builtInObjects.length.should.eql(11);
-				PageScope.builtInObjects.should.containDeep([
-					{name: "window", def: "htmlDom"},
-					{name: "document", def: "htmlDom"},
-					{name: "String", def: "object"},
-					{name: "Number", def: "object"},
-					{name: "Boolean", def: "object"},
-					{name: "Array", def: "object"},
-					{name: "Map", def: "object"},
-					{name: "WeakMap", def: "object"},
-					{name: "Set", def: "object"},
-					{name: "Date", def: "object"},
-					{name: "console", def: "object"}
-				]);
-			});
-		});
 	});
 
 	describe('static methods', function () {
@@ -78,12 +59,12 @@ describe('PageScope', function () {
 	});
 
 	describe('public data members', function () {
-		describe('index', function () {
-			var scope;
-			beforeEach(function () {
-				scope = new PageScope({type: 'Program', range: [0,1], loc: {line: 1, col: 0}});
-			});
+		var scope;
+		beforeEach(function () {
+			scope = new PageScope({type: 'Program', range: [0,1], loc: {line: 1, col: 0}});
+		});
 
+		describe('index', function () {
 			it('should support to retrieve the value', function () {
 				scope.index.should.eql(0);
 			});
@@ -96,6 +77,25 @@ describe('PageScope', function () {
 
 			it('should be enumerable', function () {
 				PageScope.prototype.propertyIsEnumerable('index').should.eql(true);
+			});
+		});
+
+		describe('buildInObjects', function () {
+			it('should have correct values', function () {
+				scope.builtInObjects.length.should.eql(11);
+				scope.builtInObjects.should.containDeep([
+					{name: "window", def: "htmlDom"},
+					{name: "document", def: "htmlDom"},
+					{name: "String", def: "object"},
+					{name: "Number", def: "object"},
+					{name: "Boolean", def: "object"},
+					{name: "Array", def: "object"},
+					{name: "Map", def: "object"},
+					{name: "WeakMap", def: "object"},
+					{name: "Set", def: "object"},
+					{name: "Date", def: "object"},
+					{name: "console", def: "object"}
+				]);
 			});
 		});
 	});

@@ -8,11 +8,12 @@ var DomainScope = require('../../lib/dujs/domainscope');
 
 describe('DomainScope', function () {
 	"use strict";
-	describe('static data members', function () {
+	describe('public data members', function () {
 		describe('buildInObjects', function () {
 			it('should contain correct values', function () {
-				DomainScope.builtInObjects.length.should.eql(1);
-				DomainScope.builtInObjects.should.containDeep([
+				var scope = new DomainScope();
+				scope.builtInObjects.length.should.eql(1);
+				scope.builtInObjects.should.containDeep([
 					{name: "localStorage", def: "localStorage"}
 				]);
 			});
