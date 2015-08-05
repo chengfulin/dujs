@@ -55,10 +55,10 @@ describe('ScopeFactory', function () {
             describe('create', function () {
                 it('should support to create Scope for global scope', function () {
                     var globalWrapper = factoryScopeWrapper.create(cfg, Scope.GLOBAL_SCOPE);
-                    should.exist(globalWrapper._testonly_._cfg);
+                    should.exist(globalWrapper._testonly_._graph);
                     should.exist(globalWrapper._testonly_._name);
-                    globalWrapper._testonly_._cfg[0].should.eql(node1);
-                    globalWrapper._testonly_._cfg[1].should.eql(node2);
+                    globalWrapper._testonly_._graph[0].should.eql(node1);
+                    globalWrapper._testonly_._graph[1].should.eql(node2);
                     globalWrapper._testonly_._name._testonly_._type.should.eql('Global');
                 });
 

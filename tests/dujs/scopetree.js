@@ -281,7 +281,7 @@ describe('ScopeTree', function () {
 			});
 		});
 
-		describe('hasScope', function () {
+		describe('isRelatedToTheScope', function () {
 			var tree;
 			beforeEach(function () {
 				var ast = esprima.parse(
@@ -302,15 +302,15 @@ describe('ScopeTree', function () {
 
 			it('should support to find a Scope by its reference', function () {
 				var pageScope = tree._testonly_._root;
-				tree.hasScope(pageScope).should.eql(true);
+				tree.isRelatedToTheScope(pageScope).should.eql(true);
 			});
 
 			it('should support to find a Scope by its name', function () {
-				tree.hasScope('$PAGE_0.foo').should.eql(true);
+				tree.isRelatedToTheScope('$PAGE_0.foo').should.eql(true);
 			});
 
 			it('should support ot find a Scope by its range value', function () {
-				tree.hasScope([50,83]).should.eql(true);
+				tree.isRelatedToTheScope([50,83]).should.eql(true);
 			});
 		});
 

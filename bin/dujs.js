@@ -68,7 +68,7 @@ function outputDUPairsFile(dirPath, analysisItem, index) {
 /**
  * Output dot files and related image files for the graphs
  * @param dirPath
- * @param {AnalyzedCFG} analysisItem
+ * @param {Model} analysisItem
  * @param {number} index
  * @private
  * @function

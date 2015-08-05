@@ -11,21 +11,21 @@ var AnalyzedCFG = require('../../lib/dujs').AnalyzedCFG,
     Map = require('core-js/es6/map'),
     should = require('should');
 
-describe('AnalyzedCFG', function () {
+describe('Model', function () {
     "use strict";
     beforeEach(function () {
         factoryFlowNode.resetCounter();
     });
 
     describe('Static Methods', function () {
-        describe('isAnalyzedCFG', function () {
-            it('should return false as the object is not an AnalyzedCFG', function () {
-                AnalyzedCFG.isAnalyzedCFG(null).should.eql(false);
-                AnalyzedCFG.isAnalyzedCFG({}).should.eql(false);
+        describe('isModel', function () {
+            it('should return false as the object is not an Model', function () {
+                AnalyzedCFG.isModel(null).should.eql(false);
+                AnalyzedCFG.isModel({}).should.eql(false);
             });
 
-            it('should return true as the object is an AnalyzedCFG', function () {
-                AnalyzedCFG.isAnalyzedCFG(new AnalyzedCFG()).should.eql(true);
+            it('should return true as the object is an Model', function () {
+                AnalyzedCFG.isModel(new AnalyzedCFG()).should.eql(true);
             });
         });
     });
@@ -41,7 +41,7 @@ describe('AnalyzedCFG', function () {
                 var node1 = factoryFlowNode.createEntryNode(),
                     node2 = factoryFlowNode.createExitNode(),
                     cfg = [node1, node2, [node1, node2]];
-                analyzed._testonly_._cfg = cfg;
+                analyzed._testonly_._graph = cfg;
 
                 should.exist(analyzed.cfg);
                 analyzed.cfg.length.should.eql(3);
@@ -56,10 +56,10 @@ describe('AnalyzedCFG', function () {
                     cfg = [node1, node2, [node1, node2]];
 
                 analyzed.cfg = cfg;
-                analyzed._testonly_._cfg.length.should.eql(3);
-                analyzed._testonly_._cfg[0].should.eql(node1);
-                analyzed._testonly_._cfg[1].should.eql(node2);
-                analyzed._testonly_._cfg[2].length.should.eql(2);
+                analyzed._testonly_._graph.length.should.eql(3);
+                analyzed._testonly_._graph[0].should.eql(node1);
+                analyzed._testonly_._graph[1].should.eql(node2);
+                analyzed._testonly_._graph[2].length.should.eql(2);
             });
         });
 
@@ -74,7 +74,7 @@ describe('AnalyzedCFG', function () {
                     node2 = factoryFlowNode.createExitNode(),
                     wrapper = new ScopeWrapper([node1, node2, [node1, node2]], Scope.PROGRAM_SCOPE);
 
-                analyzed._testonly_._scopeWrappers.push(wrapper);
+                analyzed._testonly_._relatedScopes.push(wrapper);
 
                 should.exist(analyzed.scopeWrappers);
                 analyzed.scopeWrappers.length.should.eql(1);
@@ -86,8 +86,8 @@ describe('AnalyzedCFG', function () {
                     node2 = factoryFlowNode.createExitNode(),
                     wrapper = new ScopeWrapper([node1, node2, [node1, node2]], Scope.PROGRAM_SCOPE);
                 analyzed.scopeWrappers = [wrapper];
-                analyzed._testonly_._scopeWrappers.length.should.eql(1);
-                analyzed._testonly_._scopeWrappers[0].should.eql(wrapper);
+                analyzed._testonly_._relatedScopes.length.should.eql(1);
+                analyzed._testonly_._relatedScopes[0].should.eql(wrapper);
             });
         });
 
