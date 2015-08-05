@@ -3,7 +3,7 @@
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
  * @lastmodifiedDate 2015-07-27
  */
-var Def = require('../../lib/dujs').Def,
+var Def = require('../../lib/dujs/def'),
 	flownodeFactory = require('../../lib/esgraph/flownodefactory'),
     should = require('should');
 
@@ -72,7 +72,7 @@ describe('Def', function () {
 
 	    describe('HTML_DOM_TYPE', function () {
 		    it('should have correct value', function () {
-			    Def.HTML_DOM_TYPE.should.eql('htmlDOM');
+			    Def.HTML_DOM_TYPE.should.eql('htmlDom');
 		    });
 
 		    it('should not support to modify value', function () {
@@ -180,16 +180,9 @@ describe('Def', function () {
 				node1.cfgId = 0;
 				node2.cfgId = 1;
 
-				var aDef = new Def(node1, 'object'),
-					another = new Def(node2, 'literal');
+				var aDef = new Def(node1, 'object'), another = new Def(node2, 'literal');
 				aDef.toString().should.eql('object @ n0');
 				another.toString().should.eql('literal @ n1');
-			});
-		});
-
-		describe('toJSON', function () {
-			it('should be tested', function () {
-				should.fail(null, null, 'Not tested yet');
 			});
 		});
 	});
@@ -207,7 +200,7 @@ describe('Def', function () {
                 should.exist(def.fromNode);
                 def.fromNode._testonly_._cfgId.should.eql(0);
                 def.fromNode._testonly_._type.should.eql('normal');
-                def._testonly_.fromNode.should.eql(def.fromNode);
+                def._testonly_._fromNode.should.eql(def.fromNode);
             });
 
 	        it('should not support to modify value', function () {
