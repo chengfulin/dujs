@@ -3,13 +3,19 @@
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
  * @lastmodifiedDate 2015-08-04
  */
-var should = require('should');
+var should = require('should'),
+	esprima = require('esprima');
 var ScopeTree = require('../../lib/dujs/scopetree'),
 	factoryScope = require('../../lib/dujs/scopefactory'),
 	factoryRange = require('../../lib/dujs/rangefactory');
 
 describe('ScopeTree', function () {
 	"use strict";
+	beforeEach(function () {
+		factoryScope.resetPageScopeCounter();
+		factoryScope.resetAnonymousFunctionScopeCounter();
+	});
+
 	describe('private methods', function () {
 		describe('addScope', function () {
 			var tree, scope;
@@ -60,6 +66,137 @@ describe('ScopeTree', function () {
 				tree._testonly_._scopes[0].should.eql(page);
 				tree._testonly_._mapFromNameToScope.size.should.eql(1);
 				tree._testonly_._mapFromNameToScope.has('$PAGE_0').should.eql(true);
+			});
+		});
+	});
+
+	describe('public methods', function () {
+		describe('buildScopeTree', function () {
+			var tree;
+			beforeEach(function () {
+				tree = new ScopeTree();
+			});
+
+			describe('to build a ScopeTree with PageScope only', function () {
+				beforeEach(function () {
+					var ast = esprima.parse(
+						'var a = 0, b = 1;\n' +
+						'++a;\n' +
+						'b = a\n' +
+						'console.log("a=" + a);\n' +
+						'console.log("b=" + b);',
+						{range: true, loc: true}
+					);
+
+					tree.buildScopeTree(ast);
+				});
+
+				it('should contain all the scopes', function () {
+					tree._testonly_._scopes.length.should.eql(1);
+					should.exist(tree._testonly_._root);
+					tree._testonly_._root.should.eql(tree._testonly_._scopes[0]);
+					tree._testonly_._mapFromNameToScope.size.should.eql(1);
+					tree._testonly_._mapFromNameToScope.has('$PAGE_0').should.eql(true);
+					tree._testonly_._mapFromRangeToScope.size.should.eql(1);
+					tree._testonly_._mapFromRangeToScope.has('[0,74]').should.eql(true);
+				});
+
+				it('should set the tree structure well', function () {
+					tree._testonly_._root._testonly_._children.length.should.eql(0);
+					should.not.exist(tree._testonly_._root._testonly_._parent);
+				});
+
+				it('should not set local variables yet', function () {
+					var pageScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0');
+					pageScope._testonly_._vars.size.should.eql(0);
+				});
+			});
+
+			describe('to build a ScopeTree with two level scopes', function () {
+				beforeEach(function () {
+					var ast = esprima.parse(
+						'var a = 0;\n' +
+						'function foo(x) {\n' +
+						'a = x + 1;\n' +
+						'}\n' +
+						'foo(2);\n' +
+						'function fun(x, y) {\n' +
+						'a = x * y;\n' +
+						'}\n' +
+						'fun(3, 4);',
+						{range: true, loc: true}
+					);
+
+					tree.buildScopeTree(ast);
+				});
+
+				it('should contain all scopes', function () {
+					tree._testonly_._mapFromNameToScope.size.should.eql(3);
+					tree._testonly_._mapFromNameToScope.has('$PAGE_0.foo').should.eql(true);
+					tree._testonly_._mapFromNameToScope.has('$PAGE_0.fun').should.eql(true);
+					tree._testonly_._mapFromRangeToScope.size.should.eql(3);
+					tree._testonly_._mapFromRangeToScope.has('[11,41]').should.eql(true);
+					tree._testonly_._mapFromRangeToScope.has('[50,83]').should.eql(true);
+				});
+
+				it('should set the tree structure well', function () {
+					var pageScope = tree._testonly_._root;
+					var fooScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.foo');
+					var funScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.fun');
+
+					(pageScope._testonly_._children.indexOf(fooScope) !== -1).should.eql(true);
+					(pageScope._testonly_._children.indexOf(funScope) !== -1).should.eql(true);
+					fooScope._testonly_._parent.should.eql(pageScope);
+					funScope._testonly_._parent.should.eql(pageScope);
+				});
+
+				it('should not set the local variables yet', function () {
+					var fooScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.foo');
+					var funScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.fun');
+					fooScope._testonly_._vars.size.should.eql(0);
+					funScope._testonly_._vars.size.should.eql(0);
+				});
+			});
+
+			describe('to build a ScopeTree with more than two level scopes', function () {
+				beforeEach(function () {
+					var ast = esprima.parse(
+						'var a = 0;\n' +
+						'function foo(x) {\n' +
+							'a = x + 1;\n' +
+						'}\n' +
+						'foo(2);\n' +
+						'function fun(x, y) {\n' +
+							'a = x * y;\n' +
+							'var c = function () {\n' +
+								'console.log("a=" + a);\n' +
+							'};\n' +
+						'}\n' +
+						'fun(3, 4);',
+						{range: true, loc: true}
+					);
+
+					tree.buildScopeTree(ast);
+				});
+
+				it('should contain all the scopes', function () {
+					tree._testonly_._mapFromNameToScope.size.should.eql(4);
+					tree._testonly_._mapFromNameToScope.has('$PAGE_0.fun.$ANONYMOUS_FUN_0').should.eql(true);
+					tree._testonly_._mapFromRangeToScope.size.should.eql(4);
+					tree._testonly_._mapFromRangeToScope.has('[90,128]').should.eql(true);
+				});
+
+				it('should set the tree structure well', function () {
+					var funScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.fun');
+					var anonymousScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.fun.$ANONYMOUS_FUN_0');
+					(funScope._testonly_._children.indexOf(anonymousScope) !== -1).should.eql(true);
+					anonymousScope._testonly_._parent.should.eql(funScope);
+				});
+
+				it('should not set the local variables yet', function () {
+					var anonymousScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.fun.$ANONYMOUS_FUN_0');
+					anonymousScope._testonly_._vars.size.should.eql(0);
+				});
 			});
 		});
 	});
