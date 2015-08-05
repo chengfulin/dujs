@@ -1,5 +1,7 @@
-/**
- * Created by ChengFuLin on 2015/5/20.
+/*
+ * Gruntfile
+ * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
+ * @lastmodifiedDate 2015/5/20
  */
 module.exports = function (grunt) {
     "use strict";
@@ -59,7 +61,37 @@ module.exports = function (grunt) {
                     }
                 }
             }
-        }
+        },
+	    jsdoc: {
+		    dist : {
+			    src: [
+				    'lib/namespace.js',
+				    'lib/dujs/var.js',
+				    'lib/dujs/varfactory.js',
+				    'lib/dujs/def.js',
+				    'lib/dujs/deffactory.js',
+				    'lib/dujs/range.js',
+				    'lib/dujs/rangefactory.js',
+				    'lib/dujs/scope.js',
+				    'lib/dujs/domainscope.js',
+				    'lib/dujs/pagescope.js',
+				    'lib/dujs/functionscope.js',
+				    'lib/dujs/anonymousfunctionscope.js',
+				    'lib/dujs/scopetree.js',
+				    'lib/dujs/scopefinder.js',
+				    'lib/dujs/scopectrl.js',
+				    'lib/dujs/scopefactory.js',
+				    'lib/dujs/astvalidator.js',
+				    'lib/dujs/cfgbuilder.js',
+				    'lib/dujs/cfggraphconverter.js',
+				    'lib/dujs/cfgvalidator.js',
+				    'lib/dujs/jsparser.js',
+				    'lib/dujs/variableananlyzer.js',
+				    'lib/esgraph/flownode.js'
+			    ],
+			    jsdoc: './node_modules/.bin/jsdoc'
+		    }
+	    }
     });
 
     grunt.event.on('coverage', function(lcovFileContents, done){
@@ -69,9 +101,10 @@ module.exports = function (grunt) {
 
     grunt.loadNpmTasks('grunt-strip-code');
     grunt.loadNpmTasks('grunt-mocha-istanbul');
+	grunt.loadNpmTasks('grunt-jsdoc');
 
     grunt.registerTask('default', ['mocha_istanbul:coverage']);
     //grunt.registerTask('deploy', ['strip_code']);
-    grunt.registerTask('coveralls', ['mocha_istanbul:coveralls']);
     grunt.registerTask('coverage', ['mocha_istanbul:coverage']);
+	grunt.registerTask('doc', ['jsdoc']);
 };
