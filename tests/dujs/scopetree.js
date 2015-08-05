@@ -67,6 +67,25 @@ describe('ScopeTree', function () {
 				tree._testonly_._mapFromNameToScope.size.should.eql(1);
 				tree._testonly_._mapFromNameToScope.has('$PAGE_0').should.eql(true);
 			});
+
+			it('should throw an error as the input AST is invalid', function () {
+				should(function () {
+					ScopeTree._testonly_._initialization(tree, {type: 'domain', range: [0,1], loc: {line: 1, col: 0}});
+				}).throw('Invalid value for a PageScope');
+			});
+		});
+	});
+
+	describe('static methods', function () {
+		describe('isScopeTree', function () {
+			it('should return false as the object is not a ScopeTree', function () {
+				ScopeTree.isScopeTree({root: null}).should.eql(false);
+				ScopeTree.isScopeTree(null).should.eql(false);
+			});
+
+			it('should return true as the object is a ScopeTree', function () {
+				ScopeTree.isScopeTree(new ScopeTree()).should.eql(true);
+			});
 		});
 	});
 
@@ -197,6 +216,124 @@ describe('ScopeTree', function () {
 					var anonymousScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.fun.$ANONYMOUS_FUN_0');
 					anonymousScope._testonly_._vars.size.should.eql(0);
 				});
+			});
+		});
+
+		describe('getScopeByRange', function () {
+			var tree;
+			beforeEach(function () {
+				var ast = esprima.parse(
+					'var a = 0, b = 1;\n' +
+					'++a;\n' +
+					'b = a\n' +
+					'console.log("a=" + a);\n' +
+					'console.log("b=" + b);',
+					{range: true, loc: true}
+				);
+				tree = new ScopeTree();
+				tree.buildScopeTree(ast);
+			});
+
+			it('should support to get a Scope by its range value', function () {
+				var scope = tree.getScopeByRange([0,74]);
+				should.exist(scope);
+				scope.should.eql(tree._testonly_._root);
+			});
+
+			it('should return null as the range value is invalid', function () {
+				var scope = tree.getScopeByRange({start: 0, end: 74});
+				should.not.exist(scope);
+			});
+		});
+
+		describe('getScopeByName', function () {
+			var tree;
+			beforeEach(function () {
+				var ast = esprima.parse(
+					'var a = 0;\n' +
+					'function foo(x) {\n' +
+					'a = x + 1;\n' +
+					'}\n' +
+					'foo(2);\n' +
+					'function fun(x, y) {\n' +
+					'a = x * y;\n' +
+					'}\n' +
+					'fun(3, 4);',
+					{range: true, loc: true}
+				);
+				tree = new ScopeTree();
+				tree.buildScopeTree(ast);
+			});
+
+			it('should support to get a Scope by its name', function () {
+				var pageScope = tree.getScopeByName('$PAGE_0');
+				should.exist(pageScope);
+				pageScope.should.eql(tree._testonly_._root);
+
+				var fooScope = tree.getScopeByName('$PAGE_0.foo');
+				should.exist(fooScope);
+				fooScope.should.eql(tree._testonly_._mapFromNameToScope.get('$PAGE_0.foo'));
+			});
+
+			it('should return null as the name value is invalid', function () {
+				should.not.exist(tree.getScopeByName('notExisted'));
+				should.not.exist(tree.getScopeByName('!invalid'));
+			});
+		});
+
+		describe('hasScope', function () {
+			var tree;
+			beforeEach(function () {
+				var ast = esprima.parse(
+					'var a = 0;\n' +
+					'function foo(x) {\n' +
+					'a = x + 1;\n' +
+					'}\n' +
+					'foo(2);\n' +
+					'function fun(x, y) {\n' +
+					'a = x * y;\n' +
+					'}\n' +
+					'fun(3, 4);',
+					{range: true, loc: true}
+				);
+				tree = new ScopeTree();
+				tree.buildScopeTree(ast);
+			});
+
+			it('should support to find a Scope by its reference', function () {
+				var pageScope = tree._testonly_._root;
+				tree.hasScope(pageScope).should.eql(true);
+			});
+
+			it('should support to find a Scope by its name', function () {
+				tree.hasScope('$PAGE_0.foo').should.eql(true);
+			});
+
+			it('should support ot find a Scope by its range value', function () {
+				tree.hasScope([50,83]).should.eql(true);
+			});
+		});
+	});
+
+	describe('public data members', function () {
+		describe('root', function () {
+			var tree;
+			beforeEach(function () {
+				tree = new ScopeTree();
+			});
+
+			it('should be empty as default', function () {
+				should.not.exist(tree.root);
+			});
+
+			it('should not be modified directly', function () {
+				should(function () {
+					tree.root = {};
+				}).throw();
+			});
+
+			it('should be enumerable', function () {
+				ScopeTree.prototype.propertyIsEnumerable('root').should.eql(true);
 			});
 		});
 	});
