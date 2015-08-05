@@ -35,6 +35,7 @@ module.exports = function (grunt) {
 	                'tests/dujs/anonymousfunctionscope.js',
 	                'tests/dujs/scopetree.js',
 	                'tests/dujs/scopectrl.js',
+                    'tests/dujs/model.js',
 	                'tests/esgraph/flownodetest.js',
 	                'tests/esgraph/test.js'
                 ],
