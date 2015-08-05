@@ -30,7 +30,7 @@ describe('PageScope', function () {
 
 		describe('buildInObjects', function () {
 			it('should have correct values', function () {
-				PageScope.builtInObjects.length.should.eql(10);
+				PageScope.builtInObjects.length.should.eql(11);
 				PageScope.builtInObjects.should.containDeep([
 					{name: "window", def: "htmlDom"},
 					{name: "document", def: "htmlDom"},
@@ -41,7 +41,8 @@ describe('PageScope', function () {
 					{name: "Map", def: "object"},
 					{name: "WeakMap", def: "object"},
 					{name: "Set", def: "object"},
-					{name: "Date", def: "object"}
+					{name: "Date", def: "object"},
+					{name: "console", def: "object"}
 				]);
 			});
 		});
