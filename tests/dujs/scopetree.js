@@ -313,6 +313,75 @@ describe('ScopeTree', function () {
 				tree.hasScope([50,83]).should.eql(true);
 			});
 		});
+
+		describe('toString', function () {
+			describe('to represent the ScopeTree by string', function () {
+				it('should support to represent the tree containing page scope only', function () {
+					var ast = esprima.parse(
+						'var a = 0, b = 1;\n' +
+						'++a;\n' +
+						'b = a\n' +
+						'console.log("a=" + a);\n' +
+						'console.log("b=" + b);',
+						{range: true, loc: true}
+					);
+					var tree = new ScopeTree();
+					tree.buildScopeTree(ast);
+
+					tree.toString().should.eql('+-$PAGE_0');
+				});
+
+				it('should support to represent the tree containing two level scopes', function () {
+					var ast = esprima.parse(
+						'var a = 0;\n' +
+						'function foo(x) {\n' +
+						'a = x + 1;\n' +
+						'}\n' +
+						'foo(2);\n' +
+						'function fun(x, y) {\n' +
+						'a = x * y;\n' +
+						'}\n' +
+						'fun(3, 4);',
+						{range: true, loc: true}
+					);
+					var tree = new ScopeTree();
+					tree.buildScopeTree(ast);
+
+					tree.toString().should.eql(
+						'+-$PAGE_0\n' +
+						'  +-$PAGE_0.foo\n' +
+						'  +-$PAGE_0.fun'
+					);
+				});
+
+				it('should support to represent the tree containing more than two level scopes', function () {
+					var ast = esprima.parse(
+						'var a = 0;\n' +
+						'function foo(x) {\n' +
+						'a = x + 1;\n' +
+						'}\n' +
+						'foo(2);\n' +
+						'function fun(x, y) {\n' +
+						'a = x * y;\n' +
+						'var c = function () {\n' +
+						'console.log("a=" + a);\n' +
+						'};\n' +
+						'}\n' +
+						'fun(3, 4);',
+						{range: true, loc: true}
+					);
+					var tree = new ScopeTree();
+					tree.buildScopeTree(ast);
+
+					tree.toString().should.eql(
+						'+-$PAGE_0\n' +
+						'  +-$PAGE_0.foo\n' +
+						'  +-$PAGE_0.fun\n' +
+						'    +-$PAGE_0.fun.$ANONYMOUS_FUN_0'
+					);
+				});
+			});
+		});
 	});
 
 	describe('public data members', function () {
