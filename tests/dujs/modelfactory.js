@@ -4,7 +4,7 @@
 var factoryAnalyzedCFG = require('../../lib/dujs').factoryAnalyzedCFG,
     should = require('should');
 
-describe('AnalyzedCFGFactory', function () {
+describe('ModelFactory', function () {
     "use strict";
     describe('Factory Method', function () {
         it('should support to create empty Model', function () {
