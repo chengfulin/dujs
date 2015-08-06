@@ -405,5 +405,43 @@ describe('ScopeTree', function () {
 				ScopeTree.prototype.propertyIsEnumerable('root').should.eql(true);
 			});
 		});
+
+		describe('scopes', function () {
+			var tree;
+			beforeEach(function () {
+				var ast = esprima.parse(
+					'var a = 0;\n' +
+					'function foo(x) {\n' +
+					'a = x + 1;\n' +
+					'}\n' +
+					'foo(2);\n' +
+					'function fun(x, y) {\n' +
+					'a = x * y;\n' +
+					'var c = function () {\n' +
+					'console.log("a=" + a);\n' +
+					'};\n' +
+					'}\n' +
+					'fun(3, 4);',
+					{range: true, loc: true}
+				);
+				tree = new ScopeTree();
+				tree.buildScopeTree(ast);
+			});
+
+			it('should retrieve the correct value', function () {
+				var scopes = tree.scopes;
+				scopes.length.should.eql(4);
+				tree._testonly_._scopes.indexOf(scopes[0]).should.not.eql(-1);
+				tree._testonly_._scopes.indexOf(scopes[1]).should.not.eql(-1);
+				tree._testonly_._scopes.indexOf(scopes[2]).should.not.eql(-1);
+				tree._testonly_._scopes.indexOf(scopes[3]).should.not.eql(-1);
+			});
+
+			it('should not be modified directly', function () {
+				should(function () {
+					tree.scopes = [];
+				}).throw();
+			});
+		});
 	});
 });
