@@ -7,7 +7,7 @@ var factoryDef = require('../../lib/dujs/deffactory'),
     factoryFlowNode = require('../../lib/esgraph/flownodefactory');
 require('should');
 
-describe('DefFactory singleton', function () {
+describe('DefFactory', function () {
     "use strict";
     var node;
 	beforeEach(function () {
