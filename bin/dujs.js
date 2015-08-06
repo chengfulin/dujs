@@ -172,7 +172,7 @@ function doIntraPageAnalysis(source, pageIndex) {
 function doInterPageAnalysis(sources) {
     "use strict";
     if (sources instanceof Array) {
-        var analysisOutputs = DUJS.doInterPageAnalysis(sources).interPageAnalysisItems;
+        var analysisOutputs = DUJS.doInterPageAnalysis(sources).interPageModels;
         analysisOutputs.forEach(function (item, index) {
             outputInterPageResultFiles(OUTPUT_DIR + '/' + INTER_PAGE_OUTPUTS_DIR, item, index);
         });
