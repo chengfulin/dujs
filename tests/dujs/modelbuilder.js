@@ -6,7 +6,7 @@ var builder = require('../../lib/dujs').analyzedCFGBuilder,
     ScopeTree = require('../../lib/dujs').ScopeTree,
     should = require('should');
 
-describe('AnalyzedCFGBuilder', function () {
+describe('ModelBuilder', function () {
     "use strict";
     describe('Private Methods', function () {
         describe('connectCallerCalleeCFGs', function () {
