@@ -69,12 +69,12 @@ describe('ModelBuilder', function () {
                     tree = new ScopeTree();
                 tree.buildScopeTree(ast);
 
-                var analyzedCFGs = builder.buildIntraProceduralAnalysisItems(tree);
+                var analyzedCFGs = builder.buildIntraProceduralModels(tree);
                 analyzedCFGs.length.should.eql(3);
             });
 
             it('should be empty as the input is not a ScopeCtrl',function () {
-                var analyzedCFGs = builder.buildIntraProceduralAnalysisItems({});
+                var analyzedCFGs = builder.buildIntraProceduralModels({});
                 analyzedCFGs.length.should.eql(0);
             });
         });
