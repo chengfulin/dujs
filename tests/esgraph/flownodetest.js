@@ -1,17 +1,12 @@
-/*
- * Test cases for FlowNode module
- * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-07
+/**
+ * Created by ChengFuLin on 2015/5/20.
  */
 var FlowNode = require('../../lib/esgraph/flownode'),
-    Set = require('../../lib/analyses/set'),
+    Set = require('../../lib/analyses').Set,
     should = require('should');
 
 describe('FlowNode', function () {
     "use strict";
-    beforeEach(function () {
-	    FlowNode.numOfNodes = 0;
-    });
 
     describe('constructor', function () {
         describe('create object with node type', function () {
@@ -48,6 +43,10 @@ describe('FlowNode', function () {
                 single = new FlowNode();
             });
             describe('default values', function () {
+                it('should not have cfgId yet', function () {
+                    should.not.exist(single._testonly_._cfgId);
+                });
+
                 it('should not have astNode', function () {
                     should.not.exist(single._testonly_._astNode);
                 });
