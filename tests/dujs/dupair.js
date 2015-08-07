@@ -1,9 +1,10 @@
 /**
  * Created by chengfulin on 2015/4/16.
  */
-var DUPair = require('../../lib/dujs').DUPair,
-    factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
-    should = require('should');
+var DUPair = require('../../lib/dujs/dupair'),
+    factoryFlowNode = require('../../lib/esgraph/flownodefactory'),
+	factoryPair = require('../../lib/dujs/pairfactory');
+var should = require('should');
 
 describe('DUPair', function () {
     'use strict';
@@ -33,11 +34,11 @@ describe('DUPair', function () {
             it('should throw as def or use is invalid', function () {
                 should(function () {
                     DUPair.validate(null, {});
-                }).throw('Invalid DUPair');
+                }).throw('Invalid value for a DUPair');
 
                 should(function () {
                     DUPair.validate(factoryFlowNode.createNormalNode(), null);
-                }).throw('Invalid DUPair');
+                }).throw('Invalid value for a DUPair');
             });
 
             it('should support custom error message', function () {
@@ -54,7 +55,7 @@ describe('DUPair', function () {
         });
     });
 
-    describe('Properties', function () {
+    describe('public data members', function () {
         var pair;
         beforeEach(function () {
             pair = new DUPair(factoryFlowNode.createNormalNode(), factoryFlowNode.createEntryNode());
@@ -84,6 +85,29 @@ describe('DUPair', function () {
                     pair.use = null;
                 }).throw();
             });
+        });
+    });
+
+    describe('public methods', function () {
+        describe('toString', function () {
+	        it('should represent a c-use DUPair correctly', function () {
+		        var defNode = factoryFlowNode.createNormalNode(),
+			        useNode = factoryFlowNode.createExitNode();
+		        var pair = new DUPair(defNode, useNode);
+		        pair.toString().should.eql('(n0,exit)');
+
+		        defNode.label = 'def';
+		        pair.toString().should.eql('(def,exit)');
+	        });
+
+	        it('should represent a p-use DUPair correctly', function () {
+		        var defNode = factoryFlowNode.createNormalNode(),
+			        useNode = factoryFlowNode.createNormalNode(),
+			        brachNode = factoryFlowNode.createNormalNode();
+
+		        var pair = new DUPair(defNode, factoryPair.create(useNode, brachNode));
+		        pair.toString().should.eql('(n0,(n1,n2))');
+	        });
         });
     });
 
