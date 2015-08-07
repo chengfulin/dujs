@@ -166,7 +166,6 @@ describe('FlowNode', function () {
                 should(FlowNode.isValidNodeType('callReturn')).eql(true);
                 should(FlowNode.isValidNodeType('loopReturn')).eql(true);
                 should(FlowNode.isValidNodeType('branch')).eql(true);
-                should(FlowNode.isValidNodeType('halt')).eql(true);
                 should(FlowNode.isValidNodeType('localStorage')).eql(true);
             });
 
