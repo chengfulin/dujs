@@ -1,86 +1,73 @@
-/**
- * Created by ChengFuLin on 2015/5/27.
+/*
+ * Test cases for ModelBuilder module
+ * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
+ * @lastmodifiedDate 2015-08-07
  */
-var builder = require('../../lib/dujs').analyzedCFGBuilder,
-    CFGExt = require('../../lib/dujs').CFGExt,
-    ScopeTree = require('../../lib/dujs').ScopeTree,
-    should = require('should');
+var should = require('should'),
+	esprima = require('esprima');
+var Model = require('../../lib/dujs/model'),
+	factoryScopeTree = require('../../lib/dujs/scopetreefactory'),
+	modelBuilder = require('../../lib/dujs/modelbuilder');
 
 describe('ModelBuilder', function () {
-    "use strict";
-    describe('Private Methods', function () {
-        describe('connectCallerCalleeCFGs', function () {
-            it('should connect two CFGs correctly', function () {
-                var cfg1 = CFGExt.getCFG(CFGExt.parseAST(
-                        'foo();'
-                    )),
-                    cfg2 = CFGExt.getCFG(CFGExt.parseAST(
-                        'var b = 1;'
-                    )),
-                    connectedCFG = builder._testonly_.connectCallerCalleeCFGs(cfg1, cfg2, cfg1[2][1]);
+	"use strict";
+	describe('public methods', function () {
+		describe('buildIntraProceduralModels', function () {
+			var scopeTree;
+			beforeEach(function () {
+				var ast = esprima.parse(
+					'var a, b;' +
+					'function foo() {' +
+						'var c;' +
+						'c++' +
+					'}' +
+					'function fun() {' +
+						'var d = function() {' +
+							'var f;' +
+						'};' +
+						'var g = 1;' +
+						'--g;' +
+						'++g;' +
+					'}' +
+					'foo();' +
+					'fun();',
+					{range: true, loc: true}
+				);
+				scopeTree = factoryScopeTree.create();
+				scopeTree.buildScopeTree(ast);
+			});
 
-                connectedCFG.length.should.eql(3);
-                connectedCFG[0].should.eql(cfg1[0]);
-                connectedCFG[1].should.eql(cfg1[1]);
-                connectedCFG[2].length.should.eql(7);
+			it('should contain correct number of models', function () {
+				var models = modelBuilder.buildIntraProceduralModels(scopeTree);
+				models.length.should.eql(4);
+			});
 
-                /// All nodes of connected CFG
-                connectedCFG[2][0]._testonly_._type.should.eql('entry');
-                connectedCFG[2][1]._testonly_._type.should.eql('call');
-                /// original call site is modified to be Call Node
-                should.exist(connectedCFG[2][1]._testonly_._astNode);
-                connectedCFG[2][1]._testonly_._astNode.type.should.eql('CallExpression');
-                connectedCFG[2][2]._testonly_._type.should.eql('entry');
-                connectedCFG[2][4]._testonly_._type.should.eql('exit');
-                connectedCFG[2][5]._testonly_._type.should.eql('callReturn');
-                should.not.exist(connectedCFG[2][5]._testonly_._astNode);
-                connectedCFG[2][6]._testonly_._type.should.eql('exit');
+			it('should contain corresponding scope', function () {
+				var models = modelBuilder.buildIntraProceduralModels(scopeTree);
+				models.forEach(function (model) {
+					model._testonly_._relatedScopes.length.should.eql(1);
+				});
+				scopeTree._testonly_._scopes.every(function (scope) {
+					return models.some(function (model) {
+						return model._testonly_._relatedScopes.indexOf(scope) !== -1;
+					});
+				}).should.eql(true);
+			});
 
-                /// Call connection
-                connectedCFG[2][0]._testonly_.normal.should.eql(connectedCFG[2][1]);
-                connectedCFG[2][1]._testonly_.call.should.eql(connectedCFG[2][2]);
-                connectedCFG[2][1]._testonly_._next.length.should.eql(1);
-                connectedCFG[2][1]._testonly_._next[0].should.eql(connectedCFG[2][2]);
-                connectedCFG[2][2]._testonly_._prev.length.should.eql(1);
-                connectedCFG[2][2]._testonly_._prev[0].should.eql(connectedCFG[2][1]);
-
-                /// Return connection
-                connectedCFG[2][4]._testonly_.return[0].should.eql(connectedCFG[2][5]);
-                connectedCFG[2][4]._testonly_._next.length.should.eql(1);
-                connectedCFG[2][4]._testonly_._next[0].should.eql(connectedCFG[2][5]);
-                connectedCFG[2][5]._testonly_._prev.length.should.eql(1);
-                connectedCFG[2][5]._testonly_._prev[0].should.eql(connectedCFG[2][4]);
-            });
-        });
-    });
-
-    describe('Public Methods', function () {
-        describe('buildIntraProceduralCFGs', function () {
-            it('should produce correct AnalyzedCFGs', function () {
-                var ast = CFGExt.parseAST(
-                        'var a;' +
-                        'function foo() {' +
-                        'expr;' +
-                        '}' +
-                        'a = function () {' +
-                        'expr;' +
-                        '};'
-                    ),
-                    tree = new ScopeTree();
-                tree.buildScopeTree(ast);
-
-                var analyzedCFGs = builder.buildIntraProceduralModels(tree);
-                analyzedCFGs.length.should.eql(3);
-            });
-
-            it('should be empty as the input is not a ScopeCtrl',function () {
-                var analyzedCFGs = builder.buildIntraProceduralModels({});
-                analyzedCFGs.length.should.eql(0);
-            });
-        });
-
-        describe('buildInterProceduralCFGs', function () {
-            /// TODO: should be tested
-        });
-    });
+			it('should contain corresponding graph', function () {
+				var models = modelBuilder.buildIntraProceduralModels(scopeTree);
+				models.forEach(function (model) {
+					if (model._testonly_._mainlyRelatedScope === scopeTree._testonly_._scopes[0]) {
+						model._testonly_._graph[2].length.should.eql(5);
+					} else if (model._testonly_._mainlyRelatedScope === scopeTree._testonly_._scopes[1]) {
+						model._testonly_._graph[2].length.should.eql(4);
+					} else if (model._testonly_._mainlyRelatedScope === scopeTree._testonly_._scopes[2]) {
+						model._testonly_._graph[2].length.should.eql(6);
+					} else if (model._testonly_._mainlyRelatedScope === scopeTree._testonly_._scopes[3]) {
+						model._testonly_._graph[2].length.should.eql(3);
+					}
+				});
+			});
+		});
+	});
 });
