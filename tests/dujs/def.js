@@ -181,8 +181,8 @@ describe('Def', function () {
 				node2.cfgId = 1;
 
 				var aDef = new Def(node1, 'object'), another = new Def(node2, 'literal');
-				aDef.toString().should.eql('object @ n0');
-				another.toString().should.eql('literal @ n1');
+				aDef.toString().should.eql('object@n0');
+				another.toString().should.eql('literal@n1');
 			});
 		});
 	});
