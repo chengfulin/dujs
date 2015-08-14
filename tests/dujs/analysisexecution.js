@@ -24,9 +24,11 @@ function createTest(dir, file, expected) {
 
 describe('Def-Use analysis execution', function () {
 	"use strict";
-	beforeEach(function () {
+	afterEach(function () {
 		scopeCtrl.clear();
 	});
+
+
 
 	var dir = __dirname + '/cases/';
 	var files = fs.readdirSync(dir);
