@@ -1,13 +1,10 @@
 /**
  * Created by ChengFuLin on 2015/5/11.
  */
-var VarDef = require('../../lib/dujs').VarDef,
-    //Var = require('../../lib/dujs').Var,
-    //Def = require('../../lib/dujs').Def,
-    factoryVar = require('../../lib/dujs').factoryVar,
-    factoryDef = require('../../lib/dujs').factoryDef,
-    factoryFlowNode = require('../../lib/esgraph').factoryFlowNode,
-    Scope = require('../../lib/dujs').Scope,
+var VarDef = require('../../lib/dujs/vardef'),
+    factoryVar = require('../../lib/dujs/varfactory'),
+    factoryDef = require('../../lib/dujs/deffactory'),
+    factoryFlowNode = require('../../lib/esgraph/flownodefactory'),
     should = require('should');
 
 describe('VarDef', function () {
@@ -24,12 +21,12 @@ describe('VarDef', function () {
                     node._testonly_._cfgId = 0;
                     VarDef.validate(
                         {},
-                        factoryDef.createLiteralDef(node, [1,2], Scope.PROGRAM_SCOPE)
+                        factoryDef.createLiteralDef(node)
                     );
                 }).throw('Invalid Var for a VarDef');
                 should(function () {
                     VarDef.validate(
-                        factoryVar.create('a', [0,1], Scope.PROGRAM_SCOPE),
+                        factoryVar.create('a'),
                         {}
                     );
                 }).throw('Invalid Def for a VarDef');
@@ -52,8 +49,8 @@ describe('VarDef', function () {
                     var node = factoryFlowNode.createNormalNode();
                     node._testonly_._cfgId = 0;
                     VarDef.validate(
-                        factoryVar.create('a', [0,1], Scope.PROGRAM_SCOPE),
-                        factoryDef.createLiteralDef(node, [1,2], Scope.PROGRAM_SCOPE)
+                        factoryVar.create('a'),
+                        factoryDef.createLiteralDef(node)
                     );
                 }).not.throw();
             });
@@ -66,8 +63,8 @@ describe('VarDef', function () {
             node = factoryFlowNode.createNormalNode();
             node._testonly_._cfgId = 0;
             varDef = new VarDef(
-                factoryVar.create('var', [0,3], Scope.PROGRAM_SCOPE),
-                factoryDef.createLiteralDef(node, [3,4], Scope.PROGRAM_SCOPE)
+                factoryVar.create('var'),
+                factoryDef.createLiteralDef(node)
             );
         });
 
@@ -103,16 +100,13 @@ describe('VarDef', function () {
             var node = factoryFlowNode.createNormalNode();
             node._testonly_._cfgId = 0;
             var varDef = new VarDef(
-                factoryVar.create('a', [0,1], Scope.PROGRAM_SCOPE),
-                factoryDef.createLiteralDef(node, [1,2], Scope.PROGRAM_SCOPE)
+                factoryVar.create('a'),
+                factoryDef.createLiteralDef(node)
             );
             varDef._testonly_._var._testonly_._name.should.eql('a');
-            varDef._testonly_._var._testonly_._name._testonly_._type.should.eql('Program');
-            varDef._testonly_._var._testonly_._range._testonly_._start.should.eql(0);
 
             varDef._testonly_._def._testonly_._type.should.eql('literal');
-            varDef._testonly_._def._testonly_._fromCFGNode._testonly_._cfgId.should.eql(0);
-            varDef._testonly_._def._testonly_._range._testonly_._start.should.eql(1);
+            varDef._testonly_._def._testonly_._fromNode._testonly_._cfgId.should.eql(0);
         });
     });
 
@@ -127,8 +121,8 @@ describe('VarDef', function () {
                 var node = factoryFlowNode.createNormalNode();
                 node._testonly_._cfgId = 0;
                 var varDef = new VarDef(
-                    factoryVar.create('var', [0,1], Scope.PROGRAM_SCOPE),
-                    factoryDef.createObjectDef(node, [0,1], Scope.PROGRAM_SCOPE)
+                    factoryVar.create('var'),
+                    factoryDef.createObjectDef(node)
                 );
                 VarDef.isVarDef(varDef).should.eql(true);
             });
@@ -139,10 +133,10 @@ describe('VarDef', function () {
                 var node = factoryFlowNode.createNormalNode();
                 node._testonly_._cfgId = 0;
                 var varDef = new VarDef(
-                    factoryVar.create('a', [0,1], Scope.PROGRAM_SCOPE),
-                    factoryDef.createLiteralDef(node, [1,2], Scope.PROGRAM_SCOPE)
+                    factoryVar.create('a'),
+                    factoryDef.createLiteralDef(node)
                 );
-                varDef.toString().should.eql('(a@[0,1]_Program,Def@n0@[1,2]_Program)');
+                varDef.toString().should.eql('(a,literal@n0)');
             });
         });
     });
