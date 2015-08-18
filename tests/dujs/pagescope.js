@@ -8,8 +8,18 @@ var PageScope = require('../../lib/dujs/pagescope');
 
 describe('PageScope', function () {
 	"use strict";
+	var sampleProgramAST;
+
 	beforeEach(function () {
 		PageScope.numOfPageScopes = 0;
+		sampleProgramAST = {
+			type: 'Program',
+			range: [0,1],
+			loc: {
+				start: {line: 1, column: 0},
+				end: {line: 1, column: 1}
+			}
+		};
 	});
 
 	describe('static data members', function () {
@@ -39,20 +49,22 @@ describe('PageScope', function () {
 		});
 
 		describe('validate', function () {
-			var ast;
-			beforeEach(function () {
-				ast = {type: 'Program', range: [0,1], loc: {line: 1, col: 0}};
-			});
-
 			it('should not throw errors as the input is valid', function () {
 				should(function () {
-					PageScope.validate(ast);
+					PageScope.validate(sampleProgramAST);
 				}).not.throw();
 			});
 
 			it('should throw an error as the AST is invalid', function () {
 				should(function () {
-					PageScope.validate({type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}});
+					PageScope.validate({
+						type: 'FunctionDeclaration',
+						range: [0,1],
+						loc: {
+							start: {line: 1, column: 0},
+							end: {line: 1, column: 1}
+						}
+					});
 				}).throw('Invalid value for a PageScope');
 			});
 		});
@@ -61,7 +73,7 @@ describe('PageScope', function () {
 	describe('public data members', function () {
 		var scope;
 		beforeEach(function () {
-			scope = new PageScope({type: 'Program', range: [0,1], loc: {line: 1, col: 0}});
+			scope = new PageScope(sampleProgramAST);
 		});
 
 		describe('index', function () {
@@ -102,12 +114,11 @@ describe('PageScope', function () {
 
 	describe('constructor', function () {
 		it('should construct with index and indexed name', function () {
-			var ast = {type: 'Program', range: [0,1], loc: {line: 1, col: 0}};
-			var page1 = new PageScope(ast, null);
+			var page1 = new PageScope(sampleProgramAST, null);
 			page1._testonly_._index.should.eql(0);
 			page1.name.should.eql('$PAGE_0');
 
-			var page2 = new PageScope(ast, null);
+			var page2 = new PageScope(sampleProgramAST, null);
 			page2._testonly_._index.should.eql(1);
 			page2.name.should.eql('$PAGE_1');
 		});

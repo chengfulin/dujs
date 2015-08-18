@@ -150,7 +150,14 @@ describe('Scope', function () {
 	describe('static methods', function () {
 		describe('isValidParent', function () {
 			it('should return true as the parent is a Scope', function () {
-				var parent = new Scope({type: 'Program', range: [0,1], loc: {line: 1, col: 0}}, '$PAGE_0', 'page', null);
+				var parent = new Scope({
+					type: 'Program',
+					range: [0,1],
+					loc: {
+						start: {line: 1, column: 0},
+						end: {line: 1, column: 1}
+					}
+				}, '$PAGE_0', 'page', null);
 				Scope.isValidParent(parent).should.eql(true);
 			});
 
@@ -237,7 +244,14 @@ describe('Scope', function () {
 			});
 
 			it('should not throw error as the object is a Scope', function () {
-				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				var ast = {
+					type: 'FunctionDeclaration',
+					range: [0,1],
+					loc: {
+						start: {line: 1, column: 0},
+						end: {line: 1, column: 1}
+					}
+				};
 				var scope = new Scope(ast, 'foo', 'function', null);
 				should(function () {
 					Scope.validateType(scope);
@@ -596,15 +610,31 @@ describe('Scope', function () {
 	});
 
 	describe('public data members', function () {
-		var ast, scope;
+		var sampleProgramAST, sampleFunctionDeclarationAST, scope;
 		beforeEach(function () {
-			ast = {type: 'FunctionDeclaration', range: [0, 1], loc: {line: 1, col: 0}};
-			scope = new Scope(ast, 'foo', 'function', null);
+			sampleProgramAST = {
+				type: 'Program',
+					range: [0, 1],
+				loc: {
+					start: {line: 1, column: 0},
+					end: {line: 1, column: 1}
+				}
+			};
+
+			sampleFunctionDeclarationAST = {
+				type: 'FunctionDeclaration',
+				range: [0, 1],
+				loc: {
+					start: {line: 1, column: 0},
+					end: {line: 1, column: 1}
+				}
+			};
+			scope = new Scope(sampleFunctionDeclarationAST, 'foo', 'function', null);
 		});
 
 		describe('ast', function () {
 			it('should retrieve the correct value', function () {
-				scope.ast.should.eql(ast);
+				scope.ast.should.eql(sampleFunctionDeclarationAST);
 			});
 
 			it('should not be modified directly', function () {
@@ -657,9 +687,9 @@ describe('Scope', function () {
 		describe('children', function () {
 			var child1, child2, child3;
 			beforeEach(function () {
-				child1 = new Scope(ast, 'child1', 'function');
-				child2 = new Scope(ast, 'child2', 'function');
-				child3 = new Scope(ast, 'child3', 'function');
+				child1 = new Scope(sampleFunctionDeclarationAST, 'child1', 'function');
+				child2 = new Scope(sampleFunctionDeclarationAST, 'child2', 'function');
+				child3 = new Scope(sampleFunctionDeclarationAST, 'child3', 'function');
 
 				child1._testonly_._parent = scope;
 				child2._testonly_._parent = scope;
@@ -710,7 +740,7 @@ describe('Scope', function () {
 		describe('parent', function () {
 			var ast, scope, parent;
 			beforeEach(function () {
-				ast = {type: 'Program', range: [0,1], loc: {line: 1, col: 0}};
+				ast = sampleProgramAST;
 				scope = new Scope(ast, '$PAGE_0', 'page', null);
 				parent = new Scope(null, '$DOMAIN', 'domain', null);
 			});
@@ -730,7 +760,7 @@ describe('Scope', function () {
 		describe('vars', function () {
 			var v1, v2, ast, scope;
 			beforeEach(function () {
-				ast = {type: 'Program', range: [0,1], loc: {line: 1, col: 0}};
+				ast = sampleProgramAST;
 				scope = new Scope(ast, '$PAGE_0', 'page', null);
 				v1 = factoryVar.create('v1');
 				v2 = factoryVar.create('v2');
@@ -757,7 +787,7 @@ describe('Scope', function () {
 		describe('params', function () {
 			var p1, p2, ast, scope;
 			beforeEach(function () {
-				ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				ast = sampleFunctionDeclarationAST;
 				scope = new Scope(ast, 'foo', 'function', null);
 				p1 = factoryVar.create('p1');
 				p2 = factoryVar.create('p2');
@@ -788,7 +818,7 @@ describe('Scope', function () {
 		describe('namedFunctionVars', function () {
 			var f1, f2, ast, scope;
 			beforeEach(function () {
-				ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				ast = sampleFunctionDeclarationAST;
 				scope = new Scope(ast, 'foo', 'function', null);
 				f1 = factoryVar.create('f1');
 				f2 = factoryVar.create('f2');

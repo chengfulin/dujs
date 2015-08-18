@@ -32,30 +32,49 @@ describe('FunctionScope', function () {
 			});
 		});
 
+		var sampleFunctionDeclarationAST;
+		beforeEach(function () {
+			sampleFunctionDeclarationAST = {
+				type: 'FunctionDeclaration',
+				range: [0,1],
+				loc: {
+					start: {line: 1, column: 0},
+					end: {line: 1, column: 1}
+				}
+			};
+		});
+
 		describe('validate', function () {
 			it('should not throw any error as the inputs are valid', function () {
-				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				var ast = sampleFunctionDeclarationAST;
 				should(function () {
 					FunctionScope.validate(ast, 'foo', null);
 				}).not.throw();
 			});
 
 			it('should throw an error as the ast is not for a function scope', function () {
-				var ast = {type: 'FunctionExpression', range: [0,1], loc: {line: 1, col: 0}};
+				var ast = {
+					type: 'FunctionExpression',
+					range: [0,1],
+					loc: {
+						start: {line: 1, column: 0},
+						end: {line: 1, column: 1}
+					}
+				};
 				should(function () {
 					FunctionScope.validate(ast, 'foo', null);
 				}).throw('Invalid value for a FunctionScope');
 			});
 
 			it('should throw an error as the name is invalid', function () {
-				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				var ast = sampleFunctionDeclarationAST;
 				should(function () {
 					FunctionScope.validate(ast, 'invalid!', null);
 				}).throw('Invalid value for a FunctionScope');
 			});
 
 			it('should throw an error as the parent is invalid', function () {
-				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				var ast = sampleFunctionDeclarationAST;
 				should(function () {
 					FunctionScope.validate(ast, 'foo', {});
 				}).throw('Invalid value for a FunctionScope');
@@ -70,7 +89,7 @@ describe('FunctionScope', function () {
 
 		describe('constructor', function () {
 			it('should construct well', function () {
-				var ast = {type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}};
+				var ast = sampleFunctionDeclarationAST;
 				var scope = new FunctionScope(ast, 'foo', null);
 				(scope instanceof FunctionScope).should.eql(true);
 				(scope instanceof Scope).should.eql(true);

@@ -8,9 +8,20 @@ var AnonymousFunctionScope = require('../../lib/dujs/anonymousfunctionscope');
 
 describe('AnonymousFunctionScope', function () {
 	"use strict";
+	var sampleFunctionExpressionAST;
+
 	beforeEach(function () {
 		AnonymousFunctionScope.numOfAnonymousFunctionScopes = 0;
+		sampleFunctionExpressionAST = {
+			type: 'FunctionExpression',
+			range: [0,1],
+			loc: {
+				start: {line: 1, column: 0},
+				end: {line: 1, column: 1}
+			}
+		};
 	});
+
 	describe('static data members', function () {
 		describe('numOfAnonymousFunctionScopes', function () {
 			it('should have correct default value', function () {
@@ -38,7 +49,10 @@ describe('AnonymousFunctionScope', function () {
 		});
 
 		describe('validate', function () {
-			var validAST = {type: 'FunctionExpression', range: [0,1], loc: {line: 1, col: 0}};
+			var validAST;
+			beforeEach(function () {
+				validAST = sampleFunctionExpressionAST;
+			});
 
 			it('should not throw as the inputs are valid', function () {
 				should(function () {
@@ -48,7 +62,14 @@ describe('AnonymousFunctionScope', function () {
 
 			it('should throw an error as the AST is invalid', function () {
 				should(function () {
-					AnonymousFunctionScope.validate({type: 'Program', range: [0,1], loc: {line: 1, col: 0}}, null);
+					AnonymousFunctionScope.validate({
+						type: 'Program',
+						range: [0,1],
+						loc: {
+							start: {line: 1, column: 0},
+							end: {line: 1, column: 1}
+						}
+					}, null);
 				}).throw('Invalid value for an AnonymousFunctionScope');
 			});
 
@@ -68,7 +89,7 @@ describe('AnonymousFunctionScope', function () {
 
 	describe('constructor', function () {
 		it('should increase the property "numOfAnonymousFunctionScope" and "index"', function () {
-			var ast = {type: 'FunctionExpression', range: [0,1], loc: {line: 1, col: 0}};
+			var ast = sampleFunctionExpressionAST;
 			var scope = new AnonymousFunctionScope(ast, null);
 			scope._testonly_._index.should.eql(0);
 			AnonymousFunctionScope.numOfAnonymousFunctionScopes.should.eql(1);
@@ -81,8 +102,12 @@ describe('AnonymousFunctionScope', function () {
 
 	describe('public data member', function () {
 		describe('index', function () {
-			var ast = {type: 'FunctionExpression', range: [0,1], loc: {line: 1, col: 0}};
-			var scope = new AnonymousFunctionScope(ast, null);
+			var ast, scope;
+
+			beforeEach(function () {
+				ast = sampleFunctionExpressionAST;
+				scope = new AnonymousFunctionScope(ast, null);
+			});
 
 			it('should retrieve the value correctly', function () {
 				scope.index.should.eql(0);

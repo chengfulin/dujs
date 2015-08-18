@@ -22,7 +22,14 @@ describe('ScopeTree', function () {
 			beforeEach(function () {
 				tree = new ScopeTree();
 				scope = factoryScope.createFunctionScope(
-					{type: 'FunctionDeclaration', range: [0,1], loc: {line: 1, col: 0}},
+					{
+						type: 'FunctionDeclaration',
+						range: [0,1],
+						loc: {
+							start: {line: 1, column: 0},
+							end: {line: 1, column: 0}
+						}
+					},
 					'foo',
 					null
 				);
@@ -52,7 +59,14 @@ describe('ScopeTree', function () {
 			var tree, ast;
 			beforeEach(function () {
 				tree = new ScopeTree();
-				ast = {type: 'Program', range: [0,1], loc: {line: 1, col: 0}};
+				ast = {
+					type: 'Program',
+					range: [0,1],
+					loc: {
+						start: {line: 1, column: 0},
+						end: {line: 1, column: 0}
+					}
+				};
 			});
 
 			it('should initialize the tree with AST', function () {
