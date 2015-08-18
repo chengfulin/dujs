@@ -1,1 +1,2 @@
-core.autocrlf=input
+core.autocrlf = input
+core.eol = lf
