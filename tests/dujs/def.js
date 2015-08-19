@@ -185,6 +185,23 @@ describe('Def', function () {
 				another.toString().should.eql('literal@n1');
 			});
 		});
+
+		describe('toJSON', function () {
+			it('should support to convert the definition to JSON', function () {
+				var node = flownodeFactory.createNormalNode();
+				var def = new Def(node, 'literal');
+				def.toJSON().should.containDeep({
+					"fromNode": {
+						"cfgId": 0,
+						"type": "normal",
+						"label": null,
+						"prev": [],
+						"next": []
+					},
+					"type": "literal"
+				});
+			});
+		});
 	});
 
     describe('public data members', function () {
