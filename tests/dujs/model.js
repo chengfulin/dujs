@@ -31,69 +31,7 @@ describe('Model', function () {
         });
     });
 
-	describe('static data members', function () {
-		describe('REACH_IN_ARTIFACT_TYPE', function () {
-			it('should have correct value', function () {
-				Model.REACH_IN_ARTIFACT_TYPE.should.eql('reachIn');
-			});
-
-			it('should not be modified directly', function () {
-				should(function () {
-					Model.REACH_IN_ARTIFACT_TYPE = '';
-				}).throw();
-			});
-		});
-
-		describe('REACH_OUT_ARTIFACT_TYPE', function () {
-			it('should have correct value', function () {
-				Model.REACH_OUT_ARTIFACT_TYPE.should.eql('reachOut');
-			});
-
-			it('should not be modified directly', function () {
-				should(function () {
-					Model.REACH_OUT_ARTIFACT_TYPE = '';
-				}).throw();
-			});
-		});
-
-		describe('KILL_ARTIFACT_TYPE', function () {
-			it('should have correct value', function () {
-				Model.KILL_ARTIFACT_TYPE.should.eql('kill');
-			});
-
-			it('should not be modified directly', function () {
-				should(function () {
-					Model.KILL_ARTIFACT_TYPE = '';
-				}).throw();
-			});
-		});
-
-		describe('GEN_ARTIFACT_TYPE', function () {
-			it('should have correct value', function () {
-				Model.GEN_ARTIFACT_TYPE.should.eql('gen');
-			});
-
-			it('should not be modified directly', function () {
-				should(function () {
-					Model.GEN_ARTIFACT_TYPE = '';
-				}).throw();
-			});
-		});
-
-		describe('USE_ARTIFACT_TYPE', function () {
-			it('should have correct value', function () {
-				Model.USE_ARTIFACT_TYPE.should.eql('use');
-			});
-
-			it('should not be modified directly', function () {
-				should(function () {
-					Model.USE_ARTIFACT_TYPE = '';
-				}).throw();
-			});
-		});
-	});
-
-    describe('public data members', function () {
+	describe('public data members', function () {
         describe('graph', function () {
             var model;
             beforeEach(function () {
@@ -185,6 +123,27 @@ describe('Model', function () {
                 model.dupairs.get(variable).size.should.eql(1);
             });
         });
+
+		describe('mainlyRelatedScope', function () {
+			var model;
+			beforeEach(function () {
+				model = new Model();
+			});
+
+			it('should support to retrieve the value', function () {
+				should.not.exist(model.mainlyRelatedScope);
+				var scope = factoryScope.createDomainScope();
+				model._testonly_._mainlyRelatedScope = scope;
+				should.exist(model.mainlyRelatedScope);
+				model.mainlyRelatedScope.should.eql(scope);
+			});
+
+			it('should not be modified directly', function () {
+				should(function () {
+					model.mainlyRelatedScope = {};
+				}).throw();
+			});
+		});
     });
 
     describe('Methods', function () {
@@ -223,5 +182,22 @@ describe('Model', function () {
 	            model.hasDUPair(factoryDUPair.create(node2, node1)).should.eql(false);
             });
         });
+
+		describe('isMainlyRelatedToTheScope', function () {
+			var model, scope;
+			beforeEach(function () {
+				model = new Model();
+				scope = factoryScope.createDomainScope();
+				model._testonly_._mainlyRelatedScope = scope;
+			});
+
+			it('should return true as the input scope is equal to the mainlyRelatedScope', function () {
+				model.isMainlyRelatedToTheScope(scope).should.eql(true);
+			});
+
+			it('should return false otherwise', function () {
+				model.isMainlyRelatedToTheScope(factoryScope.createDomainScope()).should.eql(false);
+			});
+		});
     });
 });
