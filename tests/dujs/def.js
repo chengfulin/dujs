@@ -9,14 +9,6 @@ var Def = require('../../lib/dujs/def'),
 
 describe('Def', function () {
     'use strict';
-	var MockDef = function (fromNode, type) {
-		Def.call(this, fromNode, type);
-	};
-	MockDef.prototype = Object.create(Def.prototype);
-	Object.defineProperty(MockDef.prototype, 'constructor', {
-		value: MockDef
-	});
-
     beforeEach(function () {
         flownodeFactory.resetCounter();
     });
@@ -114,7 +106,8 @@ describe('Def', function () {
 					node.cfgId = 0;
 					Def.validate(
 						node,
-						'function'
+						'function',
+						[0,1]
 					);
 				}).not.throw();
 
@@ -123,7 +116,8 @@ describe('Def', function () {
 					node.cfgId = 0;
 					Def.validate(
 						node,
-						'literal'
+						'literal',
+						[0,1]
 					);
 				}).not.throw();
 			});
@@ -154,7 +148,7 @@ describe('Def', function () {
 				should(function () {
 					var node = flownodeFactory.createNormalNode();
 					node.cfgId = 0;
-					Def.validateType(new MockDef(node, 'object'));
+					Def.validateType(new Def(node, 'object', [0,1]));
 				}).not.throw();
 			});
 
@@ -180,7 +174,7 @@ describe('Def', function () {
 				node1.cfgId = 0;
 				node2.cfgId = 1;
 
-				var aDef = new Def(node1, 'object'), another = new Def(node2, 'literal');
+				var aDef = new Def(node1, 'object', [0,1]), another = new Def(node2, 'literal', [1,2]);
 				aDef.toString().should.eql('object@n0');
 				another.toString().should.eql('literal@n1');
 			});
@@ -189,7 +183,7 @@ describe('Def', function () {
 		describe('toJSON', function () {
 			it('should support to convert the definition to JSON', function () {
 				var node = flownodeFactory.createNormalNode();
-				var def = new Def(node, 'literal');
+				var def = new Def(node, 'literal', [0,1]);
 				def.toJSON().should.containDeep({
 					"fromNode": {
 						"cfgId": 0,
@@ -198,7 +192,8 @@ describe('Def', function () {
 						"prev": [],
 						"next": []
 					},
-					"type": "literal"
+					"type": "literal",
+					"range": [0,1]
 				});
 			});
 		});
@@ -209,7 +204,7 @@ describe('Def', function () {
         beforeEach(function () {
             node = flownodeFactory.createNormalNode();
             node.cfgId = 0;
-            def = new MockDef(node, 'literal');
+            def = new Def(node, 'literal', [0,1]);
         });
 
         describe('fromNode', function () {
@@ -248,5 +243,24 @@ describe('Def', function () {
 		        Def.prototype.propertyIsEnumerable('type').should.eql(true);
 	        });
         });
+
+		describe('range', function () {
+			it('should support to retrieve the value correctly', function () {
+				should.exist(def.range);
+				def.range._testonly_._start.should.eql(0);
+				def.range._testonly_._end.should.eql(1);
+			});
+
+			it('should not be modified directly', function () {
+				should(function () {
+					def.range = [1,2];
+				}).throw();
+			});
+
+			it('should be enumerable', function () {
+				var descriptor = Object.getOwnPropertyDescriptor(Def.prototype, 'range');
+				descriptor.enumerable.should.eql(true);
+			});
+		});
     });
 });
