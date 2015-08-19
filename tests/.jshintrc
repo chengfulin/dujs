@@ -4,6 +4,7 @@
   "noarg":true,
   "forin":true,
   "noempty":true,
+  "node": true,
   "mocha":true,
   "eqeqeq":true,
   "strict":true,
