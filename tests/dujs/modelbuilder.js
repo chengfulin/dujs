@@ -40,17 +40,19 @@ describe('ModelBuilder', function () {
 
 			it('should contain correct number of models', function () {
 				var modelsOfPages = modelBuilder.buildIntraProceduralModels();
-				modelsOfPages.length.should.eql(1);
-				modelsOfPages[0].length.should.eql(4);
+				modelsOfPages.size.should.eql(1);
+				console.log(!!modelsOfPages.get(scopeCtrl.pageScopeTrees[0]));
+				modelsOfPages.get(scopeCtrl.pageScopeTrees[0]).length.should.eql(4);
 			});
 
 			it('should contain corresponding scope', function () {
 				var modelsOfPages = modelBuilder.buildIntraProceduralModels();
-				modelsOfPages[0].forEach(function (model) {
+				var pageScopeTree = scopeCtrl.pageScopeTrees[0];
+				modelsOfPages.get(pageScopeTree).forEach(function (model) {
 					model._testonly_._relatedScopes.length.should.eql(1);
 				});
-				scopeCtrl.pageScopeTrees[0]._testonly_._scopes.every(function (scope) {
-					return modelsOfPages[0].some(function (model) {
+				pageScopeTree._testonly_._scopes.every(function (scope) {
+					return modelsOfPages.get(pageScopeTree).some(function (model) {
 						return model._testonly_._relatedScopes.indexOf(scope) !== -1;
 					});
 				}).should.eql(true);
@@ -58,14 +60,15 @@ describe('ModelBuilder', function () {
 
 			it('should contain corresponding graph', function () {
 				var modelsOfPages = modelBuilder.buildIntraProceduralModels();
-				modelsOfPages[0].forEach(function (model) {
-					if (model._testonly_._mainlyRelatedScope === scopeCtrl.pageScopeTrees[0]._testonly_._scopes[0]) {
+				var pageScopeTree = scopeCtrl.pageScopeTrees[0];
+				modelsOfPages.get(pageScopeTree).forEach(function (model) {
+					if (model._testonly_._mainlyRelatedScope === pageScopeTree._testonly_._scopes[0]) {
 						model._testonly_._graph[2].length.should.eql(5);
-					} else if (model._testonly_._mainlyRelatedScope === scopeCtrl.pageScopeTrees[0]._testonly_._scopes[1]) {
+					} else if (model._testonly_._mainlyRelatedScope === pageScopeTree._testonly_._scopes[1]) {
 						model._testonly_._graph[2].length.should.eql(4);
-					} else if (model._testonly_._mainlyRelatedScope === scopeCtrl.pageScopeTrees[0]._testonly_._scopes[2]) {
+					} else if (model._testonly_._mainlyRelatedScope === pageScopeTree._testonly_._scopes[2]) {
 						model._testonly_._graph[2].length.should.eql(6);
-					} else if (model._testonly_._mainlyRelatedScope === scopeCtrl.pageScopeTrees[0]._testonly_._scopes[3]) {
+					} else if (model._testonly_._mainlyRelatedScope === pageScopeTree._testonly_._scopes[3]) {
 						model._testonly_._graph[2].length.should.eql(3);
 					}
 				});
