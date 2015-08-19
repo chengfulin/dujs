@@ -21,7 +21,7 @@ describe('VarDef', function () {
                     node._testonly_._cfgId = 0;
                     VarDef.validate(
                         {},
-                        factoryDef.createLiteralDef(node)
+                        factoryDef.createLiteralDef(node, [0,1])
                     );
                 }).throw('Invalid Var for a VarDef');
                 should(function () {
@@ -50,7 +50,7 @@ describe('VarDef', function () {
                     node._testonly_._cfgId = 0;
                     VarDef.validate(
                         factoryVar.create('a'),
-                        factoryDef.createLiteralDef(node)
+                        factoryDef.createLiteralDef(node, [0,1])
                     );
                 }).not.throw();
             });
@@ -64,7 +64,7 @@ describe('VarDef', function () {
             node._testonly_._cfgId = 0;
             varDef = new VarDef(
                 factoryVar.create('var'),
-                factoryDef.createLiteralDef(node)
+                factoryDef.createLiteralDef(node, [0,1])
             );
         });
 
@@ -101,7 +101,7 @@ describe('VarDef', function () {
             node._testonly_._cfgId = 0;
             var varDef = new VarDef(
                 factoryVar.create('a'),
-                factoryDef.createLiteralDef(node)
+                factoryDef.createLiteralDef(node, [0,1])
             );
             varDef._testonly_._var._testonly_._name.should.eql('a');
 
@@ -122,7 +122,7 @@ describe('VarDef', function () {
                 node._testonly_._cfgId = 0;
                 var varDef = new VarDef(
                     factoryVar.create('var'),
-                    factoryDef.createObjectDef(node)
+                    factoryDef.createObjectDef(node, [0,1])
                 );
                 VarDef.isVarDef(varDef).should.eql(true);
             });
@@ -134,7 +134,7 @@ describe('VarDef', function () {
                 node._testonly_._cfgId = 0;
                 var varDef = new VarDef(
                     factoryVar.create('a'),
-                    factoryDef.createLiteralDef(node)
+                    factoryDef.createLiteralDef(node, [0,1])
                 );
                 varDef.toString().should.eql('(a,literal@n0)');
             });
