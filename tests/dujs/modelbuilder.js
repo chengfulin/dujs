@@ -9,7 +9,8 @@ var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	modelCtrl = require('../../lib/dujs/modelctrl'),
 	modelBuilder = require('../../lib/dujs/modelbuilder'),
 	cfgBuilder = require('../../lib/dujs/cfgbuilder'),
-	factoryModel = require('../../lib/dujs/modelfactory');
+	factoryModel = require('../../lib/dujs/modelfactory'),
+	factoryScope = require('../../lib/dujs/scopefactory');
 
 describe('ModelBuilder', function () {
 	"use strict";
@@ -63,6 +64,58 @@ describe('ModelBuilder', function () {
 				connectedGraph[1].prev[0]._testonly_._type.should.eql('loop');
 				connectedGraph[2][2]._testonly_._type.should.eql('loop');
 				connectedGraph[2][2].normal.should.eql(connectedGraph[1]);
+			});
+		});
+
+		describe('connectPageAndEventHandlers', function () {
+			var pageAST, eventHandlerAST1, eventHandlerAST2,
+				pageScope, eventHandlerScope1, eventHandlerScope2,
+				pageGraph, eventHandlerGraph1, eventHandlerGraph2,
+				pageModel, eventHandlerModel1, eventHandlerModel2;
+			beforeEach(function () {
+				pageAST = esprima.parse(
+					'var a, b;',
+					{range: true, loc: true}
+				);
+				eventHandlerAST1 = esprima.parse(
+					'function foo() {' +
+					'var c, d, e;' +
+					'}',
+					{range: true, loc: true}
+				);
+				eventHandlerAST2 = esprima.parse(
+					'function fun() {' +
+					'var g;' +
+					'}',
+					{range: true, loc: true}
+				);
+				pageScope = factoryScope.createPageScope(pageAST);
+				eventHandlerScope1 = factoryScope.createFunctionScope(eventHandlerAST1.body[0], 'foo', pageScope);
+				eventHandlerScope2 = factoryScope.createFunctionScope(eventHandlerAST2.body[0], 'fun', pageScope);
+				pageGraph = cfgBuilder.getCFG(pageAST);
+				eventHandlerGraph1 = cfgBuilder.getCFG(eventHandlerAST1.body[0].body);
+				eventHandlerGraph2 = cfgBuilder.getCFG(eventHandlerAST2.body[0].body);
+				pageModel = factoryModel.create();
+				eventHandlerModel1 = factoryModel.create();
+				eventHandlerModel2 = factoryModel.create();
+				pageModel.graph = pageGraph;
+				pageModel.addRelatedScope(pageScope);
+				eventHandlerModel1.graph = eventHandlerGraph1;
+				eventHandlerModel1.addRelatedScope(eventHandlerScope1);
+				eventHandlerModel2.graph = eventHandlerGraph2;
+				eventHandlerModel2.addRelatedScope(eventHandlerScope2);
+			});
+			it('should connect page model and event handler models well', function () {
+				var resultModel = modelBuilder._testonly_._connectPageAndEventHandlers(pageModel, [eventHandlerModel1, eventHandlerModel2]);
+				var resultGraph = resultModel.graph;
+				resultGraph[2].length.should.eql(11);
+				var pageLoopNode = resultGraph[2][2];
+				var pageLoopReturnNode = resultGraph[2][7];
+				pageLoopNode.onEvent[0].should.eql(eventHandlerGraph1[0]);
+				pageLoopNode.onEvent[1].should.eql(eventHandlerGraph2[0]);
+				eventHandlerGraph1[1].normal.should.eql(pageLoopReturnNode);
+				eventHandlerGraph2[1].normal.should.eql(pageLoopReturnNode);
+				pageLoopReturnNode.return[0].should.eql(pageLoopNode);
 			});
 		});
 	});
