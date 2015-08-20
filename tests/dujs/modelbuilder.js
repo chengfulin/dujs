@@ -48,6 +48,23 @@ describe('ModelBuilder', function () {
 				connectedModel.graph[2][2].call.should.eql(calleeGraph[0]);
 			});
 		});
+
+		describe('connectPageRelatedModelToLoopNode', function () {
+			it('should connect LOOP NODE to the related model for a page well', function () {
+				var graph = cfgBuilder.getCFG(esprima.parse(
+					'var a, b;',
+					{range: true, loc: true}
+				));
+				var model = factoryModel.create();
+				model.graph = graph;
+				var connectedModel = modelBuilder._testonly_._connectPageRelatedModelToLoopNode(model);
+				connectedModel.graph[2].length.should.eql(4);
+				connectedModel.graph[1].prev.length.should.eql(1);
+				connectedModel.graph[1].prev[0]._testonly_._type.should.eql('loop');
+				connectedModel.graph[2][2]._testonly_._type.should.eql('loop');
+				connectedModel.graph[2][2].normal.should.eql(connectedModel.graph[1]);
+			});
+		});
 	});
 
 	describe('public methods', function () {
