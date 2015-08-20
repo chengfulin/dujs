@@ -57,12 +57,12 @@ describe('ModelBuilder', function () {
 				));
 				var model = factoryModel.create();
 				model.graph = graph;
-				var connectedModel = modelBuilder._testonly_._connectPageRelatedModelToLoopNode(model);
-				connectedModel.graph[2].length.should.eql(4);
-				connectedModel.graph[1].prev.length.should.eql(1);
-				connectedModel.graph[1].prev[0]._testonly_._type.should.eql('loop');
-				connectedModel.graph[2][2]._testonly_._type.should.eql('loop');
-				connectedModel.graph[2][2].normal.should.eql(connectedModel.graph[1]);
+				var connectedGraph = modelBuilder._testonly_._connectLoopNodeToPageGraph(model);
+				connectedGraph[2].length.should.eql(4);
+				connectedGraph[1].prev.length.should.eql(1);
+				connectedGraph[1].prev[0]._testonly_._type.should.eql('loop');
+				connectedGraph[2][2]._testonly_._type.should.eql('loop');
+				connectedGraph[2][2].normal.should.eql(connectedGraph[1]);
 			});
 		});
 	});
