@@ -10,5 +10,6 @@
   "undef":true,
   "bitwise":true,
   "unused": true,
-  "predef": ["require"]
+  "predef": ["require"],
+  "maxdepth": 3
 }
