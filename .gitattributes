@@ -1,2 +1,5 @@
-core.autocrlf = input
-core.eol = lf
+*.txt		text
+*.vcproj	eol=crlf
+*.sh		eol=lf
+*.jpg		-text
+*.js        eol=lf
