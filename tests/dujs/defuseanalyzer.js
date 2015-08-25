@@ -8,7 +8,11 @@ var defuseAnalyzer = require('../../lib/dujs/defuseanalyzer'),
     modelFactory = require('../../lib/dujs/modelfactory'),
     scopeFactory = require('../../lib/dujs/scopefactory'),
     varFactory = require('../../lib/dujs/varfactory'),
-    cfgBuilder = require('../../lib/dujs/cfgbuilder');
+    cfgBuilder = require('../../lib/dujs/cfgbuilder'),
+    scopeCtrl = require('../../lib/dujs/scopectrl'),
+    modelCtrl = require('../../lib/dujs/modelctrl'),
+    modelBuilder = require('../../lib/dujs/modelbuilder'),
+    variableAnalyzer = require('../../lib/dujs/variableanalyzer');
 var esprima = require('esprima');
 
 describe('DefUseAnalyzer', function () {
@@ -88,6 +92,51 @@ describe('DefUseAnalyzer', function () {
                     '(loc_2,undefined@entry)',
                     '(loc_3,undefined@entry)'
                 ]);
+            });
+        });
+    });
+
+    describe('public methods', function () {
+        var ast;
+
+        beforeEach(function () {
+            ast = esprima.parse(
+                'var a = 1, b = 0;' +
+                'function foo() {' +
+                    'var c = a + b;' +
+                '}' +
+                'a--;',
+                {range: true, loc: true}
+            );
+            scopeCtrl.addPageScopeTree(ast);
+            scopeCtrl.pageScopeTrees.forEach(function (scopeTree) {
+                scopeTree.scopes.forEach(function (scope) {
+                    variableAnalyzer.setLocalVariables(scope);
+                });
+            });
+            modelCtrl.initializePageModels();
+            modelBuilder.buildIntraProceduralModels();
+        });
+
+        afterEach(function () {
+            scopeCtrl.clear();
+            modelCtrl.clear();
+            cfgBuilder.resetGraphNodeCounter();
+        });
+
+        describe('initiallyAnalyzeIntraProceduralModels', function () {
+            it('should do initial analysis on intra-procedural models well', function () {
+                defuseAnalyzer.initiallyAnalyzeIntraProceduralModels();
+                var pageIntraProceduralModel = modelCtrl.getIntraProceduralModelByMainlyRelatedScopeFromAPageModels(
+                        scopeCtrl.pageScopeTrees[0],
+                        scopeCtrl.pageScopeTrees[0].scopes[0]
+                    ),
+                    fooIntraProceduralModel = modelCtrl.getIntraProceduralModelByMainlyRelatedScopeFromAPageModels(
+                        scopeCtrl.pageScopeTrees[0],
+                        scopeCtrl.pageScopeTrees[0].scopes[1]
+                    );
+                pageIntraProceduralModel.graph[0].generate.size.should.eql(13);
+                fooIntraProceduralModel.graph[0].generate.size.should.eql(1);
             });
         });
     });
