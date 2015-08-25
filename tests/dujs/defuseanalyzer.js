@@ -12,8 +12,13 @@ var defuseAnalyzer = require('../../lib/dujs/defuseanalyzer'),
     scopeCtrl = require('../../lib/dujs/scopectrl'),
     modelCtrl = require('../../lib/dujs/modelctrl'),
     modelBuilder = require('../../lib/dujs/modelbuilder'),
-    variableAnalyzer = require('../../lib/dujs/variableanalyzer');
-var esprima = require('esprima');
+    variableAnalyzer = require('../../lib/dujs/variableanalyzer'),
+    flownodeFactory = require('../../lib/esgraph/flownodefactory'),
+    vardefFactory = require('../../lib/dujs/vardeffactory'),
+    defFactory = require('../../lib/dujs/deffactory');
+var esprima = require('esprima'),
+    Set = require('../../lib/analyses/set'),
+    Map = require('core-js/es6/map');
 
 describe('DefUseAnalyzer', function () {
     "use strict";
@@ -94,30 +99,74 @@ describe('DefUseAnalyzer', function () {
                 ]);
             });
         });
+
+        describe('getVarDefsOfLocalVariablesReachingInExitNode', function () {
+            var exitNode, reachIns,  locals, globals;
+            beforeEach(function () {
+                exitNode = flownodeFactory.createExitNode();
+                locals = new Map();
+                locals.set('a', varFactory.create('a'));
+                locals.set('b', varFactory.create('b'));
+                globals = new Map();
+                globals.set('global', varFactory.create('global'));
+                reachIns = new Set([
+                    vardefFactory.create(globals.get('global'), defFactory.create(exitNode, 'literal', [0,1])),
+                    vardefFactory.create(locals.get('a'), defFactory.create(exitNode, 'object', [10,11])),
+                    vardefFactory.create(locals.get('b'), defFactory.create(exitNode, 'htmlDom', [12,22]))
+                ]);
+                exitNode.reachIns = reachIns;
+            });
+
+            afterEach(function () {
+                flownodeFactory.resetCounter();
+            });
+
+            it('should get local variables and corresponding definitions from reaching in definitions of exit node well', function () {
+                var localVarDefs = defuseAnalyzer._testonly_._getVarDefsOfLocalVariablesReachingInExitNode(exitNode, locals);
+                localVarDefs.size.should.eql(2);
+                var localVarDefsText = [];
+                localVarDefs.forEach(function (vardef) {
+                    localVarDefsText.push(vardef.toString());
+                });
+                localVarDefsText.should.containDeep([
+                    '(a,object@exit)',
+                    '(b,htmlDom@exit)'
+                ]);
+            });
+        });
+
+        describe('findVariableAndItsDefinitionsFromASet', function () {
+            var variable, vardefSet;
+            beforeEach(function () {
+                var sampleNode = flownodeFactory.createNormalNode();
+                variable = varFactory.create('v1');
+                vardefSet = new Set();
+                vardefSet.add(vardefFactory.create(
+                    variable,
+                    defFactory.create(sampleNode, 'literal', [0,1])
+                ));
+                vardefSet.add(vardefFactory.create(
+                    varFactory.create('v2'),
+                    defFactory.create(sampleNode, 'object', [1,3])
+                ));
+                vardefSet.add(vardefFactory.create(
+                    variable,
+                    defFactory.create(sampleNode, 'function', [3,10])
+                ));
+            });
+
+            it('should find variable and its definitions well', function () {
+                var set = defuseAnalyzer._testonly_._findVariableAndItsDefinitionsFromASet(vardefSet, variable);
+                set.size.should.eql(2);
+                set.values().every(function (vardef) {
+                    return vardef.variable === variable;
+                }).should.eql(true);
+            });
+        });
     });
 
     describe('public methods', function () {
         var ast;
-
-        beforeEach(function () {
-            ast = esprima.parse(
-                'var a = 1, b = 0;' +
-                'function foo() {' +
-                    'var c = a + b;' +
-                '}' +
-                'a--;',
-                {range: true, loc: true}
-            );
-            scopeCtrl.addPageScopeTree(ast);
-            scopeCtrl.pageScopeTrees.forEach(function (scopeTree) {
-                scopeTree.scopes.forEach(function (scope) {
-                    variableAnalyzer.setLocalVariables(scope);
-                });
-            });
-            modelCtrl.initializePageModels();
-            modelBuilder.buildIntraProceduralModels();
-        });
-
         afterEach(function () {
             scopeCtrl.clear();
             modelCtrl.clear();
@@ -125,6 +174,25 @@ describe('DefUseAnalyzer', function () {
         });
 
         describe('initiallyAnalyzeIntraProceduralModels', function () {
+            beforeEach(function () {
+                ast = esprima.parse(
+                    'var a = 1, b = 0;' +
+                    'function foo() {' +
+                    'var c = a + b;' +
+                    '}' +
+                    'a--;',
+                    {range: true, loc: true}
+                );
+                scopeCtrl.addPageScopeTree(ast);
+                scopeCtrl.pageScopeTrees.forEach(function (scopeTree) {
+                    scopeTree.scopes.forEach(function (scope) {
+                        variableAnalyzer.setLocalVariables(scope);
+                    });
+                });
+                modelCtrl.initializePageModels();
+                modelBuilder.buildIntraProceduralModels();
+            });
+
             it('should do initial analysis on intra-procedural models well', function () {
                 defuseAnalyzer.initiallyAnalyzeIntraProceduralModels();
                 var pageIntraProceduralModel = modelCtrl.getIntraProceduralModelByMainlyRelatedScopeFromAPageModels(
