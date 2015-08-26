@@ -163,6 +163,60 @@ describe('DefUseAnalyzer', function () {
                 }).should.eql(true);
             });
         });
+
+        describe('getNonReachableVarDefs', function () {
+            var rootScope, childScope1, childScope2, descendantScope;
+            var var1, var2, var3, node1, node2, node3, node4;
+            var vardefs;
+            beforeEach(function () {
+                rootScope = scopeFactory.createDomainScope();
+                childScope1 = scopeFactory.createPageScope(
+                    esprima.parse('var a = 0;', {range: true, loc: true}),
+                    rootScope
+                );
+                childScope2 = scopeFactory.createPageScope(
+                    esprima.parse('var b = 0;', {range: true, loc: true}),
+                    rootScope
+                );
+                descendantScope = scopeFactory.createFunctionScope(
+                    esprima.parse('function foo() { var c = 0; }', {range: true, loc: true}).body[0],
+                    'foo',
+                    childScope1
+                );
+                var1 = varFactory.create('g');
+                var2 = varFactory.create('a');
+                var3 = varFactory.create('c');
+                node1 = flownodeFactory.createLocalStorageNode();
+                node2 = flownodeFactory.createNormalNode();
+                node3 = flownodeFactory.createNormalNode();
+                node2.label = 'inChildScope1';
+                node3.label = 'inDescendantScope';
+
+                node1.scope = rootScope;
+                node2.scope = childScope1;
+                node3.scope = descendantScope;
+
+                rootScope._testonly_._vars.set('g', var1);
+                childScope1._testonly_._vars.set('a', var2);
+                descendantScope._testonly_._vars.set('c', var3);
+
+                vardefs = new Set();
+                vardefs.add(vardefFactory.create(var1, defFactory.createLiteralDef(node1, [0,0])));
+                vardefs.add(vardefFactory.create(var1, defFactory.createLiteralDef(node2, [0,1])));
+                vardefs.add(vardefFactory.create(var2, defFactory.createLiteralDef(node2, [1,2])));
+                vardefs.add(vardefFactory.create(var3, defFactory.createLiteralDef(node3, [2,3])));
+            });
+
+            it('should get non-reachable VarDefs well', function () {
+                var set = defuseAnalyzer._testonly_._getNonReachableVarDefs(vardefs, childScope2);
+                set.size.should.eql(2);
+                var setText = getTextOfVarDefSet(set);
+                setText.should.containDeep([
+                    '(a,literal@inChildScope1)',
+                    '(c,literal@inDescendantScope)'
+                ]);
+            });
+        });
     });
 
     describe('public methods', function () {
