@@ -1,8 +1,10 @@
 {
   "numOfScopes": 4,
   "numOfIntraProceduralModels": 4,
+  "numOfInterProceduralModels": 4,
   "scopeNames": ["$DOMAIN.$PAGE_0", "$DOMAIN.$PAGE_0.ack", "$DOMAIN.$PAGE_0.fib", "$DOMAIN.$PAGE_0.tak"],
   "mainlyRelatedScopeNameOfIntraProceduralModels": ["$DOMAIN.$PAGE_0", "$DOMAIN.$PAGE_0.ack", "$DOMAIN.$PAGE_0.fib", "$DOMAIN.$PAGE_0.tak"],
+  "mainlyRelatedScopeNameOfInterProceduralModels": ["$DOMAIN.$PAGE_0", "$DOMAIN.$PAGE_0.ack", "$DOMAIN.$PAGE_0.fib", "$DOMAIN.$PAGE_0.tak"],
   "scopeLocalVars": [
     ["window", "document", "String", "Number", "Boolean", "Array", "Map", "WeakMap", "Set", "Date", "console", "ack", "fib", "tak", "result", "i", "expected"],
     ["m", "n"],
