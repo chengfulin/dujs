@@ -10,7 +10,8 @@ var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	modelBuilder = require('../../lib/dujs/modelbuilder'),
 	cfgBuilder = require('../../lib/dujs/cfgbuilder'),
 	factoryModel = require('../../lib/dujs/modelfactory'),
-	factoryScope = require('../../lib/dujs/scopefactory');
+	factoryScope = require('../../lib/dujs/scopefactory'),
+    variableAnalyzer = require('../../lib/dujs/variableanalyzer');
 
 describe('ModelBuilder', function () {
 	"use strict";
@@ -118,41 +119,87 @@ describe('ModelBuilder', function () {
 				pageLoopReturnNode.return[0].should.eql(pageLoopNode);
 			});
 		});
+
+        describe('getInterProceduralModelStartFromTheScope', function () {
+            beforeEach(function () {
+                var ast = esprima.parse(
+                    'var a, b;' +
+                    'function foo() {' +
+                    'var c;' +
+                    'c++' +
+                    '}' +
+                    'function fun() {' +
+                    'var d = function() {' +
+                    'var f;' +
+                    '};' +
+                    'var g = 1;' +
+                    '--g;' +
+                    '++g;' +
+                    '}' +
+                    'foo();' +
+                    'fun();',
+                    {range: true, loc: true}
+                );
+                scopeCtrl.addPageScopeTree(ast);
+                scopeCtrl.pageScopeTrees.forEach(function (pageScopeTree) {
+                    pageScopeTree.scopes.forEach(function (scope) {
+                        variableAnalyzer.setLocalVariables(scope);
+                    });
+                });
+                modelCtrl.initializePageModels();
+                modelCtrl.addPageModels(scopeCtrl.pageScopeTrees[0]);
+                modelBuilder.buildIntraProceduralModels();
+            });
+
+            it('should get inter-procedural models start from the scope', function () {
+                var pageScopeTree = scopeCtrl.pageScopeTrees[0];
+                var pageScope = pageScopeTree.scopes[0];
+                var model = modelBuilder._testonly_._getInterProceduralModelStartFromTheScope(pageScope, pageScopeTree);
+            });
+        });
 	});
 
 	describe('public methods', function () {
+        beforeEach(function () {
+            var ast = esprima.parse(
+                'var a, b;' +
+                'function foo() {' +
+                'var c;' +
+                'c++' +
+                '}' +
+                'function fun() {' +
+                'var d = function() {' +
+                'var f;' +
+                '};' +
+                'var g = 1;' +
+                '--g;' +
+                '++g;' +
+                '}' +
+                'foo();' +
+                'fun();',
+                {range: true, loc: true}
+            );
+            scopeCtrl.addPageScopeTree(ast);
+            scopeCtrl.pageScopeTrees.forEach(function (pageScopeTree) {
+                pageScopeTree.scopes.forEach(function (scope) {
+                    variableAnalyzer.setLocalVariables(scope);
+                });
+            });
+            modelCtrl.initializePageModels();
+            modelCtrl.addPageModels(scopeCtrl.pageScopeTrees[0]);
+        });
+
 		describe('buildIntraProceduralModels', function () {
 			beforeEach(function () {
-				var ast = esprima.parse(
-					'var a, b;' +
-					'function foo() {' +
-						'var c;' +
-						'c++' +
-					'}' +
-					'function fun() {' +
-						'var d = function() {' +
-							'var f;' +
-						'};' +
-						'var g = 1;' +
-						'--g;' +
-						'++g;' +
-					'}' +
-					'foo();' +
-					'fun();',
-					{range: true, loc: true}
-				);
-				scopeCtrl.addPageScopeTree(ast);
-				modelCtrl.addPageModels(scopeCtrl.pageScopeTrees[0]);
+                modelBuilder.buildIntraProceduralModels();
 			});
 
 			it('should contain correct number of models', function () {
-				modelBuilder.buildIntraProceduralModels();
 				modelCtrl._testonly_._collectionOfPageModels.get(scopeCtrl.pageScopeTrees[0])
 					._testonly_._intraProceduralModels.length.should.eql(4);
 			});
 
 			it('should contain corresponding scope', function () {
-				modelBuilder.buildIntraProceduralModels();
 				var pageScopeTree = scopeCtrl.pageScopeTrees[0];
 				modelCtrl._testonly_._collectionOfPageModels.get(pageScopeTree)._testonly_._intraProceduralModels.forEach(function (model) {
 					model._testonly_._relatedScopes.length.should.eql(1);
@@ -165,7 +212,6 @@ describe('ModelBuilder', function () {
 			});
 
 			it('should contain corresponding graph', function () {
-				modelBuilder.buildIntraProceduralModels();
 				var pageScopeTree = scopeCtrl.pageScopeTrees[0];
 				modelCtrl._testonly_._collectionOfPageModels.get(pageScopeTree)._testonly_._intraProceduralModels.forEach(function (model) {
 					if (model._testonly_._mainlyRelatedScope === pageScopeTree._testonly_._scopes[0]) {
@@ -180,5 +226,16 @@ describe('ModelBuilder', function () {
 				});
 			});
 		});
+
+        describe('buildInterProceduralModels', function () {
+            beforeEach(function () {
+                modelBuilder.buildIntraProceduralModels();
+                modelBuilder.buildInterProceduralModels();
+            });
+
+            it('should build inter-procedural models well', function () {
+
+            });
+        });
 	});
 });
