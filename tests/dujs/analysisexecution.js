@@ -1,43 +1,72 @@
 /*
  * Test cases for testing analysis execution
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-06
+ * @lastmodifiedDate 2015-08-27
  */
 var should = require('should');
 var fs = require('fs');
-var jsParser = require('../../lib/dujs/jsparser'),
-	scopeCtrl = require('../../lib/dujs/scopectrl'),
-	modelCtrl = require('../../lib/dujs/modelctrl');
+var scopeCtrl = require('../../lib/dujs/scopectrl'),
+	modelCtrl = require('../../lib/dujs/modelctrl'),
+    defuseAnalysisExecutor = require('../../lib/dujs/defuseanalysisexecutor');
 
-function createTest(dir, file, expected) {
-	'use strict';
-	var contents = fs.readFileSync(dir + file, 'utf8');
-	var ast = jsParser.parseAST(contents, {range: true, loc: true});
-
-	describe('case: ' + file, function () {
-		it('should have correct number of scopes', function () {
-			scopeCtrl.addPageScopeTree(ast);
-			scopeCtrl.pageScopeTrees[0].scopes.length.should.eql(expected.numOfScopes);
-		});
-	});
-}
-
-describe('Def-Use analysis execution', function () {
+describe('DefUseAnalysisExecutor', function () {
 	"use strict";
-	afterEach(function () {
-		scopeCtrl.clear();
-	});
+	var dir, files, sources, expected;
+    beforeEach(function () {
+        dir = __dirname + '/cases/';
+        files = fs.readdirSync(dir);
+        sources = [],
+        expected = [];
 
+        files.forEach(function (file) {
+            if(/.js$/.test(file)){
+                sources.push(fs.readFileSync(dir + file, 'utf8'));
+                expected.push(JSON.parse(fs.readFileSync(dir + '/' + file + '.expected.json')));
+            }
+        });
+    });
 
+    afterEach(function () {
+        scopeCtrl.clear();
+        modelCtrl.clear();
+    });
 
-	var dir = __dirname + '/cases/';
-	var files = fs.readdirSync(dir);
-	var numOfCases = 0;
-	files.forEach(function (file) {
-		if(/.js$/.test(file)){
-			++numOfCases;
-			var expected = JSON.parse(fs.readFileSync(dir + '/' + file + '.expected.json'));
-			createTest(dir, file, expected);
-		}
-	});
+    describe('public methods', function () {
+        describe('initialize', function () {
+            it('should initialize the scopeCtrl and modelCtrl well', function () {
+                defuseAnalysisExecutor.initialize(sources);
+                var pageScopeTrees = scopeCtrl.pageScopeTrees;
+                var pageModels = modelCtrl.collectionOfPageModels;
+                pageScopeTrees.length.should.eql(sources.length);
+                pageModels.size.should.eql(sources.length);
+
+                pageScopeTrees.forEach(function (scopeTree, index) {
+                    scopeTree.scopes.length.should.eql(expected[index].numOfScopes);
+                    var scopeNames = [];
+                    scopeTree.scopes.forEach(function (scope, scopeIndex) {
+                        scopeNames.push(scope.toString());
+                        var scopeLocals = [];
+                        scope.vars.forEach(function (variable) {
+                            scopeLocals.push(variable.toString());
+                        });
+                        scopeLocals.should.containDeep(expected[index].scopeLocalVars[scopeIndex]);
+                    });
+                    scopeNames.should.containDeep(expected[index].scopeNames);
+
+                    pageModels.has(scopeTree).should.eql(true);
+                    should.exist(pageModels.get(scopeTree));
+                });
+            });
+        });
+
+        describe('buildIntraProceduralModelsOfEachPageModels', function () {
+            beforeEach(function () {
+                defuseAnalysisExecutor.initialize(sources);
+            });
+
+            it('should build intra-procedural models well', function () {
+                defuseAnalysisExecutor.buildIntraProceduralModelsOfEachPageModels();
+            });
+        });
+    });
 });
