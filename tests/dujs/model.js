@@ -9,13 +9,16 @@ var Model = require('../../lib/dujs/model'),
     factoryDUPair = require('../../lib/dujs/dupairfactory'),
     factoryVar = require('../../lib/dujs/varfactory');
 var Set = require('../../lib/analyses/set'),
-    Map = require('core-js/es6/map');
+    Map = require('core-js/es6/map'),
+    esprima = require('esprima');
 var should = require('should');
 
 describe('Model', function () {
     "use strict";
-    beforeEach(function () {
+    afterEach(function () {
         factoryFlowNode.resetCounter();
+        factoryScope.resetPageScopeCounter();
+        factoryScope.resetAnonymousFunctionScopeCounter();
     });
 
     describe('static methods', function () {
@@ -199,5 +202,26 @@ describe('Model', function () {
 				model.isMainlyRelatedToTheScope(factoryScope.createDomainScope()).should.eql(false);
 			});
 		});
+
+        describe('addRelatedScope', function () {
+            var model, scope1, scope2;
+            beforeEach(function () {
+                model = new Model();
+                scope1 = factoryScope.createDomainScope();
+                scope2 = factoryScope.createPageScope(esprima.parse('var a;', {range: true, loc: true}));
+            });
+
+            it('should add the first related scope as mainly related scope', function () {
+                model.addRelatedScope(scope1);
+                model._testonly_._relatedScopes.length.should.eql(1);
+                model._testonly_._mainlyRelatedScope.should.eql(scope1);
+            });
+
+            it('should support to add multiple related scopes', function () {
+                model.addRelatedScope(scope1);
+                model.addRelatedScope(scope2);
+                model._testonly_._relatedScopes.length.should.eql(2);
+            });
+        });
     });
 });
