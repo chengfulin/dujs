@@ -15,7 +15,7 @@ describe('DefUseAnalysisExecutor', function () {
     beforeEach(function () {
         dir = __dirname + '/cases/';
         files = fs.readdirSync(dir);
-        sources = [],
+        sources = [];
         expected = [];
 
         files.forEach(function (file) {
@@ -62,10 +62,37 @@ describe('DefUseAnalysisExecutor', function () {
         describe('buildIntraProceduralModelsOfEachPageModels', function () {
             beforeEach(function () {
                 defuseAnalysisExecutor.initialize(sources);
+                defuseAnalysisExecutor.buildIntraProceduralModelsOfEachPageModels();
             });
 
-            it('should build intra-procedural models well', function () {
+            it('should have intra-procedural models corresponding to each scope', function () {
+                var pageScopeTrees = scopeCtrl.pageScopeTrees;
+                var collectionPageModels = modelCtrl.collectionOfPageModels;
+                /// model and corresponding scopes
+                pageScopeTrees.forEach(function (scopeTree, index) {
+                    var pageModel = collectionPageModels.get(scopeTree);
+                    pageModel.intraProceduralModels.length.should.eql(expected[index].numOfIntraProceduralModels);
+                    var scopesOfIntraProceduralModels = [];
+                    pageModel.intraProceduralModels.forEach(function (model) {
+                        scopesOfIntraProceduralModels.push(model.mainlyRelatedScope.toString());
+                    });
+                    var scopeNames = [];
+                    scopeTree.scopes.forEach(function (scope) {
+                        scopeNames.push(scope.toString());
+                    });
+                    scopeNames.should.containDeep(scopesOfIntraProceduralModels);
+                });
+            });
+        });
+
+        describe('buildInterProceduralModelsOfEachPageModels', function () {
+            beforeEach(function () {
+                defuseAnalysisExecutor.initialize(sources);
                 defuseAnalysisExecutor.buildIntraProceduralModelsOfEachPageModels();
+                defuseAnalysisExecutor.buildInterProceduralModelsOfEachPageModels();
+            });
+
+            it('should build inter-procedural models well', function () {
             });
         });
     });
