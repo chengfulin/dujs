@@ -11,7 +11,8 @@ var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	cfgBuilder = require('../../lib/dujs/cfgbuilder'),
 	factoryModel = require('../../lib/dujs/modelfactory'),
 	factoryScope = require('../../lib/dujs/scopefactory'),
-    variableAnalyzer = require('../../lib/dujs/variableanalyzer');
+    variableAnalyzer = require('../../lib/dujs/variableanalyzer'),
+    defuseAnalyzer = require('../../lib/dujs/defuseanalyzer');
 
 describe('ModelBuilder', function () {
 	"use strict";
@@ -149,12 +150,24 @@ describe('ModelBuilder', function () {
                 modelCtrl.initializePageModels();
                 modelCtrl.addPageModels(scopeCtrl.pageScopeTrees[0]);
                 modelBuilder.buildIntraProceduralModels();
+                defuseAnalyzer.initiallyAnalyzeIntraProceduralModels();
+                scopeCtrl.pageScopeTrees.forEach(function (scopeTree) {
+                    scopeTree.scopes.forEach(function (scope) {
+                        var model = modelCtrl.getIntraProceduralModelByMainlyRelatedScopeFromAPageModels(scopeTree, scope);
+                        if (!!model) {
+                            defuseAnalyzer.doAnalysis(model);
+                        }
+                    });
+                });
             });
 
             it('should get inter-procedural models start from the scope', function () {
                 var pageScopeTree = scopeCtrl.pageScopeTrees[0];
                 var pageScope = pageScopeTree.scopes[0];
                 var model = modelBuilder._testonly_._getInterProceduralModelStartFromTheScope(pageScope, pageScopeTree);
+                should.exist(model);
+                model._testonly_._mainlyRelatedScope.should.eql(pageScope);
+                model._testonly_._relatedScopes.length.should.eql(3);
             });
         });
 	});
@@ -230,6 +243,15 @@ describe('ModelBuilder', function () {
         describe('buildInterProceduralModels', function () {
             beforeEach(function () {
                 modelBuilder.buildIntraProceduralModels();
+                defuseAnalyzer.initiallyAnalyzeIntraProceduralModels();
+                scopeCtrl.pageScopeTrees.forEach(function (scopeTree) {
+                    scopeTree.scopes.forEach(function (scope) {
+                        var model = modelCtrl.getIntraProceduralModelByMainlyRelatedScopeFromAPageModels(scopeTree, scope);
+                        if (!!model) {
+                            defuseAnalyzer.doAnalysis(model);
+                        }
+                    });
+                });
                 modelBuilder.buildInterProceduralModels();
             });
 
