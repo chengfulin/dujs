@@ -257,7 +257,7 @@ describe('DefUseAnalyzer', function () {
                         scopeCtrl.pageScopeTrees[0],
                         scopeCtrl.pageScopeTrees[0].scopes[1]
                     );
-                pageIntraProceduralModel.graph[0].generate.size.should.eql(13);
+                pageIntraProceduralModel.graph[0].generate.size.should.eql(14);
                 fooIntraProceduralModel.graph[0].generate.size.should.eql(1);
             });
         });
