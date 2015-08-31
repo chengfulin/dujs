@@ -1,209 +1,6 @@
 /**
  * Created by ChengFuLin on 2015/5/7.
  */
-var fs = require('fs'),
-    spawnSync = require('child_process').spawnSync,
-    //open = require('open'),
-    DUJS = require('../lib/dujs'),
-    graphics = require('../lib/dujs').graphics,
-    Map = require('core-js/es6/map');
-
-var GRAPHVIZ_DOT_CMD = 'dot',
-    OUTPUT_DIR = 'out-' + (new Date()).toLocaleDateString() + '-' + (new Date()).getHours() + '-' + (new Date()).getMinutes() + '-' + (new Date()).getSeconds(),
-    INTRA_PROCEDURAL_OUTPUTS_DIR = 'intra-procedurals',
-    INTER_PROCEDURAL_OUTPUTS_DIR = 'inter-procedurals',
-    INTRA_PAGE_OUTPUTS_DIR = 'intra-pages',
-    INTER_PAGE_OUTPUTS_DIR = 'inter-page',
-    PAGE_OUTPUT_DIR = 'page',
-    JS_FILES_FLAG = '-js',
-    jsSourceFileNames = [],
-    pageOutputs = [];
-    intraProceduralCFGOutputs = new Map(),
-    interProceduralCFGOutputs = new Map(),
-    intraPageCFGOutputs = new Map(),
-    interPageCFGOutputs = new Map(),
-    intraProceduralDUPairsOutputs = new Map(),
-    interProceduralDUPairsOutputs = new Map(),
-    intraPageDUPairsOutputs = new Map(),
-    interPageDUPairsOutputs = new Map();
-
-/**
- * Get source code from files
- * @param files
- * @param callback
- * @function
- */
-function getSourceFromFiles(files, pageIndex) {
-    "use strict";
-    pageIndex = pageIndex || 0;
-    var source = '';
-    files.forEach(function (filename) {
-        var content = fs.readFileSync(filename);
-        source += '/// --- start ' + filename + ' ---\n' + content + '\n/// --- end ' + filename + ' ---\n';
-    });
-    fs.writeFileSync(OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + 'src.js', source);
-    return source;
-}
-
-function outputGraphFile(dirPath, analysisItem, index) {
-    "use strict";
-    var cfgContent = graphics.analysisItemToCFG(analysisItem);
-    var dotCFG = dirPath + '/' + index + '.cfg.dot';
-    var outputCFG = dirPath + '/' + index + '.cfg.png';
-    fs.writeFileSync(dotCFG, cfgContent);
-    spawnSync(GRAPHVIZ_DOT_CMD, [dotCFG, '-Tpng', '-o', outputCFG]);
-    return outputCFG;
-}
-
-function outputDUPairsFile(dirPath, analysisItem, index) {
-    "use strict";
-    var dupairsTable = graphics.dupairsToTable(analysisItem.dupairs);
-    var dotDUPairs = dirPath + '/' + index + '.dupairs.dot'
-    var outputDUPairs = dirPath + '/' + index + '.dupairs.png';
-    fs.writeFileSync(dotDUPairs, dupairsTable);
-    spawnSync(GRAPHVIZ_DOT_CMD, [dotDUPairs, '-Tpng', '-o', outputDUPairs]);
-    return outputDUPairs;
-}
-
-/**
- * Output dot files and related image files for the graphs
- * @param dirPath
- * @param {Model} analysisItem
- * @param {number} index
- * @private
- * @function
- */
-function outputPageResultFiles(pageIndex, dirPath, analysisItem, index) {
-    "use strict";
-    var outputCFG = outputGraphFile(dirPath, analysisItem, index);
-    var outputDUPairs = outputDUPairsFile(dirPath, analysisItem, index);
-
-    var pageResultFiles = {
-        intraProceduralCFGOutputs: new Map(),
-        interProceduralCFGOutputs: new Map(),
-        intraPageCFGOutputs: new Map(),
-        interPageCFGOutputs: new Map(),
-        intraProceduralDUPairsOutputs: new Map(),
-        interProceduralDUPairsOutputs: new Map(),
-        intraPageDUPairsOutputs: new Map(),
-        interPageDUPairsOutputs: new Map(),
-    };
-
-    if (!pageOutputs[pageIndex]) {
-        pageOutputs[pageIndex] = pageResultFiles;
-    }
-
-    if (dirPath.indexOf(INTRA_PROCEDURAL_OUTPUTS_DIR) !== -1) {
-        if (!pageOutputs[pageIndex].intraProceduralCFGOutputs.has(index)) {
-            pageOutputs[pageIndex].intraProceduralCFGOutputs.set(index, []);
-        }
-        pageOutputs[pageIndex].intraProceduralCFGOutputs.set(index, pageOutputs[pageIndex].intraProceduralCFGOutputs.get(index).concat(outputCFG));
-        if (!pageOutputs[pageIndex].intraProceduralDUPairsOutputs.has(index)) {
-            pageOutputs[pageIndex].intraProceduralDUPairsOutputs.set(index, []);
-        }
-        pageOutputs[pageIndex].intraProceduralDUPairsOutputs.set(index, pageOutputs[pageIndex].intraProceduralDUPairsOutputs.get(index).concat(outputDUPairs));
-    } else if (dirPath.indexOf(INTER_PROCEDURAL_OUTPUTS_DIR) !== -1) {
-        if (!pageOutputs[pageIndex].interProceduralCFGOutputs.has(index)) {
-            pageOutputs[pageIndex].interProceduralCFGOutputs.set(index, []);
-        }
-        pageOutputs[pageIndex].interProceduralCFGOutputs.set(index, pageOutputs[pageIndex].interProceduralCFGOutputs.get(index).concat(outputCFG));
-        if (!pageOutputs[pageIndex].interProceduralDUPairsOutputs.has(index)) {
-            pageOutputs[pageIndex].interProceduralDUPairsOutputs.set(index, []);
-        }
-        pageOutputs[pageIndex].interProceduralDUPairsOutputs.set(index, pageOutputs[pageIndex].interProceduralDUPairsOutputs.get(index).concat(outputDUPairs));
-    } else if (dirPath.indexOf(INTRA_PAGE_OUTPUTS_DIR) !== -1) {
-        if (!pageOutputs[pageIndex].intraPageCFGOutputs.has(index)) {
-            pageOutputs[pageIndex].intraPageCFGOutputs.set(index, []);
-        }
-        pageOutputs[pageIndex].intraPageCFGOutputs.set(index, pageOutputs[pageIndex].intraPageCFGOutputs.get(index).concat(outputCFG));
-        if (!pageOutputs[pageIndex].intraPageDUPairsOutputs.has(index)) {
-            pageOutputs[pageIndex].intraPageDUPairsOutputs.set(index, []);
-        }
-        pageOutputs[pageIndex].intraPageDUPairsOutputs.set(index, pageOutputs[pageIndex].intraPageDUPairsOutputs.get(index).concat(outputDUPairs));
-    }
-}
-
-function outputInterPageResultFiles(dirPath, analysisItem, index) {
-    "use strict";
-    var outputCFG = outputGraphFile(dirPath, analysisItem, index);
-    var outputDUPairs = outputDUPairsFile(dirPath, analysisItem, index);
-
-    if (dirPath.indexOf(INTER_PAGE_OUTPUTS_DIR) !== -1) {
-        pageOutputs.forEach(function (outputs) {
-            if (!outputs.interPageCFGOutputs.has(index)) {
-                outputs.interPageCFGOutputs.set(index, []);
-            }
-            outputs.interPageCFGOutputs.set(index, outputs.interPageCFGOutputs.get(index).concat(outputCFG));
-            if (!outputs.interPageDUPairsOutputs.has(index)) {
-                outputs.interPageDUPairsOutputs.set(index, []);
-            }
-            outputs.interPageDUPairsOutputs.set(index, outputs.interPageDUPairsOutputs.get(index).concat(outputDUPairs));
-        });
-    }
-}
-
-function doIntraProceduralAnalysis(source, pageIndex) {
-    "use strict";
-    pageIndex = pageIndex || 0;
-    var analysisOutputs = DUJS.doIntraProceduralAnalysis(source).intraProceduralAnalysisItems;
-    analysisOutputs.forEach(function (item, index) {
-        outputPageResultFiles(pageIndex, OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR, item, index);
-    });
-}
-
-function doInterProceduralAnalysis(source, pageIndex) {
-    "use strict";
-    pageIndex = pageIndex || 0;
-    var analysisOutputs = DUJS.doInterProceduralAnalysis(source).interProceduralAnalysisItems;
-    analysisOutputs.forEach(function (item, index) {
-        outputPageResultFiles(pageIndex, OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + INTER_PROCEDURAL_OUTPUTS_DIR, item, index);
-    });
-}
-
-function doIntraPageAnalysis(source, pageIndex) {
-    "use strict";
-    pageIndex = pageIndex || 0;
-    var analysisOutputs = DUJS.doIntraPageAnalysis(source).intraPageAnalysisItems;
-    analysisOutputs.forEach(function (item, index) {
-        outputPageResultFiles(pageIndex, OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + INTRA_PAGE_OUTPUTS_DIR, item, index);
-    });
-}
-
-function doInterPageAnalysis(sources) {
-    "use strict";
-    if (sources instanceof Array) {
-        var analysisOutputs = DUJS.doInterPageAnalysis(sources).interPageModels;
-        analysisOutputs.forEach(function (item, index) {
-            outputInterPageResultFiles(OUTPUT_DIR + '/' + INTER_PAGE_OUTPUTS_DIR, item, index);
-        });
-    }
-}
-
-/**
- * Create output directories
- */
-function createOutputDirectories(pageIndex) {
-    "use strict";
-    pageIndex = pageIndex || 0;
-    if (!fs.existsSync(OUTPUT_DIR)) { /// root
-        fs.mkdirSync(OUTPUT_DIR);
-    }
-    if (!fs.existsSync(OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex)) {
-        fs.mkdirSync(OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex);
-    }
-    if (!fs.existsSync(OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR)) { /// intra-procedural outputs
-        fs.mkdirSync(OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + INTRA_PROCEDURAL_OUTPUTS_DIR);
-    }
-    if (!fs.existsSync(OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + INTER_PROCEDURAL_OUTPUTS_DIR)) { /// inter-procedural outputs
-        fs.mkdirSync(OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + INTER_PROCEDURAL_OUTPUTS_DIR);
-    }
-    if (!fs.existsSync(OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + INTRA_PAGE_OUTPUTS_DIR)) { /// intra-page outputs
-        fs.mkdirSync(OUTPUT_DIR + '/' + PAGE_OUTPUT_DIR + pageIndex + '/' + INTRA_PAGE_OUTPUTS_DIR);
-    }
-    if (!fs.existsSync(OUTPUT_DIR + '/' + INTER_PAGE_OUTPUTS_DIR)) { /// inter-page outputs
-        fs.mkdirSync(OUTPUT_DIR + '/' + INTER_PAGE_OUTPUTS_DIR);
-    }
-}
 
 function createSourceReportFromPage(pageIndex) {
     "use strict";
@@ -355,41 +152,34 @@ function createReport() {
     fs.writeFileSync(OUTPUT_DIR + '/' + 'report.html', reportHTMLContent);
 }
 
+var inputReader = require('../lib/dujs/inputreader'),
+    sourceReader = require('../lib/dujs/sourcereader'),
+    outputWriter = require('../lib/dujs/outputwriter'),
+    defuseAnalysisExecutor = require('../lib/dujs/defuseanalysisexecutor');
+
 /* Main */
 try {
-    var jsFilesIndexes = [];
-    process.argv.forEach(function (arg, index) {
-        "use strict";
-        if (arg === JS_FILES_FLAG) {
-            jsFilesIndexes.push(index);
-        }
-    });
-    var pageSourceFileNames = [];
-    jsFilesIndexes.forEach(function (jsIndex, index) {
-        "use strict";
-        if (index !== jsFilesIndexes.length - 1) {
-            pageSourceFileNames.push(process.argv.slice(jsIndex + 1, jsFilesIndexes[index + 1]));
-        } else {
-            pageSourceFileNames.push(process.argv.slice(jsIndex + 1));
-        }
-    });
-
-    var sourceFiles = [];
-    for (var index = 0; index < pageSourceFileNames.length; ++index) {
-        createOutputDirectories(index);
-        sourceFiles.push(getSourceFromFiles(pageSourceFileNames[index], index));
+    var jsFileNamesOfPages = inputReader.readInput(process.argv);
+    var sourceContents = [];
+    for (var index = 0; index < jsFileNamesOfPages.length; ++index) {
+        var content = sourceReader.getSourceFromFiles(jsFileNamesOfPages[index]);
+        outputWriter.createOutputDirectories(index);
+        outputWriter.writeCombinedJSSource(content, index);
+        sourceContents.push(content);
     }
 
-    sourceFiles.forEach(function (source, index) {
-        "use strict";
-        doIntraProceduralAnalysis(source, index);
-        doInterProceduralAnalysis(source, index);
-        doIntraPageAnalysis(source, index);
-    });
+    defuseAnalysisExecutor.initialize(sourceContents);
+    defuseAnalysisExecutor.buildIntraProceduralModelsOfEachPageModels();
+    outputWriter.writeIntraProceduralAnalysisResultFiles();
 
-    doInterPageAnalysis(sourceFiles);
-    createReport();
+    defuseAnalysisExecutor.buildInterProceduralModelsOfEachPageModels();
+    outputWriter.writeInterProceduralAnalysisResultFiles();
 
+    defuseAnalysisExecutor.buildIntraPageModelsOfEachPageModels();
+    outputWriter.writeIntraPageAnalysisResultFiles();
+
+    defuseAnalysisExecutor.buildInterPageModelsOfEachPageModels();
+    outputWriter.writeInterPageAnalysisResultFiles();
 } catch(err) {
-    throw err;
+    console.error(err.message);
 }
