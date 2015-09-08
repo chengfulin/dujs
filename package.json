@@ -1,7 +1,7 @@
 {
   "name": "dujs",
-  "description": "Aim to find the intra-procedural, inter-procedural and intra-page Def-Use pairs of the client-side JavaScript",
-  "version": "0.3.0",
+  "description": "Support to model intra-procedural, inter-procedural, intra-page and inter-page data flow on client-side JavaScript programs",
+  "version": "1.0.0",
   "maintainers": [
     {
       "name": "chengfulin",
@@ -11,17 +11,15 @@
   "dependencies": {
     "core-js": "^0.8.4",
     "espree": "^2.0.2",
+    "esgraph": "*",
     "open": "0.0.5",
-    "walkes": "*"
-  },
-  "peerDependencies": {
+    "walkes": "*",
     "esprima": "~ 1.0"
   },
   "devDependencies": {
     "async": "^1.2.1",
     "blanket": "^1.1.7",
     "grunt": "^0.4.5",
-    "grunt-contrib-jshint": "^0.11.2",
     "grunt-jsdoc": "^0.6.7",
     "grunt-mocha-istanbul": "^2.4.0",
     "grunt-mocha-test": "^0.12.7",
