@@ -471,58 +471,145 @@ describe('FlowNode', function () {
             });
         });
 
-        describe('toJSON', function () {
-	        var entryNode, normalNode, exitNode, callNode, callReturnNode, loopNode, loopReturnNode, localStorageNode, branchNode;
-	        beforeEach(function () {
-		        entryNode = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
-		        entryNode.cfgId = 0;
-		        entryNode.label = 'entry';
-		        normalNode = new FlowNode();
-		        normalNode.cfgId = 1;
-		        normalNode.label = '1';
-		        exitNode = new FlowNode(FlowNode.EXIT_NODE_TYPE);
-		        exitNode.cfgId = 2;
-		        exitNode.label = 'exit';
-		        callNode = new FlowNode(FlowNode.CALL_NODE_TYPE);
-		        callNode.cfgId = 3;
-		        callNode.label = 'call';
-		        callReturnNode = new FlowNode(FlowNode.CALL_RETURN_NODE_TYPE);
-		        callReturnNode.cfgId = 4;
-		        callReturnNode.label = 'callReturn';
-		        loopNode = new FlowNode(FlowNode.LOOP_NODE_TYPE);
-		        loopNode.cfgId = 5;
-		        loopNode.label = 'loop';
-		        loopReturnNode = new FlowNode(FlowNode.LOOP_RETURN_NODE_TYPE);
-		        loopReturnNode.cfgId = 6;
-		        loopReturnNode.label = 'loopReturn';
-		        localStorageNode = new FlowNode(FlowNode.LOCAL_STORAGE_NODE_TYPE);
-		        localStorageNode.cfgId = 7;
-		        localStorageNode.label = 'localStorage';
-		        branchNode = new FlowNode(FlowNode.BRANCH_NODE_TYPE);
-		        branchNode.cfgId = 8;
-		        branchNode.label = '8';
-	        });
+	    describe('JSON formatting', function () {
+		    var entryNode, normalNode, exitNode, callNode, callReturnNode, loopNode, loopReturnNode, localStorageNode, branchNode;
+		    beforeEach(function () {
+			    entryNode = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
+			    entryNode.cfgId = 0;
+			    entryNode.label = 'entry';
+			    normalNode = new FlowNode();
+			    normalNode.cfgId = 1;
+			    normalNode.label = '1';
+			    exitNode = new FlowNode(FlowNode.EXIT_NODE_TYPE);
+			    exitNode.cfgId = 2;
+			    exitNode.label = 'exit';
+			    callNode = new FlowNode(FlowNode.CALL_NODE_TYPE);
+			    callNode.cfgId = 3;
+			    callNode.label = 'call';
+			    callReturnNode = new FlowNode(FlowNode.CALL_RETURN_NODE_TYPE);
+			    callReturnNode.cfgId = 4;
+			    callReturnNode.label = 'callReturn';
+			    loopNode = new FlowNode(FlowNode.LOOP_NODE_TYPE);
+			    loopNode.cfgId = 5;
+			    loopNode.label = 'loop';
+			    loopReturnNode = new FlowNode(FlowNode.LOOP_RETURN_NODE_TYPE);
+			    loopReturnNode.cfgId = 6;
+			    loopReturnNode.label = 'loopReturn';
+			    localStorageNode = new FlowNode(FlowNode.LOCAL_STORAGE_NODE_TYPE);
+			    localStorageNode.cfgId = 7;
+			    localStorageNode.label = 'localStorage';
+			    branchNode = new FlowNode(FlowNode.BRANCH_NODE_TYPE);
+			    branchNode.cfgId = 8;
+			    branchNode.label = '8';
+		    });
 
-	        it('should contain correct information', function () {
-		        entryNode.toJSON().should.eql('{"id":0,"label":"entry","type":"entry"}');
-		        normalNode.toJSON().should.eql('{"id":1,"label":"1","type":"normal"}');
-		        exitNode.toJSON().should.eql('{"id":2,"label":"exit","type":"exit"}');
-		        callNode.toJSON().should.eql('{"id":3,"label":"call","type":"call"}');
-		        callReturnNode.toJSON().should.eql('{"id":4,"label":"callReturn","type":"callReturn"}');
-		        loopNode.toJSON().should.eql('{"id":5,"label":"loop","type":"loop"}');
-		        loopReturnNode.toJSON().should.eql('{"id":6,"label":"loopReturn","type":"loopReturn"}');
-		        localStorageNode.toJSON().should.eql('{"id":7,"label":"localStorage","type":"localStorage"}');
-		        branchNode.toJSON().should.eql('{"id":8,"label":"8","type":"branch"}');
-	        });
+		    describe('toJSON', function () {
+			    it('should contain correct information', function () {
+				    JSON.stringify(entryNode.toJSON()).should.eql('{"id":0,"label":"entry","type":"entry"}');
+				    JSON.stringify(normalNode.toJSON()).should.eql('{"id":1,"label":"1","type":"normal"}');
+				    JSON.stringify(exitNode.toJSON()).should.eql('{"id":2,"label":"exit","type":"exit"}');
+				    JSON.stringify(callNode.toJSON()).should.eql('{"id":3,"label":"call","type":"call"}');
+				    JSON.stringify(callReturnNode.toJSON()).should.eql('{"id":4,"label":"callReturn","type":"callReturn"}');
+				    JSON.stringify(loopNode.toJSON()).should.eql('{"id":5,"label":"loop","type":"loop"}');
+				    JSON.stringify(loopReturnNode.toJSON()).should.eql('{"id":6,"label":"loopReturn","type":"loopReturn"}');
+				    JSON.stringify(localStorageNode.toJSON()).should.eql('{"id":7,"label":"localStorage","type":"localStorage"}');
+				    JSON.stringify(branchNode.toJSON()).should.eql('{"id":8,"label":"8","type":"branch"}');
+			    });
 
-	        it('should not contain connection information', function () {
-		        entryNode._testonly_.normal = normalNode;
-		        entryNode._testonly_._next.push(normalNode);
-		        normalNode._testonly_._prev.push(entryNode);
-		        entryNode.toJSON().should.eql('{"id":0,"label":"entry","type":"entry"}');
-		        normalNode.toJSON().should.eql('{"id":1,"label":"1","type":"normal"}');
-	        });
-        });
+			    it('should not contain connection information', function () {
+				    entryNode._testonly_.normal = normalNode;
+				    entryNode._testonly_._next.push(normalNode);
+				    normalNode._testonly_._prev.push(entryNode);
+				    var entryNodeJSONText = JSON.stringify(entryNode.toJSON());
+				    entryNodeJSONText.should.eql('{"id":0,"label":"entry","type":"entry"}');
+				    var normalNodeJSONText = JSON.stringify(normalNode.toJSON());
+				    normalNodeJSONText.should.eql('{"id":1,"label":"1","type":"normal"}');
+			    });
+		    });
+
+		    describe('linksToJSON', function () {
+			    it('should represent normal connection correctly', function () {
+				    entryNode._testonly_._next.push(normalNode);
+				    entryNode._testonly_.normal = normalNode;
+				    normalNode._testonly_._prev.push(entryNode);
+					JSON.stringify(entryNode.linksToJSON()).should.eql(
+						'[{' +
+						'"from":{"id":0,"label":"entry","type":"entry"},' +
+						'"to":{"id":1,"label":"1","type":"normal"},' +
+						'"type":"normal"' +
+						'}]'
+					);
+			    });
+
+			    it('should represent exception connection correctly', function () {
+				    normalNode._testonly_._next.push(exitNode);
+				    normalNode._testonly_.exception = exitNode;
+				    exitNode._testonly_._prev.push(normalNode);
+				    JSON.stringify(normalNode.linksToJSON()).should.eql(
+					    '[{' +
+					    '"from":{"id":1,"label":"1","type":"normal"},' +
+					    '"to":{"id":2,"label":"exit","type":"exit"},' +
+					    '"type":"exception"' +
+					    '}]'
+				    );
+			    });
+
+			    it('should represent call connection correctly', function () {
+				    normalNode._testonly_._next.push(callNode);
+				    normalNode._testonly_.call = callNode;
+				    callNode._testonly_._prev.push(normalNode);
+					JSON.stringify(normalNode.linksToJSON()).should.eql(
+						'[{' +
+						'"from":{"id":1,"label":"1","type":"normal"},' +
+						'"to":{"id":3,"label":"call","type":"call"},' +
+						'"type":"call"' +
+						'}]'
+					);
+			    });
+
+			    it('should represent different types of connections correctly', function () {
+				    normalNode._testonly_._next.push(exitNode);
+				    normalNode._testonly_.exception = exitNode;
+				    exitNode._testonly_._prev.push(normalNode);
+				    normalNode._testonly_._next.push(callNode);
+				    normalNode._testonly_.call = callNode;
+				    callNode._testonly_._prev.push(normalNode);
+				    JSON.stringify(normalNode.linksToJSON()).should.eql(
+					    '[{' +
+					    '"from":{"id":1,"label":"1","type":"normal"},' +
+					    '"to":{"id":2,"label":"exit","type":"exit"},' +
+					    '"type":"exception"' +
+					    '},' +
+					    '{' +
+					    '"from":{"id":1,"label":"1","type":"normal"},' +
+					    '"to":{"id":3,"label":"call","type":"call"},' +
+					    '"type":"call"' +
+					    '}]'
+				    );
+			    });
+
+			    it('should represent on event connection correctly', function () {
+				    loopNode._testonly_._next.push(loopReturnNode);
+				    loopNode._testonly_._next.push(entryNode);
+				    loopNode._testonly_.onEvent.push(loopReturnNode);
+				    loopNode._testonly_.onEvent.push(entryNode);
+				    loopReturnNode._testonly_._prev.push(loopNode);
+				    entryNode._testonly_._prev.push(loopNode);
+				    JSON.stringify(loopNode.linksToJSON()).should.eql(
+					    '[{' +
+					    '"from":{"id":5,"label":"loop","type":"loop"},' +
+					    '"to":{"id":6,"label":"loopReturn","type":"loopReturn"},' +
+					    '"type":"onEvent"' +
+					    '},' +
+					    '{' +
+					    '"from":{"id":5,"label":"loop","type":"loop"},' +
+					    '"to":{"id":0,"label":"entry","type":"entry"},' +
+					    '"type":"onEvent"' +
+					    '}]'
+				    );
+			    });
+		    });
+	    });
     });
 
     describe('Properties', function () {
