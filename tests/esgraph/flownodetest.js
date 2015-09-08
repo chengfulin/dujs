@@ -1,5 +1,7 @@
-/**
- * Created by ChengFuLin on 2015/5/20.
+/*
+ * Test cases for FlowNode class
+ * @lastmodifiedBy ChengFuLin
+ * @lastmodifiedDate 2015-09-08
  */
 var FlowNode = require('../../lib/esgraph/flownode'),
     Set = require('../../lib/analyses').Set,
@@ -467,6 +469,59 @@ describe('FlowNode', function () {
                 nodeA._testonly_._next.length.should.eql(0);
                 nodeB._testonly_._prev.length.should.eql(0);
             });
+        });
+
+        describe('toJSON', function () {
+	        var entryNode, normalNode, exitNode, callNode, callReturnNode, loopNode, loopReturnNode, localStorageNode, branchNode;
+	        beforeEach(function () {
+		        entryNode = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
+		        entryNode.cfgId = 0;
+		        entryNode.label = 'entry';
+		        normalNode = new FlowNode();
+		        normalNode.cfgId = 1;
+		        normalNode.label = '1';
+		        exitNode = new FlowNode(FlowNode.EXIT_NODE_TYPE);
+		        exitNode.cfgId = 2;
+		        exitNode.label = 'exit';
+		        callNode = new FlowNode(FlowNode.CALL_NODE_TYPE);
+		        callNode.cfgId = 3;
+		        callNode.label = 'call';
+		        callReturnNode = new FlowNode(FlowNode.CALL_RETURN_NODE_TYPE);
+		        callReturnNode.cfgId = 4;
+		        callReturnNode.label = 'callReturn';
+		        loopNode = new FlowNode(FlowNode.LOOP_NODE_TYPE);
+		        loopNode.cfgId = 5;
+		        loopNode.label = 'loop';
+		        loopReturnNode = new FlowNode(FlowNode.LOOP_RETURN_NODE_TYPE);
+		        loopReturnNode.cfgId = 6;
+		        loopReturnNode.label = 'loopReturn';
+		        localStorageNode = new FlowNode(FlowNode.LOCAL_STORAGE_NODE_TYPE);
+		        localStorageNode.cfgId = 7;
+		        localStorageNode.label = 'localStorage';
+		        branchNode = new FlowNode(FlowNode.BRANCH_NODE_TYPE);
+		        branchNode.cfgId = 8;
+		        branchNode.label = '8';
+	        });
+
+	        it('should contain correct information', function () {
+		        entryNode.toJSON().should.eql('{"id":0,"label":"entry","type":"entry"}');
+		        normalNode.toJSON().should.eql('{"id":1,"label":"1","type":"normal"}');
+		        exitNode.toJSON().should.eql('{"id":2,"label":"exit","type":"exit"}');
+		        callNode.toJSON().should.eql('{"id":3,"label":"call","type":"call"}');
+		        callReturnNode.toJSON().should.eql('{"id":4,"label":"callReturn","type":"callReturn"}');
+		        loopNode.toJSON().should.eql('{"id":5,"label":"loop","type":"loop"}');
+		        loopReturnNode.toJSON().should.eql('{"id":6,"label":"loopReturn","type":"loopReturn"}');
+		        localStorageNode.toJSON().should.eql('{"id":7,"label":"localStorage","type":"localStorage"}');
+		        branchNode.toJSON().should.eql('{"id":8,"label":"8","type":"branch"}');
+	        });
+
+	        it('should not contain connection information', function () {
+		        entryNode._testonly_.normal = normalNode;
+		        entryNode._testonly_._next.push(normalNode);
+		        normalNode._testonly_._prev.push(entryNode);
+		        entryNode.toJSON().should.eql('{"id":0,"label":"entry","type":"entry"}');
+		        normalNode.toJSON().should.eql('{"id":1,"label":"1","type":"normal"}');
+	        });
         });
     });
 
