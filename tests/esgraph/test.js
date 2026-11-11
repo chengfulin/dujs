@@ -1,7 +1,14 @@
-/**
- * From the repository: esgraph
- * @license LGPLv3
- * @author Swatinem (arpad.borsos@googlemail.com)
+/*
+ * Derived from esgraph 0.1.1 (https://github.com/Swatinem/esgraph), upstream test runner
+ * Original author: Arpad Borsos (Swatinem) <arpad.borsos@googlemail.com>
+ * SPDX-License-Identifier: LGPL-3.0-only
+ * Licensed under the GNU LGPL v3, see LICENSES/LGPL-3.0.txt and
+ * LICENSES/GPL-3.0.txt. This file is NOT covered by the dujs MIT license.
+ *
+ * Modified by ChengFuLin (chengfulin0806@gmail.com):
+ *   2015-05: run against the dujs fork in lib/esgraph
+ *   2026-11-11: parse with lib/dujs/jsparser (espree) instead of esprima
+ * See THIRD_PARTY_NOTICES.md for details.
  */
 var esgraph = require('../../lib/esgraph');
 var jsParser = require('../../lib/dujs/jsparser');

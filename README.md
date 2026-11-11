@@ -38,3 +38,13 @@ Result files will located under the <strong>out-[year]-[month]-[day]-[hour]-[min
 
 ##Demo
 [Single page sample](http://chengfulin.github.io/dujs/)
+
+## License
+dujs is released under the [MIT License](LICENSE), except for the files derived
+from [esgraph](https://github.com/Swatinem/esgraph) and
+[analyses](https://github.com/Swatinem/analyses) (`lib/esgraph/index.js`,
+`lib/esgraph/dot.js`, `lib/analyses/`, and their tests), which remain under the
+GNU LGPL v3 ([LICENSES/](LICENSES)). The runtime dependency
+[walkes](https://github.com/Swatinem/walkes) is also LGPL v3 and is used
+unmodified. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the origin
+and modifications of each file.
