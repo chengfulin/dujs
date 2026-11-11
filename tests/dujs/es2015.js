@@ -145,5 +145,76 @@ describe('ES2015+ modeling', function () {
 			pairs.should.not.containEql('count: entry -> L3');
 		});
 	});
+
+	describe('destructuring, default parameters, rest and spread', function () {
+		it('should define each variable of an object pattern and not use property keys', function () {
+			var result = analyze([
+				'var obj = {a: 1, b: 2};',
+				'var {a, b: c} = obj;',
+				'console.log(a + c);'
+			].join('\n'));
+			var pairs = result.intraProcedural();
+			pairs.should.containDeep(['a: L2 -> L3', 'c: L2 -> L3', 'obj: L1 -> L2']);
+			pairs.should.not.containEql('a: entry -> L1');
+			result.scopeTree.root.hasLocalVariable('b').should.eql(false);
+		});
+
+		it('should define variables of an array pattern with defaults and a rest element', function () {
+			var result = analyze([
+				'function f(list) {',
+				'  let [first, second = 0, ...rest] = list;',
+				'  return first + second + rest.length;',
+				'}'
+			].join('\n'));
+			result.intraProcedural(PAGE + '.f').should.eql([
+				'first: L2 -> L3', 'list: entry -> L2', 'rest: L2 -> L3', 'second: L2 -> L3'
+			]);
+		});
+
+		it('should define and kill variables in a destructuring assignment', function () {
+			var result = analyze([
+				'function g(x, y) {',
+				'  [x, y] = [y, x];',
+				'  return x - y;',
+				'}'
+			].join('\n'));
+			result.intraProcedural(PAGE + '.g').should.eql([
+				'x: L2 -> L3', 'x: entry -> L2', 'y: L2 -> L3', 'y: entry -> L2'
+			]);
+		});
+
+		it('should use the variables of a default value in a pattern', function () {
+			var result = analyze([
+				'var fallback = 0;',
+				'var {size = fallback} = {};',
+				'console.log(size);'
+			].join('\n'));
+			result.intraProcedural().should.containDeep(['fallback: L1 -> L2', 'size: L2 -> L3']);
+		});
+
+		it('should declare pattern, default and rest parameters', function () {
+			var result = analyze([
+				'function h({id, name}, [first], last = 1, ...others) {',
+				'  return id + name + first + last + others.length;',
+				'}'
+			].join('\n'));
+			var h = result.scopeTree.root.children[0];
+			['id', 'name', 'first', 'last', 'others'].forEach(function (name) {
+				h.params.has(name).should.eql(true);
+			});
+			result.intraProcedural(PAGE + '.h').should.eql([
+				'first: entry -> L2', 'id: entry -> L2', 'last: entry -> L2', 'name: entry -> L2', 'others: entry -> L2'
+			]);
+		});
+
+		it('should use the variables of spread elements', function () {
+			var result = analyze([
+				'var arr = [1];',
+				'var copy = [...arr];',
+				'console.log(...copy);'
+			].join('\n'));
+			result.intraProcedural().should.containDeep(['arr: L1 -> L2', 'copy: L2 -> L3']);
+		});
+	});
 });
 
