@@ -390,5 +390,71 @@ describe('ES2015+ modeling', function () {
 			result.intraProcedural().should.containEql('data: L1 -> L2');
 		});
 	});
+
+	describe('other expressions', function () {
+		it('should use variables in template literals, tagged templates, optional chaining and nullish coalescing', function () {
+			var result = analyze([
+				'var name = \'a\';',
+				'var s = `hi ${name}`;',
+				'var t = tag`x${s}`;',
+				'var o = null;',
+				'var v = o?.a?.b ?? t;',
+				'console.log(v);'
+			].join('\n'));
+			result.intraProcedural().should.containDeep([
+				'name: L1 -> L2', 's: L2 -> L3', 't: L3 -> L5', 'o: L4 -> L5', 'v: L5 -> L6'
+			]);
+		});
+
+		it('should use the computed property of a member expression', function () {
+			var result = analyze([
+				'var list = [1];',
+				'var k = 0;',
+				'var a = list[k];',
+				'var b = list?.[k];',
+				'console.log(a, b);'
+			].join('\n'));
+			result.intraProcedural().should.containDeep(['k: L2 -> L3', 'k: L2 -> L4']);
+		});
+
+		it('should use the target of compound and logical assignments', function () {
+			var result = analyze([
+				'var n = 0;',
+				'n ??= 1;',
+				'n **= 2;',
+				'n <<= 1;',
+				'console.log(n);'
+			].join('\n'));
+			pairsOf(result.intraProcedural(), 'n').should.eql([
+				'n: L1 -> L2', 'n: L2 -> L3', 'n: L3 -> L4', 'n: L4 -> L5'
+			]);
+		});
+
+		it('should not treat meta properties as variables', function () {
+			var result = analyze([
+				'var meta = 1;',
+				'console.log(import.meta.url);'
+			].join('\n'));
+			pairsOf(result.intraProcedural(), 'meta').should.eql([]);
+		});
+
+		it('should model async functions, await and generators', function () {
+			var result = analyze([
+				'async function load(url) {',
+				'  const res = await fetch(url);',
+				'  return res.json();',
+				'}',
+				'function* gen(n) {',
+				'  let i = 0;',
+				'  while (i < n) {',
+				'    yield i;',
+				'    i++;',
+				'  }',
+				'}'
+			].join('\n'));
+			result.intraProcedural(PAGE + '.load').should.eql(['res: L2 -> L3', 'url: entry -> L2']);
+			result.intraProcedural(PAGE + '.gen').should.containDeep(['i: L6 -> L8', 'i: L9 -> L8', 'i: L9 -> L7>L8']);
+		});
+	});
 });
 
