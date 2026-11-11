@@ -1,12 +1,11 @@
 .*
+!/.gitignore
+!/.gitattributes
+!/.nvmrc
 node_modules
 coverage
-!/.gitignore
-!/.jshintrc
-out-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{1,2}-[0-9]{1,2}-[0-9]{1,2}
-!/sampleOutputs
-out
-!/.gitattributes
-!/**/.jshintrc
 doc
-!/.nvmrc
+# dujs analysis outputs: out-YYYY-MM-DD-h-m-s
+out-*/
+out
+!/sampleOutputs
