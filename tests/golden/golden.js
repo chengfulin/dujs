@@ -2,9 +2,11 @@
  * Golden regression test: runs the dujs CLI on the ES5 fixtures and compares
  * every generated .dot file (four models) with the expected outputs.
  *
- * The expected outputs were produced before the parser switch (esprima 1.0)
- * and must stay byte-identical unless the analysis is intentionally changed.
- * To regenerate after an intended change: UPDATE_GOLDEN=1 npm test
+ * The expected outputs must stay byte-identical unless the analysis is
+ * intentionally changed. To regenerate after an intended change:
+ * UPDATE_GOLDEN=1 npm test, then review the diff.
+ * History: produced with esprima 1.0 (dujs 1.0.0); regenerated after fixing
+ * the always-empty KILL sets of reaching definitions.
  */
 var fs = require('fs'),
 	os = require('os'),

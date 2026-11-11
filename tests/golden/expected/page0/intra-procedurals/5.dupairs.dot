@@ -2,9 +2,9 @@ digraph structs {
 node [shape="plaintext"]
 struct1 [label=<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-<tr><td>Variable</td><td COLSPAN="5">Def-Use pairs</td></tr><tr><td>raw</td><td>(entry,54)</td><td></td><td></td><td></td><td></td></tr>
-<tr><td>parsed</td><td>(entry,60)</td><td>(52,60)</td><td>(54,60)</td><td>(55,60)</td><td>(56,60)</td></tr>
-<tr><td>total</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Variable</td><td COLSPAN="2">Def-Use pairs</td></tr><tr><td>raw</td><td>(entry,54)</td><td></td></tr>
+<tr><td>parsed</td><td>(54,60)</td><td>(56,60)</td></tr>
+<tr><td>total</td><td></td><td></td></tr>
 </TABLE>
 >];
 }
