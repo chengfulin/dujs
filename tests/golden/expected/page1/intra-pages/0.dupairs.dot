@@ -1,0 +1,22 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="6">Def-Use pairs</td></tr><tr><td>window</td><td>(entry_a,15)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,16)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>saved</td><td>(entry_a,entry_b)</td><td>(2,entry_b)</td><td>(6,entry_b)</td><td>(entry_a,7)</td><td>(2,7)</td><td>(6,7)</td></tr>
+<tr><td>count</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>onLoad</td><td>(entry_a,15)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>onClear</td><td>(entry_a,16)</td><td></td><td></td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

@@ -28,7 +28,9 @@ module.exports = [
 			'doc/**',
 			'out-*/**',
 			// esgraph fixtures: intentionally undefined identifiers as CFG input
-			'tests/esgraph/tests/**'
+			'tests/esgraph/tests/**',
+			// golden fixtures: browser scripts analyzed as input, not run by Node
+			'tests/golden/fixtures/**'
 		]
 	},
 	{

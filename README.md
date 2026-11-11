@@ -16,11 +16,16 @@ Forked and modified in `lib/`: [esgraph](https://github.com/Swatinem/esgraph) (i
 ## Setup
 ```
 npm install
-npm test           # run unit tests
+npm test           # run unit tests and the golden regression test
 npm run lint       # ESLint (rules ported from the former .jshintrc)
 npm run coverage   # run unit tests with coverage report
 npm run doc        # generate API docs into doc/
 ```
+
+`tests/golden/` runs the CLI on two ES5 sample pages and compares all generated
+`.dot` files (four models) with `tests/golden/expected/`. After an intended
+change to the analysis, regenerate them with `UPDATE_GOLDEN=1 npm test` and
+review the diff.
 
 Existing lint violations are recorded in `eslint-suppressions.json`
 (ESLint bulk suppressions), so only new violations fail `npm run lint`. After
