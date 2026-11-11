@@ -57,6 +57,8 @@ compound and logical assignments, async functions and generators.
     <li>The files of a page are concatenated, so imports between module files are not resolved</li>
 </ul>
 
+See [docs/known-issues.md](docs/known-issues.md) for confirmed issues that are not fixed yet, each with a reproducing input.
+
 ##Demo
 [Single page sample](http://chengfulin.github.io/dujs/)
 
