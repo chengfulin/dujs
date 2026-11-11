@@ -1,8 +1,19 @@
-
+/*
+ * Derived from analyses 0.2.1 (https://github.com/Swatinem/analyses), upstream tests
+ * Original author: Arpad Borsos (Swatinem) <arpad.borsos@googlemail.com>
+ * SPDX-License-Identifier: LGPL-3.0-only
+ * Licensed under the GNU LGPL v3, see LICENSES/LGPL-3.0.txt and
+ * LICENSES/GPL-3.0.txt. This file is NOT covered by the dujs MIT license.
+ *
+ * Modified by ChengFuLin (chengfulin0806@gmail.com):
+ *   2015-04: moved into dujs, test the fork in lib/analyses
+ *   2026-11-11: parse with lib/dujs/jsparser (espree) instead of esprima
+ * See THIRD_PARTY_NOTICES.md for details.
+ */
 var worklist = require('../../lib/analyses/index');
 var Set = worklist.Set;
 var esgraph = require('esgraph');
-var esprima = require('esprima');
+var jsParser = require('../../lib/dujs/jsparser');
 
 describe('Worklist algorithm', function () {
 	var n1 = {node: 'n1'};

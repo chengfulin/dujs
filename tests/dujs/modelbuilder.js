@@ -4,7 +4,7 @@
  * @lastmodifiedDate 2015-08-31
  */
 var should = require('should'),
-	esprima = require('esprima');
+	jsParser = require('../../lib/dujs/jsparser');
 var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	modelCtrl = require('../../lib/dujs/modelctrl'),
 	modelBuilder = require('../../lib/dujs/modelbuilder'),
@@ -24,13 +24,13 @@ describe('ModelBuilder', function () {
 	describe('private methods', function () {
 		describe('connectCallerCalleeScopeRelatedModelsAtCallSite', function () {
 			it('should connect models related to caller and callee well', function () {
-				var callerGraph = cfgBuilder.getCFG(esprima.parse(
+				var callerGraph = cfgBuilder.getCFG(jsParser.parseAST(
 						'var a = 0;' +
 						'foo();' +
 						'++a;',
 						{range: true, loc: true}
 					)),
-					calleeGraph = cfgBuilder.getCFG(esprima.parse(
+					calleeGraph = cfgBuilder.getCFG(jsParser.parseAST(
 						'var b = 1;' +
 						'--b;' +
 						'--a;',
@@ -54,7 +54,7 @@ describe('ModelBuilder', function () {
 
 		describe('connectPageRelatedModelToLoopNode', function () {
 			it('should connect LOOP NODE to the related model for a page well', function () {
-				var graph = cfgBuilder.getCFG(esprima.parse(
+				var graph = cfgBuilder.getCFG(jsParser.parseAST(
 					'var a, b;',
 					{range: true, loc: true}
 				));
@@ -75,17 +75,17 @@ describe('ModelBuilder', function () {
 				pageGraph, eventHandlerGraph1, eventHandlerGraph2,
 				pageModel, eventHandlerModel1, eventHandlerModel2;
 			beforeEach(function () {
-				pageAST = esprima.parse(
+				pageAST = jsParser.parseAST(
 					'var a, b;',
 					{range: true, loc: true}
 				);
-				eventHandlerAST1 = esprima.parse(
+				eventHandlerAST1 = jsParser.parseAST(
 					'function foo() {' +
 					'var c, d, e;' +
 					'}',
 					{range: true, loc: true}
 				);
-				eventHandlerAST2 = esprima.parse(
+				eventHandlerAST2 = jsParser.parseAST(
 					'function fun() {' +
 					'var g;' +
 					'}',
@@ -137,7 +137,7 @@ describe('ModelBuilder', function () {
 
         describe('getRegisteredEventHandlerCallback', function () {
             beforeEach(function () {
-                var ast = esprima.parse(
+                var ast = jsParser.parseAST(
                     'function foo() {}' +
                     'window.addEventListener("click",foo);',
                     {range: true, loc: true}
@@ -171,7 +171,7 @@ describe('ModelBuilder', function () {
 
         describe('findEventHandlerModelsFromAModel', function () {
             it('should find depth-1 event handlers well', function () {
-                var ast = esprima.parse(
+                var ast = jsParser.parseAST(
                     'function foo() {}' +
                     'function fun() {}' +
                     'window.addEventListener("click",foo);' +
@@ -208,7 +208,7 @@ describe('ModelBuilder', function () {
             });
 
             it('should ignore already found event handler', function () {
-                var ast = esprima.parse(
+                var ast = jsParser.parseAST(
                     'function foo() {}' +
                     'window.addEventListener("click",foo);' +
                     'document.getElementById("id").addEventListener("load",foo);',
@@ -243,7 +243,7 @@ describe('ModelBuilder', function () {
             });
 
             it('should support finding as no event handlers', function () {
-                var ast = esprima.parse(
+                var ast = jsParser.parseAST(
                     'var a, b;',
                     {range: true, loc: true}
                 );
@@ -275,7 +275,7 @@ describe('ModelBuilder', function () {
 
         describe('getInterProceduralModelStartFromTheScope', function () {
             beforeEach(function () {
-                var ast = esprima.parse(
+                var ast = jsParser.parseAST(
                     'var a, b;' +
                     'function foo() {' +
                     'var c;' +
@@ -327,7 +327,7 @@ describe('ModelBuilder', function () {
 	describe('public methods', function () {
         describe('building intra-procedural and inter-procedural models', function () {
             beforeEach(function () {
-                var ast = esprima.parse(
+                var ast = jsParser.parseAST(
                     'var a, b;' +
                     'function foo() {' +
                     'var c;' +
@@ -435,7 +435,7 @@ describe('ModelBuilder', function () {
 
         describe('buildIntraPageModel', function () {
             beforeEach(function () {
-                var ast = esprima.parse(
+                var ast = jsParser.parseAST(
                     'function foo() {}' +
                     'function fun() {}' +
                     'function some() {}' +
@@ -482,12 +482,12 @@ describe('ModelBuilder', function () {
         describe('buildInterPageModel', function () {
             var page1ScopeTree, page2ScopeTree, pageScope1, pageScope2;
             beforeEach(function () {
-                var ast1 = esprima.parse(
+                var ast1 = jsParser.parseAST(
                         'var d = "data";' +
                         'localStorage.data = d;',
                         {range: true, loc: true}
                     ),
-                    ast2 = esprima.parse(
+                    ast2 = jsParser.parseAST(
                         'var d = localStorage.data;',
                         {range: true, loc: true}
                     );

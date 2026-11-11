@@ -9,8 +9,7 @@ var Model = require('../../lib/dujs/model'),
     factoryDUPair = require('../../lib/dujs/dupairfactory'),
     factoryVar = require('../../lib/dujs/varfactory');
 var Set = require('../../lib/analyses/set'),
-    Map = require('core-js/es6/map'),
-    esprima = require('esprima');
+    jsParser = require('../../lib/dujs/jsparser');
 var should = require('should');
 
 describe('Model', function () {
@@ -208,7 +207,7 @@ describe('Model', function () {
             beforeEach(function () {
                 model = new Model();
                 scope1 = factoryScope.createDomainScope();
-                scope2 = factoryScope.createPageScope(esprima.parse('var a;', {range: true, loc: true}));
+                scope2 = factoryScope.createPageScope(jsParser.parseAST('var a;', {range: true, loc: true}));
             });
 
             it('should add the first related scope as mainly related scope', function () {

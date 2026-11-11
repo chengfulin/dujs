@@ -1,10 +1,17 @@
-/**
- * From the repository: esgraph
- * @license LGPLv3
- * @author Swatinem (arpad.borsos@googlemail.com)
+/*
+ * Derived from esgraph 0.1.1 (https://github.com/Swatinem/esgraph), upstream test runner
+ * Original author: Arpad Borsos (Swatinem) <arpad.borsos@googlemail.com>
+ * SPDX-License-Identifier: LGPL-3.0-only
+ * Licensed under the GNU LGPL v3, see LICENSES/LGPL-3.0.txt and
+ * LICENSES/GPL-3.0.txt. This file is NOT covered by the dujs MIT license.
+ *
+ * Modified by ChengFuLin (chengfulin0806@gmail.com):
+ *   2015-05: run against the dujs fork in lib/esgraph
+ *   2026-11-11: parse with lib/dujs/jsparser (espree) instead of esprima
+ * See THIRD_PARTY_NOTICES.md for details.
  */
 var esgraph = require('../../lib/esgraph');
-var esprima = require('esprima');
+var jsParser = require('../../lib/dujs/jsparser');
 var fs = require('fs');
 var should = require('should');
 var FlowNode = require('../../lib/esgraph/flownode');
@@ -12,7 +19,7 @@ var FlowNode = require('../../lib/esgraph/flownode');
 function createTest(dir, file) {
 	'use strict';
 	var contents = fs.readFileSync(dir + file, 'utf8');
-	var ast = esprima.parse(contents, {comment: true, range: true});
+	var ast = jsParser.parseAST(contents, {comment: true, range: true});
 	var comments = ast.comments;
 	delete ast.comments;
 	it(comments[0].value.trim() + ' (' + file + ')', function () {
@@ -41,7 +48,7 @@ describe('esgraph', function () {
 
 	it('should handle long graphs', function () {
 		var source = Array(1e4).join('stmt;');
-		var ast = esprima.parse(source);
+		var ast = jsParser.parseAST(source);
 		var cfg = esgraph(ast);
 		esgraph.dot(cfg);
 	});
@@ -50,7 +57,7 @@ describe('esgraph', function () {
 describe('esgraph.dot', function () {
 	'use strict';
 	it('should number the nodes starting at `counter`', function () {
-		var out = esgraph.dot(esgraph(esprima.parse('var a;')), {counter: 10});
+		var out = esgraph.dot(esgraph(jsParser.parseAST('var a;')), {counter: 10});
 		out.should.not.containEql('n0');
 		out.should.containEql('n10');
 	});

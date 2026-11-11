@@ -4,7 +4,7 @@
  * @lastmodifiedDate 2015-08-04
  */
 var should = require('should'),
-	esprima = require('esprima');
+	jsParser = require('../../lib/dujs/jsparser');
 var ScopeTree = require('../../lib/dujs/scopetree'),
 	factoryScope = require('../../lib/dujs/scopefactory'),
 	factoryRange = require('../../lib/dujs/rangefactory');
@@ -112,7 +112,7 @@ describe('ScopeTree', function () {
 
 			describe('to build a ScopeTree with PageScope only', function () {
 				beforeEach(function () {
-					var ast = esprima.parse(
+					var ast = jsParser.parseAST(
 						'var a = 0, b = 1;\n' +
 						'++a;\n' +
 						'b = a\n' +
@@ -147,7 +147,7 @@ describe('ScopeTree', function () {
 
 			describe('to build a ScopeTree with two level scopes', function () {
 				beforeEach(function () {
-					var ast = esprima.parse(
+					var ast = jsParser.parseAST(
 						'var a = 0;\n' +
 						'function foo(x) {\n' +
 						'a = x + 1;\n' +
@@ -193,7 +193,7 @@ describe('ScopeTree', function () {
 
 			describe('to build a ScopeTree with more than two level scopes', function () {
 				beforeEach(function () {
-					var ast = esprima.parse(
+					var ast = jsParser.parseAST(
 						'var a = 0;\n' +
 						'function foo(x) {\n' +
 							'a = x + 1;\n' +
@@ -236,7 +236,7 @@ describe('ScopeTree', function () {
 		describe('getScopeByRange', function () {
 			var tree;
 			beforeEach(function () {
-				var ast = esprima.parse(
+				var ast = jsParser.parseAST(
 					'var a = 0, b = 1;\n' +
 					'++a;\n' +
 					'b = a\n' +
@@ -263,7 +263,7 @@ describe('ScopeTree', function () {
 		describe('getScopeByName', function () {
 			var tree;
 			beforeEach(function () {
-				var ast = esprima.parse(
+				var ast = jsParser.parseAST(
 					'var a = 0;\n' +
 					'function foo(x) {\n' +
 					'a = x + 1;\n' +
@@ -298,7 +298,7 @@ describe('ScopeTree', function () {
 		describe('isRelatedToTheScope', function () {
 			var tree;
 			beforeEach(function () {
-				var ast = esprima.parse(
+				var ast = jsParser.parseAST(
 					'var a = 0;\n' +
 					'function foo(x) {\n' +
 					'a = x + 1;\n' +
@@ -331,7 +331,7 @@ describe('ScopeTree', function () {
 		describe('toString', function () {
 			describe('to represent the ScopeTree by string', function () {
 				it('should support to represent the tree containing page scope only', function () {
-					var ast = esprima.parse(
+					var ast = jsParser.parseAST(
 						'var a = 0, b = 1;\n' +
 						'++a;\n' +
 						'b = a\n' +
@@ -346,7 +346,7 @@ describe('ScopeTree', function () {
 				});
 
 				it('should support to represent the tree containing two level scopes', function () {
-					var ast = esprima.parse(
+					var ast = jsParser.parseAST(
 						'var a = 0;\n' +
 						'function foo(x) {\n' +
 						'a = x + 1;\n' +
@@ -369,7 +369,7 @@ describe('ScopeTree', function () {
 				});
 
 				it('should support to represent the tree containing more than two level scopes', function () {
-					var ast = esprima.parse(
+					var ast = jsParser.parseAST(
 						'var a = 0;\n' +
 						'function foo(x) {\n' +
 						'a = x + 1;\n' +
@@ -423,7 +423,7 @@ describe('ScopeTree', function () {
 		describe('scopes', function () {
 			var tree;
 			beforeEach(function () {
-				var ast = esprima.parse(
+				var ast = jsParser.parseAST(
 					'var a = 0;\n' +
 					'function foo(x) {\n' +
 					'a = x + 1;\n' +

@@ -16,16 +16,15 @@ var defuseAnalyzer = require('../../lib/dujs/defuseanalyzer'),
     flownodeFactory = require('../../lib/esgraph/flownodefactory'),
     vardefFactory = require('../../lib/dujs/vardeffactory'),
     defFactory = require('../../lib/dujs/deffactory');
-var esprima = require('esprima'),
-    Set = require('../../lib/analyses/set'),
-    Map = require('core-js/es6/map');
+var jsParser = require('../../lib/dujs/jsparser'),
+    Set = require('../../lib/analyses/set');
 
 describe('DefUseAnalyzer', function () {
     "use strict";
     describe('private methods', function () {
         var ast, scope, model;
         beforeEach(function () {
-            ast =esprima.parse('var a = 1, b = 0;', {range: true, loc: true});
+            ast =jsParser.parseAST('var a = 1, b = 0;', {range: true, loc: true});
             scope = scopeFactory.createPageScope(ast, null);
             model = modelFactory.create();
             model._testonly_._mainlyRelatedScope = scope;
@@ -171,15 +170,15 @@ describe('DefUseAnalyzer', function () {
             beforeEach(function () {
                 rootScope = scopeFactory.createDomainScope();
                 childScope1 = scopeFactory.createPageScope(
-                    esprima.parse('var a = 0;', {range: true, loc: true}),
+                    jsParser.parseAST('var a = 0;', {range: true, loc: true}),
                     rootScope
                 );
                 childScope2 = scopeFactory.createPageScope(
-                    esprima.parse('var b = 0;', {range: true, loc: true}),
+                    jsParser.parseAST('var b = 0;', {range: true, loc: true}),
                     rootScope
                 );
                 descendantScope = scopeFactory.createFunctionScope(
-                    esprima.parse('function foo() { var c = 0; }', {range: true, loc: true}).body[0],
+                    jsParser.parseAST('function foo() { var c = 0; }', {range: true, loc: true}).body[0],
                     'foo',
                     childScope1
                 );
@@ -229,7 +228,7 @@ describe('DefUseAnalyzer', function () {
 
         describe('initiallyAnalyzeIntraProceduralModels', function () {
             beforeEach(function () {
-                ast = esprima.parse(
+                ast = jsParser.parseAST(
                     'var a = 1, b = 0;' +
                     'function foo() {' +
                     'var c = a + b;' +
