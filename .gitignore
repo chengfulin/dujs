@@ -9,3 +9,4 @@ out
 !/.gitattributes
 !/**/.jshintrc
 doc
+!/.nvmrc

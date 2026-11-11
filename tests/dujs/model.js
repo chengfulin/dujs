@@ -9,7 +9,6 @@ var Model = require('../../lib/dujs/model'),
     factoryDUPair = require('../../lib/dujs/dupairfactory'),
     factoryVar = require('../../lib/dujs/varfactory');
 var Set = require('../../lib/analyses/set'),
-    Map = require('core-js/es6/map'),
     esprima = require('esprima');
 var should = require('should');
 

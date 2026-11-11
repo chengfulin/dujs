@@ -17,8 +17,7 @@ var defuseAnalyzer = require('../../lib/dujs/defuseanalyzer'),
     vardefFactory = require('../../lib/dujs/vardeffactory'),
     defFactory = require('../../lib/dujs/deffactory');
 var esprima = require('esprima'),
-    Set = require('../../lib/analyses/set'),
-    Map = require('core-js/es6/map');
+    Set = require('../../lib/analyses/set');
 
 describe('DefUseAnalyzer', function () {
     "use strict";
