@@ -62,6 +62,15 @@ See [docs/known-issues.md](docs/known-issues.md) for confirmed issues that are n
 ##Demo
 [Single page sample](http://chengfulin.github.io/dujs/)
 
+## SDD 導入宣告
+
+| 項目 | 值 |
+|------|-----|
+| 目前導入階段 | 第 1 階段（對齊基礎）|
+| 服務風險分級 | 未分級（階段一）|
+| 應用類型 | 工具服務（函式庫＋CLI）|
+| 憲章基線 | chengfulin/sdd-baseline v5.6.0@4a4b2be |
+
 ## License
 dujs is released under the [MIT License](LICENSE), except for the files derived
 from [esgraph](https://github.com/Swatinem/esgraph) and
