@@ -152,9 +152,6 @@
     }
   },
   "lib/dujs/variableanalyzer.js": {
-    "no-unused-vars": {
-      "count": 1
-    },
     "strict": {
       "count": 1
     }

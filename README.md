@@ -22,8 +22,9 @@ npm run coverage   # run unit tests with coverage report
 npm run doc        # generate API docs into doc/
 ```
 
-`tests/golden/` runs the CLI on two ES5 sample pages and compares all generated
-`.dot` files (four models) with `tests/golden/expected/`. After an intended
+`tests/golden/` runs the CLI on two ES5 sample pages and an ES2015+ module and
+compares all generated `.dot` files (four models) with `tests/golden/expected/`
+and `tests/golden/expected-es2015/`. After an intended
 change to the analysis, regenerate them with `UPDATE_GOLDEN=1 npm test` and
 review the diff.
 
@@ -38,13 +39,25 @@ node bin/dujs.js -js [src_file_page1_1] [src_file_page1_2] ... [src_file_page1_i
 
 Result files will located under the <strong>out-[year]-[month]-[day]-[hour]-[minute]-[second]</strong> directory
 
+## Supported syntax
+ES5 and ES2015+: `let`/`const` block scopes, arrow functions, classes,
+destructuring, default and rest parameters, spread, `for...of`, ES modules
+(`import`/`export`, top-level `await`; a page is parsed as a module when it is
+not a valid script), template literals, optional chaining, nullish coalescing,
+compound and logical assignments, async functions and generators.
+
 ##Limits
 <ul>
     <li>Anonymous function call</li>
     <li>Closure</li>
     <li>HTML DOM object</li>
-    <li>ES2015+ syntax (let/const, arrow functions, classes, modules, ...) can be parsed but is not yet modeled correctly</li>
+    <li>Only call statements (<code>f();</code>) are connected as inter-procedural call sites; calls inside other expressions (<code>x = f()</code>, <code>return f()</code>) are not</li>
+    <li>Object properties, <code>this</code> and aliases are not tracked: assigning to <code>a.b</code> defines <code>a</code></li>
+    <li>Labeled <code>break</code>/<code>continue</code>; <code>catch</code> parameters are not variables</li>
+    <li>The files of a page are concatenated, so imports between module files are not resolved</li>
 </ul>
+
+See [docs/known-issues.md](docs/known-issues.md) for confirmed issues that are not fixed yet, each with a reproducing input.
 
 ##Demo
 [Single page sample](http://chengfulin.github.io/dujs/)

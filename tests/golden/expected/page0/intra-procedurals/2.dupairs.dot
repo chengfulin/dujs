@@ -2,9 +2,9 @@ digraph structs {
 node [shape="plaintext"]
 struct1 [label=<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-<tr><td>Variable</td><td COLSPAN="9">Def-Use pairs</td></tr><tr><td>list</td><td>(entry,(18b,19))</td><td>(entry,(18b,21))</td><td>(entry,19)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>sum</td><td>(entry,19)</td><td>(17,19)</td><td>(19,19)</td><td>(entry,21)</td><td>(17,21)</td><td>(19,21)</td><td></td><td></td><td></td></tr>
-<tr><td>i</td><td>(entry,(18b,19))</td><td>(entry,(18b,21))</td><td>(18a,(18b,19))</td><td>(18a,(18b,21))</td><td>(18c,(18b,19))</td><td>(18c,(18b,21))</td><td>(entry,18c)</td><td>(18a,18c)</td><td>(18c,18c)</td></tr>
+<tr><td>Variable</td><td COLSPAN="8">Def-Use pairs</td></tr><tr><td>list</td><td>(entry,(18b,19))</td><td>(entry,(18b,21))</td><td>(entry,19)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>sum</td><td>(19,19)</td><td>(17,19)</td><td>(19,21)</td><td>(17,21)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>i</td><td>(18c,(18b,19))</td><td>(18c,(18b,21))</td><td>(18a,(18b,19))</td><td>(18a,(18b,21))</td><td>(18c,19)</td><td>(18a,19)</td><td>(18c,18c)</td><td>(18a,18c)</td></tr>
 </TABLE>
 >];
 }

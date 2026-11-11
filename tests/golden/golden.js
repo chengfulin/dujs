@@ -2,9 +2,11 @@
  * Golden regression test: runs the dujs CLI on the ES5 fixtures and compares
  * every generated .dot file (four models) with the expected outputs.
  *
- * The expected outputs were produced before the parser switch (esprima 1.0)
- * and must stay byte-identical unless the analysis is intentionally changed.
- * To regenerate after an intended change: UPDATE_GOLDEN=1 npm test
+ * The expected outputs must stay byte-identical unless the analysis is
+ * intentionally changed. To regenerate after an intended change:
+ * UPDATE_GOLDEN=1 npm test, then review the diff.
+ * History: produced with esprima 1.0 (dujs 1.0.0); regenerated after fixing
+ * the always-empty KILL sets of reaching definitions.
  */
 var fs = require('fs'),
 	os = require('os'),
@@ -37,49 +39,67 @@ function listDotFiles(dir) {
 	return result.sort();
 }
 
-describe('Golden outputs (ES5 fixtures)', function () {
+/**
+ * Define a golden test case: run the CLI on the pages (each an array of
+ * fixture files) and compare the .dot outputs with the expected directory
+ * @param {string} title
+ * @param {Array} pages Arrays of fixture paths relative to FIXTURES
+ * @param {string} expectedDir Directory of expected outputs
+ */
+function goldenCase(title, pages, expectedDir) {
 	'use strict';
-	this.timeout(30000);
-	var workDir, outDir;
+	describe(title, function () {
+		this.timeout(30000);
+		var workDir, outDir;
 
-	before(function () {
-		workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dujs-golden-'));
-		var run = spawnSync(process.execPath, [
-			CLI,
-			'-js', path.join(FIXTURES, 'page0', 'app.js'),
-			'-js', path.join(FIXTURES, 'page1', 'report.js')
-		], {cwd: workDir, encoding: 'utf8'});
-		run.status.should.eql(0);
-		// the CLI reports failures on stderr but still exits with 0
-		run.stderr.should.eql('');
-		var outDirs = fs.readdirSync(workDir).filter(function (name) {
-			return /^out-/.test(name);
-		});
-		outDirs.should.have.length(1);
-		outDir = path.join(workDir, outDirs[0]);
-
-		if (process.env.UPDATE_GOLDEN) {
-			fs.rmSync(EXPECTED, {recursive: true, force: true});
-			listDotFiles(outDir).forEach(function (file) {
-				fs.mkdirSync(path.dirname(path.join(EXPECTED, file)), {recursive: true});
-				fs.copyFileSync(path.join(outDir, file), path.join(EXPECTED, file));
+		before(function () {
+			workDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dujs-golden-'));
+			var args = [CLI];
+			pages.forEach(function (files) {
+				args.push('-js');
+				files.forEach(function (file) {
+					args.push(path.join(FIXTURES, file));
+				});
 			});
-		}
-	});
+			var run = spawnSync(process.execPath, args, {cwd: workDir, encoding: 'utf8'});
+			run.status.should.eql(0);
+			// the CLI reports failures on stderr but still exits with 0
+			run.stderr.should.eql('');
+			var outDirs = fs.readdirSync(workDir).filter(function (name) {
+				return /^out-/.test(name);
+			});
+			outDirs.should.have.length(1);
+			outDir = path.join(workDir, outDirs[0]);
 
-	after(function () {
-		fs.rmSync(workDir, {recursive: true, force: true});
-	});
+			if (process.env.UPDATE_GOLDEN) {
+				fs.rmSync(expectedDir, {recursive: true, force: true});
+				listDotFiles(outDir).forEach(function (file) {
+					fs.mkdirSync(path.dirname(path.join(expectedDir, file)), {recursive: true});
+					fs.copyFileSync(path.join(outDir, file), path.join(expectedDir, file));
+				});
+			}
+		});
 
-	it('should generate the same set of .dot files', function () {
-		listDotFiles(outDir).should.eql(listDotFiles(EXPECTED));
-	});
+		after(function () {
+			fs.rmSync(workDir, {recursive: true, force: true});
+		});
 
-	it('should generate identical contents for every .dot file', function () {
-		listDotFiles(EXPECTED).forEach(function (file) {
-			var actual = fs.readFileSync(path.join(outDir, file), 'utf8'),
-				expected = fs.readFileSync(path.join(EXPECTED, file), 'utf8');
-			should(actual).eql(expected, 'mismatch in ' + file);
+		it('should generate the same set of .dot files', function () {
+			listDotFiles(outDir).should.eql(listDotFiles(expectedDir));
+		});
+
+		it('should generate identical contents for every .dot file', function () {
+			listDotFiles(expectedDir).forEach(function (file) {
+				var actual = fs.readFileSync(path.join(outDir, file), 'utf8'),
+					expected = fs.readFileSync(path.join(expectedDir, file), 'utf8');
+				should(actual).eql(expected, 'mismatch in ' + file);
+			});
 		});
 	});
-});
+}
+
+goldenCase('Golden outputs (ES5 fixtures)',
+	[['page0/app.js'], ['page1/report.js']], EXPECTED);
+/// characterization of the ES2015+ modeling; semantics are asserted in tests/dujs/es2015.js
+goldenCase('Golden outputs (ES2015+ module fixture)',
+	[['es2015/app.js']], path.join(__dirname, 'expected-es2015'));
