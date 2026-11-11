@@ -17,9 +17,14 @@ Forked and modified in `lib/`: [esgraph](https://github.com/Swatinem/esgraph) (i
 ```
 npm install
 npm test           # run unit tests
+npm run lint       # ESLint (rules ported from the former .jshintrc)
 npm run coverage   # run unit tests with coverage report
 npm run doc        # generate API docs into doc/
 ```
+
+Existing lint violations are recorded in `eslint-suppressions.json`
+(ESLint bulk suppressions), so only new violations fail `npm run lint`. After
+fixing some of them, run `npx eslint . --prune-suppressions`.
 
 ## Usage
 ```

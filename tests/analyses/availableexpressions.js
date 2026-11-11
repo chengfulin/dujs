@@ -42,6 +42,7 @@ function doAnalysis(code) {
  * different source offsets compare as equal
  */
 function stripPositions(node) {
+	'use strict';
 	if (Array.isArray(node)) {
 		return node.map(stripPositions);
 	}

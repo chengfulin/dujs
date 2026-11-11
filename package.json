@@ -16,6 +16,7 @@
   },
   "scripts": {
     "test": "mocha \"tests/analyses/*.js\" \"tests/dujs/*.js\" tests/esgraph/flownodetest.js tests/esgraph/flownodefactory.js tests/esgraph/test.js",
+    "lint": "eslint .",
     "coverage": "c8 --reporter=text --reporter=lcov npm test",
     "doc": "jsdoc lib/namespace.js lib/dujs lib/esgraph/flownode.js lib/esgraph/flownodefactory.js -d doc"
   },
@@ -26,6 +27,8 @@
   "devDependencies": {
     "c8": "^12.0.0",
     "esgraph": "^0.3.0",
+    "eslint": "^10.14.0",
+    "globals": "^17.14.0",
     "jsdoc": "^4.0.5",
     "mocha": "^12.0.3",
     "should": "^13.2.3"

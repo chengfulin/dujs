@@ -1,0 +1,245 @@
+{
+  "lib/analyses/examples/availableexpressions.js": {
+    "curly": {
+      "count": 3
+    },
+    "no-unused-vars": {
+      "count": 1
+    },
+    "strict": {
+      "count": 2
+    }
+  },
+  "lib/analyses/examples/livevariables.js": {
+    "curly": {
+      "count": 4
+    },
+    "strict": {
+      "count": 3
+    }
+  },
+  "lib/analyses/queue.js": {
+    "curly": {
+      "count": 1
+    },
+    "eqeqeq": {
+      "count": 1
+    },
+    "strict": {
+      "count": 2
+    }
+  },
+  "lib/analyses/set.js": {
+    "curly": {
+      "count": 10
+    },
+    "eqeqeq": {
+      "count": 1
+    },
+    "no-bitwise": {
+      "count": 2
+    },
+    "strict": {
+      "count": 13
+    }
+  },
+  "lib/dujs/astvalidator.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/cfgbuilder.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/cfggraphconverter.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/cfgvalidator.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/deffactory.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/defuseanalysisexecutor.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/dupairfactory.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/graphics.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/inputreader.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/jsparser.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/modelfactory.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/pagemodelsfactory.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/pairfactory.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/rangefactory.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/reportgenerator.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/scopefactory.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/scopefinder.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/scopetreefactory.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/sourcereader.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/vardeffactory.js": {
+    "no-unused-vars": {
+      "count": 2
+    },
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/varfactory.js": {
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/dujs/variableanalyzer.js": {
+    "no-unused-vars": {
+      "count": 1
+    },
+    "strict": {
+      "count": 1
+    }
+  },
+  "lib/esgraph/dot.js": {
+    "max-depth": {
+      "count": 1
+    },
+    "strict": {
+      "count": 1
+    }
+  },
+  "tests/analyses/availableexpressions.js": {
+    "curly": {
+      "count": 2
+    },
+    "no-bitwise": {
+      "count": 1
+    },
+    "strict": {
+      "count": 3
+    }
+  },
+  "tests/analyses/livevariables.js": {
+    "no-unused-vars": {
+      "count": 1
+    },
+    "strict": {
+      "count": 2
+    }
+  },
+  "tests/analyses/set.js": {
+    "eqeqeq": {
+      "count": 2
+    },
+    "no-unused-vars": {
+      "count": 3
+    },
+    "strict": {
+      "count": 1
+    }
+  },
+  "tests/analyses/worklist.js": {
+    "curly": {
+      "count": 7
+    },
+    "eqeqeq": {
+      "count": 7
+    },
+    "no-unused-vars": {
+      "count": 5
+    },
+    "strict": {
+      "count": 1
+    }
+  },
+  "tests/dujs/cases/controlflow-recursive.js": {
+    "curly": {
+      "count": 2
+    },
+    "eqeqeq": {
+      "count": 3
+    },
+    "strict": {
+      "count": 3
+    }
+  },
+  "tests/dujs/defuseanalyzer.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "tests/dujs/range.js": {
+    "no-unused-vars": {
+      "count": 3
+    }
+  },
+  "tests/dujs/scopetree.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "tests/esgraph/test.js": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  }
+}
