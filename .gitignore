@@ -2,6 +2,10 @@
 !/.gitignore
 !/.gitattributes
 !/.nvmrc
+# spec-kit (SDD) project files
+!/.specify/
+!/.claude/
+/.claude/settings.local.json
 node_modules
 coverage
 doc
