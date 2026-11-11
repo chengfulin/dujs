@@ -216,5 +216,58 @@ describe('ES2015+ modeling', function () {
 			result.intraProcedural().should.containDeep(['arr: L1 -> L2', 'copy: L2 -> L3']);
 		});
 	});
+
+	describe('for-of', function () {
+		it('should define the loop variable at the loop node and use the iterable', function () {
+			var result = analyze([
+				'function sum(items) {',
+				'  let total = 0;',
+				'  for (const item of items) {',
+				'    total = total + item;',
+				'  }',
+				'  return total;',
+				'}'
+			].join('\n'));
+			result.intraProcedural(PAGE + '.sum').should.eql([
+				'item: L3 -> L4',
+				'items: entry -> L3',
+				'total: L2 -> L4', 'total: L2 -> L6', 'total: L4 -> L4', 'total: L4 -> L6'
+			]);
+			result.scopeTree.root.children[0].children[0].hasLocalVariable('item').should.eql(true);
+		});
+
+		it('should continue to the loop node and break out of the loop', function () {
+			var result = analyze([
+				'function g(xs) {',
+				'  var last = null;',
+				'  for (var x of xs) {',
+				'    if (x > 1) {',
+				'      continue;',
+				'    }',
+				'    if (x < 0) {',
+				'      break;',
+				'    }',
+				'    last = x;',
+				'  }',
+				'  return last;',
+				'}'
+			].join('\n'));
+			var pairs = result.intraProcedural(PAGE + '.g');
+			pairsOf(pairs, 'last').should.eql(['last: L10 -> L12', 'last: L2 -> L12']);
+			/// continue/break are not nodes: their branches go to the loop node (L3) and after the loop (L12)
+			pairs.should.containDeep(['x: L3 -> L4>L3', 'x: L3 -> L4>L7', 'x: L3 -> L7>L12', 'x: L3 -> L7>L10', 'x: L3 -> L10']);
+		});
+
+		it('should define variables of a destructuring pattern in the loop head', function () {
+			var result = analyze([
+				'function h(entries) {',
+				'  for (const [key, value] of entries) {',
+				'    console.log(key, value);',
+				'  }',
+				'}'
+			].join('\n'));
+			result.intraProcedural(PAGE + '.h').should.containDeep(['key: L2 -> L3', 'value: L2 -> L3']);
+		});
+	});
 });
 
