@@ -185,13 +185,7 @@ describe('Def', function () {
 				var node = flownodeFactory.createNormalNode();
 				var def = new Def(node, 'literal', [0,1]);
 				def.toJSON().should.containDeep({
-					"fromNode": {
-						"cfgId": 0,
-						"type": "normal",
-						"label": null,
-						"prev": [],
-						"next": []
-					},
+					"fromNode": node.toJSON(),
 					"type": "literal",
 					"range": [0,1]
 				});
