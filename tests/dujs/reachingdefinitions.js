@@ -84,4 +84,34 @@ describe('Reaching definitions', function () {
 		pairs.should.not.containEql('s: entry -> L4');
 		pairs.should.not.containEql('s: entry -> L6');
 	});
+
+	it('should define the for-in variable at the loop node without analyzing the body there', function () {
+		var result = analyze([
+			'function g(o) {',
+			'  var k, n = 0;',
+			'  for (k in o) {',
+			'    n = n + 1;',
+			'  }',
+			'  return n;',
+			'}'
+		].join('\n'));
+		result.intraProcedural('$DOMAIN.$PAGE_0.g').should.eql([
+			'n: L2 -> L4',
+			'n: L2 -> L6',
+			'n: L4 -> L4',
+			'n: L4 -> L6',
+			'o: entry -> L3'
+		]);
+	});
+
+	it('should pair the for-in variable defined at the loop node with its uses in the body', function () {
+		var result = analyze([
+			'function h(o) {',
+			'  for (var k in o) {',
+			'    console.log(k);',
+			'  }',
+			'}'
+		].join('\n'));
+		result.intraProcedural('$DOMAIN.$PAGE_0.h').should.containEql('k: L2 -> L3');
+	});
 });
