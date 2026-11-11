@@ -53,6 +53,8 @@ only because the forked CFG builder uses them.
     they are not considered as throwing.
   - `ForOfStatement` is handled like `ForInStatement` (loop node with
     true/false branches, `continue` and `break` targets).
+  - A `ClassDeclaration` is a single statement node; no CFG nodes are created
+    or linked inside class bodies (methods are separate scopes).
 
 The full history is in `git log -- lib/esgraph tests/esgraph`.
 

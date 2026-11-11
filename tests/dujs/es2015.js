@@ -269,5 +269,70 @@ describe('ES2015+ modeling', function () {
 			result.intraProcedural(PAGE + '.h').should.containDeep(['key: L2 -> L3', 'value: L2 -> L3']);
 		});
 	});
+
+	describe('classes', function () {
+		it('should bind a class lexically, model its methods as scopes and continue after it', function () {
+			var result = analyze([
+				'class Counter {',
+				'  constructor(start) {',
+				'    this.count = start;',
+				'  }',
+				'  increment(step) {',
+				'    const next = this.count + step;',
+				'    return next;',
+				'  }',
+				'}',
+				'const c = new Counter(1);',
+				'c.increment(2);'
+			].join('\n'));
+			result.scopeNames().should.eql([PAGE, ANONYMOUS + '0', ANONYMOUS + '1']);
+			var pagePairs = result.intraProcedural();
+			pagePairs.should.containDeep(['Counter: L1 -> L10', 'c: L10 -> L11']);
+			pairsOf(pagePairs, 'Counter').should.eql(['Counter: L1 -> L10']);
+			result.intraProcedural(ANONYMOUS + '0').should.eql(['start: entry -> L3']);
+			result.intraProcedural(ANONYMOUS + '1').should.eql(['next: L6 -> L7', 'step: entry -> L6']);
+		});
+
+		it('should use the superclass but not the class name', function () {
+			var result = analyze([
+				'class Base {}',
+				'class Child extends Base {}',
+				'const Other = class extends Child {};'
+			].join('\n'));
+			var pairs = result.intraProcedural();
+			pairs.should.containDeep(['Base: L1 -> L2', 'Child: L2 -> L3']);
+			pairsOf(pairs, 'Child').should.eql(['Child: L2 -> L3']);
+			pairsOf(pairs, 'Other').should.eql([]);
+		});
+
+		it('should not analyze class bodies as part of the enclosing statement', function () {
+			var result = analyze([
+				'var total = 0;',
+				'var Box = class {',
+				'  static init = (total = 1);',
+				'  add(n) {',
+				'    total = total + n;',
+				'  }',
+				'};',
+				'console.log(total);'
+			].join('\n'));
+			pairsOf(result.intraProcedural(), 'total').should.eql(['total: L1 -> L8']);
+		});
+
+		it('should scope a class declared in a block to that block', function () {
+			var result = analyze([
+				'function f() {',
+				'  if (true) {',
+				'    class Local {}',
+				'    new Local();',
+				'  }',
+				'}'
+			].join('\n'));
+			var f = result.scopeTree.root.children[0];
+			f.hasLocalVariable('Local').should.eql(false);
+			f.children[0].hasLocalVariable('Local').should.eql(true);
+			result.intraProcedural(PAGE + '.f').should.containEql('Local: L3 -> L4');
+		});
+	});
 });
 
