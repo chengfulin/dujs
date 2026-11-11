@@ -2,7 +2,7 @@
 var worklist = require('../../lib/analyses/index');
 var Set = worklist.Set;
 var esgraph = require('esgraph');
-var esprima = require('esprima');
+var jsParser = require('../../lib/dujs/jsparser');
 
 describe('Worklist algorithm', function () {
 	var n1 = {node: 'n1'};

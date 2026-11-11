@@ -1,5 +1,5 @@
 
-var esprima = require('esprima');
+var jsParser = require('../../lib/dujs/jsparser');
 var esgraph = require('esgraph');
 var availableExpressions = require('../../lib/analyses/index').examples.availableExpressions;
 
@@ -8,7 +8,7 @@ var availableExpressions = require('../../lib/analyses/index').examples.availabl
  * forward analysis
  */
 function doAnalysis(code) {
-	var ast = esprima.parse(code);
+	var ast = jsParser.parseAST(code);
 	var cfg = esgraph(ast);
 	var output = availableExpressions(cfg);
 	var exit = cfg[1];
@@ -23,11 +23,31 @@ function doAnalysis(code) {
 		}, []);
 	if (normals.length === 1)
 		exit = normals[0];
-	return output.get(exit).values();
+	return output.get(exit).values().map(stripPositions);
+}
+
+/**
+ * Remove position info so that structurally equal expressions parsed from
+ * different source offsets compare as equal
+ */
+function stripPositions(node) {
+	if (Array.isArray(node)) {
+		return node.map(stripPositions);
+	}
+	if (!node || typeof node !== 'object') {
+		return node;
+	}
+	var result = {};
+	Object.keys(node).forEach(function (key) {
+		if (key !== 'start' && key !== 'end' && key !== 'range' && key !== 'loc') {
+			result[key] = stripPositions(node[key]);
+		}
+	});
+	return result;
 }
 
 function expr(code) {
-	return esprima.parse(code).body[0].expression;
+	return stripPositions(jsParser.parseAST(code).body[0].expression);
 }
 
 describe('Available Expressions', function () {

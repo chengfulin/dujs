@@ -20,7 +20,7 @@
     "doc": "jsdoc lib/namespace.js lib/dujs lib/esgraph/flownode.js lib/esgraph/flownodefactory.js -d doc"
   },
   "dependencies": {
-    "esprima": "~1.0",
+    "espree": "^11.2.0",
     "walkes": "^0.2.1"
   },
   "devDependencies": {

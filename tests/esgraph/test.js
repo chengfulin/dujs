@@ -4,7 +4,7 @@
  * @author Swatinem (arpad.borsos@googlemail.com)
  */
 var esgraph = require('../../lib/esgraph');
-var esprima = require('esprima');
+var jsParser = require('../../lib/dujs/jsparser');
 var fs = require('fs');
 var should = require('should');
 var FlowNode = require('../../lib/esgraph/flownode');
@@ -12,7 +12,7 @@ var FlowNode = require('../../lib/esgraph/flownode');
 function createTest(dir, file) {
 	'use strict';
 	var contents = fs.readFileSync(dir + file, 'utf8');
-	var ast = esprima.parse(contents, {comment: true, range: true});
+	var ast = jsParser.parseAST(contents, {comment: true, range: true});
 	var comments = ast.comments;
 	delete ast.comments;
 	it(comments[0].value.trim() + ' (' + file + ')', function () {
@@ -41,7 +41,7 @@ describe('esgraph', function () {
 
 	it('should handle long graphs', function () {
 		var source = Array(1e4).join('stmt;');
-		var ast = esprima.parse(source);
+		var ast = jsParser.parseAST(source);
 		var cfg = esgraph(ast);
 		esgraph.dot(cfg);
 	});
@@ -50,7 +50,7 @@ describe('esgraph', function () {
 describe('esgraph.dot', function () {
 	'use strict';
 	it('should number the nodes starting at `counter`', function () {
-		var out = esgraph.dot(esgraph(esprima.parse('var a;')), {counter: 10});
+		var out = esgraph.dot(esgraph(jsParser.parseAST('var a;')), {counter: 10});
 		out.should.not.containEql('n0');
 		out.should.containEql('n10');
 	});

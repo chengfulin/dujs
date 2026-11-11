@@ -4,7 +4,7 @@
  * @lastmodifiedDate 2015-08-05
  */
 var should = require('should'),
-	esprima = require('esprima');
+	jsParser = require('../../lib/dujs/jsparser');
 var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	PageScope = require('../../lib/dujs/pagescope');
 
@@ -30,7 +30,7 @@ describe('ScopeCtrl', function () {
 
 		describe('addPageScopeTree', function () {
 			it('should support to add a ScopeTree of a page with its AST well', function () {
-				var ast = esprima.parse(
+				var ast = jsParser.parseAST(
 					'var a = 0, b = 1;',
 					{range: true, loc: true}
 				);
@@ -57,7 +57,7 @@ describe('ScopeCtrl', function () {
 			it('should support to retrieve the value', function () {
 				scopeCtrl.pageScopeTrees.length.should.eql(0);
 
-				var ast = esprima.parse(
+				var ast = jsParser.parseAST(
 					'var a = 0, b = 1;',
 					{range: true, loc: true}
 				);

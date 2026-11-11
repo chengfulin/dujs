@@ -1,5 +1,5 @@
 
-var esprima = require('esprima');
+var jsParser = require('../../lib/dujs/jsparser');
 var esgraph = require('esgraph');
 var liveVariables = require('../../lib/analyses/index').examples.liveVariables;
 var Set = require('../../lib/analyses/index').Set,
@@ -10,7 +10,7 @@ var Set = require('../../lib/analyses/index').Set,
  * backwards analysis
  */
 function doAnalysis(code) {
-	var ast = esprima.parse(code);
+	var ast = jsParser.parseAST(code);
 	var cfg = esgraph(ast);
 	var output = liveVariables(cfg);
 	return output.get(cfg[0]);

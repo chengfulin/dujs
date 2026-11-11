@@ -4,7 +4,7 @@
  * @lastmodifiedDate 2015-07-29
  */
 var should = require('should');
-var esprima = require('esprima');
+var jsParser = require('../../lib/dujs/jsparser');
 var Scope = require('../../lib/dujs/scope'),
 	Range = require('../../lib/dujs/range'),
 	factoryVar = require('../../lib/dujs/varfactory');
@@ -263,10 +263,10 @@ describe('Scope', function () {
 	describe('public methods', function () {
 		var rootScope, parentScope, childScope, otherScope;
 		beforeEach(function () {
-			var rootAST = esprima.parse('var ga, gb;', {range: true, loc: true});
-			var parentAST = esprima.parse('var a, b', {range: true, loc: true});
-			var childAST = esprima.parse('var ca, cb', {range: true, loc: true});
-			var otherAST = esprima.parse('var oa, ob', {range: true, loc: true});
+			var rootAST = jsParser.parseAST('var ga, gb;', {range: true, loc: true});
+			var parentAST = jsParser.parseAST('var a, b', {range: true, loc: true});
+			var childAST = jsParser.parseAST('var ca, cb', {range: true, loc: true});
+			var otherAST = jsParser.parseAST('var oa, ob', {range: true, loc: true});
 
 			rootScope = new Scope(rootAST, '$DOMAIN', 'domain', null);
 			parentScope = new Scope(parentAST, '$PAGE', 'page', null);
@@ -309,12 +309,12 @@ describe('Scope', function () {
 			var outerScope, innerScope;
 
 			beforeEach(function () {
-				var outerAST = esprima.parse('var ga = 0, gb = 1;' +
+				var outerAST = jsParser.parseAST('var ga = 0, gb = 1;' +
 					'function foo(a) {' +
 					'var b = 1;' +
 					'ga = a + b;' +
 					'}', {range: true, loc: true});
-				var innerAST = esprima.parse('function foo(a) {' +
+				var innerAST = jsParser.parseAST('function foo(a) {' +
 					'var b = 1;' +
 					'ga = a + b;' +
 					'}', {range: true, loc: true});
@@ -497,7 +497,7 @@ describe('Scope', function () {
 			});
 
 			it('should return false otherwise', function () {
-				var anotherAST = esprima.parse('var aa, ab;', {range: true, loc: true});
+				var anotherAST = jsParser.parseAST('var aa, ab;', {range: true, loc: true});
 				var anotherScope = new Scope(anotherAST, 'another', 'function', childScope);
 
 				otherScope.hasAscendantContainingTheChild(rootScope).should.eql(false);
@@ -719,9 +719,9 @@ describe('Scope', function () {
 			var oneScope, parentScope, rootScope;
 
 			beforeEach(function () {
-				oneScope = new Scope(esprima.parse('var a;', {range: true, loc: true}), 'one', 'function', null);
-				parentScope = new Scope(esprima.parse('var pa;', {range: true, loc: true}), '$PAGE', 'page', null);
-				rootScope = new Scope(esprima.parse('var ga;', {range: true, loc: true}), '$DOMAIN', 'domain', null);
+				oneScope = new Scope(jsParser.parseAST('var a;', {range: true, loc: true}), 'one', 'function', null);
+				parentScope = new Scope(jsParser.parseAST('var pa;', {range: true, loc: true}), '$PAGE', 'page', null);
+				rootScope = new Scope(jsParser.parseAST('var ga;', {range: true, loc: true}), '$DOMAIN', 'domain', null);
 			});
 
 			it('should be same as own name since it has no parent scope', function () {
