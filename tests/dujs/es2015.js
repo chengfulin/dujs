@@ -334,5 +334,61 @@ describe('ES2015+ modeling', function () {
 			result.intraProcedural(PAGE + '.f').should.containEql('Local: L3 -> L4');
 		});
 	});
+
+	describe('ES modules', function () {
+		var jsParser = require('../../lib/dujs/jsparser');
+
+		it('should parse import/export and top-level await as a module, and other code as a script', function () {
+			jsParser.parseAST('import a from "./a.js";').sourceType.should.eql('module');
+			jsParser.parseAST('const x = await load();').sourceType.should.eql('module');
+			jsParser.parseAST('var a = 1;').sourceType.should.eql('script');
+			(function () {
+				jsParser.parseAST('import a from "./a.js";', {sourceType: 'script'});
+			}).should.throw();
+		});
+
+		it('should define imported bindings and analyze exported declarations', function () {
+			var result = analyze([
+				'import { fetchItems, LIMIT as max } from \'./api.js\';',
+				'import render from \'./view.js\';',
+				'import * as utils from \'./utils.js\';',
+				'export const items = fetchItems(max);',
+				'export function show() {',
+				'  render(utils.format(items));',
+				'}',
+				'export default class App {}',
+				'export { show as display };',
+				'console.log(items, App);'
+			].join('\n'));
+			result.scopeNames().should.eql([PAGE, PAGE + '.show']);
+			var pairs = result.intraProcedural();
+			pairs.should.containDeep([
+				'fetchItems: L1 -> L4', 'max: L1 -> L4', 'items: L4 -> L10', 'App: L8 -> L10'
+			]);
+			pairs.should.not.containEql('fetchItems: entry -> L4');
+			result.scopeTree.root.hasLocalVariable('LIMIT').should.eql(false);
+			result.scopeTree.root.hasLocalVariable('display').should.eql(false);
+		});
+
+		it('should model anonymous default-exported functions and classes', function () {
+			var result = analyze([
+				'export default function () {',
+				'  const one = 1;',
+				'  return one;',
+				'}'
+			].join('\n'));
+			result.scopeNames().should.eql([PAGE, ANONYMOUS + '0']);
+			result.intraProcedural(ANONYMOUS + '0').should.eql(['one: L2 -> L3']);
+			analyze('export default class {}\nconsole.log(1);').scopeNames().should.eql([PAGE]);
+		});
+
+		it('should analyze a module with top-level await', function () {
+			var result = analyze([
+				'const data = await load();',
+				'console.log(data);'
+			].join('\n'));
+			result.intraProcedural().should.containEql('data: L1 -> L2');
+		});
+	});
 });
 
