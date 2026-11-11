@@ -1,0 +1,29 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="3">Def-Use pairs</td></tr><tr><td>window</td><td>(entry_a,37)</td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,38)</td><td>(entry_a,entry_c)</td><td>(entry_a,39)</td></tr>
+<tr><td>String</td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td></tr>
+<tr><td>init</td><td>(entry_a,37)</td><td></td><td></td></tr>
+<tr><td>loadTodos</td><td>(2,entry_b)</td><td>(2,29)</td><td></td></tr>
+<tr><td>saveTodos</td><td></td><td></td><td></td></tr>
+<tr><td>state</td><td>(4,entry_b)</td><td>(33,entry_b)</td><td>(33,34)</td></tr>
+<tr><td>nextId</td><td>(5,31)</td><td>(31,31)</td><td></td></tr>
+<tr><td>TodoList</td><td>(7,17)</td><td></td><td></td></tr>
+<tr><td>list</td><td>(17,entry_b)</td><td>(17,34)</td><td></td></tr>
+<tr><td>addTodo</td><td>(19,entry_c)</td><td>(19,40)</td><td></td></tr>
+<tr><td>saved</td><td>(29,30)</td><td>(29,33)</td><td></td></tr>
+<tr><td>id</td><td>(30,31)</td><td></td><td></td></tr>
+<tr><td>input</td><td>(39,40)</td><td></td><td></td></tr>
+</TABLE>
+>];
+}

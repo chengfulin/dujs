@@ -1,0 +1,26 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="1">Def-Use pairs</td></tr><tr><td>window</td><td>(entry,37)</td></tr>
+<tr><td>document</td><td>(entry,38)</td></tr>
+<tr><td>String</td><td></td></tr>
+<tr><td>Number</td><td></td></tr>
+<tr><td>Boolean</td><td></td></tr>
+<tr><td>Array</td><td></td></tr>
+<tr><td>Map</td><td></td></tr>
+<tr><td>WeakMap</td><td></td></tr>
+<tr><td>Set</td><td></td></tr>
+<tr><td>Date</td><td></td></tr>
+<tr><td>console</td><td></td></tr>
+<tr><td>init</td><td>(entry,37)</td></tr>
+<tr><td>loadTodos</td><td></td></tr>
+<tr><td>saveTodos</td><td></td></tr>
+<tr><td>state</td><td></td></tr>
+<tr><td>nextId</td><td></td></tr>
+<tr><td>TodoList</td><td>(7,17)</td></tr>
+<tr><td>list</td><td></td></tr>
+<tr><td>addTodo</td><td></td></tr>
+</TABLE>
+>];
+}
