@@ -48,6 +48,9 @@ only because the forked CFG builder uses them.
     esprima 1.x `handlers` array), required after switching the parser to
     espree.
   - Tests parse through `lib/dujs/jsparser` (espree) instead of esprima.
+  - Arrow functions are treated like function expressions: their bodies are
+    separate scopes, so no CFG nodes are created or linked inside them and
+    they are not considered as throwing.
 
 The full history is in `git log -- lib/esgraph tests/esgraph`.
 

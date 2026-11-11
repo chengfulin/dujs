@@ -105,9 +105,15 @@ function analyze(codeOfPages) {
 		intraPage: function () {
 			return pairsOfModel(pageModels.intraPageModels[0]);
 		},
-		/** names of the scopes connected into the intra-page model */
+		/** names of the scopes whose nodes are in the intra-page graph */
 		intraPageScopes: function () {
-			return pageModels.intraPageModels[0].relatedScopes.map(String);
+			var names = [];
+			pageModels.intraPageModels[0].graph[2].forEach(function (node) {
+				if (!!node.scope && names.indexOf(node.scope.name) === -1) {
+					names.push(node.scope.name);
+				}
+			});
+			return names;
 		},
 		/** names of the scopes connected into inter-procedural models */
 		interProceduralScopes: function () {
