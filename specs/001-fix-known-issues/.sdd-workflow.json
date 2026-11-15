@@ -1,0 +1,29 @@
+{
+  "feature": "001-fix-known-issues",
+  "steps": {
+    "specify": {
+      "done": true
+    },
+    "clarify": {
+      "done": true
+    },
+    "plan": {
+      "done": true
+    },
+    "tasks": {
+      "done": false
+    },
+    "analyze": {
+      "done": false,
+      "findings": null,
+      "remediated": null
+    },
+    "implement": {
+      "done": false,
+      "stories": {}
+    }
+  },
+  "brief": {
+    "artifact_url": "https://claude.ai/artifact/QLp6iYySsTeY4wyaZTSjUK"
+  }
+}

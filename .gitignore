@@ -13,3 +13,4 @@ doc
 out-*/
 out
 !/sampleOutputs
+!specs/**/.sdd-workflow.json
