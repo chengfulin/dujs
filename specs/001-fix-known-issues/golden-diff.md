@@ -71,3 +71,25 @@ ES5 fixtures 無 `?:`／短路運算拆分差異；只有 T040a（`connectLoopNo
 |------|------|----|
 | `tests/dujs/es2015.js`「should use variables in template literals, tagged templates, optional chaining and nullish coalescing」 | L5 `var v = o?.a?.b ?? t;` 拆為決策 L5 與葉 L5:T／L5:F：`t: L3 -> L5` → `t: L3 -> L5:F`；`v: L5 -> L6` → `v: L5:T -> L6`、`v: L5:F -> L6`（`o: L4 -> L5` 不變，決策非單一識別字為 c-use） | FR-008 |
 | `tests/dujs/es2015.js`「should use the target of compound and logical assignments」 | L2 `n ??= 1;` 拆為決策 `n`（L2）與指派葉 L2:F：`n: L1 -> L2` → `n: L1 -> L2>L2:F`、`n: L1 -> L2>L3:T`（單一識別字決策為 p-use）、`n: L1 -> L3`（true 分支不指派，L1 的 def 到達 L3）；`n: L2 -> L3` → `n: L2:F -> L3` | FR-008、FR-009 |
+
+## T053 總稽核：PR 說明用對照表
+
+基準：`45022ed`（PR #2 合併點）。指令：`git diff 45022ed -- tests/golden tests/esgraph/tests tests/dujs/es2015.js`
+（18 檔）。graph 差異以「節點標記取代 n-id」後比對（忽略編號連帶）；逐 commit 檢查：US1（`77a4571`）、US3
+（`bb9ce6e`）、US4（`82f44c7`）、US6（`edd53ec`）對上列路徑零差異，差異只來自 Foundational（`193b1a3`，僅
+`es2015.js` 記法）、US2（`0d0b05b`）、US5（`04dbf3d`）。結論：每處差異皆對應 FR-004、FR-005、FR-008、FR-009、
+FR-010（T040a）或 FR-014；ES5 golden 只有 D17 的 loop exception 邊（graph 共 4 條），ES5 dupairs 零差異。
+
+| 範圍 | 檔案 | 差異摘要 | FR |
+|------|------|----------|----|
+| ES5 golden | `expected/inter-page/0.graph.dot`、`expected/page0/intra-pages/0.graph.dot`、`expected/page1/intra-pages/0.graph.dot` | 頁面最後一個敘述→LOOP 節點各新增 exception 邊（2＋1＋1 條）；其餘零差異，dupairs 零差異 | FR-010（T040a，D17） |
+| ES2015 golden | `page0/intra-procedurals/0.dupairs.dot`、`page0/intra-pages/0.dupairs.dot`、`inter-page/0.dupairs.dot` | `document` 新增 `new TodoList(document…)` 參數的 use（fixture L16）；欄數擴充 | FR-004 |
+| ES2015 golden | `page0/intra-procedurals/4.graph.dot`、`4.dupairs.dot` | `title = ''` 初始化節點 `19`（fixture L18）；`title` 的 def 由 `entry` 改為 `19` | FR-005 |
+| ES2015 golden | `page0/intra-procedurals/3.graph.dot`、`3.dupairs.dot` | `\|\|` 拆為決策 `12` 與葉 `12:T`／`12:F`（fixture L11）；`done` 的 use 移至 `12:F` | FR-008 |
+| ES2015 golden | `page0/intra-procedurals/5.graph.dot`、`5.dupairs.dot`；`page0/intra-pages/0.*`、`inter-page/0.*` | `??` 拆為決策 `30a`（`saved`）＋迴圈節點 `30b`（fixture L29）；`saved` 由 c-use 改為 p-use；`id` def 移至 `30b`；`nextId` 兩筆 pair 欄序對調 | FR-008、FR-009 |
+| ES2015 golden | `page0/intra-pages/0.graph.dot`、`inter-page/0.graph.dot` | `38 -> loop` 新增 exception 邊 | FR-010（T040a，D17） |
+| ES2015 golden | `page0/intra-procedurals/4.graph.dot`、`6.graph.dot`、`inter-page/0.graph.dot` | 僅 n-id 順移；以標記比對節點與邊不變（`6.graph.dot` 標記比對零差異） | FR-005、FR-008（編號連帶） |
+| 上游 fixture | `tests/esgraph/tests/maythrow.js` | `1 && call()` 拆為決策 `1`＋葉 `call()`；修改紀錄見 `tests/esgraph/tests/README.md` | FR-008 |
+| 單元測試 | `tests/dujs/es2015.js`（Foundational） | p-use 目標記法加 `:T`／`:F`（4 個 `it`：`x: L2 -> L3>L4` → `L3>L4:T` 等），行為不變 | FR-014 |
+| 單元測試 | `tests/dujs/es2015.js`（US2） | `last: entry -> L2` → `last: L1 -> L2` | FR-005 |
+| 單元測試 | `tests/dujs/es2015.js`（US5） | `??`（L5）拆分後 `t`／`v` 的標記；`n ??= 1` 拆分後 `n` 的 p-use 與 def | FR-008、FR-009 |

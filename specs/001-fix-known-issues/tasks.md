@@ -209,12 +209,12 @@ FR-010／D12 不變量以 fast-check 性質測試（`tests/dujs/branchsplit.prop
 
 **Purpose**: 文件、LGPL 紀錄彙整、全面回歸與 golden 稽核
 
-- [ ] T050 [P] 更新 `README.md` Limits（FR-012）：把「Labeled `break`/`continue`; `catch` parameters are not variables」改為只保留 `catch` 參數限制；新增 `with` 本體內名稱不推斷物件屬性（FR-003）、實例欄位初始化式不接入外層流程（FR-006）、「同一敘述有大量並列條件時節點數以乘積成長；以壓縮（minified）檔為分析目標可能耗盡資源而卡住，建議分析原始碼」（D12、D16）、「帶預設值的參數初始化節點一律定義該參數，不建模『僅在傳入 undefined 時』，呼叫端有傳值時 entry 上的 def 會被視為被覆寫，可能漏報」（FR-005、spec Assumptions）；呼叫點限制維持原文（R12 方案 A）
-- [ ] T051 [P] 更新 `docs/known-issues.md`（FR-012）：§1–§6、§8 移除或標為已修正（註明 feature `001-fix-known-issues`）；§7、§9 保留
-- [ ] T052 [P] 彙整 `THIRD_PARTY_NOTICES.md`、`lib/esgraph/index.js` 檔頭與 `tests/esgraph/tests/README.md`：確認 T017、T038、T042 的修改紀錄齊全、日期一致，且 `lib/esgraph/branchsplitter.js` 列為 MIT 原創檔
-- [ ] T053 Golden 總稽核（FR-013、SC-004）：以本 feature 起點 `45022ed`（PR #2 合併點；本機 master 可能落後）為基準，`git diff 45022ed -- tests/golden tests/esgraph/tests tests/dujs/es2015.js` 與 `specs/001-fix-known-issues/golden-diff.md` 逐處比對，確認每處差異都對應 FR-001、FR-004～FR-010 或 FR-014，ES5 golden 只有 D17 的 loop exception 邊、dupairs 零差異；整理為 PR 說明用的對照表
-- [ ] T054 SC-001 覆蓋檢查：確認 `docs/known-issues.md` §1–§6、§8 的每段重現輸入都有對應的自動化測試（`tests/dujs/labeledwithdebugger.js`、`paramsandnew.js`、`classfields.js`、`chainedassignment.js`、`branchsplit.js`、`scopenames.js`），缺者補測
-- [ ] T055 執行 `specs/001-fix-known-issues/quickstart.md` 全部步驟：`npm test`、`npm run lint`、§3 CLI 煙霧測試（三檔 exit=0、stderr 空）、`FC_NUM_RUNS=1000` 性質測試；全綠（SC-002、SC-003、SC-005）
+- [X] T050 [P] 更新 `README.md` Limits（FR-012）：把「Labeled `break`/`continue`; `catch` parameters are not variables」改為只保留 `catch` 參數限制；新增 `with` 本體內名稱不推斷物件屬性（FR-003）、實例欄位初始化式不接入外層流程（FR-006）、「同一敘述有大量並列條件時節點數以乘積成長；以壓縮（minified）檔為分析目標可能耗盡資源而卡住，建議分析原始碼」（D12、D16）、「帶預設值的參數初始化節點一律定義該參數，不建模『僅在傳入 undefined 時』，呼叫端有傳值時 entry 上的 def 會被視為被覆寫，可能漏報」（FR-005、spec Assumptions）；呼叫點限制維持原文（R12 方案 A）
+- [X] T051 [P] 更新 `docs/known-issues.md`（FR-012）：§1–§6、§8 移除或標為已修正（註明 feature `001-fix-known-issues`）；§7、§9 保留
+- [X] T052 [P] 彙整 `THIRD_PARTY_NOTICES.md`、`lib/esgraph/index.js` 檔頭與 `tests/esgraph/tests/README.md`：確認 T017、T038、T042 的修改紀錄齊全、日期一致，且 `lib/esgraph/branchsplitter.js` 列為 MIT 原創檔
+- [X] T053 Golden 總稽核（FR-013、SC-004）：以本 feature 起點 `45022ed`（PR #2 合併點；本機 master 可能落後）為基準，`git diff 45022ed -- tests/golden tests/esgraph/tests tests/dujs/es2015.js` 與 `specs/001-fix-known-issues/golden-diff.md` 逐處比對，確認每處差異都對應 FR-001、FR-004～FR-010 或 FR-014，ES5 golden 只有 D17 的 loop exception 邊、dupairs 零差異；整理為 PR 說明用的對照表
+- [X] T054 SC-001 覆蓋檢查：確認 `docs/known-issues.md` §1–§6、§8 的每段重現輸入都有對應的自動化測試（`tests/dujs/labeledwithdebugger.js`、`paramsandnew.js`、`classfields.js`、`chainedassignment.js`、`branchsplit.js`、`scopenames.js`），缺者補測
+- [X] T055 執行 `specs/001-fix-known-issues/quickstart.md` 全部步驟：`npm test`、`npm run lint`、§3 CLI 煙霧測試（三檔 exit=0、stderr 空）、`FC_NUM_RUNS=1000` 性質測試；全綠（SC-002、SC-003、SC-005）
 
 ---
 

@@ -1,8 +1,13 @@
 # Known Issues
 
 Issues found by the code review of PR #2 (ES2015+ modeling) and confirmed by
-reproducing them on `feat/es2015-modeling`. They are recorded here and not
-fixed yet. "Pre-existing" means dujs 1.0.0/1.1.0 behaves the same way.
+reproducing them on `feat/es2015-modeling`. "Pre-existing" means dujs
+1.0.0/1.1.0 behaves the same way.
+
+Issues §1–§6 and §8 are fixed by feature `001-fix-known-issues`
+(`specs/001-fix-known-issues/`); their sections are kept for reference and the
+results describe the behavior before the fix. §7 and §9 are not fixed yet.
+§10–§13 were found while implementing that feature and are not fixed yet.
 
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
@@ -10,6 +15,11 @@ the entry node of a scope.
 ## Analysis errors
 
 ### 1. Labeled statements, `with` and `debugger` make the analysis throw (pre-existing)
+
+**Fixed** by feature `001-fix-known-issues` (FR-001–FR-003): the three
+programs are analyzed and the CLI writes all models. Labeled
+`break`/`continue` jump to the labeled statement or loop, the object of `with`
+is a use, and `debugger` is a plain statement.
 
 | Input | Result |
 |---|---|
@@ -26,6 +36,12 @@ the intra-procedural model fails (`lib/dujs/model.js` via
 
 ### 2. Default parameter values are not uses (severity: medium)
 
+**Fixed** by feature `001-fix-known-issues` (FR-005): each parameter with a
+default value has its own
+initialization node after the entry node, which uses the variables of the
+default value and defines the parameter (also for arrow functions and pattern
+parameters).
+
 ```js
 var d = 1;
 function f(a, b = a + d) {
@@ -40,6 +56,9 @@ these uses to the entry node of the function.
 
 ### 3. Arguments of `new` are not uses (severity: medium, pre-existing)
 
+**Fixed** by feature `001-fix-known-issues` (FR-004): the arguments of `new`
+(including spread) are uses.
+
 ```js
 var a = 1;
 var o = new X(a);
@@ -49,6 +68,12 @@ throw new Error(a);
 No pair for `a`: the use analysis of `NewExpression` only visits the callee.
 
 ### 4. Class field initializers and static blocks do not use outer variables
+
+**Fixed** by feature `001-fix-known-issues` (FR-006): every field initializer
+and static block is a scope of
+its own; static field initializers and static blocks are connected into the
+intra-page model at the class node (instance field initializers are not, see
+the README limits).
 
 ```js
 var v = 1;
@@ -68,6 +93,10 @@ own (methods are).
 
 ### 5. A chained assignment uses the inner target (pre-existing)
 
+**Fixed** by feature `001-fix-known-issues` (FR-007): the inner target of a
+chained plain assignment is not
+a use; chained logical assignments are split into branches (FR-008).
+
 ```js
 var a, b;
 a = b = 1;
@@ -78,6 +107,11 @@ Gives `b: L1 -> L2`, but `b` is only defined at L2. The same happens with
 chained logical assignments (`a ||= b ||= 1`).
 
 ### 6. A conditional expression outside a decision node gives p-uses without a target (pre-existing)
+
+**Fixed** by feature `001-fix-known-issues` (FR-008–FR-010): conditional
+expressions and short-circuit
+operators are split into a decision node with true and false branches, so
+every p-use has both targets.
 
 ```js
 var a = 1, b = 2;
@@ -110,6 +144,10 @@ the README limitation on call sites).
 
 ### 8. Duplicate scope names for functions declared in plain blocks
 
+**Fixed** by feature `001-fix-known-issues` (FR-011): same-named scopes under
+the same parent scope are named
+`f`, `f_1`, `f_2`, ... in source order.
+
 ```js
 {
   function f() {}
@@ -137,3 +175,86 @@ name returns only one of them. A function declared in a block that has
   kept only for its existing tests.
 - `lib/dujs/jsparser.js` uses an optional catch binding (`catch {`, ES2019),
   unlike the ES5 style of the rest of `lib/`.
+
+## Found while fixing §1–§6 and §8 (feature `001-fix-known-issues`)
+
+### 10. A function as the default value of a parameter is not a scope
+
+```js
+var d = 1;
+function f(g = () =>
+  d) {
+  return g();
+}
+f();
+```
+
+Scopes: only `$DOMAIN.$PAGE_0` and `$DOMAIN.$PAGE_0.f`; the intra-page pairs
+are `f: entry -> L6` and `g: L2 -> L4`. The arrow function `() => d` is not a
+scope, so its body is not analyzed and there is no pair for `d`. The scope
+tree (`lib/dujs/scopetree.js`) does not visit the parameters of a function.
+
+### 11. Uses of the class name in its own static members are missed
+
+```js
+class Q {
+  static {
+    console.log(Q);
+  }
+}
+```
+
+The intra-page pairs are only `console: entry -> L3` and
+`console: entry -> entry`; there is no pair for `Q`. The same happens with a
+static field (`static s = Q;`). The class name is defined at the class node,
+which comes after all static members in the intra-page flow, so no definition
+of `Q` reaches the uses in the static members.
+
+### 12. CLI: no help, and errors exit with status 0 (pre-existing)
+
+`node bin/dujs.js --help` (and `node bin/dujs.js` without arguments) does not
+print a usage text; it prints
+
+```
+*** ERROR:  ENOENT: no such file or directory, open 'out-<time>/inter-page/0.graph.dot'  ***
+```
+
+and exits with status 0. Arguments before the first `-js` are ignored, so
+there are no pages: the output directories are created per page
+(`createOutputDirectories` in `lib/dujs/outputwriter.js`), the analysis of zero
+pages succeeds, and writing the inter-page model fails. `bin/dujs.js` catches
+every error, prints it to stderr and does not set an exit status, so a failed
+run cannot be told from a successful one by its exit status.
+
+During the acceptance of the feature, a run with `-js` failed once with the
+same kind of ENOENT; it did not happen again in 11 reruns (intermittent, not
+reproduced). Possible causes, not confirmed:
+
+- The output directory name `out-<year>-<month>-<day>-<hour>-<minute>-<second>`
+  has a resolution of one second and is computed once when
+  `lib/dujs/outputwriter.js` is loaded. Two runs started in the same directory
+  within the same second share the directory (`mkdirSync` is skipped when it
+  exists) and overwrite each other's files; if one run's directory is removed
+  (for example by a cleanup of `out-*` after the other run) while the second
+  run is still writing, the write fails with ENOENT.
+- The run had no page at all (no file after `-js`, or an argument list
+  without `-js`), which gives exactly this error as described above.
+
+### 13. Branches of the intra-procedural model point to the LOOP node of the intra-page model
+
+```js
+var a = 1;
+if (a) {
+  a = 2;
+}
+```
+
+`FlowNode` objects are shared by the models of a page. When the intra-page
+model is built, the edges to the exit node of the page are redirected to its
+LOOP node (`connectLoopNodeToPageGraph` in `lib/dujs/modelbuilder.js`); this
+also changes the false branch of the decision `L2` seen through the
+intra-procedural model, which now points to the LOOP node although that node is
+not in the intra-procedural graph. The def-use pairs of the intra-procedural
+model still target the exit node (`a: L1 -> L2>exit:F`). The test helper
+(`tests/helpers/analyze.js`) treats a LOOP node branch as the exit node for
+such a pair (`specs/001-fix-known-issues/contracts/analyze-helper-notation.md`).

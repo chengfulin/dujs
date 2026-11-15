@@ -19,7 +19,7 @@
       "remediated": 22
     },
     "implement": {
-      "done": false,
+      "done": true,
       "stories": {
         "US1": {
           "validated": true,
