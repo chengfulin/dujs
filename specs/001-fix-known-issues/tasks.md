@@ -96,14 +96,14 @@ FR-010／D12 不變量以 fast-check 性質測試（`tests/dujs/branchsplit.prop
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T019 [US2] 新增 `tests/dujs/paramsandnew.js`：US2-1～US2-7 各一個 `it`，期望 pair 照 spec 原文（US2-3 另斷言不含 `b: entry -> L3`；US2-5 的箭頭函式與 `function h({x = d}) {}` 各寫在獨立行並附呼叫敘述；US2-6 以無預設值函式斷言 intra-procedural 無額外節點）
+- [X] T019 [US2] 新增 `tests/dujs/paramsandnew.js`：US2-1～US2-7 各一個 `it`，期望 pair 照 spec 原文（US2-3 另斷言不含 `b: entry -> L3`；US2-5 的箭頭函式與 `function h({x = d}) {}` 各寫在獨立行並附呼叫敘述；US2-6 以無預設值函式斷言 intra-procedural 無額外節點）
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] 在 `lib/dujs/defuseanalyzer.js` 的 `findUSESet` 把 `NewExpression` 改為 `recurse(callee)` 並 `arguments.forEach(recurse)`（`SpreadElement` 走預設遞迴）（FR-004、research R7）
-- [ ] T021 [P] [US2] 在 `lib/dujs/modelbuilder.js` 取函式 CFG 輸入時，若任一參數帶預設值，改用合成 `BlockStatement`（快取於函式 AST 的不可列舉屬性 `dujsBodyWithParamInits`）：依參數出現順序、含參數解構中巢狀 `AssignmentPattern`，每個帶預設值的名稱一個 `ExpressionStatement(AssignmentExpression '=' 名稱 = 預設值)`，`loc`／`range` 取該 `AssignmentPattern`；其後接原本體（箭頭運算式本體接既有 `dujsBodyStatement`）；無預設值參數維持在 entry 定義（FR-005、research R4、data-model §3）
-- [ ] T022 [US2] 確認 `lib/dujs/defuseanalyzer.js` 的 `analyzeDefaultValueOfLocalVariables` 對參數解構出的名稱（`{x = d, y = x}`）仍在 entry 有 undefined def，必要時補上，使初始化節點能 kill 之（US2-4、US2-7）
-- [ ] T023 [US2] 執行 `UPDATE_GOLDEN=1 npm test`：差異只可出現在 `tests/golden/expected-es2015/` 的 ES2015 fixture L16（`new` 參數，FR-004）與 L18（預設參數，FR-005）相關節點／pair；依共通約定寫入 `specs/001-fix-known-issues/golden-diff.md`；同步更新 `tests/dujs/es2015.js` 中受 FR-004／FR-005 影響的期望字串並逐筆註明 FR；`tests/golden/expected/`（ES5）MUST 零差異
+- [X] T020 [P] [US2] 在 `lib/dujs/defuseanalyzer.js` 的 `findUSESet` 把 `NewExpression` 改為 `recurse(callee)` 並 `arguments.forEach(recurse)`（`SpreadElement` 走預設遞迴）（FR-004、research R7）
+- [X] T021 [P] [US2] 在 `lib/dujs/modelbuilder.js` 取函式 CFG 輸入時，若任一參數帶預設值，改用合成 `BlockStatement`（快取於函式 AST 的不可列舉屬性 `dujsBodyWithParamInits`）：依參數出現順序、含參數解構中巢狀 `AssignmentPattern`，每個帶預設值的名稱一個 `ExpressionStatement(AssignmentExpression '=' 名稱 = 預設值)`，`loc`／`range` 取該 `AssignmentPattern`；其後接原本體（箭頭運算式本體接既有 `dujsBodyStatement`）；無預設值參數維持在 entry 定義（FR-005、research R4、data-model §3）
+- [X] T022 [US2] 確認 `lib/dujs/defuseanalyzer.js` 的 `analyzeDefaultValueOfLocalVariables` 對參數解構出的名稱（`{x = d, y = x}`）仍在 entry 有 undefined def，必要時補上，使初始化節點能 kill 之（US2-4、US2-7）
+- [X] T023 [US2] 執行 `UPDATE_GOLDEN=1 npm test`：差異只可出現在 `tests/golden/expected-es2015/` 的 ES2015 fixture L16（`new` 參數，FR-004）與 L18（預設參數，FR-005）相關節點／pair；依共通約定寫入 `specs/001-fix-known-issues/golden-diff.md`；同步更新 `tests/dujs/es2015.js` 中受 FR-004／FR-005 影響的期望字串並逐筆註明 FR；`tests/golden/expected/`（ES5）MUST 零差異
 
 **Checkpoint**: US1、US2 皆可獨立運作（US2 不含情境 8：依賴 US5，於 Phase 7 的 T034 驗證）
 

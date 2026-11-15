@@ -202,8 +202,9 @@ describe('ES2015+ modeling', function () {
 			['id', 'name', 'first', 'last', 'others'].forEach(function (name) {
 				h.params.has(name).should.eql(true);
 			});
+			/// FR-005: `last = 1` is initialized at its own node on line 1 (was `last: entry -> L2`)
 			result.intraProcedural(PAGE + '.h').should.eql([
-				'first: entry -> L2', 'id: entry -> L2', 'last: entry -> L2', 'name: entry -> L2', 'others: entry -> L2'
+				'first: entry -> L2', 'id: entry -> L2', 'last: L1 -> L2', 'name: entry -> L2', 'others: entry -> L2'
 			]);
 		});
 
