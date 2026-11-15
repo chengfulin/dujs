@@ -117,14 +117,14 @@ FR-010／D12 不變量以 fast-check 性質測試（`tests/dujs/branchsplit.prop
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T024 [US3] 新增 `tests/dujs/classfields.js`：US3-1（scope 清單含欄位 `f` 與 static block 各一個 `$ANONYMOUS_FUN_<n>` scope）、US3-2（含 `v: L1 -> L5`、不含 `v: L1 -> L3`）、US3-3（`v: L1 -> L3`）、US3-4（static block intra-procedural 含 `t: L3 -> L4`）、US3-5（方法、computed key、`extends` 既有行為不變：以修正前結果作 characterization 斷言）
+- [X] T024 [US3] 新增 `tests/dujs/classfields.js`：US3-1（scope 清單含欄位 `f` 與 static block 各一個 `$ANONYMOUS_FUN_<n>` scope）、US3-2（含 `v: L1 -> L5`、不含 `v: L1 -> L3`）、US3-3（`v: L1 -> L3`）、US3-4（static block intra-procedural 含 `t: L3 -> L4`）、US3-5（方法、computed key、`extends` 既有行為不變：以修正前結果作 characterization 斷言）
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] 在 `lib/dujs/scopetree.js` 的 `buildScopeTree` 走訪 `ClassBody` 時，對每個有 value 的 `PropertyDefinition` 與 `StaticBlock` 建立合成無參數 `FunctionExpression`（欄位本體 `[ExpressionStatement(value)]`、static block 本體為其 `body`；`range`／`loc` 取成員），快取於成員 AST 不可列舉屬性 `dujsScopeFunction`，以既有 `AnonymousFunctionScope` 建 scope；欄位值本身是函式時原函式 scope 為其子 scope（research R5、data-model §3）
-- [ ] T026 [US3] 確認 `lib/dujs/variableanalyzer.js`、`lib/dujs/defuseanalyzer.js` 對 `ClassBody` 的略過不影響新 scope 的分析（新 scope 的 `ast` 為合成 `FunctionExpression`），必要時最小修正
-- [ ] T027 [US3] 在 `lib/dujs/modelbuilder.js` 的 inter-procedural 階段，把 class 宣告節點（或含 `ClassExpression` 的敘述節點）視為其 static 欄位與 static block scope 的呼叫點，依原始碼順序以 `connectCallerCalleeScopeRelatedModelsAtCallSite` 串接（CALL → S1.entry、S1.exit RETURN → ret1 → CALL S2…，最後回返節點接原後繼）；實例欄位 scope 不接入（FR-006、D7、data-model §4）
-- [ ] T028 [US3] 執行 `npx mocha tests/dujs/classfields.js` 與 `npm test`：US3 全過；`tests/golden/` 零差異（fixtures 無 class 欄位／static block，research R5）
+- [X] T025 [US3] 在 `lib/dujs/scopetree.js` 的 `buildScopeTree` 走訪 `ClassBody` 時，對每個有 value 的 `PropertyDefinition` 與 `StaticBlock` 建立合成無參數 `FunctionExpression`（欄位本體 `[ReturnStatement(value)]`（實作時由 ExpressionStatement 更正，見 research R5）、static block 本體為其 `body`；`range`／`loc` 取成員），快取於成員 AST 不可列舉屬性 `dujsScopeFunction`，以既有 `AnonymousFunctionScope` 建 scope；欄位值本身是函式時原函式 scope 為其子 scope（research R5、data-model §3）
+- [X] T026 [US3] 確認 `lib/dujs/variableanalyzer.js`、`lib/dujs/defuseanalyzer.js` 對 `ClassBody` 的略過不影響新 scope 的分析（新 scope 的 `ast` 為合成 `FunctionExpression`），必要時最小修正
+- [X] T027 [US3] 在 `lib/dujs/modelbuilder.js` 的 inter-procedural 階段，把 class 宣告節點（或含 `ClassExpression` 的敘述節點）視為其 static 欄位與 static block scope 的呼叫點，依原始碼順序以 `connectCallerCalleeScopeRelatedModelsAtCallSite` 串接（CALL → S1.entry、S1.exit RETURN → ret1 → CALL S2…，最後回返節點接原後繼）；實例欄位 scope 不接入（FR-006、D7、data-model §4）
+- [X] T028 [US3] 執行 `npx mocha tests/dujs/classfields.js` 與 `npm test`：US3 全過；`tests/golden/` 零差異（fixtures 無 class 欄位／static block，research R5）
 
 **Checkpoint**: US3 可獨立運作（README 註明實例欄位限制於 Polish T050）
 

@@ -153,7 +153,7 @@ esgraph 不知道參數，否決。
 **Decision**：
 
 - `ScopeTree.buildScopeTree` 走訪 `ClassBody` 時，對每個 `PropertyDefinition`（有 value 者）與
-  `StaticBlock` 建立一個**合成 `FunctionExpression`**（無參數；欄位本體為 `[ExpressionStatement(value)]`，
+  `StaticBlock` 建立一個**合成 `FunctionExpression`**（無參數；欄位本體為 `[ReturnStatement(value)]`（同箭頭函式運算式本體的作法；用 ExpressionStatement 時單一識別字的值會被根識別字防護略過），
   static block 本體為其 `body`；`range`／`loc` 取成員），快取於成員 AST 的不可列舉屬性 `dujsScopeFunction`，
   以既有 `AnonymousFunctionScope` 建 scope（命名 `$ANONYMOUS_FUN_<n>`，符合 spec Assumptions「沿用匿名函式
   scope 的命名方式」）。欄位值本身就是函式／箭頭時仍建欄位 scope，原函式 scope 成為其子 scope。

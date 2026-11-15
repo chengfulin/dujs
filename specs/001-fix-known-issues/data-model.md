@@ -54,7 +54,7 @@ CALL 節點（其 callReturn 節點複製 `line`／`col`／`branchPath`）。
 |------|------|------|------|
 | `dujsBodyStatement` | 箭頭函式 | 既有：運算式本體的 `ReturnStatement` | 不變 |
 | `dujsBodyWithParamInits` | 有預設值參數的函式／箭頭函式 | **新增**：`BlockStatement`＝依序的參數初始化 `ExpressionStatement(名稱 = 預設值)` ＋ 原本體 | FR-005（R4） |
-| `dujsScopeFunction` | `PropertyDefinition`（有 value）、`StaticBlock` | **新增**：無參數 `FunctionExpression`（本體為欄位值敘述或 static block 本體），`range`／`loc` 取成員 | FR-006（R5） |
+| `dujsScopeFunction` | `PropertyDefinition`（有 value）、`StaticBlock` | **新增**：無參數 `FunctionExpression`（本體為 `return 欄位值` 或 static block 本體），`range`／`loc` 取成員 | FR-006（R5） |
 
 ## 4. Scope（`lib/dujs/scope.js`、`lib/dujs/scopetree.js`）
 
