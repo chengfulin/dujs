@@ -51,14 +51,14 @@ FR-010／D12 不變量以 fast-check 性質測試（`tests/dujs/branchsplit.prop
 
 **⚠️ CRITICAL**: 本 phase 完成前不得開始任何 user story
 
-- [ ] T003 [P] 在 `tests/esgraph/flownodetest.js` 新增 FlowNode 新欄位的單元測試：`preEvaluated` 預設 `[]`、`branchPath` 預設 `''`、`splitOrigin` 預設 `null`、`isWithObject` 與 `loopRightSplit` 預設 `false`、`analyzedExpressions` 為唯讀且等於 `preEvaluated.concat([astNode])`（data-model §1）
-- [ ] T004 在 `lib/esgraph/flownode.js`（MIT）新增 `preEvaluated`、`branchPath`、`splitOrigin`、`isWithObject`、`loopRightSplit` 欄位與唯讀 getter `analyzedExpressions`（data-model §1、research R8），補 JSDoc；使 T003 通過
-- [ ] T005 在 `lib/dujs/defuseanalyzer.js` 把所有走訪 `cfgNode.astNode` 求 GEN／USE 之處改走訪 `cfgNode.analyzedExpressions`（`preEvaluated` 以 c-use 語境走訪，research R8）；本任務 MUST NOT 改變任何輸出（`preEvaluated` 尚恆為空）
-- [ ] T006 [P] 在 `lib/dujs/modelbuilder.js` 把事件 handler、localStorage 偵測等走訪 `astNode` 的地方改走訪 `analyzedExpressions`；呼叫點判定（`astNode.type === 'CallExpression'`）維持不變（R12 方案 A）；MUST NOT 改變任何輸出
-- [ ] T007 [P] 新增 `tests/dujs/analyzehelper.js`：驗證記法規則——目標不帶路徑時加 `:T`／`:F`（如 `var a = 1;`／`if (a > 0) {`／`  a = 2;`／`}`／`console.log(a);` 得 `a: L1 -> L2>L3:T` 與 `a: L1 -> L2>L5:F`）；true／false 目標同一節點時兩筆皆輸出（規則 4）；以手建的 stub model（決策節點缺 `false`）驗證拋出含變數名與節點標記的 `Error`（規則 6、FR-010）；以手建 FlowNode 設 `branchPath` 驗證 `L<行>:<路徑>` 與目標帶路徑時省略分支碼（規則 2、3）；檔頭註明 helper 的已知限制（同一行多個節點來源時標記碰撞、p-use 省略記法可能歧義；不加序號、不拋錯，故本檔與各驗收測試的程式一行一個節點來源）
-- [ ] T008 改寫 `tests/helpers/analyze.js`（FR-014、research R9）：`nodeLabel` 加 `:<branchPath>`；p-use 依 `dupair.second.second === first.true` 決定 `:T`／`:F`，目標帶路徑時省略；同目標兩筆；任一 p-use 決策缺 true／false 目標即拋明確 `Error`；改寫檔頭記法說明，並在檔頭註明已知限制：同一行有多個節點來源（多個敘述、多個拆分來源、參數預設值與本體同行）時標記碰撞、p-use 省略記法可能歧義，不加序號、不拋錯（spec「表示法」、contracts 已知限制）；使 T007 通過
-- [ ] T009 依新記法更新 `tests/dujs/es2015.js` 既有 p-use 期望字串（第 83、104、258、456 行附近，共 9 筆 `L<n>>L<m>` → `L<n>>L<m>:T`／`:F`，依實際 true／false 目標判定）；這些差異對應 FR-014
-- [ ] T010 執行 `npm test` 與 `npm run lint`：全綠，且 `tests/golden/`、`tests/esgraph/tests/` 零差異（Foundational 不得改變分析輸出）
+- [X] T003 [P] 在 `tests/esgraph/flownodetest.js` 新增 FlowNode 新欄位的單元測試：`preEvaluated` 預設 `[]`、`branchPath` 預設 `''`、`splitOrigin` 預設 `null`、`isWithObject` 與 `loopRightSplit` 預設 `false`、`analyzedExpressions` 為唯讀且等於 `preEvaluated.concat([astNode])`（data-model §1）
+- [X] T004 在 `lib/esgraph/flownode.js`（MIT）新增 `preEvaluated`、`branchPath`、`splitOrigin`、`isWithObject`、`loopRightSplit` 欄位與唯讀 getter `analyzedExpressions`（data-model §1、research R8），補 JSDoc；使 T003 通過
+- [X] T005 在 `lib/dujs/defuseanalyzer.js` 把所有走訪 `cfgNode.astNode` 求 GEN／USE 之處改走訪 `cfgNode.analyzedExpressions`（`preEvaluated` 以 c-use 語境走訪，research R8）；本任務 MUST NOT 改變任何輸出（`preEvaluated` 尚恆為空）
+- [X] T006 [P] 在 `lib/dujs/modelbuilder.js` 把事件 handler、localStorage 偵測等走訪 `astNode` 的地方改走訪 `analyzedExpressions`；呼叫點判定（`astNode.type === 'CallExpression'`）維持不變（R12 方案 A）；MUST NOT 改變任何輸出
+- [X] T007 [P] 新增 `tests/dujs/analyzehelper.js`：驗證記法規則——目標不帶路徑時加 `:T`／`:F`（如 `var a = 1;`／`if (a > 0) {`／`  a = 2;`／`}`／`console.log(a);` 得 `a: L1 -> L2>L3:T` 與 `a: L1 -> L2>L5:F`）；true／false 目標同一節點時兩筆皆輸出（規則 4）；以手建的 stub model（決策節點缺 `false`）驗證拋出含變數名與節點標記的 `Error`（規則 6、FR-010）；以手建 FlowNode 設 `branchPath` 驗證 `L<行>:<路徑>` 與目標帶路徑時省略分支碼（規則 2、3）；檔頭註明 helper 的已知限制（同一行多個節點來源時標記碰撞、p-use 省略記法可能歧義；不加序號、不拋錯，故本檔與各驗收測試的程式一行一個節點來源）
+- [X] T008 改寫 `tests/helpers/analyze.js`（FR-014、research R9）：`nodeLabel` 加 `:<branchPath>`；p-use 依 `dupair.second.second === first.true` 決定 `:T`／`:F`，目標帶路徑時省略；同目標兩筆；任一 p-use 決策缺 true／false 目標即拋明確 `Error`；改寫檔頭記法說明，並在檔頭註明已知限制：同一行有多個節點來源（多個敘述、多個拆分來源、參數預設值與本體同行）時標記碰撞、p-use 省略記法可能歧義，不加序號、不拋錯（spec「表示法」、contracts 已知限制）；使 T007 通過
+- [X] T009 依新記法更新 `tests/dujs/es2015.js` 既有 p-use 期望字串（第 83、104、258、456 行附近，共 9 筆 `L<n>>L<m>` → `L<n>>L<m>:T`／`:F`，依實際 true／false 目標判定）；這些差異對應 FR-014
+- [X] T010 執行 `npm test` 與 `npm run lint`：全綠，且 `tests/golden/`、`tests/esgraph/tests/` 零差異（Foundational 不得改變分析輸出）
 
 **Checkpoint**: Foundation ready — user story 可開始
 
