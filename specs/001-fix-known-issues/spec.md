@@ -282,10 +282,13 @@
    **Then** `b` 的決策在 `a` 的兩個分支各有一份（`L2:T`、`L2:F`）：含 `b: L1 -> L2:T>L2:TT`、
    `b: L1 -> L2:T>L2:TF`、`b: L1 -> L2:F>L2:FT`、`b: L1 -> L2:F>L2:FF`，以及 `x: L2:TT -> L3`、
    `x: L2:TF -> L3`、`x: L2:FT -> L3`、`x: L2:FF -> L3`。[SRC USR D12]
-10. **Given** `var c = 1, a = 1, b = 2;` / `var x = log(c ? a : b);` / `console.log(x);` /
-    `function log(v) { return v; }`，**When** 分析，**Then** `L2:T`（`x = log(a)`）與 `L2:F`（`x = log(b)`）
-    都是 `log` 的呼叫點，inter-procedural 模型中兩者各自連到同一個 `log` scope；含 `a: L1 -> L2:T`、
-    `b: L1 -> L2:F`、`x: L2:T -> L3`、`x: L2:F -> L3`。[SRC USR D12]
+10. **Given** `var c = 1, a = 1, b = 2;` / `log(c ? a : b);` / `function log(v) { return v; }`，**When** 分析，
+    **Then** `L2:T`（`log(a);`）與 `L2:F`（`log(b);`）都是 `log` 的呼叫點，inter-procedural 模型中兩者各自
+    連到同一個 `log` scope；含 `a: L1 -> L2:T`、`b: L1 -> L2:F`。[SRC USR D12]
+10b. **Given** `var c = 1, a = 1, b = 2;` / `var x = log(c ? a : b);` / `console.log(x);` /
+    `function log(v) { return v; }`，**When** 分析，**Then** 含 `a: L1 -> L2:T`、`b: L1 -> L2:F`、
+    `x: L2:T -> L3`、`x: L2:F -> L3`（宣告右側的呼叫依 README 既有限制不連為呼叫點，本情境不驗呼叫連結）。
+    [SRC USR D12]
 11. **Given** `var c = 1, a = 1;` / `var x = (c ? 1 : 2) + run(function () { return a; });`，**When** 分析，
     **Then** 匿名函式只有一個 scope（不因複製成為兩個），其中 `a` 的 pair 不重複。[SRC USR D12]
 12. **Given** `function f(c, a, b) {` / `  return c ? a : b;` / `}` / `f(1, 2, 3);`，**When** 分析，**Then** f 的
@@ -361,7 +364,8 @@
   運算與定義（含呼叫）在每個葉分支各有一份節點（各自的 def），MUST NOT 在匯合後才定義；條件之前已求值的
   部分 MUST 留在決策節點；短路運算的左運算元 MUST 只在決策節點求值一次，葉節點 MUST NOT 重讀；函式／class
   運算式 MUST 只有一個 scope；沒有運算的分支 MUST NOT 建節點、直接接到後繼；位於既有決策節點條件中時
-  （含 switch 判斷式）MUST NOT 複製該敘述的本體；MUST NOT 引入原程式沒有的變數。[SRC KI §6] [SRC USR D3] [SRC USR D8]
+  （含 switch 判斷式）MUST NOT 複製該敘述的本體；MUST NOT 引入原程式沒有的變數。呼叫點的認定沿用既有規則
+  （只有呼叫敘述是呼叫點），拆分不改變此規則。[SRC KI §6] [SRC USR D3] [SRC USR D8]
   [SRC USR D12]
 - **FR-009**: 決策節點的條件只有單一識別字時，該識別字 MUST 記為 p-use。[G-1]
 - **FR-010**: 所有模型中的 p-use MUST 有存在的 true 與 false 分支目標。[SRC KI §6]

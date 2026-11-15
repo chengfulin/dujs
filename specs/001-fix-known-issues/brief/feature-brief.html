@@ -46,6 +46,7 @@ th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-alig
 th{background:var(--th)}
 .ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
 code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+.mermaid{min-width:640px;text-align:center}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -62,7 +63,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>修正已知問題（#1–#6、#8）</h1>
-<div class="meta">clarify · 第 1 輪（承 spec 首輪）· 2026-11-16 · 分支 <code>001-fix-known-issues</code></div>
+<div class="meta">plan · 第 1 輪（承 clarify 第 1 輪）· 2026-11-16 · 分支 <code>001-fix-known-issues</code></div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -189,17 +190,17 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <section class="panel">
   <span class="num">圖解 B · 新做法（D12）</span>
   <h3>每個葉分支各自定義，像寫成 if/else</h3>
-  <div class="pic"><svg viewBox="0 0 860 300" role="img" aria-label="新做法：x = log(c ? a : b) 拆成 L2:T 與 L2:F 兩個葉節點，各自定義 x 並各自是 log 的呼叫點">
+  <div class="pic"><svg viewBox="0 0 860 300" role="img" aria-label="新做法：x = log(c ? a : b) 拆成 L2:T 與 L2:F 兩個葉節點，各自定義 x">
     <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
       <rect x="30" y="100" width="170" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="115" y="140">L2 決策</text><text x="115" y="166" font-size="14" font-weight="400" fill="var(--sub)">判斷 c（p-use）</text>
-      <rect x="300" y="10" width="260" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="430" y="38" fill="var(--green)">L2:T　x = log(a)</text><text x="430" y="64" font-size="14" font-weight="400" fill="var(--ink)">log 的呼叫點之一</text><text x="430" y="88" font-size="14" font-weight="400" fill="var(--sub)">x: L2:T -&gt; L3</text>
-      <rect x="300" y="190" width="260" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="430" y="218" fill="var(--green)">L2:F　x = log(b)</text><text x="430" y="244" font-size="14" font-weight="400" fill="var(--ink)">log 的呼叫點之二</text><text x="430" y="268" font-size="14" font-weight="400" fill="var(--sub)">x: L2:F -&gt; L3</text>
+      <rect x="300" y="10" width="260" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="430" y="38" fill="var(--green)">L2:T　x = log(a)</text><text x="430" y="64" font-size="14" font-weight="400" fill="var(--ink)">x 的 def 之一</text><text x="430" y="88" font-size="14" font-weight="400" fill="var(--sub)">x: L2:T -&gt; L3</text>
+      <rect x="300" y="190" width="260" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="430" y="218" fill="var(--green)">L2:F　x = log(b)</text><text x="430" y="244" font-size="14" font-weight="400" fill="var(--ink)">x 的 def 之二</text><text x="430" y="268" font-size="14" font-weight="400" fill="var(--sub)">x: L2:F -&gt; L3</text>
       <rect x="650" y="100" width="180" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="740" y="140">L3</text><text x="740" y="166" font-size="14" font-weight="400" fill="var(--sub)">console.log(x)</text>
     </g>
     <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M200 130 L296 70"/><path d="M200 170 L296 230"/><path d="M560 60 L646 125"/><path d="M560 240 L646 175"/></g>
     <g font-size="15" fill="var(--sub)"><text x="236" y="92">T</text><text x="236" y="222">F</text></g>
   </svg></div>
-  <p class="cap">x 在 <b>L2:T、L2:F 各有一個 def</b>，分支來源一目了然；函式 log 只有一個 scope。<small>來源：D12、US5 情境 10</small></p>
+  <p class="cap">x 在 <b>L2:T、L2:F 各有一個 def</b>，分支來源一目了然；若寫成呼叫敘述 <code>log(c ? a : b);</code>，兩個葉各自是 log 的呼叫點。<small>來源：D12、US5 情境 10、10b</small></p>
 </section>
 
 <h3>記法怎麼讀</h3>
@@ -212,17 +213,52 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 </table></div>
 <p class="cap"><small>來源：D13、表示法、Clarifications 2026-11-16 第 3 條</small></p>
 
-<h2>本輪變更（clarify · 第 1 輪）</h2>
+<section class="panel">
+  <span class="num">架構 · plan 起</span>
+  <h3>新增一個拆分模組，其餘沿用既有管線</h3>
+  <div class="pic"><div class="mermaid">
+flowchart LR
+  CLI["bin/dujs.js<br/>CLI 不變"] --> ESG["esgraph/index.js<br/>基本 CFG + labeled/with/debugger"]
+  ESG --> BS["esgraph/branchsplitter.js 新<br/>拆決策節點與葉節點"]
+  BS --> FN["flownode.js<br/>branchPath 等新欄位"]
+  SC["scopetree.js / scope.js<br/>欄位與 static scope、名稱唯一化"] --> MB
+  BS --> MB["modelbuilder.js<br/>參數初始化、static 串接、呼叫點"]
+  MB --> DU["defuseanalyzer.js<br/>new 參數、連鎖指派、走訪 analyzedExpressions"]
+  DU --> CV["cfggraphconverter.js<br/>label L行:路徑"]
+  CV --> OUT[("out-時間/*.dot<br/>格式不變")]
+  PT["tests/helpers/analyze.js<br/>+ fast-check 性質測試"] -.驗證.-> DU
+  DEP["espree、walkes<br/>既有依賴"] --> ESG
+  FC["fast-check<br/>新 devDependency"] -.-> PT
+  </div></div>
+  <ul>
+    <li>拆分在基本 CFG 建好後、排序編號前一次完成；下游走訪器經 <code>analyzedExpressions</code> 取得合成運算式，不需理解替換。<small>research R1–R3、R8</small></li>
+    <li>參數初始化與 class 欄位／static block 都沿用「合成 AST」手法，重用既有 scope 與呼叫連結。<small>research R4、R5</small></li>
+    <li>LGPL 衍生檔（<code>esgraph/index.js</code>）只加呼叫點與 labeled／with／debugger；新邏輯放 MIT 新檔。<small>plan Structure Decision</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（plan · 第 1 輪）</h2>
+<h3>技術選型</h3>
 <div class="box"><table>
-<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響</th></tr>
-<tr><td>D12（新）</td><td>條件拆分後匯合再定義，只留一個 def</td><td>等效 if/else：剩餘運算與 def 在每個葉分支複製；不設匯合 def、不引入暫存變數；並列條件複製數為乘積</td><td>US5、US2 情境 8</td></tr>
-<tr><td>D13（新）、表示法、FR-014</td><td>節點只標 <code>L&lt;行&gt;</code>；p-use 一律加 <code>:T</code>／<code>:F</code></td><td>拆出的節點標 <code>L&lt;行&gt;:&lt;路徑&gt;</code>；目標帶路徑時省略 <code>:T</code>／<code>:F</code></td><td>所有含 p-use 的 story、既有測試期望字串</td></tr>
-<tr><td>D9、D10</td><td>D9 無省略規則；D10 拆分後「接回該參數的 def」</td><td>D9 指向 D13；D10 改為該參數在每個葉分支各自定義</td><td>US2 情境 8</td></tr>
-<tr><td>Clarifications 2026-11-16（新，5 條）</td><td>未定義</td><td>條件在既有決策節點中不複製本體；左運算元不重讀；目標帶路徑省略分支標記；空分支不建節點；呼叫點隨葉複製、函式／class 只一個 scope、不設上限</td><td>US5 情境 4、6、10、11</td></tr>
-<tr><td>US2 情境 6、8</td><td>6：差異只來自 US5 條件修正；8：只說兩分支接到 b 的 def</td><td>6：列 FR-001／004／007／008／009／014；8：給完整程式與 pair（<code>b: L2:T -&gt; L3</code> 等）</td><td>US2</td></tr>
-<tr><td>US5 情境 1–7 改寫，新增 8–12</td><td>情境只描述分支目標，無法分辨 T／F</td><td>給具體 pair 字串；新增 use 先於條件、並列條件、呼叫點、函式運算式、entry 參數情境</td><td>US5</td></tr>
-<tr><td>FR-005、FR-008</td><td>只要求拆分支、use 只在該分支</td><td>加入與 if/else 一致、不重讀、不匯合定義、不複製本體、函式只一個 scope 等 MUST</td><td>US2、US5</td></tr>
-<tr><td>Edge Cases、FR-012、FR-013、SC-004</td><td>golden 只受 US5 條件修正影響；README 只加 <code>with</code> 限制</td><td>列出 golden 受影響的 FR；README 加並列條件使節點數乘積成長；SC-004 擴充受影響語法清單</td><td>全部既有 golden</td></tr>
+<tr><th>項目</th><th>選擇</th><th>狀態</th></tr>
+<tr><td>語言／執行環境</td><td>JavaScript（CommonJS）、Node.js ≥ 24</td><td>沿用</td></tr>
+<tr><td>解析與走訪</td><td>espree ^11.2.0、walkes ^0.2.1</td><td>沿用</td></tr>
+<tr><td>測試／覆蓋率／lint</td><td>mocha ^12 ＋ should ^13、c8 ^12、eslint ^10</td><td>沿用</td></tr>
+<tr><td>性質測試</td><td>fast-check ^4.10.2（devDependency；<code>FC_NUM_RUNS</code> 可調，預設 100 runs）</td><td class="no">新增</td></tr>
+</table></div>
+<h3>偏離 tech-standards（§CP-6 記錄）</h3>
+<div class="box"><table>
+<tr><th>項目</th><th>規範建議</th><th>本專案做法</th><th>使用者理由</th></tr>
+<tr><td>PBT 執行框架</td><td>fast-check（舉例 Jest／Vitest）</td><td>fast-check 搭配既有 mocha</td><td>既有系統相容、同專案選型一致</td></tr>
+<tr><td>Mutation testing</td><td>Stryker</td><td>本輪不導入</td><td>本輪範圍只加 PBT</td></tr>
+</table></div>
+<h3>plan 執行者自行決定（請知悉，非 spec 內容）</h3>
+<div class="box"><table>
+<tr><th>決定</th><th>出處</th></tr>
+<tr><td><code>if (a ?? b)</code> 的 true 分支建一個不讀任何變數的決策節點（<code>a</code> 真假未知，且不重讀）</td><td>research R3</td></tr>
+<tr><td>複合指派 <code>x += …</code>：x 的讀取放決策節點，葉為單純指派</td><td>research R2</td></tr>
+<tr><td>預設參數初始化節點一律定義參數，不模擬「僅 undefined 時」</td><td>research R4</td></tr>
+<tr><td>欄位與 static block 的 scope 佔用 <code>$ANONYMOUS_FUN_&lt;n&gt;</code> 序號，會位移其後匿名函式編號（既有 golden 無此語法，不受影響）</td><td>research R5</td></tr>
 </table></div>
 
 <h2>工程師要決定的事</h2>
@@ -234,18 +270,18 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>US2 預設參數與 new</td><td class="ok">1、2、3、4、6、8</td><td class="no">5：未給完整程式與行號，只說「有初始化節點、d 記為 use」；7：未給程式行號與 pair 字串</td></tr>
 <tr><td>US3 class 欄位／static block</td><td class="ok">1、2、3、4</td><td class="no">5：「既有行為不變」未指定 computed key、extends 的輸入（由既有測試涵蓋）</td></tr>
 <tr><td>US4 連鎖指派</td><td class="ok">1、2</td><td class="no">3：以 <code>L&lt;def&gt;</code> 佔位，未給完整程式與具體 pair</td></tr>
-<tr><td>US5 條件與短路</td><td class="ok">1–9、12（上輪「T／F 分不出」已由 D13 解決）；7 為通則，可驗證</td><td class="no">10：pair 可驗證，但「兩葉各連到同一 <code>log</code> scope」未給記法；11：只說 scope 一個、pair 不重複，未給 pair 字串（<code>run</code> 也未宣告）</td></tr>
+<tr><td>US5 條件與短路</td><td class="ok">1–9、12（上輪「T／F 分不出」已由 D13 解決）；7 為通則，可驗證</td><td class="no">10／10b：已拆為呼叫敘述（驗呼叫連結）與宣告形式（只驗 pair），皆可驗證；11：只說 scope 一個、pair 不重複，未給 pair 字串（<code>run</code> 也未宣告）</td></tr>
 <tr><td>US6 同名 scope</td><td class="ok">1、2、3、5</td><td class="no">4：只要求名稱唯一，未給預期名稱（原始碼自帶 <code>f_1</code> 的出現順序未定）</td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
-<p>無。規範未涵蓋「Node.js 靜態分析函式庫＋CLI」，本輪也不新增技術選型；變動只在測試輔助工具的記法（<code>tests/helpers/analyze.js</code>），plan 起再檢視。</p>
+<p>缺漏：規範未涵蓋「Node.js 靜態分析函式庫＋CLI」的選型，依既有專案堆疊（見上「技術選型」）。偏離：2 項（PBT 搭 mocha、本輪不導入 Stryker），理由見「偏離 tech-standards」。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無。對照憲章 §CP-1（可追溯）、§CP-4（核心邏輯有測試）：D12、D13 與新增情境皆標註來源，FR-013、SC-001～005 要求測試覆蓋。</p>
+<p>無 CRITICAL／HIGH。plan 的 Constitution Check 全數 PASS；唯一觸及 §CP-1（可追溯：先更新 spec 再改程式碼）的是 US5 情境 10 與 README 呼叫點限制的衝突，已裁決方案 A 並先更新 spec。受影響 story：US5。</p>
 
 <h3>本輪判斷點</h3>
-<p class="meta">本輪 1 個判斷點（switch 判斷式）已由使用者裁決：方案 A，改列於「已決事項」。</p>
+<p class="meta">本輪 1 個判斷點（US5 情境 10 與呼叫點限制）已由使用者裁決：方案 A，改列於「已決事項」。</p>
 
 <h3>次要疑點</h3>
 <div class="box"><table>
@@ -270,6 +306,10 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>D11</td><td>參數解構中每個帶預設值的名稱各一個初始化節點，依出現順序</td></tr>
 <tr><td>D12</td><td>?:／&amp;&amp;／||／??／邏輯指派一律等效 if/else；剩餘運算與 def 在每個葉分支複製；不在匯合點定義、不引入暫存變數</td></tr>
 <tr><td>D13</td><td>拆出的節點標 <code>L&lt;行&gt;:&lt;路徑&gt;</code>；p-use 目標帶路徑時省略 <code>:T</code>／<code>:F</code></td></tr>
+<tr><td>R12（plan）</td><td>US5 情境 10 拆為 10（<code>log(c ? a : b);</code> 驗兩葉連到 log）與 10b（<code>var x = log(…)</code> 只驗 pair）；呼叫點規則不變</td></tr>
+<tr><td>plan 選型</td><td>沿用既有堆疊；新增 fast-check 做性質測試；偏離 tech-standards 兩項（mocha、不導入 Stryker）</td></tr>
 <tr><td>釐清 2026-11-16</td><td>既有決策節點條件中不複製本體；左運算元不重讀；空分支不建節點直接接後繼；呼叫點隨葉複製、函式／class 運算式只一個 scope；複製數不設上限（README 註明）；switch 判斷式比照既有決策節點，不複製 case 本體（US5 情境 13）</td></tr>
 </table></div>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true,theme:(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches&&document.documentElement.getAttribute('data-theme')!=='light')||document.documentElement.getAttribute('data-theme')==='dark'?'dark':'default'});</script>
