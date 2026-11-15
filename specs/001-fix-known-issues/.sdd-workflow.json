@@ -20,7 +20,13 @@
     },
     "implement": {
       "done": false,
-      "stories": {}
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      }
     }
   },
   "brief": {

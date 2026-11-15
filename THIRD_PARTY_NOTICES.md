@@ -58,6 +58,14 @@ only because the forked CFG builder uses them.
   - ES module declarations: `import`, `export * from` and `export { ... }` are
     statement nodes; an exported declaration (`export const`, `export function`,
     `export default class`, ...) is analyzed as the declaration itself.
+- 2026-11-16, by ChengFuLin
+  - `LabeledStatement`: has no node of its own and is entered at its body;
+    labeled `break l` jumps to the successor of the labeled statement and
+    labeled `continue l` to the continue target of the labeled loop.
+    Unlabeled `break`/`continue` are unchanged.
+  - `WithStatement`: a node evaluating the object expression (the node refers
+    to the object, flagged by `FlowNode.isWithObject`), followed by the body.
+  - `DebuggerStatement`: a plain statement node.
 
 The full history is in `git log -- lib/esgraph tests/esgraph`.
 

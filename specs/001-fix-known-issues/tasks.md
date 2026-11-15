@@ -72,17 +72,17 @@ FR-010／D12 不變量以 fast-check 性質測試（`tests/dujs/branchsplit.prop
 
 ### Tests for User Story 1 ⚠️（先寫、確認失敗）
 
-- [ ] T011 [US1] 新增 `tests/dujs/labeledwithdebugger.js`：US1-1～US1-6 各一個 `it`（期望 pair 照 spec 原文；US1-1 另斷言不含 `a: L1 -> L3`）；US1-3 因 spec 未給 pair，改以 `cfgBuilder` 取 CFG 斷言 `continue outer` 節點的唯一 normal 後繼為外層 `i++`（L2 的更新式節點），且不是內層 `j++`；另加未加 label 的 `break`／`continue` 在 labeled 迴圈內行為不變的 edge case
-- [ ] T012 [US1] 在 `tests/dujs/labeledwithdebugger.js` 新增 US1-7 CLI 測試：以 `child_process.spawnSync` 對 `os.tmpdir()` 下的暫存目錄中三個檔案（labeled、with、debugger，內容同 quickstart §3）執行 `node bin/dujs.js -js <檔案>`（cwd 設為暫存目錄），斷言結束碼 0、stderr 為空、產出 `out-*` 目錄且含四層模型 `.dot` 檔；測試結束清除暫存目錄
+- [X] T011 [US1] 新增 `tests/dujs/labeledwithdebugger.js`：US1-1～US1-6 各一個 `it`（期望 pair 照 spec 原文；US1-1 另斷言不含 `a: L1 -> L3`）；US1-3 因 spec 未給 pair，改以 `cfgBuilder` 取 CFG 斷言 `continue outer` 節點的唯一 normal 後繼為外層 `i++`（L2 的更新式節點），且不是內層 `j++`；另加未加 label 的 `break`／`continue` 在 labeled 迴圈內行為不變的 edge case
+- [X] T012 [US1] 在 `tests/dujs/labeledwithdebugger.js` 新增 US1-7 CLI 測試：以 `child_process.spawnSync` 對 `os.tmpdir()` 下的暫存目錄中三個檔案（labeled、with、debugger，內容同 quickstart §3）執行 `node bin/dujs.js -js <檔案>`（cwd 設為暫存目錄），斷言結束碼 0、stderr 為空、產出 `out-*` 目錄且含四層模型 `.dot` 檔；測試結束清除暫存目錄
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] 在 `lib/esgraph/index.js`（LGPL）支援 `LabeledStatement`：`getEntry` 回傳 `getEntry(body)`、連線 walker 遞迴 body、`getSuccessor` 走預設（research R6）
-- [ ] T014 [US1] 在 `lib/esgraph/index.js`（LGPL）讓 `getJumpTarget` 支援 `label`：沿 `cfg.parent` 找同名 `LabeledStatement`；`break l` → `getSuccessor(labeled)`；`continue l` → 被標記迴圈的 continue 目標（for 更新式、while／do-while 條件、for-in／for-of 迴圈節點）（FR-002）
-- [ ] T015 [US1] 在 `lib/esgraph/index.js`（LGPL）支援 `WithStatement`（自己一個節點、`connect(getEntry(body))`、mayThrow；去除 `.cfg` 的 walker 將 `astNode` 改指 `node.object` 並設 `FlowNode.isWithObject = true`）與 `DebuggerStatement`（`connectNext`）（FR-001、FR-003）
-- [ ] T016 [US1] 在 `lib/dujs/defuseanalyzer.js` 讓 `with` 節點的物件運算式記為 c-use：`astNode` 根為 `Identifier`（如 `with (o)`）時，現有 `cfgNode.astNode.type !== 'Identifier'` 防護會漏掉 `o`，須對 `isWithObject` 為 true 的節點例外（research R6、data-model §1）；`a;` 這類運算式敘述維持現狀（US1-5、FR-003）
-- [ ] T017 [US1] 更新 `lib/esgraph/index.js` 檔頭：「Modified by」加 `2026-11-xx: support labeled statements (labeled break/continue), with and debugger`，移除 `TODO: labeled break/continue`、`TODO: WithStatement`；並在 `THIRD_PARTY_NOTICES.md` esgraph 段記錄本項修改（LGPL 修改紀錄）
-- [ ] T018 [US1] 執行 `npx mocha tests/dujs/labeledwithdebugger.js` 與 `npm test`：US1 全過；golden 零差異（ES5／ES2015 fixtures 無 labeled／with／debugger，research R10）；如有差異依共通約定記錄或回報
+- [X] T013 [US1] 在 `lib/esgraph/index.js`（LGPL）支援 `LabeledStatement`：`getEntry` 回傳 `getEntry(body)`、連線 walker 遞迴 body、`getSuccessor` 走預設（research R6）
+- [X] T014 [US1] 在 `lib/esgraph/index.js`（LGPL）讓 `getJumpTarget` 支援 `label`：沿 `cfg.parent` 找同名 `LabeledStatement`；`break l` → `getSuccessor(labeled)`；`continue l` → 被標記迴圈的 continue 目標（for 更新式、while／do-while 條件、for-in／for-of 迴圈節點）（FR-002）
+- [X] T015 [US1] 在 `lib/esgraph/index.js`（LGPL）支援 `WithStatement`（自己一個節點、`connect(getEntry(body))`、mayThrow；去除 `.cfg` 的 walker 將 `astNode` 改指 `node.object` 並設 `FlowNode.isWithObject = true`）與 `DebuggerStatement`（`connectNext`）（FR-001、FR-003）
+- [X] T016 [US1] 在 `lib/dujs/defuseanalyzer.js` 讓 `with` 節點的物件運算式記為 c-use：`astNode` 根為 `Identifier`（如 `with (o)`）時，現有 `cfgNode.astNode.type !== 'Identifier'` 防護會漏掉 `o`，須對 `isWithObject` 為 true 的節點例外（research R6、data-model §1）；`a;` 這類運算式敘述維持現狀（US1-5、FR-003）
+- [X] T017 [US1] 更新 `lib/esgraph/index.js` 檔頭：「Modified by」加 `2026-11-xx: support labeled statements (labeled break/continue), with and debugger`，移除 `TODO: labeled break/continue`、`TODO: WithStatement`；並在 `THIRD_PARTY_NOTICES.md` esgraph 段記錄本項修改（LGPL 修改紀錄）
+- [X] T018 [US1] 執行 `npx mocha tests/dujs/labeledwithdebugger.js` 與 `npm test`：US1 全過；golden 零差異（ES5／ES2015 fixtures 無 labeled／with／debugger，research R10）；如有差異依共通約定記錄或回報
 
 **Checkpoint**: US1 可獨立運作——含 labeled／with／debugger 的程式 CLI 正常產出（SC-002）
 

@@ -161,8 +161,8 @@ for-in／for-of 右側拆分時，第一個決策與迴圈節點同為 `L<行>`�
    **When** 分析，**Then** `break outer` 的下一步是 L8（外層迴圈之後），因此 intra-procedural 同時含
    `a: L1 -> L8` 與 `a: L5 -> L8`。[SRC USR D2]
 3. **Given** 把情境 2 的 `break outer` 改為 `continue outer`，**When** 分析，**Then** `continue outer`
-   的下一步是外層迴圈的更新式 `i++`（L2），而非內層迴圈；以 CFG 驗證：`continue outer` 節點唯一的 normal
-   後繼為外層更新式 `i++`，不是內層 `j++`。[SRC USR D2]
+   的下一步是外層迴圈的更新式 `i++`（L2），而非內層迴圈；以 CFG 驗證：break／continue 不是 CFG 節點，
+   `if (j)` 決策的 true 後繼為外層更新式 `i++`，不是內層 `j++`。[SRC USR D2]
 4. **Given** 程式 `var a = 0, c = 1;` / `l: {` / `  if (c) break l;` / `  a = 1;` / `}` / `console.log(a);`，
    **When** 分析，**Then** intra-procedural 同時含 `a: L1 -> L6` 與 `a: L4 -> L6`。[SRC USR D2]
 5. **Given** 程式 `var o = {}, x = 1;` / `with (o) {` / `  console.log(x);` / `  p = 1;` / `}`，**When**
@@ -170,7 +170,7 @@ for-in／for-of 右側拆分時，第一個決策與迴圈節點同為 `L<行>`�
 6. **Given** 程式 `var a = 1;` / `debugger;` / `console.log(a);`，**When** 分析，**Then** 不拋錯，且含
    `a: L1 -> L3`。[SRC KI §1]
 7. **Given** 上述任一程式存成檔案，**When** 以 CLI 執行 `dujs -js <檔案>`，**Then** 結束碼為 0 並產出四層
-   模型的輸出檔。[SRC KI §1]
+   模型的輸出檔（程式沒有函式時 inter-procedural 層依既有行為為空目錄）。[SRC KI §1]
 
 ---
 
