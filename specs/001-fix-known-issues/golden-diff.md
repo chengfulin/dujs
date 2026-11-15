@@ -24,3 +24,7 @@ L18 為 `19`）。
 | 檔案 | 變更 | FR |
 |------|------|----|
 | `tests/dujs/es2015.js`「should declare pattern, default and rest parameters」 | `last: entry -> L2` → `last: L1 -> L2`（`last = 1` 在 L1 的初始化節點定義） | FR-005 |
+
+## US4（T031）：連鎖指派（FR-007）
+
+`tests/golden/expected/` 與 `tests/golden/expected-es2015/`：零差異。

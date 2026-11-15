@@ -138,12 +138,12 @@ FR-010／D12 不變量以 fast-check 性質測試（`tests/dujs/branchsplit.prop
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T029 [US4] 新增 `tests/dujs/chainedassignment.js`：US4-1、US4-2（含與不含的 pair 照 spec）、US4-3（程式 `var a, b = 1;` / `a = b += 1;` / `console.log(a, b);`，斷言含 `b: L1 -> L2`、`a: L2 -> L3`、`b: L2 -> L3`；`a ||= b ||= 1` 已移到 US5 情境 14，由 T034a 驗證，本檔不測）
+- [X] T029 [US4] 新增 `tests/dujs/chainedassignment.js`：US4-1、US4-2（含與不含的 pair 照 spec）、US4-3（程式 `var a, b = 1;` / `a = b += 1;` / `console.log(a, b);`，斷言含 `b: L1 -> L2`、`a: L2 -> L3`、`b: L2 -> L3`；`a ||= b ||= 1` 已移到 US5 情境 14，由 T034a 驗證，本檔不測）
 
 ### Implementation for User Story 4
 
-- [ ] T030 [US4] 在 `lib/dujs/defuseanalyzer.js` 刪除 `AssignmentExpression` handler 中 `node.right.type === 'AssignmentExpression'` 時的 `recurse(node.right.left)`，及 `VariableDeclarator` 中同型的 `recurse(node.init.left)`；內層由 `recurse(node.right)` 依其運算子決定（FR-007、research R7）
-- [ ] T031 [US4] 執行 `UPDATE_GOLDEN=1 npm test`：預期零差異；若有差異 MUST 只與連鎖指派相關並依共通約定記錄為 FR-007，否則回報
+- [X] T030 [US4] 在 `lib/dujs/defuseanalyzer.js` 刪除 `AssignmentExpression` handler 中 `node.right.type === 'AssignmentExpression'` 時的 `recurse(node.right.left)`，及 `VariableDeclarator` 中同型的 `recurse(node.init.left)`；內層由 `recurse(node.right)` 依其運算子決定（FR-007、research R7）
+- [X] T031 [US4] 執行 `UPDATE_GOLDEN=1 npm test`：預期零差異；若有差異 MUST 只與連鎖指派相關並依共通約定記錄為 FR-007，否則回報
 
 **Checkpoint**: US4 可獨立運作
 
