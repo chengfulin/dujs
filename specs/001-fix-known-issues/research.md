@@ -79,8 +79,16 @@ Alternatives considered」記錄。程式碼位置以 2026-11-16 的 `001-fix-kn
 6. 原節點 N 的入邊改接到 D；N 從圖中移除（不留匯合節點）。for-in／for-of 右側例外：迴圈節點 N 保留，只把
    「迴圈外進入 N」的入邊改接到 D（R3）。
 
-**模組介面**：`branchsplitter.split(allNodes, { expressionThrows: fn })`，由 `lib/esgraph/index.js`（LGPL）
+**模組介面**：`branchsplitter.split(entryNode, { expressionThrows: fn })`，由 `lib/esgraph/index.js`（LGPL）
 呼叫並傳入其 `expressionThrows` 作為 callback；`branchsplitter.js` 只呼叫該 callback，不含任何 LGPL 程式碼。
+
+**實作補記（2026-11-16，T036–T038）**：`split(entryNode, { expressionThrows })` 自 entry 以 BFS 收集可達節點後拆分，
+回傳新建節點；`expressionThrows(astNode)` 對 `analyzedExpressions` 各項呼叫取 some，僅原節點有 EXCEPTION 出邊時接例外邊
+（`throw` 葉一律接）；另匯出 `PLACEHOLDER_TYPE`。與上文的出入：(1) switch 判斷式的 SwitchStatement 節點自入口不可達，
+決策改攔截第一個 case 節點的入邊、葉接該 case（case test 可拆時其後再拆）；(2) `splitOrigin` 取原節點的 `astNode`；
+(3) 佔位真值已知時直接定案、不建決策、路徑不加碼；(4) 敘述語境的葉只含常值／佔位／函式運算式時視為空分支不建節點
+（`return`／`throw` 除外），switch 判斷式、with 物件、for-of 右側的葉同；(5) 前段不含不讀變數的運算元，呼叫的 callee
+留在葉，不進入 ChainExpression 與解構 pattern 找可拆運算子。
 
 求值順序細節：
 
@@ -117,7 +125,7 @@ LGPL 檔案擴大、修改紀錄冗長；改以獨立 MIT 模組，index.js 只�
 
 - 例外邊：每個拆出節點各自以 `expressionThrows(自己的 analyzedExpressions)` 判斷是否接例外目標；例外目標
   取**原節點 N 既有的 EXCEPTION 出邊**（不重新計算 try／catch 目標）。`expressionThrows` 由 index.js 以
-  `split(allNodes, { expressionThrows })` 傳入（R2 模組介面）。
+  `split(entryNode, { expressionThrows })` 傳入（R2 模組介面）。
 - `??` 位於條件語境（`if (a ?? b)`）時，T 分支的值（`a`，非 null）真假未知：建一個不讀任何變數的決策節點
   `L<n>:T`（等效 `if (a != null) { if (<a 的值>) … }`，依 Clarification 不重讀 `a`）；`||`／`&&` 的已知真值
   分支則直接接 N 的 true／false 目標（spec US5 情境 4）。

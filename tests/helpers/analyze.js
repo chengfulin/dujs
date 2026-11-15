@@ -56,20 +56,27 @@ function useLabels(use, variableName) {
 	if (!(use instanceof Pair)) {
 		return [nodeLabel(use)];
 	}
-	var decision = use.first, target = use.second,
-		prefix = nodeLabel(decision) + '>' + nodeLabel(target);
-	if (!decision.true || !decision.false) {
+	var decision = use.first, target = use.second;
+	if (!decision.true || !decision.false || !target) {
 		throw new Error('Decision node ' + nodeLabel(decision) + ' of the p-use of variable ' + variableName +
-			' lacks its ' + (!decision.true ? 'true' : 'false') + ' target');
+			' lacks its ' + (!decision.true ? 'true' : (!decision.false ? 'false' : 'branch')) + ' target');
 	}
+	var prefix = nodeLabel(decision) + '>' + nodeLabel(target);
 	if (!!target.branchPath) {
 		return [prefix];
 	}
+	/// FlowNodes are shared by the models: the intra-page model reconnects a
+	/// branch to the exit node to its LOOP node, while the pair of the
+	/// intra-procedural model still targets the exit node (known limitation)
+	function branch(node) {
+		return (!!node && node.type === FlowNode.LOOP_NODE_TYPE && target.type === FlowNode.EXIT_NODE_TYPE) ?
+			target : node;
+	}
 	var labels = [];
-	if (target === decision.true) {
+	if (target === branch(decision.true)) {
 		labels.push(prefix + ':T');
 	}
-	if (target === decision.false) {
+	if (target === branch(decision.false)) {
 		labels.push(prefix + ':F');
 	}
 	if (labels.length === 0) {

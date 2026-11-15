@@ -402,8 +402,11 @@ describe('ES2015+ modeling', function () {
 				'var v = o?.a?.b ?? t;',
 				'console.log(v);'
 			].join('\n'));
+			// FR-008: `??` on L5 is split into the decision `o?.a?.b` (L5) and the leaves
+			// L5:T (`v = o?.a?.b`) and L5:F (`v = t`), so `t` is used and `v` is defined in the leaves
 			result.intraProcedural().should.containDeep([
-				'name: L1 -> L2', 's: L2 -> L3', 't: L3 -> L5', 'o: L4 -> L5', 'v: L5 -> L6'
+				'name: L1 -> L2', 's: L2 -> L3', 't: L3 -> L5:F', 'o: L4 -> L5',
+				'v: L5:T -> L6', 'v: L5:F -> L6'
 			]);
 		});
 
@@ -426,8 +429,12 @@ describe('ES2015+ modeling', function () {
 				'n <<= 1;',
 				'console.log(n);'
 			].join('\n'));
+			// FR-008: `n ??= 1` on L2 is split into the decision `n` (L2) and the assigning leaf L2:F;
+			// FR-009: the single-identifier decision `n` is a p-use (L2>L3:T, L2>L2:F) and the def on L1
+			// also reaches L3 through the true branch
 			pairsOf(result.intraProcedural(), 'n').should.eql([
-				'n: L1 -> L2', 'n: L2 -> L3', 'n: L3 -> L4', 'n: L4 -> L5'
+				'n: L1 -> L2>L2:F', 'n: L1 -> L2>L3:T', 'n: L1 -> L3',
+				'n: L2:F -> L3', 'n: L3 -> L4', 'n: L4 -> L5'
 			]);
 		});
 

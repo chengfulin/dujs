@@ -27,7 +27,7 @@ dujs 為函式庫＋CLI，無持久儲存；本文件描述分析過程中的記
 - V4：拆出節點不得是「敘述語境中無 use、無 def、無呼叫的非決策節點」（空分支不建節點）；例外：`return`／
   `throw` 的葉一律建節點（spec D15），`return` 葉接 exit、`throw` 葉接原節點既有的 EXCEPTION 出邊目標。
 
-**生命週期**：esgraph 建基本 CFG → `branchsplitter.split(allNodes, { expressionThrows })` 以決策子圖取代含可拆
+**生命週期**：esgraph 建基本 CFG → `branchsplitter.split(entryNode, { expressionThrows })` 以決策子圖取代含可拆
 運算的節點（原節點不進入 `allNodes`；for-in／for-of 右側例外：迴圈節點保留並設 `loopRightSplit`）→ DFS 排序、指派 cfgId → cfgbuilder 設 `line`／`col` → modelbuilder 設 scope、必要時成為
 CALL 節點（其 callReturn 節點複製 `line`／`col`／`branchPath`）。
 
@@ -46,7 +46,7 @@ CALL 節點（其 callReturn 節點複製 `line`／`col`／`branchPath`）。
 
 | 介面 | 說明 |
 |------|------|
-| `split(allNodes, { expressionThrows: fn })` | 由 `lib/esgraph/index.js`（LGPL）在既有邊連好、DFS 排序與 cfgId 指派之前呼叫；`expressionThrows(astNode)` 為 index.js 傳入的 callback，branchsplitter（MIT）只呼叫它判斷拆出節點是否可能拋例外，不含任何 LGPL 程式碼；拆出節點的例外目標取原節點既有的 EXCEPTION 出邊（R3） |
+| `split(entryNode, { expressionThrows: fn })` | 由 `lib/esgraph/index.js`（LGPL）在既有邊連好、DFS 排序與 cfgId 指派之前呼叫；`expressionThrows(astNode)` 為 index.js 傳入的 callback，branchsplitter（MIT）只呼叫它判斷拆出節點是否可能拋例外，不含任何 LGPL 程式碼；拆出節點的例外目標取原節點既有的 EXCEPTION 出邊（R3） |
 
 ## 3. 合成 AST（皆以不可列舉屬性快取於原 AST，重複建 CFG 取得同一物件）
 

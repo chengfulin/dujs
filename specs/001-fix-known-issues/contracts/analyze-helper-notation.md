@@ -42,3 +42,7 @@ line        = 1*DIGIT                                 ; 被分析程式碼的行
 有歧義（`L2>L2:T` 可能是目標 `L2` 的 true 分支或目標 `L2:T`）；for-in／for-of 右側拆分時第一個決策與迴圈節點
 同為 `L<行>`。接受為已知限制（spec「表示法」、Clarifications 2026-11-16（analyze））：不加序號、不拋錯；驗收
 程式一行一個節點來源。`tests/helpers/analyze.js` 檔頭 MUST 註明此限制。
+
+FlowNode 由各層模型共用：intra-page 模型把接到 exit 的分支改接到 LOOP 節點後，intra-procedural 模型的 p-use
+目標仍是 exit。helper 判定 `:T`／`:F` 時，決策分支為 LOOP 節點且 pair 目標為 exit 者視為同一分支（2026-11-16，
+US5 實作中補）。

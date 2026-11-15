@@ -30,5 +30,5 @@
 
 ## 相容性與回歸
 
-- golden 期望輸出只可因 FR-001、FR-004～FR-009、FR-014 改變；每處差異在 PR 說明中對應 FR（FR-013、SC-004）。
+- golden 期望輸出只可因 FR-001、FR-004～FR-010、FR-014 改變（FR-010 限 T040a 新增的 loop 出邊，D17）；每處差異在 PR 說明中對應 FR（FR-013、SC-004）。
 - `tests/esgraph/tests/*.js`（上游 fixture）視同 golden：`maythrow.js` 的 `1 && call();` 因 FR-008 改變。

@@ -63,7 +63,7 @@ fast-check ^4.10.2**（搭配 mocha，性質測試 FR-010 與 D12 不變量；re
 | 模組 | 檔案 | FR |
 |------|------|----|
 | CFG（LGPL） | `lib/esgraph/index.js`（labeled／with／debugger、呼叫 branchsplitter、檔頭紀錄） | FR-001～003、FR-008 |
-| CFG（MIT，新） | `lib/esgraph/branchsplitter.js`（介面 `split(allNodes, { expressionThrows: fn })`，`expressionThrows` 由 LGPL 的 index.js 傳入，本檔不含 LGPL 程式碼） | FR-008、FR-010 |
+| CFG（MIT，新） | `lib/esgraph/branchsplitter.js`（介面 `split(entryNode, { expressionThrows: fn })`，`expressionThrows` 由 LGPL 的 index.js 傳入，本檔不含 LGPL 程式碼） | FR-008、FR-010 |
 | FlowNode | `lib/esgraph/flownode.js`（`preEvaluated`、`branchPath`、`splitOrigin`、`analyzedExpressions`、`isWithObject`、`loopRightSplit`） | FR-003、FR-008、FR-014 |
 | def-use | `lib/dujs/defuseanalyzer.js`（new 參數、連鎖指派、單一識別字、with 物件 use、走訪 `analyzedExpressions`、switch 判斷式與 for-in／for-of 右側不重讀） | FR-003、FR-004、FR-007～009 |
 | 變數 | `lib/dujs/variableanalyzer.js`（必要時：新 scope 的 `ClassBody` 略過不影響分析，T026） | FR-006 |
@@ -76,7 +76,7 @@ fast-check ^4.10.2**（搭配 mocha，性質測試 FR-010 與 D12 不變量；re
 | 依賴 | `package.json`、`package-lock.json`（fast-check） | — |
 
 **明確不受影響**：KI §7（class 方法呼叫連結）、§9；可選鏈；`with` 的屬性推斷；呼叫點偵測規則（R12 裁決 A）；
-`lib/analyses/`；`bin/dujs.js`；ES5 golden（`tests/golden/expected/`）預期零差異。
+`lib/analyses/`；`bin/dujs.js`；ES5 golden（`tests/golden/expected/`）預期只有 FR-010（T040a，D17）新增的 loop exception 邊、dupairs 零差異。
 
 ## 偏離 tech-standards（§CP-6 記錄）
 
