@@ -40,8 +40,8 @@ FR-010／D12 不變量以 fast-check 性質測試（`tests/dujs/branchsplit.prop
 
 **Purpose**: 引入性質測試依賴並確認基線
 
-- [ ] T001 新增 devDependency `fast-check@^4.10.2`（`npm install -D fast-check@^4.10.2`），更新 `package.json` 與 `package-lock.json`；不改 `scripts.test`（`tests/dujs/*.js` glob 已涵蓋新測試檔）
-- [ ] T002 執行基線 `npm test`（預期 528 passing）與 `npm run lint`，確認改動前全綠；若不符先回報（依 `package.json` scripts）
+- [X] T001 新增 devDependency `fast-check@^4.10.2`（`npm install -D fast-check@^4.10.2`），更新 `package.json` 與 `package-lock.json`；不改 `scripts.test`（`tests/dujs/*.js` glob 已涵蓋新測試檔）
+- [X] T002 執行基線 `npm test`（預期 528 passing）與 `npm run lint`，確認改動前全綠；若不符先回報（依 `package.json` scripts）
 
 ---
 
