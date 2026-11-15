@@ -62,7 +62,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>修正已知問題（#1–#6、#8）</h1>
-<div class="meta">spec · 第 1 輪（首建，已通過 review）· 2026-11-11 · 分支 <code>001-fix-known-issues</code></div>
+<div class="meta">clarify · 第 1 輪（承 spec 首輪）· 2026-11-16 · 分支 <code>001-fix-known-issues</code></div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -165,10 +165,65 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
   </svg></div>
   <p class="cap">本輪改動落在<b>建流程圖與配對</b>兩步；輸出格式與命令列參數不變。<small>來源：US1、US5、Assumptions</small></p>
   <ul>
-    <li>條件 <code>?:</code>、<code>&amp;&amp;</code>、<code>||</code>、<code>??</code>（含 <code>||=</code> 等）拆成有 true／false 分支的決策點。<small>US5、D3、D8</small></li>
+    <li>條件 <code>?:</code>、<code>&amp;&amp;</code>、<code>||</code>、<code>??</code>（含 <code>||=</code> 等）一律比照等效 if/else 拆分，每個葉分支各自定義，不在匯合點定義（見下兩格）。<small>US5、D3、D8、D12</small></li>
     <li>帶預設值的參數在函式 entry 之後各有初始化節點；沒有預設值的維持在 entry。<small>US2、D4</small></li>
   </ul>
 </section>
+
+<section class="panel">
+  <span class="num">圖解 A · 舊做法（已取代）</span>
+  <h3>先拆開再匯合，只剩一個定義</h3>
+  <div class="pic"><svg viewBox="0 0 860 300" role="img" aria-label="舊做法：x = log(c ? a : b) 拆成兩支後匯合，匯合點只有一個 x 的定義">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="30" y="100" width="170" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="115" y="140">L2 決策</text><text x="115" y="166" font-size="14" font-weight="400" fill="var(--sub)">判斷 c</text>
+      <rect x="300" y="10" width="170" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="385" y="50">取 a</text><text x="385" y="76" font-size="14" font-weight="400" fill="var(--sub)">c 為真時</text>
+      <rect x="300" y="190" width="170" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="385" y="230">取 b</text><text x="385" y="256" font-size="14" font-weight="400" fill="var(--sub)">c 為假時</text>
+      <rect x="560" y="100" width="270" height="100" rx="10" fill="var(--coral-soft)" stroke="var(--coral)" stroke-width="2.5"/><text x="695" y="132" fill="var(--coral)">L2 匯合後才定義</text><text x="695" y="158" font-size="14" font-weight="400" fill="var(--ink)">x = log(a 或 b)</text><text x="695" y="182" font-size="14" font-weight="400" fill="var(--sub)">只有 1 個 def</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M200 130 L296 70"/><path d="M200 170 L296 230"/><path d="M470 60 L556 125"/><path d="M470 240 L556 175"/></g>
+    <g font-size="15" fill="var(--sub)"><text x="236" y="92">T</text><text x="236" y="222">F</text></g>
+  </svg></div>
+  <p class="cap">匯合後只留一個 <b>def</b>，看不出「哪個分支的值流到 L3」。<small>來源：D12 括號說明（取代原建模）</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">圖解 B · 新做法（D12）</span>
+  <h3>每個葉分支各自定義，像寫成 if/else</h3>
+  <div class="pic"><svg viewBox="0 0 860 300" role="img" aria-label="新做法：x = log(c ? a : b) 拆成 L2:T 與 L2:F 兩個葉節點，各自定義 x 並各自是 log 的呼叫點">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="30" y="100" width="170" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="115" y="140">L2 決策</text><text x="115" y="166" font-size="14" font-weight="400" fill="var(--sub)">判斷 c（p-use）</text>
+      <rect x="300" y="10" width="260" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="430" y="38" fill="var(--green)">L2:T　x = log(a)</text><text x="430" y="64" font-size="14" font-weight="400" fill="var(--ink)">log 的呼叫點之一</text><text x="430" y="88" font-size="14" font-weight="400" fill="var(--sub)">x: L2:T -&gt; L3</text>
+      <rect x="300" y="190" width="260" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="430" y="218" fill="var(--green)">L2:F　x = log(b)</text><text x="430" y="244" font-size="14" font-weight="400" fill="var(--ink)">log 的呼叫點之二</text><text x="430" y="268" font-size="14" font-weight="400" fill="var(--sub)">x: L2:F -&gt; L3</text>
+      <rect x="650" y="100" width="180" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="740" y="140">L3</text><text x="740" y="166" font-size="14" font-weight="400" fill="var(--sub)">console.log(x)</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M200 130 L296 70"/><path d="M200 170 L296 230"/><path d="M560 60 L646 125"/><path d="M560 240 L646 175"/></g>
+    <g font-size="15" fill="var(--sub)"><text x="236" y="92">T</text><text x="236" y="222">F</text></g>
+  </svg></div>
+  <p class="cap">x 在 <b>L2:T、L2:F 各有一個 def</b>，分支來源一目了然；函式 log 只有一個 scope。<small>來源：D12、US5 情境 10</small></p>
+</section>
+
+<h3>記法怎麼讀</h3>
+<div class="box"><table>
+<tr><th>記法</th><th>讀法</th></tr>
+<tr><td><code>a: L1 -&gt; L2&gt;L2:F</code></td><td>a 在 L1 定義；L2 的決策判斷 a 為 false，走進葉節點 <code>L2:F</code>。目標已帶路徑（末碼 F 即分支），不再加 <code>:F</code>。</td></tr>
+<tr><td><code>b: L1 -&gt; L2:T&gt;L2:TF</code></td><td>決策節點 <code>L2:T</code>（在 a 的 true 分支內才求值的 b）判斷為 false，進入 <code>L2:TF</code>。</td></tr>
+<tr><td><code>a: L1 -&gt; L4&gt;L5:T</code></td><td>L4 的決策判斷為 true，進入 L5；目標不帶路徑，所以補 <code>:T</code> 標出分支。</td></tr>
+<tr><td><code>x: L2:T -&gt; L3</code></td><td>x 在葉節點 <code>L2:T</code> 定義，於 L3 被讀取（c-use）。</td></tr>
+</table></div>
+<p class="cap"><small>來源：D13、表示法、Clarifications 2026-11-16 第 3 條</small></p>
+
+<h2>本輪變更（clarify · 第 1 輪）</h2>
+<div class="box"><table>
+<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響</th></tr>
+<tr><td>D12（新）</td><td>條件拆分後匯合再定義，只留一個 def</td><td>等效 if/else：剩餘運算與 def 在每個葉分支複製；不設匯合 def、不引入暫存變數；並列條件複製數為乘積</td><td>US5、US2 情境 8</td></tr>
+<tr><td>D13（新）、表示法、FR-014</td><td>節點只標 <code>L&lt;行&gt;</code>；p-use 一律加 <code>:T</code>／<code>:F</code></td><td>拆出的節點標 <code>L&lt;行&gt;:&lt;路徑&gt;</code>；目標帶路徑時省略 <code>:T</code>／<code>:F</code></td><td>所有含 p-use 的 story、既有測試期望字串</td></tr>
+<tr><td>D9、D10</td><td>D9 無省略規則；D10 拆分後「接回該參數的 def」</td><td>D9 指向 D13；D10 改為該參數在每個葉分支各自定義</td><td>US2 情境 8</td></tr>
+<tr><td>Clarifications 2026-11-16（新，5 條）</td><td>未定義</td><td>條件在既有決策節點中不複製本體；左運算元不重讀；目標帶路徑省略分支標記；空分支不建節點；呼叫點隨葉複製、函式／class 只一個 scope、不設上限</td><td>US5 情境 4、6、10、11</td></tr>
+<tr><td>US2 情境 6、8</td><td>6：差異只來自 US5 條件修正；8：只說兩分支接到 b 的 def</td><td>6：列 FR-001／004／007／008／009／014；8：給完整程式與 pair（<code>b: L2:T -&gt; L3</code> 等）</td><td>US2</td></tr>
+<tr><td>US5 情境 1–7 改寫，新增 8–12</td><td>情境只描述分支目標，無法分辨 T／F</td><td>給具體 pair 字串；新增 use 先於條件、並列條件、呼叫點、函式運算式、entry 參數情境</td><td>US5</td></tr>
+<tr><td>FR-005、FR-008</td><td>只要求拆分支、use 只在該分支</td><td>加入與 if/else 一致、不重讀、不匯合定義、不複製本體、函式只一個 scope 等 MUST</td><td>US2、US5</td></tr>
+<tr><td>Edge Cases、FR-012、FR-013、SC-004</td><td>golden 只受 US5 條件修正影響；README 只加 <code>with</code> 限制</td><td>列出 golden 受影響的 FR；README 加並列條件使節點數乘積成長；SC-004 擴充受影響語法清單</td><td>全部既有 golden</td></tr>
+</table></div>
 
 <h2>工程師要決定的事</h2>
 
@@ -176,26 +231,27 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <div class="box"><table>
 <tr><th>Story</th><th>可驗證的情境</th><th>不可驗證／缺（原因）</th></tr>
 <tr><td>US1 labeled／with／debugger</td><td class="ok">1、2、4、5、6、7</td><td class="no">3：只給 <code>continue outer</code> 的下一步，未給 pair 預期</td></tr>
-<tr><td>US2 預設參數與 new</td><td class="ok">1、2、3、4、6</td><td class="no">5：未給完整程式與行號，只說「有初始化節點、d 記為 use」</td></tr>
+<tr><td>US2 預設參數與 new</td><td class="ok">1、2、3、4、6、8</td><td class="no">5：未給完整程式與行號，只說「有初始化節點、d 記為 use」；7：未給程式行號與 pair 字串</td></tr>
 <tr><td>US3 class 欄位／static block</td><td class="ok">1、2、3、4</td><td class="no">5：「既有行為不變」未指定 computed key、extends 的輸入（由既有測試涵蓋）</td></tr>
 <tr><td>US4 連鎖指派</td><td class="ok">1、2</td><td class="no">3：以 <code>L&lt;def&gt;</code> 佔位，未給完整程式與具體 pair</td></tr>
-<tr><td>US5 條件與短路</td><td class="ok">5、7</td><td class="no">1、2、3、6：分支目標與 use 同一行時，<code>L&lt;決策行&gt;&gt;L&lt;目標行&gt;</code> 分不出 true／false（見判斷點 1）</td></tr>
+<tr><td>US5 條件與短路</td><td class="ok">1–9、12（上輪「T／F 分不出」已由 D13 解決）；7 為通則，可驗證</td><td class="no">10：pair 可驗證，但「兩葉各連到同一 <code>log</code> scope」未給記法；11：只說 scope 一個、pair 不重複，未給 pair 字串（<code>run</code> 也未宣告）</td></tr>
 <tr><td>US6 同名 scope</td><td class="ok">1、2、3、5</td><td class="no">4：只要求名稱唯一，未給預期名稱（原始碼自帶 <code>f_1</code> 的出現順序未定）</td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
-<p>無。規範未涵蓋「Node.js 靜態分析函式庫＋CLI」，但本功能不新增技術選型；plan 起再檢視。</p>
+<p>無。規範未涵蓋「Node.js 靜態分析函式庫＋CLI」，本輪也不新增技術選型；變動只在測試輔助工具的記法（<code>tests/helpers/analyze.js</code>），plan 起再檢視。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無。對照憲章 §CP-1（可追溯）、§CP-4（核心邏輯有測試）：spec 逐條標註來源，且 FR-013、SC-001～005 要求測試覆蓋。</p>
+<p>無。對照憲章 §CP-1（可追溯）、§CP-4（核心邏輯有測試）：D12、D13 與新增情境皆標註來源，FR-013、SC-001～005 要求測試覆蓋。</p>
 
 <h3>本輪判斷點</h3>
-<p>3 個判斷點已由使用者裁決，改列於「已決事項」D9–D11。</p>
+<p class="meta">本輪 1 個判斷點（switch 判斷式）已由使用者裁決：方案 A，改列於「已決事項」。</p>
 
 <h3>次要疑點</h3>
-<p class="meta">已修正：US3 情境編號順序、US2 情境 6 與 G-1 的口徑、US5 情境 4 的 false 分支目標（exit）。</p>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
+<tr><td>同一行多個敘述（<code>var a = c ? 1 : 2, b = d ? 3 : 4;</code>）時，拆出節點標記會碰撞；使用者已延後到 analyze 重評。提醒：壓縮過的 client-side JS 常整檔同一行，碰撞可能是常態。</td><td>Clarifications「延後釐清」；FR-014</td></tr>
+<tr><td>條件位於 <code>for</code> 更新式、箭頭函式運算式本體時，spec 靠 D12 通則類推（情境 12 為 <code>return</code> 的例子），未逐一列出。</td><td>D12；US5 情境 12</td></tr>
 <tr><td>US1 情境 3、US4 情境 3、US2 情境 5 缺具體 pair 預期</td><td>見驗收條件盤點</td></tr>
 <tr><td>原始碼自帶 <code>f_1</code> 且在兩個同名 <code>f</code> 之後時，誰得到 <code>f_1_1</code>？</td><td>FR-011；US6 情境 4</td></tr>
 </table></div>
@@ -209,8 +265,11 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>D4</td><td>帶預設值的參數在 entry 之後各有初始化節點（use 與 def 同在該節點）</td></tr>
 <tr><td>D5、D7</td><td>欄位初始化式與 static block 各自成 scope；static 者接在 class 宣告節點，實例欄位不接入外層（README 註明）</td></tr>
 <tr><td>D6</td><td>同父同名 scope 依出現順序加 <code>_1</code>、<code>_2</code> 後綴</td></tr>
-<tr><td>D9</td><td>測試輔助工具的 p-use 記法加分支標記 <code>:T</code>／<code>:F</code></td></tr>
-<tr><td>D10</td><td>預設值運算式內的條件與短路比照 D3 拆分支，接回該參數的 def</td></tr>
+<tr><td>D9</td><td>測試輔助工具的 p-use 記法加分支標記 <code>:T</code>／<code>:F</code>（目標帶路徑時省略，見 D13）</td></tr>
+<tr><td>D10</td><td>預設值運算式內的條件與短路比照 D3 拆分支；該參數在每個葉分支各自定義（依 D12）</td></tr>
 <tr><td>D11</td><td>參數解構中每個帶預設值的名稱各一個初始化節點，依出現順序</td></tr>
+<tr><td>D12</td><td>?:／&amp;&amp;／||／??／邏輯指派一律等效 if/else；剩餘運算與 def 在每個葉分支複製；不在匯合點定義、不引入暫存變數</td></tr>
+<tr><td>D13</td><td>拆出的節點標 <code>L&lt;行&gt;:&lt;路徑&gt;</code>；p-use 目標帶路徑時省略 <code>:T</code>／<code>:F</code></td></tr>
+<tr><td>釐清 2026-11-16</td><td>既有決策節點條件中不複製本體；左運算元不重讀；空分支不建節點直接接後繼；呼叫點隨葉複製、函式／class 運算式只一個 scope；複製數不設上限（README 註明）；switch 判斷式比照既有決策節點，不複製 case 本體（US5 情境 13）</td></tr>
 </table></div>
 </main>

@@ -13,17 +13,17 @@
 | 簡稱 | 路徑 | 權威範圍 |
 |------|------|----------|
 | KI | `docs/known-issues.md` | 各問題的重現輸入與目前錯誤結果（§1–§9 對應檔內問題編號） |
-| USR | 本 feature 的需求討論（2026-11-11，記錄於本 spec 的「範圍決策」） | 修正範圍與各問題的建模方向 |
+| USR | 本 feature 的需求討論（2026-11-11、2026-11-15，記錄於本 spec 的「範圍決策」） | 修正範圍與各問題的建模方向 |
 
 範圍對照：
 
 | User Story | 來源 |
 |------------|------|
 | US1 | KI §1；USR D2 |
-| US2 | KI §2、§3；USR D4、D10、D11 |
+| US2 | KI §2、§3；USR D4、D10、D11、D12 |
 | US3 | KI §4；USR D5、D7 |
 | US4 | KI §5 |
-| US5 | KI §6；USR D3、D8、D9；G-1 |
+| US5 | KI §6；USR D3、D8、D9、D12、D13；G-1 |
 | US6 | KI §8；USR D6 |
 
 ### 範圍決策（USR）
@@ -40,12 +40,29 @@
   實例欄位初始化式的 scope 不接入外層流程（屬 KI §7 範圍），README 註明。
 - **D8**：D3 的短路運算一併包含邏輯指派 `||=`、`&&=`、`??=`。
 - **D9**：測試輔助工具的 p-use 記法加上分支標記（`L<決策行>>L<目標行>:T`／`:F`），以區分同一行內的
-  true／false 分支。
-- **D10**：預設值運算式本身含 `?:` 或短路運算時，比照 D3 拆出分支，最後接回該參數的 def。
+  true／false 分支。（目標節點帶分支路徑時的省略規則見 D13。）
+- **D10**：預設值運算式本身含 `?:` 或短路運算時，比照 D3 拆出分支；依 D12，該參數在每個葉分支各自定義。
 - **D11**：參數解構中每個帶預設值的名稱各有一個初始化節點，依出現順序。
 - **D5**：KI §4 每個 class 欄位初始化式與 static block 各自成為一個 scope。
 - **D6**：KI §8 同一個父 scope 下的同名 scope，第一個保留原名，之後依原始碼出現順序加 `_1`、`_2`…
   後綴（同 TypeScript 降轉的衝突改名方式）。
+- **D12**（2026-11-15）：D3／D8 的拆分一律採「等效 if/else 轉換」：`a = c ? x : y` 等效為
+  `if (c) { a = x; } else { a = y; }`；`x = a && b` 等效為 `if (a) { x = b; } else { x = a; }`（`||`、`??`
+  依短路條件比照）。條件或短路運算包在較大的運算式中時（`x = 1 + (c ? a : b)`、`f(c ? a : b)`），
+  分支之後的剩餘運算與定義在每個葉分支各複製一份（`if (c) { x = 1 + a; } else { x = 1 + b; }`）；
+  每個葉分支各有自己的 def，不設匯合後才定義的節點；在條件之前已求值的部分留在決策節點之前，維持求值
+  順序；不引入暫存變數。同一敘述有多個並列的條件時，複製數為各條件葉分支數的乘積。
+  （取代原「拆出分支後匯合再定義」的建模：匯合只留下一個 def，會遺失「哪個分支的值流到哪裡」的 pair。）
+  短路運算的左運算元只在決策節點求值一次，葉分支取用其值時不重讀、不重算（`x = a && b` 的 false 葉只
+  定義 `x`）；剩餘運算中的呼叫隨葉分支複製（每個葉都是呼叫點），函式／class 運算式只有一個 scope、不隨
+  葉複製；不設複製上限。條件出現在既有決策節點的條件中時（`if (a && b)`），條件之後只剩分支、沒有 def，
+  不複製本體，內層決策的分支直接接到原敘述的 true／false 目標。沒有任何運算的分支（`a ||= b` 的 true
+  分支）不建節點，直接接到後繼。（細節見 Clarifications 2026-11-16）
+- **D13**（2026-11-15）：測試輔助工具的節點標記加上分支路徑：由 D12 拆出、位於某條件分支內的節點（葉
+  節點與內層決策節點）標為 `L<行>:<路徑>`，行號為原敘述所在行，路徑為從該敘述第一個拆出的決策起、依求值
+  順序沿途 `T`／`F` 的序列（如 `L1:T`、巢狀 `L1:TF`），def 與 use 皆適用；敘述的第一個決策、未拆分的
+  節點與拆分後接回的原有節點（如 if 本體）維持 `L<行>`。p-use 的目標節點標記帶路徑時省略分支標記（路徑
+  最後一碼即分支，如 `L3>L3:F`）；目標不帶路徑時維持 `:T`／`:F`（如 `L4>L5:T`）。
 
 ### 來源缺口（G）
 
@@ -53,10 +70,39 @@
   `a` 的 use 完全沒有被記錄；`if (a && b)` 的 `a`、`b` 被記為 c-use 而非 p-use。因 D3 要把短路運算元
   拆成分支節點，單一識別字的分支節點必須能產生 p-use，故納入 US5。
 
+## Clarifications
+
+### Session 2026-11-16
+
+- Q: 條件或短路運算出現在 if／while／for 的條件裡時（`if (a && b) { S }`），要不要把本體 S 複製到每個葉
+  分支？ → A: 不複製；內層決策的分支直接接到原敘述的 true／false 目標（條件之後只剩分支、沒有 def，不會
+  遺失定義）。
+- Q: 短路運算的葉分支要不要再讀一次左運算元（`x = a && b` 的 false 葉、`x = f() && b`）？ → A: 不重讀；
+  左運算元只在決策節點求值一次，葉節點只定義目標變數，識別字與非識別字同一規則（重讀產生的 c-use 必與
+  決策的 p-use 同路徑，沒有額外測試意義）。
+- Q: p-use 目標為拆出的葉節點時，`L3>L3:F:F` 的分支標記重複，記法怎麼定？ → A: 目標節點標記帶路徑時省略
+  分支標記（`L3>L3:F`）；目標不帶路徑時維持 `:T`／`:F`（`L4>L5:T`）。
+- Q: 邏輯指派中什麼都不做的分支（`a ||= b` 的 true 分支）的 p-use 指向哪裡？ → A: 不建空節點，直接指向
+  後繼節點（最後一行時為 exit）。
+- Q: 複製剩餘運算時遇到呼叫或函式運算式要怎麼處理、複製數是否設上限？ → A: 呼叫點隨葉複製，各自連到同一
+  個被呼叫端；函式／class 運算式只有一個 scope；不設上限，README 註明並列條件會使節點數以乘積成長。
+- Q: 條件或短路運算出現在 switch 的判斷式（`switch (c ? a : b)`）時怎麼拆？ → A: 比照既有決策節點：不複製
+  case 本體，判斷式拆出的每個葉各自接到原 switch 的第一個 case 比對；case 節點不重讀判斷式中的變數。
+
+#### 延後釐清
+
+- 測試輔助工具以字串去重；同一行有多個敘述時（`var a = c ? 1 : 2, b = d ? 3 : 4;`），拆出的節點標記會
+  碰撞，p-use 的省略記法也可能有歧義。暫定驗收情境一律一行一個敘述，碰撞列為輔助工具的已知限制；
+  analyze 時重新評估是否需要序號。[clarifier M2]
+
 ## 表示法
 
 驗收情境以測試輔助工具（`tests/helpers/analyze.js`）的格式描述 def-use pair：`<變數>: <def> -> <use>`。
-`<def>` 為 `entry` 或 `L<行>`；c-use 為 `L<行>`，p-use 為 `L<決策行>>L<分支目標行>:T` 或 `:F`（true／false 分支；USR D9）。行號為被分析程式碼的
+`<def>` 為 `entry` 或節點標記；c-use 為節點標記；p-use 為 `<決策節點標記>><分支目標節點標記>`，目標不帶
+路徑時再加 `:T` 或 `:F`（true／false 分支；USR D9、D13）。節點標記為 `L<行>`、`entry` 或 `exit`；由條件或
+短路運算拆出、位於分支內的節點為 `L<行>:<路徑>`（如 `L2:T`、`L1:TF`；USR D13）。短路運算的 true／false
+指等效 if 的條件結果：`&&`、`||`、`&&=`、`||=` 為 `if (a)`，`??`、`??=` 為 `if (a != null)`。範例：
+`a: L1 -> L2>L2:F`（`a` 在 L2 判斷為 false，進入 L2 的 F 葉）、`a: L1 -> L2>L5:F`（進入 L5）。行號為被分析程式碼的
 行號（1 起算）。「intra-procedural」「intra-page」指 dujs 產出的對應模型。
 
 ## User Scenarios & Testing *(mandatory)*
@@ -134,11 +180,13 @@
    **When** 分析，**Then** 兩者各有參數初始化節點，`d` 的外層定義被記為該節點的 use；`h` 的 `x` 定義在
    該節點。[SRC KI §2] [SRC USR D4]
 6. **Given** 沒有任何預設值的函式（含既有 ES5 golden fixtures），**When** 分析，**Then** 不產生參數初始化
-   節點；除 US5 對條件的修正外，輸出與現在相同。[SRC USR D4]
+   節點；除 FR-001、FR-004、FR-007、FR-008、FR-009、FR-014 造成的差異外，輸出與現在相同。[SRC USR D4]
 7. **Given** `function h({x = d, y = x}) {}` 被呼叫，**When** 分析，**Then** `x`、`y` 依序各有初始化節點，
    `y` 的預設值讀到 `x` 在其初始化節點的 def。[SRC USR D11]
-8. **Given** `function k(b = a || d) {}` 被呼叫，**When** 分析，**Then** `a` 在 `b` 的初始化中是指向兩個
-   分支的 p-use，`d` 的 use 只在 false 分支上，兩個分支都接到 `b` 的 def。[SRC USR D10]
+8. **Given** 程式 `var a = 0, d = 1;` / `function k(b = a || d) {` / `  return b;` / `}` / `k();`，**When**
+   分析，**Then** `b` 的初始化節點（L2）是判斷 `a` 的決策：true 葉 `L2:T` 只定義 `b`（取 `a` 的值，不重讀），
+   false 葉 `L2:F` 讀 `d` 並定義 `b`；intra-page 含 `a: L1 -> L2>L2:T`、`a: L1 -> L2>L2:F`、`d: L1 -> L2:F`、
+   `b: L2:T -> L3`、`b: L2:F -> L3`，不含 `d: L1 -> L2:T`。[SRC USR D10] [SRC USR D12]
 
 ---
 
@@ -199,25 +247,54 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** KI §6 的程式（`var a = 1, b = 2;` / `var c = a ? b : 3;`），**When** 分析，**Then** 不再有
-   `a (2,(3,null))` 這類目標為空的 p-use；`a` 的 p-use 有兩筆，分別指向求值 `b` 的 true 分支與求值 `3`
-   的 false 分支；`b` 的 use 只在 true 分支上。[SRC KI §6] [SRC USR D3]
-2. **Given** 巢狀條件 `var c = a ? (b ? 1 : 2) : 3;`，**When** 分析，**Then** `a`、`b` 各自有指向其兩個
-   分支的 p-use，`b` 的決策只在 `a` 的 true 分支上。[SRC USR D3]
-3. **Given** 程式 `var a = 1, b = 2;` / `var c = a && b;`，**When** 分析，**Then** `a` 的 p-use 指向「求值
-   `b`」（true）與「直接完成指派」（false）兩個分支，`b` 的 use 只在 true 分支上；`||` 與 `??` 依其短路
-   條件對調或改為「是否為 null／undefined」。[SRC USR D3]
-4. **Given** 程式 `var a = 1, b = 2;` / `if (a && b) {` / `  b = 3;` / `}`，**When** 分析，**Then** `a`
-   與 `b` 都是 p-use（不是 c-use）：`a` 的 false 分支直接跳過 if 本體（到 exit），`b` 的 true 分支進入 L3、false 分支到 exit。
-   [SRC USR D3] [G-1]
-5. **Given** 程式 `var a = 1, b;` / `if (a) {` / `  b = 3;` / `}` / `console.log(b);`，**When** 分析，
+1. **Given** KI §6 的程式（`var a = 1, b = 2;` / `var c = a ? b : 3;` / `console.log(c);`），**When** 分析，
+   **Then** 不再有 `a (2,(3,null))` 這類目標為空的 p-use；依等效 if/else，L2 的決策之後是 `c = b`（`L2:T`）
+   與 `c = 3`（`L2:F`）兩個葉節點；intra-procedural 含 `a: L1 -> L2>L2:T`、`a: L1 -> L2>L2:F`、
+   `b: L1 -> L2:T`、`c: L2:T -> L3`、`c: L2:F -> L3`，不含 `b: L1 -> L2:F`。
+   [SRC KI §6] [SRC USR D3] [SRC USR D12] [SRC USR D13]
+2. **Given** `var a = 1, b = 2;` / `var c = a ? (b ? 1 : 2) : 3;` / `console.log(c);`，**When** 分析，
+   **Then** `b` 的決策節點為 `L2:T`（只在 `a` 的 true 分支上）；含 `a: L1 -> L2>L2:T`、`a: L1 -> L2>L2:F`、
+   `b: L1 -> L2:T>L2:TT`、`b: L1 -> L2:T>L2:TF`、`c: L2:TT -> L3`、`c: L2:TF -> L3`、`c: L2:F -> L3`。
+   [SRC USR D3] [SRC USR D12] [SRC USR D13]
+3. **Given** `var a = 1, b = 2;` / `var c = a && b;` / `console.log(c);`，**When** 分析，**Then** 依等效
+   `if (a) { c = b; } else { c = a 的值; }`：含 `a: L1 -> L2>L2:T`、`a: L1 -> L2>L2:F`、`b: L1 -> L2:T`、
+   `c: L2:T -> L3`、`c: L2:F -> L3`，不含 `a: L1 -> L2:F`（左運算元不重讀）。把 `&&` 換成 `||` 時 `b` 的
+   use 改在 `L2:F`；換成 `??` 時以「`a` 不是 null／undefined」為 true，`b` 的 use 也在 `L2:F`。
+   [SRC USR D3] [SRC USR D12]
+4. **Given** `var a = 1, b = 2;` / `if (a && b) {` / `  b = 3;` / `}`，**When** 分析，**Then** `a`、`b` 都是
+   p-use（不是 c-use），`b` 的決策節點為 `L2:T`，if 本體不複製：含 `a: L1 -> L2>L2:T`、`a: L1 -> L2>exit:F`、
+   `b: L1 -> L2:T>L3:T`、`b: L1 -> L2:T>exit:F`。[SRC USR D3] [SRC USR D12] [G-1]
+5. **Given** `var a = 1, b;` / `if (a) {` / `  b = 3;` / `}` / `console.log(b);`，**When** 分析，
    **Then** 含 `a: L1 -> L2>L3:T` 與 `a: L1 -> L2>L5:F` 兩筆 p-use。`while (a)` 等其他以單一識別字為條件的
    敘述同樣產生 p-use。[G-1]
-6. **Given** 程式 `var a = 0, b = 1;` / `a ||= b;` / `console.log(a);`，**When** 分析，**Then** `a` 在 L2
-   是指向兩個分支的 p-use；`b` 的 use 與 `a` 的重新定義只在 false（`a` 為 falsy）分支上，因此同時含
-   `a: L1 -> L3` 與 `a: L2 -> L3`。`&&=`、`??=` 依其短路條件比照。[SRC USR D8]
+6. **Given** `var a = 0, b = 1;` / `a ||= b;` / `console.log(a);`，**When** 分析，**Then** 依等效
+   `if (a) {} else { a = b; }`，true 分支不建節點、直接接到 L3：含 `a: L1 -> L2>L3:T`、`a: L1 -> L2>L2:F`、
+   `b: L1 -> L2:F`、`a: L1 -> L3`、`a: L2:F -> L3`。`&&=` 的 `a = b` 葉在 true 分支（`L2:T`），false 分支直接
+   接到 L3；`??=` 以「`a` 不是 null／undefined」為 true，同 `||=`。[SRC USR D8] [SRC USR D12]
 7. **Given** 所有拆出分支後的模型，**When** 以測試輔助工具取得 pair，**Then** 每一筆 p-use 的分支目標
    都存在（輔助工具不拋錯）。[SRC KI §6]
+8. **Given** `var a = 1, b = 2, c = 1, y = 0;` / `var x = y + (c ? a : b);` / `console.log(x);`，**When**
+   分析，**Then** `y` 在判斷 `c` 之前求值，其 use 是 L2 決策節點的 c-use；葉節點 `L2:T`（`x = y 的值 + a`）與
+   `L2:F`（`x = y 的值 + b`）不重讀 `y`：含 `y: L1 -> L2`、`c: L1 -> L2>L2:T`、`c: L1 -> L2>L2:F`、
+   `a: L1 -> L2:T`、`b: L1 -> L2:F`、`x: L2:T -> L3`、`x: L2:F -> L3`，沒有匯合後的單一 def。
+   [SRC USR D12] [SRC USR D13]
+9. **Given** `var a = 1, b = 0;` / `var x = (a ? 1 : 2) + (b ? 3 : 4);` / `console.log(x);`，**When** 分析，
+   **Then** `b` 的決策在 `a` 的兩個分支各有一份（`L2:T`、`L2:F`）：含 `b: L1 -> L2:T>L2:TT`、
+   `b: L1 -> L2:T>L2:TF`、`b: L1 -> L2:F>L2:FT`、`b: L1 -> L2:F>L2:FF`，以及 `x: L2:TT -> L3`、
+   `x: L2:TF -> L3`、`x: L2:FT -> L3`、`x: L2:FF -> L3`。[SRC USR D12]
+10. **Given** `var c = 1, a = 1, b = 2;` / `var x = log(c ? a : b);` / `console.log(x);` /
+    `function log(v) { return v; }`，**When** 分析，**Then** `L2:T`（`x = log(a)`）與 `L2:F`（`x = log(b)`）
+    都是 `log` 的呼叫點，inter-procedural 模型中兩者各自連到同一個 `log` scope；含 `a: L1 -> L2:T`、
+    `b: L1 -> L2:F`、`x: L2:T -> L3`、`x: L2:F -> L3`。[SRC USR D12]
+11. **Given** `var c = 1, a = 1;` / `var x = (c ? 1 : 2) + run(function () { return a; });`，**When** 分析，
+    **Then** 匿名函式只有一個 scope（不因複製成為兩個），其中 `a` 的 pair 不重複。[SRC USR D12]
+12. **Given** `function f(c, a, b) {` / `  return c ? a : b;` / `}` / `f(1, 2, 3);`，**When** 分析，**Then** f 的
+    intra-procedural 含 `c: entry -> L2>L2:T`、`c: entry -> L2>L2:F`、`a: entry -> L2:T`、`b: entry -> L2:F`，
+    `L2:T`、`L2:F` 兩個 return 葉都接到 exit。[SRC USR D12]
+13. **Given** `var c = 1, a = 1, b = 2;` / `switch (c ? a : b) {` / `  case 1:` / `    console.log(a);` / `}`，
+    **When** 分析，**Then** case 本體不複製，`L2:T`（取 `a`）與 `L2:F`（取 `b`）都接到 L3 的 case 比對：含
+    `c: L1 -> L2>L2:T`、`c: L1 -> L2>L2:F`、`a: L1 -> L2:T`、`b: L1 -> L2:F`，且每筆 p-use 的分支目標都存在。
+    [SRC USR D12]
 
 ---
 
@@ -250,11 +327,14 @@
 - 未加 label 的 `break`／`continue` 在 labeled 迴圈內：行為與現在相同。[SRC USR D2]
 - `with` 本體內未宣告的名稱（KI §1 的 `p = 1`）：照一般規則解析，不視為 `o` 的屬性；README 註明此限制。
   [SRC USR D2]
-- 條件運算式與短路運算子出現在既有決策節點中（`if (a ? b : c)`、`while (a || b)`）：拆分後最後一個決策
-  的分支接到原敘述的 true／false 分支。[SRC USR D3]
+- 條件運算式與短路運算子出現在既有決策節點中（`if (a ? b : c)`、`while (a || b)`、`switch (c ? a : b)`）：
+  不複製本體（switch 時判斷式的每個葉接到第一個 case 比對）；內層決策
+  節點依 D13 標路徑，最後一層決策的分支接到原敘述的 true／false 目標。[SRC USR D3] [SRC USR D12]
+- 同一敘述有很多並列條件時，葉節點數為各條件葉數的乘積（不設上限）；README 註明。[SRC USR D12]
 - 可選鏈 `a?.b` 雖然也是短路，不在本輪拆分範圍（維持現狀）。[SRC USR D3]
-- 不含上述語法的程式（含既有 ES5 golden fixtures）：除了 US5 對單一識別字條件與 `&&`／`||`／`??`
-  的修正外，四層模型輸出不變（ES5 沒有預設參數、class 欄位與邏輯指派）。[SRC KI §6] [G-1]
+- 既有 ES5 golden fixtures：只會因 FR-001（labeled／`with`／`debugger`）、FR-004（`new` 的參數）、FR-007
+  （連鎖指派）、FR-008（`?:`、`&&`、`||`）、FR-009（單一識別字條件）與 FR-014（記法）改變；ES5 沒有預設
+  參數、class 欄位、`??` 與邏輯指派。[SRC KI §6] [G-1]
 
 ## Requirements *(mandatory)*
 
@@ -269,7 +349,7 @@
 - **FR-005**: 帶預設值的參數（函式、箭頭函式、參數解構）MUST 在 entry 之後依參數順序各有一個初始化節點；
   預設值運算式讀取的變數 MUST 記為該節點的 use，該參數（或解構出的名稱）MUST 在該節點定義；沒有預設值的
   參數 MUST 維持在 entry 定義；參數解構中每個帶預設值的名稱 MUST 各有一個初始化節點，依出現順序；預設值
-  運算式中的條件與短路運算 MUST 依 FR-008 拆出分支後接回該參數的 def。[SRC KI §2] [SRC USR D4]
+  運算式中的條件與短路運算 MUST 依 FR-008 拆出分支，該參數 MUST 在每個葉分支各自定義。[SRC KI §2] [SRC USR D4]
   [SRC USR D10] [SRC USR D11]
 - **FR-006**: 每個 class 欄位初始化式（實例與 static）與 static block MUST 各自成為一個 scope，其中的
   use 與區域 def MUST 依一般規則分析；static 者 MUST 接在 class 宣告節點；實例欄位 MUST NOT 接入外層流程，
@@ -277,22 +357,29 @@
 - **FR-007**: 連鎖的單純指派（`=`）中，內層指派的目標 MUST NOT 被記為 use；內層為複合或邏輯指派時，
   其目標依該運算子語意記為 use。[SRC KI §5]
 - **FR-008**: `?:` 的條件與 `&&`、`||`、`??`、`&&=`、`||=`、`??=` 的左運算元 MUST 成為具 true 與 false 分支的決策點；只在某
-  分支求值的運算式，其 use MUST 只出現在該分支上。[SRC KI §6] [SRC USR D3] [SRC USR D8]
+  分支求值的運算式，其 use MUST 只出現在該分支上。拆分 MUST 與等效的 if/else 敘述一致：條件之後的剩餘
+  運算與定義（含呼叫）在每個葉分支各有一份節點（各自的 def），MUST NOT 在匯合後才定義；條件之前已求值的
+  部分 MUST 留在決策節點；短路運算的左運算元 MUST 只在決策節點求值一次，葉節點 MUST NOT 重讀；函式／class
+  運算式 MUST 只有一個 scope；沒有運算的分支 MUST NOT 建節點、直接接到後繼；位於既有決策節點條件中時
+  （含 switch 判斷式）MUST NOT 複製該敘述的本體；MUST NOT 引入原程式沒有的變數。[SRC KI §6] [SRC USR D3] [SRC USR D8]
+  [SRC USR D12]
 - **FR-009**: 決策節點的條件只有單一識別字時，該識別字 MUST 記為 p-use。[G-1]
 - **FR-010**: 所有模型中的 p-use MUST 有存在的 true 與 false 分支目標。[SRC KI §6]
 - **FR-011**: 同一個父 scope 下名稱相同的 scope，第一個 MUST 保留原名，之後 MUST 依原始碼出現順序加上
   `_1`、`_2`… 後綴並跳過已被使用的名稱；沒有重名時名稱 MUST 不變。[SRC KI §8] [SRC USR D6]
 - **FR-012**: 修正後的問題 MUST 自 `docs/known-issues.md` 移除（或標為已修正），README 的限制段落 MUST
-  依本輪結果更新（移除「Labeled break/continue」限制、加入 `with` 限制）。[SRC KI §1] [SRC USR D1]
-- **FR-013**: 既有測試 MUST 全數通過；golden 期望輸出只可因本 spec 的 FR（主要為 FR-005、FR-006、FR-008、FR-009）
-  有意改變，且每一處差異 MUST 可對應到某條 FR。[SRC KI §6] [G-1]
-- **FR-014**: 測試輔助工具 MUST 以 `:T`／`:F` 標記 p-use 的分支，既有測試的 p-use 期望字串隨之更新。
-  [SRC USR D9]
+  依本輪結果更新（移除「Labeled break/continue」限制、加入 `with` 限制與並列條件使節點數以乘積成長的說明）。[SRC KI §1] [SRC USR D1]
+- **FR-013**: 既有測試 MUST 全數通過；golden 期望輸出與測試期望字串只可因本 spec 的 FR（FR-001、FR-004、
+  FR-005、FR-006、FR-007、FR-008、FR-009、FR-014）有意改變，且每一處差異 MUST 可對應到某條 FR。[SRC KI §6] [G-1]
+- **FR-014**: 測試輔助工具 MUST 以 `L<行>:<路徑>` 標記由 FR-008 拆出、位於分支內的節點（def 與 use 皆適用），
+  並在 p-use 目標不帶路徑時以 `:T`／`:F` 標記分支（記法見「表示法」），既有測試的 p-use 期望字串隨之更新。
+  [SRC USR D9] [SRC USR D13]
 
 ### Key Entities
 
 - **Scope**：分析的命名範圍（page、函式、block，新增欄位初始化式與 static block），名稱需唯一。
-- **CFG 節點**：控制流程圖節點；決策節點具 true／false 分支。本輪新增由條件與短路運算子拆出的決策節點，
+- **CFG 節點**：控制流程圖節點；決策節點具 true／false 分支。本輪新增由條件與短路運算子拆出的決策節點
+  與各葉分支上的複製節點，
   以及帶預設值參數的初始化節點。
 - **Def-use pair**：變數的定義節點與使用（c-use：節點；p-use：決策節點與分支目標）的配對。
 
@@ -303,8 +390,9 @@
 - **SC-001**: KI §1–§6、§8 的每段重現輸入都以自動化測試覆蓋，且全部通過（共 7 個問題，0 個仍重現）。
 - **SC-002**: 含 labeled、`with`、`debugger` 的程式以 CLI 分析時 100% 產出結果（0 次中止）。
 - **SC-003**: 任何測試輸入中，沒有分支目標的 p-use 數量為 0。
-- **SC-004**: 不含受影響語法的既有 golden fixtures，輸出 100% 與現在相同；有變更的 golden 檔案每一處差異
-  都能對應到本 spec 的某條 FR。
+- **SC-004**: 不含受影響語法（labeled／`with`／`debugger`、帶參數的 `new`、連鎖指派、`?:`、`&&`、`||`、
+  `??`、邏輯指派、單一識別字條件、預設參數、class 欄位與 static block、同名 scope）的既有 golden fixtures，
+  輸出 100% 與現在相同；有變更的 golden 檔案每一處差異都能對應到本 spec 的某條 FR。
 - **SC-005**: 既有測試套件與 lint 全數通過。
 
 ## Assumptions
