@@ -12,7 +12,9 @@ dujs 為函式庫＋CLI，無持久儲存；本文件描述分析過程中的記
 | `preEvaluated` | `Array<AST>` | **新增**，預設 `[]` | 決策節點在條件之前已求值的前段運算式；GEN／USE 以 c-use 語境走訪 |
 | `branchPath` | `string` | **新增**，預設 `''` | 自原敘述第一個決策起的 `T`／`F` 序列；第一個決策與未拆分節點為 `''` |
 | `splitOrigin` | AST \| `null` | **新增**，預設 `null` | 拆出節點所屬的原敘述 AST；同一敘述的拆出節點共用 |
-| `analyzedExpressions` | `Array<AST>`（唯讀） | **新增** | `preEvaluated.concat([astNode])`，所有 def／use／呼叫走訪的統一入口（R8） |
+| `analyzedExpressions` | `Array<AST>`（唯讀） | **新增** | `preEvaluated.concat([astNode])`，所有 def／use／呼叫走訪的統一入口（R8）；根識別字防護依每個根各自判斷，`preEvaluated` 的根一律 c-use（R7） |
+| `isWithObject` | `boolean` | **新增**，預設 `false` | `with` 節點（`astNode` = 物件運算式）設為 `true`，由 `lib/esgraph/index.js` 設定；defuseanalyzer 對此節點不套根識別字防護，物件運算式記 c-use（R6、FR-003） |
+| `loopRightSplit` | `boolean` | **新增**，預設 `false` | for-in／for-of 迴圈節點的右側已被拆出決策／葉時，由 branchsplitter 設為 `true`；defuseanalyzer `useLoopHead` 略過 `right`，迴圈節點不重讀右側（R3、spec US5 情境 16） |
 | `line`／`col` | number | 既有 | 拆出節點取原敘述的 `loc.start`（D13：行號為原敘述所在行） |
 | `true`／`false` | FlowNode | 既有 | 決策節點兩者皆非 null（FR-010 不變量） |
 
@@ -22,10 +24,11 @@ dujs 為函式庫＋CLI，無持久儲存；本文件描述分析過程中的記
 - V2：`branchPath` 只含 `T`／`F`；同一 `splitOrigin` 下兩兩不同；非空路徑去掉最後一碼必為同敘述某決策節點的
   路徑（D13）。
 - V3：`preEvaluated` 非空者必為決策節點。
-- V4：拆出節點不得是「敘述語境中無 use、無 def、無呼叫的非決策節點」（空分支不建節點）。
+- V4：拆出節點不得是「敘述語境中無 use、無 def、無呼叫的非決策節點」（空分支不建節點）；例外：`return`／
+  `throw` 的葉一律建節點（spec D15），`return` 葉接 exit、`throw` 葉接原節點既有的 EXCEPTION 出邊目標。
 
-**生命週期**：esgraph 建基本 CFG → `branchsplitter` 以決策子圖取代含可拆運算的節點（原節點不進入
-`allNodes`）→ DFS 排序、指派 cfgId → cfgbuilder 設 `line`／`col` → modelbuilder 設 scope、必要時成為
+**生命週期**：esgraph 建基本 CFG → `branchsplitter.split(allNodes, { expressionThrows })` 以決策子圖取代含可拆
+運算的節點（原節點不進入 `allNodes`；for-in／for-of 右側例外：迴圈節點保留並設 `loopRightSplit`）→ DFS 排序、指派 cfgId → cfgbuilder 設 `line`／`col` → modelbuilder 設 scope、必要時成為
 CALL 節點（其 callReturn 節點複製 `line`／`col`／`branchPath`）。
 
 ## 2. 佔位節點 `DujsEvaluatedValue`（合成 AST，`lib/esgraph/branchsplitter.js`）
@@ -38,6 +41,12 @@ CALL 節點（其 callReturn 節點複製 `line`／`col`／`branchPath`）。
 
 條件語境遇到佔位節點：`truthy`／`falsy` 直接接 true／false 目標；`nonnull`／`unknown` 建一個無 use 的決策節點
 （R3）。敘述語境中整個值只剩佔位節點且無 def：不建節點（Clarification 2026-11-16）。
+
+### branchsplitter 模組介面
+
+| 介面 | 說明 |
+|------|------|
+| `split(allNodes, { expressionThrows: fn })` | 由 `lib/esgraph/index.js`（LGPL）在既有邊連好、DFS 排序與 cfgId 指派之前呼叫；`expressionThrows(astNode)` 為 index.js 傳入的 callback，branchsplitter（MIT）只呼叫它判斷拆出節點是否可能拋例外，不含任何 LGPL 程式碼；拆出節點的例外目標取原節點既有的 EXCEPTION 出邊（R3） |
 
 ## 3. 合成 AST（皆以不可列舉屬性快取於原 AST，重複建 CFG 取得同一物件）
 

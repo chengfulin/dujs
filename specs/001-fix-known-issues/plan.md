@@ -48,7 +48,7 @@ fast-check ^4.10.2**（搭配 mocha，性質測試 FR-010 與 D12 不變量；re
 |------|------|-----------|-----------|
 | §CP-1 可追溯 | 每項設計對應 FR／USR 決策；spec 與既有限制衝突處（US5 情境 10 vs README 呼叫點限制）已由使用者裁決（R12 方案 A，spec 情境 10 拆為 10／10b），不擴大範圍 | PASS | PASS（R12 已裁決：A，spec 已先更新） |
 | §CP-2 機密 | 不涉及機密 | PASS | PASS |
-| §CP-3 設定不硬編碼 | 無環境相依設定；性質測試 runs 可由 `FC_NUM_RUNS` 覆寫 | PASS | PASS |
+| §CP-3 設定不硬編碼 | 無環境相依設定；性質測試 runs 可由 `FC_NUM_RUNS`、seed 可由 `FC_SEED` 覆寫（預設固定 seed） | PASS | PASS |
 | §CP-4 核心邏輯測試 | 每個驗收情境一個自動化測試；FR-010／D12 以性質測試；golden 回歸 | PASS | PASS |
 | §CP-5 審查 | 經 PR 人為核准合併 | PASS | PASS |
 | §CP-6 例外可追蹤 | 偏離 tech-standards 兩項記於下節（tech-standards 非強制，仍記錄） | PASS | PASS |
@@ -63,14 +63,16 @@ fast-check ^4.10.2**（搭配 mocha，性質測試 FR-010 與 D12 不變量；re
 | 模組 | 檔案 | FR |
 |------|------|----|
 | CFG（LGPL） | `lib/esgraph/index.js`（labeled／with／debugger、呼叫 branchsplitter、檔頭紀錄） | FR-001～003、FR-008 |
-| CFG（MIT，新） | `lib/esgraph/branchsplitter.js` | FR-008、FR-010 |
-| FlowNode | `lib/esgraph/flownode.js`（`preEvaluated`、`branchPath`、`splitOrigin`、`analyzedExpressions`） | FR-008、FR-014 |
-| def-use | `lib/dujs/defuseanalyzer.js`（new 參數、連鎖指派、單一識別字、走訪 `analyzedExpressions`、switch 判斷式不重讀） | FR-004、FR-007～009 |
+| CFG（MIT，新） | `lib/esgraph/branchsplitter.js`（介面 `split(allNodes, { expressionThrows: fn })`，`expressionThrows` 由 LGPL 的 index.js 傳入，本檔不含 LGPL 程式碼） | FR-008、FR-010 |
+| FlowNode | `lib/esgraph/flownode.js`（`preEvaluated`、`branchPath`、`splitOrigin`、`analyzedExpressions`、`isWithObject`、`loopRightSplit`） | FR-003、FR-008、FR-014 |
+| def-use | `lib/dujs/defuseanalyzer.js`（new 參數、連鎖指派、單一識別字、with 物件 use、走訪 `analyzedExpressions`、switch 判斷式與 for-in／for-of 右側不重讀） | FR-003、FR-004、FR-007～009 |
+| 變數 | `lib/dujs/variableanalyzer.js`（必要時：新 scope 的 `ClassBody` 略過不影響分析，T026） | FR-006 |
 | 模型 | `lib/dujs/modelbuilder.js`（參數初始化合成本體、static 成員串接、callReturn 複製 `branchPath`） | FR-005、FR-006 |
 | scope | `lib/dujs/scopetree.js`、`lib/dujs/scope.js`（欄位／static scope、名稱唯一化） | FR-006、FR-011 |
 | 輸出 | `lib/dujs/cfggraphconverter.js`（拆出節點 label） | FR-008 |
-| 測試 | `tests/helpers/analyze.js`、`tests/dujs/*`（新增驗收與性質測試、更新 4 筆 p-use 字串）、`tests/golden/expected-es2015/`、`tests/esgraph/tests/maythrow.js` | FR-013、FR-014 |
+| 測試 | `tests/helpers/analyze.js`、`tests/dujs/*`（新增驗收與性質測試、更新 `tests/dujs/es2015.js` 既有 p-use 字串 4 處 9 筆）、`tests/dujs/defuseanalyzer.js` 等（依 T043 失敗清單）、`tests/esgraph/flownodetest.js`（FlowNode 新欄位）、`tests/golden/expected-es2015/`、`tests/esgraph/tests/maythrow.js`、`tests/esgraph/tests/README.md`（fixture 修改說明） | FR-013、FR-014 |
 | 文件 | `README.md`、`docs/known-issues.md`、`THIRD_PARTY_NOTICES.md` | FR-012 |
+| 稽核 | `specs/001-fix-known-issues/golden-diff.md`（golden 差異 → FR 對照的工作檔，T053 彙整進 PR 說明） | FR-013 |
 | 依賴 | `package.json`、`package-lock.json`（fast-check） | — |
 
 **明確不受影響**：KI §7（class 方法呼叫連結）、§9；可選鏈；`with` 的屬性推斷；呼叫點偵測規則（R12 裁決 A）；
@@ -96,6 +98,7 @@ specs/001-fix-known-issues/
 ├── contracts/
 │   ├── analyze-helper-notation.md   # 測試輔助工具 pair 記法（FR-014）
 │   └── cli-and-output.md            # CLI、API、輸出檔相容性
+├── golden-diff.md       # implement 期間的稽核工作檔：golden 差異 → FR（最後由 T053 彙整進 PR 說明）
 └── tasks.md             # Phase 2（/speckit-tasks 產出，非本指令）
 ```
 
@@ -125,10 +128,14 @@ tests/
 **Structure Decision**: 沿用既有單一專案結構（`lib/esgraph` 建 CFG、`lib/dujs` 分析、`tests/` 依模組分目錄）；
 拆分邏輯獨立為 `lib/esgraph/branchsplitter.js`，使 LGPL 檔案只增加呼叫點與 labeled／with／debugger 的最小修改。
 
-## 待裁決事項
+## 已裁決事項
 
-- **R12**：US5 情境 10 要求 `var x = log(c ? a : b);` 的葉連結到 `log` scope，與 README「只有呼叫敘述會連結」
-  衝突。使用者 2026-11-16 裁決方案 A：spec 情境 10 改為 `log(c ? a : b);`，`var x = …` 形式另列情境 10b 只驗 pair。詳見 [research.md](./research.md) R12。
+- **R12（已裁決：方案 A）**：US5 情境 10 原要求 `var x = log(c ? a : b);` 的葉連結到 `log` scope，與 README
+  「只有呼叫敘述會連結」衝突。使用者 2026-11-16 裁決方案 A：spec 情境 10 改為 `log(c ? a : b);`，`var x = …`
+  形式另列情境 10b 只驗 pair；呼叫點偵測規則不變。詳見 [research.md](./research.md) R12。
+- **D14–D16（2026-11-16 analyze）**：US4 情境 3 只驗 `a = b += 1`，`a ||= b ||= 1` 移到 US5 情境 14；`return`／
+  `throw` 的葉一律建節點（US5 情境 15）；不設複製上限、README 註明壓縮檔風險。for-in／for-of 右側拆分見 US5
+  情境 16。
 
 ## Complexity Tracking
 

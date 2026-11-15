@@ -22,8 +22,8 @@
 | US1 | KI §1；USR D2 |
 | US2 | KI §2、§3；USR D4、D10、D11、D12 |
 | US3 | KI §4；USR D5、D7 |
-| US4 | KI §5 |
-| US5 | KI §6；USR D3、D8、D9、D12、D13；G-1 |
+| US4 | KI §5；USR D14 |
+| US5 | KI §6；USR D3、D8、D9、D12、D13、D14、D15、D16；G-1 |
 | US6 | KI §8；USR D6 |
 
 ### 範圍決策（USR）
@@ -36,6 +36,9 @@
 - **D4**：KI §2 帶預設值的參數（含參數解構中的預設值）在函式 entry 之後依參數順序各自有一個初始化節點，
   預設值運算式的 use 與該參數的 def 都在此節點；沒有預設值的參數維持在 entry 定義。（原議 use 歸屬
   entry，clarify 前改為此案：entry 上的 def 與 use 無法配對，前面的參數會漏報。）
+- **D5**：KI §4 每個 class 欄位初始化式與 static block 各自成為一個 scope。
+- **D6**：KI §8 同一個父 scope 下的同名 scope，第一個保留原名，之後依原始碼出現順序加 `_1`、`_2`…
+  後綴（同 TypeScript 降轉的衝突改名方式）。
 - **D7**：KI §4 static 欄位初始化式與 static block 的 scope 接在 class 宣告節點（class 定義時執行）；
   實例欄位初始化式的 scope 不接入外層流程（屬 KI §7 範圍），README 註明。
 - **D8**：D3 的短路運算一併包含邏輯指派 `||=`、`&&=`、`??=`。
@@ -43,9 +46,6 @@
   true／false 分支。（目標節點帶分支路徑時的省略規則見 D13。）
 - **D10**：預設值運算式本身含 `?:` 或短路運算時，比照 D3 拆出分支；依 D12，該參數在每個葉分支各自定義。
 - **D11**：參數解構中每個帶預設值的名稱各有一個初始化節點，依出現順序。
-- **D5**：KI §4 每個 class 欄位初始化式與 static block 各自成為一個 scope。
-- **D6**：KI §8 同一個父 scope 下的同名 scope，第一個保留原名，之後依原始碼出現順序加 `_1`、`_2`…
-  後綴（同 TypeScript 降轉的衝突改名方式）。
 - **D12**（2026-11-15）：D3／D8 的拆分一律採「等效 if/else 轉換」：`a = c ? x : y` 等效為
   `if (c) { a = x; } else { a = y; }`；`x = a && b` 等效為 `if (a) { x = b; } else { x = a; }`（`||`、`??`
   依短路條件比照）。條件或短路運算包在較大的運算式中時（`x = 1 + (c ? a : b)`、`f(c ? a : b)`），
@@ -57,12 +57,20 @@
   定義 `x`）；剩餘運算中的呼叫隨葉分支複製（每個葉都是呼叫點），函式／class 運算式只有一個 scope、不隨
   葉複製；不設複製上限。條件出現在既有決策節點的條件中時（`if (a && b)`），條件之後只剩分支、沒有 def，
   不複製本體，內層決策的分支直接接到原敘述的 true／false 目標。沒有任何運算的分支（`a ||= b` 的 true
-  分支）不建節點，直接接到後繼。（細節見 Clarifications 2026-11-16）
+  分支）不建節點，直接接到後繼；但 `return`／`throw` 的葉即使沒有 use／def 也一律建節點（見 D15）。
+  （細節見 Clarifications 2026-11-16） [SRC USR D15]
 - **D13**（2026-11-15）：測試輔助工具的節點標記加上分支路徑：由 D12 拆出、位於某條件分支內的節點（葉
   節點與內層決策節點）標為 `L<行>:<路徑>`，行號為原敘述所在行，路徑為從該敘述第一個拆出的決策起、依求值
   順序沿途 `T`／`F` 的序列（如 `L1:T`、巢狀 `L1:TF`），def 與 use 皆適用；敘述的第一個決策、未拆分的
   節點與拆分後接回的原有節點（如 if 本體）維持 `L<行>`。p-use 的目標節點標記帶路徑時省略分支標記（路徑
   最後一碼即分支，如 `L3>L3:F`）；目標不帶路徑時維持 `:T`／`:F`（如 `L4>L5:T`）。
+- **D14**（2026-11-16）：US4 情境 3 只驗複合指派 `a = b += 1`（完整程式 `var a, b = 1;` / `a = b += 1;` /
+  `console.log(a, b);`）；連鎖邏輯指派 `a ||= b ||= 1` 涉及拆分，移到 US5 以完整的拆分 pair 驗收（US5 情境 14）。
+  [SRC USR D14]
+- **D15**（2026-11-16）：`return`／`throw` 的葉即使沒有 use／def 也一律建節點（它是控制轉移，不屬「沒有運算
+  的分支」）；`return` 葉接 exit，`throw` 葉接原敘述既有的例外目標。[SRC USR D15]
+- **D16**（2026-11-16）：維持不設複製上限；README Limits 註明「同一敘述有大量並列條件時節點數以乘積成長；
+  以壓縮（minified）檔為分析目標可能耗盡資源而卡住，建議分析原始碼」。[SRC USR D16]
 
 ### 來源缺口（G）
 
@@ -89,11 +97,21 @@
 - Q: 條件或短路運算出現在 switch 的判斷式（`switch (c ? a : b)`）時怎麼拆？ → A: 比照既有決策節點：不複製
   case 本體，判斷式拆出的每個葉各自接到原 switch 的第一個 case 比對；case 節點不重讀判斷式中的變數。
 
-#### 延後釐清
+### Session 2026-11-16（analyze）
 
-- 測試輔助工具以字串去重；同一行有多個敘述時（`var a = c ? 1 : 2, b = d ? 3 : 4;`），拆出的節點標記會
-  碰撞，p-use 的省略記法也可能有歧義。暫定驗收情境一律一行一個敘述，碰撞列為輔助工具的已知限制；
-  analyze 時重新評估是否需要序號。[clarifier M2]
+- Q: US4 情境 3 的 `a ||= b ||= 1` 涉及拆分，留在 US4 會讓 US4 依賴 US5，怎麼處理？ → A: US4 情境 3 只留
+  `a = b += 1` 並寫成完整程式；`a ||= b ||= 1` 移到 US5 情境 14，依等效 if/else 寫出完整 pair（D14）。
+- Q: `return a || b` 的 true 葉沒有 use／def，要不要建節點？ → A: 一律建節點；`return`／`throw` 是控制轉移，
+  不屬「沒有運算的分支」；`return` 葉接 exit，`throw` 葉接原敘述既有的例外目標（D15）。
+- Q: 拆分的複製數要不要設上限？ → A: 不設；README Limits 註明節點數以乘積成長，分析壓縮檔可能耗盡資源而卡住，
+  建議分析原始碼（D16）。
+- Q: for-in／for-of 的右側含條件或短路（`for (var x of (saved ?? []))`）時怎麼拆？ → A: 右側依 D12 拆分，葉接
+  到迴圈節點的入口（只攔截從迴圈外進入迴圈節點的邊，本體回邊不經過決策），迴圈節點本身不重讀右側（US5 情境 16）。
+- Q: 同一行有多個節點來源時（`var a = c ? 1 : 2, b = d ? 3 : 4;`），拆出的節點標記會碰撞、p-use 的省略記法
+  也可能有歧義，要不要加序號？ → A: 不加序號、不拋錯，接受為測試輔助工具的已知限制；驗收程式一行一個節點來源
+  （同一行不放多個敘述、多個拆分來源，參數預設值與本體分行），見「表示法」。
+- Q: 帶預設值參數的初始化節點要不要模擬「僅在傳入 undefined 時才定義」？ → A: 不模擬；初始化節點一律定義該
+  參數，呼叫端有傳值時 entry 上的 def 會被視為被覆寫而可能漏報，列為已知限制並寫進 README Limits。
 
 ## 表示法
 
@@ -104,6 +122,12 @@
 指等效 if 的條件結果：`&&`、`||`、`&&=`、`||=` 為 `if (a)`，`??`、`??=` 為 `if (a != null)`。範例：
 `a: L1 -> L2>L2:F`（`a` 在 L2 判斷為 false，進入 L2 的 F 葉）、`a: L1 -> L2>L5:F`（進入 L5）。行號為被分析程式碼的
 行號（1 起算）。「intra-procedural」「intra-page」指 dujs 產出的對應模型。
+
+已知限制：測試輔助工具以字串去重，同一行有多個節點來源時（多個敘述、多個拆分來源、參數預設值與本體同行），
+拆出節點的標記會碰撞，p-use 的省略記法（`L2>L2:T` 可能是目標 `L2` 的 true 分支或目標 `L2:T`）也可能有歧義；
+不加序號、不拋錯。驗收程式因此一行一個節點來源：同一行不放多個敘述或多個拆分來源，參數預設值與函式本體分行。
+for-in／for-of 右側拆分時，第一個決策與迴圈節點同為 `L<行>`，相關情境只斷言不受此影響的 pair。
+[SRC USR D13]
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -137,7 +161,8 @@
    **When** 分析，**Then** `break outer` 的下一步是 L8（外層迴圈之後），因此 intra-procedural 同時含
    `a: L1 -> L8` 與 `a: L5 -> L8`。[SRC USR D2]
 3. **Given** 把情境 2 的 `break outer` 改為 `continue outer`，**When** 分析，**Then** `continue outer`
-   的下一步是外層迴圈的更新式 `i++`（L2），而非內層迴圈。[SRC USR D2]
+   的下一步是外層迴圈的更新式 `i++`（L2），而非內層迴圈；以 CFG 驗證：`continue outer` 節點唯一的 normal
+   後繼為外層更新式 `i++`，不是內層 `j++`。[SRC USR D2]
 4. **Given** 程式 `var a = 0, c = 1;` / `l: {` / `  if (c) break l;` / `  a = 1;` / `}` / `console.log(a);`，
    **When** 分析，**Then** intra-procedural 同時含 `a: L1 -> L6` 與 `a: L4 -> L6`。[SRC USR D2]
 5. **Given** 程式 `var o = {}, x = 1;` / `with (o) {` / `  console.log(x);` / `  p = 1;` / `}`，**When**
@@ -156,7 +181,8 @@
 
 **Why this priority**: 遺漏 use 會讓資料流分析結果漏報，`new X(a)` 與 `throw new Error(a)` 是極常見寫法。
 
-**Independent Test**: 以 KI §2、§3 的重現輸入（必要時加上呼叫敘述）執行分析，確認新增的 pair。
+**Independent Test**: 以 KI §2、§3 的重現輸入（必要時加上呼叫敘述）執行分析，確認新增的 pair。情境 8
+（預設值內的短路）依賴 US5 的拆分，於 US5 完成後驗證；US2 單獨驗收時不含情境 8。[SRC USR D10]
 
 **Acceptance Scenarios**:
 
@@ -230,8 +256,9 @@
    `b: L1 -> L2`，含 `a: L2 -> L3`。[SRC KI §5]
 2. **Given** 程式 `var a, b;` / `var c = a = b = 1;` / `console.log(a, b);`，**When** 分析，**Then** 不含
    `a: L1 -> L2` 與 `b: L1 -> L2`，含 `a: L2 -> L3` 與 `b: L2 -> L3`。[SRC KI §5]
-3. **Given** 內層為複合或邏輯指派（`a = b += 1`、`a ||= b ||= 1`），**When** 分析，**Then** 內層目標
-   `b` 因被其運算子讀取而保留 `b: L<def> -> L<該行>` 的 pair（這是正確的 use，不是本問題）。[SRC KI §5]
+3. **Given** 內層為複合指派：程式 `var a, b = 1;` / `a = b += 1;` / `console.log(a, b);`，**When** 分析，
+   **Then** 內層目標 `b` 因被 `+=` 讀取而保留 use（這是正確的 use，不是本問題）：含 `b: L1 -> L2`、
+   `a: L2 -> L3`、`b: L2 -> L3`。（連鎖邏輯指派 `a ||= b ||= 1` 見 US5 情境 14。）[SRC KI §5] [SRC USR D14]
 
 ---
 
@@ -298,6 +325,22 @@
     **When** 分析，**Then** case 本體不複製，`L2:T`（取 `a`）與 `L2:F`（取 `b`）都接到 L3 的 case 比對：含
     `c: L1 -> L2>L2:T`、`c: L1 -> L2>L2:F`、`a: L1 -> L2:T`、`b: L1 -> L2:F`，且每筆 p-use 的分支目標都存在。
     [SRC USR D12]
+14. **Given** `var a = 0, b = 0;` / `a ||= b ||= 1;` / `console.log(a, b);`，**When** 分析，**Then** 依等效
+    `if (a) {} else if (b) { a = b 的值; } else { b = 1; a = 1; }`：`a` 的 true 分支不建節點、直接接到 L3；`b` 的
+    決策為 `L2:F`，其 true 葉 `L2:FT` 只定義 `a`（不重讀 `b`），false 葉 `L2:FF` 定義 `b` 與 `a`；含
+    `a: L1 -> L2>L3:T`、`a: L1 -> L2>L2:F`、`b: L1 -> L2:F>L2:FT`、`b: L1 -> L2:F>L2:FF`、`a: L1 -> L3`、
+    `a: L2:FT -> L3`、`a: L2:FF -> L3`、`b: L1 -> L3`、`b: L2:FF -> L3`。[SRC USR D8] [SRC USR D12] [SRC USR D14]
+15. **Given** `var a = 0, b = 1;` / `function f() {` / `  return a || b;` / `}` / `f();`，**When** 分析，
+    **Then** L3 是判斷 `a` 的決策；true 葉 `L3:T`（回傳 `a` 的值，沒有 use）與 false 葉 `L3:F`（讀 `b`）都建
+    節點且唯一的 normal 後繼皆為 f 的 exit；intra-page 含 `a: L1 -> L3>L3:T`、`a: L1 -> L3>L3:F`、`b: L1 -> L3:F`，
+    不含 `a: L1 -> L3>exit:T` 與 `b: L1 -> L3:T`。`throw` 的葉同理一律建節點，接原敘述既有的例外目標。
+    [SRC USR D12] [SRC USR D15]
+16. **Given** `var c = 1, xs = [1], ys = [2], t = 0;` / `for (var x of (c ? xs : ys)) {` / `  t = x;` / `}` /
+    `console.log(t);`，**When** 分析，**Then** 右側依等效 if/else 拆分，葉 `L2:T`（取 `xs`）與 `L2:F`（取 `ys`）
+    接到迴圈節點，迴圈節點不重讀右側；含 `c: L1 -> L2>L2:T`、`c: L1 -> L2>L2:F`、`xs: L1 -> L2:T`、
+    `ys: L1 -> L2:F`、`x: L2 -> L3`、`t: L1 -> L5`、`t: L3 -> L5`，不含 `xs: L1 -> L2`、`ys: L1 -> L2`；以 CFG
+    驗證：`c` 的決策節點只有來自迴圈外的入邊，`L2:T`、`L2:F` 唯一的 normal 後繼皆為迴圈節點，本體 L3 的回邊直接
+    接迴圈節點、不經過決策。（第一個決策與迴圈節點同為 `L2`，見「表示法」已知限制。）[SRC USR D12]
 
 ---
 
@@ -333,7 +376,12 @@
 - 條件運算式與短路運算子出現在既有決策節點中（`if (a ? b : c)`、`while (a || b)`、`switch (c ? a : b)`）：
   不複製本體（switch 時判斷式的每個葉接到第一個 case 比對）；內層決策
   節點依 D13 標路徑，最後一層決策的分支接到原敘述的 true／false 目標。[SRC USR D3] [SRC USR D12]
-- 同一敘述有很多並列條件時，葉節點數為各條件葉數的乘積（不設上限）；README 註明。[SRC USR D12]
+- 同一敘述有很多並列條件時，葉節點數為各條件葉數的乘積（不設上限）；README 註明，並提醒以壓縮（minified）檔
+  為分析目標可能耗盡資源而卡住，建議分析原始碼。[SRC USR D12] [SRC USR D16]
+- `return`／`throw` 敘述拆出的葉即使沒有 use／def（`return a || b` 的 true 葉）也一律建節點：`return` 葉接 exit，
+  `throw` 葉接原敘述既有的例外目標；「沒有運算的分支不建節點」只適用於其他敘述。[SRC USR D15]
+- for-in／for-of 的右側含條件或短路（`for (var x of (saved ?? []))`）：右側依 D12 拆分，葉接到迴圈節點的入口
+  （只攔截從迴圈外進入迴圈節點的邊，本體回邊不經過決策），迴圈節點本身不重讀右側。[SRC USR D12]
 - 可選鏈 `a?.b` 雖然也是短路，不在本輪拆分範圍（維持現狀）。[SRC USR D3]
 - 既有 ES5 golden fixtures：只會因 FR-001（labeled／`with`／`debugger`）、FR-004（`new` 的參數）、FR-007
   （連鎖指派）、FR-008（`?:`、`&&`、`||`）、FR-009（單一識別字條件）與 FR-014（記法）改變；ES5 沒有預設
@@ -363,16 +411,20 @@
   分支求值的運算式，其 use MUST 只出現在該分支上。拆分 MUST 與等效的 if/else 敘述一致：條件之後的剩餘
   運算與定義（含呼叫）在每個葉分支各有一份節點（各自的 def），MUST NOT 在匯合後才定義；條件之前已求值的
   部分 MUST 留在決策節點；短路運算的左運算元 MUST 只在決策節點求值一次，葉節點 MUST NOT 重讀；函式／class
-  運算式 MUST 只有一個 scope；沒有運算的分支 MUST NOT 建節點、直接接到後繼；位於既有決策節點條件中時
-  （含 switch 判斷式）MUST NOT 複製該敘述的本體；MUST NOT 引入原程式沒有的變數。呼叫點的認定沿用既有規則
+  運算式 MUST 只有一個 scope；沒有運算的分支 MUST NOT 建節點、直接接到後繼，但 `return`／`throw` 的葉 MUST
+  一律建節點（`return` 葉接 exit、`throw` 葉接原敘述既有的例外目標）；位於既有決策節點條件中時
+  （含 switch 判斷式）MUST NOT 複製該敘述的本體；for-in／for-of 右側拆出的葉 MUST 只接到從迴圈外進入迴圈
+  節點的入口，迴圈節點 MUST NOT 重讀右側；MUST NOT 引入原程式沒有的變數。呼叫點的認定沿用既有規則
   （只有呼叫敘述是呼叫點），拆分不改變此規則。[SRC KI §6] [SRC USR D3] [SRC USR D8]
-  [SRC USR D12]
+  [SRC USR D12] [SRC USR D15]
 - **FR-009**: 決策節點的條件只有單一識別字時，該識別字 MUST 記為 p-use。[G-1]
 - **FR-010**: 所有模型中的 p-use MUST 有存在的 true 與 false 分支目標。[SRC KI §6]
 - **FR-011**: 同一個父 scope 下名稱相同的 scope，第一個 MUST 保留原名，之後 MUST 依原始碼出現順序加上
   `_1`、`_2`… 後綴並跳過已被使用的名稱；沒有重名時名稱 MUST 不變。[SRC KI §8] [SRC USR D6]
 - **FR-012**: 修正後的問題 MUST 自 `docs/known-issues.md` 移除（或標為已修正），README 的限制段落 MUST
-  依本輪結果更新（移除「Labeled break/continue」限制、加入 `with` 限制與並列條件使節點數以乘積成長的說明）。[SRC KI §1] [SRC USR D1]
+  依本輪結果更新（移除「Labeled break/continue」限制、加入 `with` 限制與並列條件使節點數以乘積成長的說明，
+  並註明以壓縮（minified）檔為分析目標可能耗盡資源而卡住、建議分析原始碼；加入帶預設值參數的初始化節點一律
+  定義該參數、可能漏報的說明）。[SRC KI §1] [SRC USR D1] [SRC USR D16]
 - **FR-013**: 既有測試 MUST 全數通過；golden 期望輸出與測試期望字串只可因本 spec 的 FR（FR-001、FR-004、
   FR-005、FR-006、FR-007、FR-008、FR-009、FR-014）有意改變，且每一處差異 MUST 可對應到某條 FR。[SRC KI §6] [G-1]
 - **FR-014**: 測試輔助工具 MUST 以 `L<行>:<路徑>` 標記由 FR-008 拆出、位於分支內的節點（def 與 use 皆適用），
@@ -406,3 +458,9 @@
 - 函式被呼叫才會把外層定義接入（README 既有限制）；驗收情境中需要外層 pair 的都附上呼叫敘述。
 - 可選鏈的短路、`with` 的屬性推斷不在範圍內。[SRC USR D2] [SRC USR D3]
 - 帶預設值參數的初始化節點、新 scope（欄位初始化式、static block）的命名沿用匿名函式 scope 的命名方式，細節於 plan 決定。
+- 帶預設值的參數初始化節點一律定義該參數，不建模「僅在傳入 undefined 時」；呼叫端有傳值時 entry 上的 def 會被
+  視為被覆寫，可能漏報；README Limits 註明。[SRC USR D4]
+- 拆分不設複製上限：同一敘述有大量並列條件時節點數以乘積成長；以壓縮（minified）檔為分析目標可能耗盡資源而
+  卡住，建議分析原始碼（README Limits 註明）。[SRC USR D16]
+- 測試輔助工具的節點標記在同一行有多個節點來源時可能碰撞，接受為已知限制；驗收程式一行一個節點來源（見
+  「表示法」）。[SRC USR D13]

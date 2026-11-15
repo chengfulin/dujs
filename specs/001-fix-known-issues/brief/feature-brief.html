@@ -63,7 +63,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>修正已知問題（#1–#6、#8）</h1>
-<div class="meta">plan · 第 1 輪（承 clarify 第 1 輪）· 2026-11-16 · 分支 <code>001-fix-known-issues</code></div>
+<div class="meta">analyze · 第 1 輪（承 plan 第 1 輪）· 2026-11-16 · 分支 <code>001-fix-known-issues</code></div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -237,7 +237,35 @@ flowchart LR
   </ul>
 </section>
 
-<h2>本輪變更（plan · 第 1 輪）</h2>
+<h2>本輪變更（analyze · 第 1 輪）</h2>
+<p class="meta">來源：speckit-analyze 與 sdd-spec-clarifier 兩份發現表；以下 4 項 CRITICAL／HIGH 全列，其餘 MEDIUM 以下為「同意套用」的修正方案。</p>
+<h3>CRITICAL／HIGH 發現</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>一句話說明</th><th>建議處置</th></tr>
+<tr><td>C1</td><td class="no">CRITICAL</td><td>spec US4 情境 3；T029</td><td><code>a ||= b ||= 1</code> 依 D8／D12 會被拆分，<code>b</code> 變成決策 <code>L2:F</code> 的 p-use，情境寫的 <code>b: L&lt;def&gt; -&gt; L&lt;該行&gt;</code> c-use 無法成立；T029 以「b 的 use 存在」迴避</td><td>判斷點 1</td></tr>
+<tr><td>F2</td><td class="no">HIGH</td><td>defuseanalyzer；T039、T032；research R7</td><td>根識別字防護看 <code>cfgNode.astNode.type</code>；改走訪 <code>analyzedExpressions</code> 後，US5 情境 8 的決策節點為 Identifier <code>c</code>，preEvaluated 的 <code>y</code> use 會被擋、漏記 <code>y: L1 -&gt; L2</code></td><td>T039 與 R7 明訂「防護依每個 analyzedExpressions 根各自判斷；preEvaluated 一律 c-use、不受防護影響」；T032 測試要抓得到</td></tr>
+<tr><td>H1</td><td class="no">HIGH</td><td>spec（缺）；research R3；tasks</td><td>for-in／for-of 右側（ES2015 golden L29 <code>saved ?? []</code>）spec 無情境、FR、Edge Case；R3 要求迴圈節點不再讀右側，卻無任務實作</td><td>spec 補 for-of 情境與 Edge Case；tasks 補「迴圈節點不重讀右側」任務與測試</td></tr>
+<tr><td>H2</td><td class="no">HIGH</td><td>spec D12／Edge Case；V4／P6；R3</td><td><code>return a || b</code>（golden L11）的 T 葉只剩 <code>return &lt;a 的值&gt;</code>，無 use／def；spec 只說「沒有運算的分支不建節點」，未涵蓋 return／throw，而 R3 又把 return 列為接 exit 的葉</td><td>判斷點 2</td></tr>
+</table></div>
+<p class="meta">MEDIUM 以下（F1、F3–F8、F10、M2、M3、M5、其他）彙總如下；F9、M1、M4 另列。</p>
+<h3>同意套用的修正方案（MEDIUM／LOW）</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>問題</th><th>修正</th></tr>
+<tr><td>F1</td><td><code>with</code> 節點 astNode 改指 <code>o</code> 後，R7 防護漏記 <code>o: L1 -&gt; L2</code>（US1 情境 5）</td><td>R6／R7 補例外、plan 影響表補（T016 已做）</td></tr>
+<tr><td>F3</td><td>US2 情境 8 依賴 US5，但 Independent Test 寫可獨立</td><td>spec 註明情境 8 於 US5 完成後驗證</td></tr>
+<tr><td>F4</td><td>US1 情境 3 無 pair 期望（外層 init／test／update 同在 L2）</td><td>spec 補「以 CFG 驗證 <code>continue outer</code> 唯一 normal 後繼為外層更新式」</td></tr>
+<tr><td>F5</td><td><code>golden-diff.md</code> 工作檔 plan 未列</td><td>plan 結構與 R10 補列，T053 彙整進 PR</td></tr>
+<tr><td>F6</td><td><code>tests/esgraph/tests/maythrow.js</code>（LGPL fixture）不能加檔頭</td><td>T042 在該目錄 README 追加日期修改說明；T052 核對清單納入；共通約定改「fixture 記目錄 README」</td></tr>
+<tr><td>F7</td><td><code>expressionThrows</code> 是 ControlFlowGraph 內巢狀函式，介面未定</td><td>定介面 <code>branchsplitter.split(allNodes, { expressionThrows: fn })</code>，由 index.js 傳 callback；例外目標取原節點既有 EXCEPTION 出邊（寫進 R3）</td></tr>
+<tr><td>F8、F10</td><td>plan／R9 把既有 p-use 寫成 4 筆（實為 4 處 9 筆）；影響表漏 <code>variableanalyzer.js</code></td><td>改正數字、補列影響表（另補 <code>flownodetest.js</code>、<code>analyzehelper.js</code>、<code>golden-diff.md</code>）</td></tr>
+<tr><td>M2</td><td>性質 P2「每條路徑恰一個 def」對 <code>x ||= E</code> 不成立</td><td>改為「至多一個 def，空分支只出現在邏輯指派」</td></tr>
+<tr><td>M3</td><td>fast-check 隨機 seed 不可重複</td><td>預設固定 seed、<code>FC_SEED</code> 可覆寫、失敗印 seed 與反例</td></tr>
+<tr><td>M5</td><td>預設參數初始化節點無條件定義，呼叫端有傳值時 entry 的 def 被 kill 造成漏報，只記在 research</td><td>寫進 spec Assumptions 與 README Limits（T050）</td></tr>
+<tr><td>其他</td><td>R3 語境表漏 case 測試式、with 物件、巢狀 label、含 extends 的 class；T016 的 with 標記欄位不在 data-model；R12 末段與 plan「待裁決事項」過時；spec D5／D6 排序在 D11 之後</td><td>逐項補表、補欄位、刪過時段落、調整排序</td></tr>
+</table></div>
+<p class="meta">標記碰撞（F9、M1）見下方「次要疑點」。</p>
+
+<h2>plan 既定事項（上輪，未變）</h2>
 <h3>技術選型</h3>
 <div class="box"><table>
 <tr><th>項目</th><th>選擇</th><th>狀態</th></tr>
@@ -266,11 +294,11 @@ flowchart LR
 <h3>驗收條件盤點</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>可驗證的情境</th><th>不可驗證／缺（原因）</th></tr>
-<tr><td>US1 labeled／with／debugger</td><td class="ok">1、2、4、5、6、7</td><td class="no">3：只給 <code>continue outer</code> 的下一步，未給 pair 預期</td></tr>
-<tr><td>US2 預設參數與 new</td><td class="ok">1、2、3、4、6、8</td><td class="no">5：未給完整程式與行號，只說「有初始化節點、d 記為 use」；7：未給程式行號與 pair 字串</td></tr>
+<tr><td>US1 labeled／with／debugger</td><td class="ok">1、2、4、5、6、7</td><td class="no">3：未給 pair 預期（F4 修正後改以 CFG 驗證 <code>continue outer</code> 唯一 normal 後繼為外層更新式，屬可驗證）</td></tr>
+<tr><td>US2 預設參數與 new</td><td class="ok">1、2、3、4、6、8</td><td class="no">5：未給完整程式與行號，只說「有初始化節點、d 記為 use」；7：未給程式行號與 pair 字串；8：依賴 US5，須於 US5 完成後驗證（F3）</td></tr>
 <tr><td>US3 class 欄位／static block</td><td class="ok">1、2、3、4</td><td class="no">5：「既有行為不變」未指定 computed key、extends 的輸入（由既有測試涵蓋）</td></tr>
-<tr><td>US4 連鎖指派</td><td class="ok">1、2</td><td class="no">3：以 <code>L&lt;def&gt;</code> 佔位，未給完整程式與具體 pair</td></tr>
-<tr><td>US5 條件與短路</td><td class="ok">1–9、12（上輪「T／F 分不出」已由 D13 解決）；7 為通則，可驗證</td><td class="no">10／10b：已拆為呼叫敘述（驗呼叫連結）與宣告形式（只驗 pair），皆可驗證；11：只說 scope 一個、pair 不重複，未給 pair 字串（<code>run</code> 也未宣告）</td></tr>
+<tr><td>US4 連鎖指派</td><td class="ok">1、2</td><td class="no">3：以 <code>L&lt;def&gt;</code> 佔位、未給具體 pair；其中 <code>a ||= b ||= 1</code> 的期望依 D8／D12 無法成立（C1，見判斷點 1）</td></tr>
+<tr><td>US5 條件與短路</td><td class="ok">1–9、12（上輪「T／F 分不出」已由 D13 解決）；7 為通則，可驗證</td><td class="no">缺：for-in／for-of 右側含條件式（如 <code>saved ?? []</code>）無情境（H1）；<code>return a || b</code> 的 return 葉是否建節點未定（H2）；10／10b：已拆為呼叫敘述（驗呼叫連結）與宣告形式（只驗 pair），皆可驗證；11：只說 scope 一個、pair 不重複，未給 pair 字串（<code>run</code> 也未宣告）</td></tr>
 <tr><td>US6 同名 scope</td><td class="ok">1、2、3、5</td><td class="no">4：只要求名稱唯一，未給預期名稱（原始碼自帶 <code>f_1</code> 的出現順序未定）</td></tr>
 </table></div>
 
@@ -278,17 +306,22 @@ flowchart LR
 <p>缺漏：規範未涵蓋「Node.js 靜態分析函式庫＋CLI」的選型，依既有專案堆疊（見上「技術選型」）。偏離：2 項（PBT 搭 mocha、本輪不導入 Stryker），理由見「偏離 tech-standards」。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無 CRITICAL／HIGH。plan 的 Constitution Check 全數 PASS；唯一觸及 §CP-1（可追溯：先更新 spec 再改程式碼）的是 US5 情境 10 與 README 呼叫點限制的衝突，已裁決方案 A 並先更新 spec。受影響 story：US5。</p>
+<div class="box"><table>
+<tr><th>憲章條款</th><th>衝突內容</th><th>受影響 story</th></tr>
+<tr><td>§CP-1 Spec 與實作可追溯</td><td>C1：US4 情境 3 的字面期望在 D8／D12 下不可滿足，實作無法與 spec 一致</td><td>US4（牽動 US5）</td></tr>
+<tr><td>§CP-1</td><td>H1／H2：for-of 右側與 return／throw 葉只存在於 research／plan 設計，spec 無對應條文</td><td>US5</td></tr>
+<tr><td>§CP-1</td><td>F2：T039 若照原寫法會漏記 <code>y: L1 -&gt; L2</code>，與 US5 情境 8 不符（已有修正方案）</td><td>US5、US2 情境 8</td></tr>
+</table></div>
 
 <h3>本輪判斷點</h3>
-<p class="meta">本輪 1 個判斷點（US5 情境 10 與呼叫點限制）已由使用者裁決：方案 A，改列於「已決事項」。</p>
+<p class="meta">本輪 3 個判斷點已由使用者裁決（D14 US4-3 移到 US5 情境 14；D15 return／throw 葉一律建節點；D16 維持不設上限、README 註明壓縮檔可能卡住），修正方案全數同意套用；改列於「已決事項」。</p>
 
 <h3>次要疑點</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>同一行多個敘述（<code>var a = c ? 1 : 2, b = d ? 3 : 4;</code>）時，拆出節點標記會碰撞；使用者已延後到 analyze 重評。提醒：壓縮過的 client-side JS 常整檔同一行，碰撞可能是常態。</td><td>Clarifications「延後釐清」；FR-014</td></tr>
+<tr><td>標記碰撞（F9、M1，使用者延後到本輪重評）：同一行多個敘述（<code>var a = c ? 1 : 2, b = d ? 3 : 4;</code>）、單行 <code>if (a) x = c ? 1 : 2;</code>、同一 <code>for</code> 的 init／test／update 各自拆分、參數預設值與本體同行，記法會歧義；壓縮過的 client-side JS 常整檔同一行，可能是常態。三案：A 記為已知限制、驗收一行一個節點來源；B 記法加序號；C helper 遇碰撞拋錯（會打壞既有 <code>for(;;)</code> 測試靠字串去重）。</td><td>Clarifications「延後釐清」；FR-014</td></tr>
 <tr><td>條件位於 <code>for</code> 更新式、箭頭函式運算式本體時，spec 靠 D12 通則類推（情境 12 為 <code>return</code> 的例子），未逐一列出。</td><td>D12；US5 情境 12</td></tr>
-<tr><td>US1 情境 3、US4 情境 3、US2 情境 5 缺具體 pair 預期</td><td>見驗收條件盤點</td></tr>
+<tr><td>US2 情境 5、情境 7 缺具體 pair 預期（US1 情境 3 已由 F4 補、US4 情境 3 見判斷點 1）</td><td>見驗收條件盤點</td></tr>
 <tr><td>原始碼自帶 <code>f_1</code> 且在兩個同名 <code>f</code> 之後時，誰得到 <code>f_1_1</code>？</td><td>FR-011；US6 情境 4</td></tr>
 </table></div>
 
@@ -306,9 +339,13 @@ flowchart LR
 <tr><td>D11</td><td>參數解構中每個帶預設值的名稱各一個初始化節點，依出現順序</td></tr>
 <tr><td>D12</td><td>?:／&amp;&amp;／||／??／邏輯指派一律等效 if/else；剩餘運算與 def 在每個葉分支複製；不在匯合點定義、不引入暫存變數</td></tr>
 <tr><td>D13</td><td>拆出的節點標 <code>L&lt;行&gt;:&lt;路徑&gt;</code>；p-use 目標帶路徑時省略 <code>:T</code>／<code>:F</code></td></tr>
+<tr><td>D14</td><td>US4 情境 3 只留 <code>a = b += 1</code>；<code>a ||= b ||= 1</code> 移到 US5 情境 14，以拆分記法精確比對</td></tr>
+<tr><td>D15</td><td>return／throw 的葉即使沒有 use／def 也一律建節點（US5 情境 15）</td></tr>
+<tr><td>D16</td><td>維持不設複製上限；README 註明以壓縮檔為分析目標可能卡住，建議分析原始碼</td></tr>
+<tr><td>analyze 修正</td><td>F1–F10、H1（for-of 右側，US5 情境 16）、M1（標記碰撞記為已知限制）、M2、M3（fast-check 固定 seed）、M5 等全數套用</td></tr>
 <tr><td>R12（plan）</td><td>US5 情境 10 拆為 10（<code>log(c ? a : b);</code> 驗兩葉連到 log）與 10b（<code>var x = log(…)</code> 只驗 pair）；呼叫點規則不變</td></tr>
 <tr><td>plan 選型</td><td>沿用既有堆疊；新增 fast-check 做性質測試；偏離 tech-standards 兩項（mocha、不導入 Stryker）</td></tr>
-<tr><td>釐清 2026-11-16</td><td>既有決策節點條件中不複製本體；左運算元不重讀；空分支不建節點直接接後繼；呼叫點隨葉複製、函式／class 運算式只一個 scope；複製數不設上限（README 註明）；switch 判斷式比照既有決策節點，不複製 case 本體（US5 情境 13）</td></tr>
+<tr><td>釐清 2026-11-16</td><td>既有決策節點條件中不複製本體；左運算元不重讀；空分支不建節點直接接後繼；呼叫點隨葉複製、函式／class 運算式只一個 scope；複製數不設上限（README 註明；本輪因壓縮程式 2^N 新事證重提，見判斷點 3）；switch 判斷式比照既有決策節點，不複製 case 本體（US5 情境 13）</td></tr>
 </table></div>
 </main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>

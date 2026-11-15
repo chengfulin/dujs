@@ -73,8 +73,14 @@ Alternatives considered」記錄。程式碼位置以 2026-11-16 的 `001-fix-kn
 4. 對替換後的敘述**遞迴**（路徑加 `T`／`F`）：仍有可拆者則再拆（得到並列條件的乘積與巢狀決策）；
    沒有則成為葉。
 5. **空分支**：替換後若在「敘述語境」（運算式敘述、值被丟棄）中只剩佔位節點，或在「條件語境」中佔位節點
-   的已知真值可直接決定結果，**不建節點**，該分支直接接到後繼（Clarification 2026-11-16）。
-6. 原節點 N 的入邊改接到 D；N 從圖中移除（不留匯合節點）。
+   的已知真值可直接決定結果，**不建節點**，該分支直接接到後繼（Clarification 2026-11-16）。**例外**：
+   `return`／`throw` 的葉（如 `return a || b` 的 T 葉 `return <truthy>`）即使沒有 use／def 也一律建節點，
+   因其為控制轉移（spec D15）。
+6. 原節點 N 的入邊改接到 D；N 從圖中移除（不留匯合節點）。for-in／for-of 右側例外：迴圈節點 N 保留，只把
+   「迴圈外進入 N」的入邊改接到 D（R3）。
+
+**模組介面**：`branchsplitter.split(allNodes, { expressionThrows: fn })`，由 `lib/esgraph/index.js`（LGPL）
+呼叫並傳入其 `expressionThrows` 作為 callback；`branchsplitter.js` 只呼叫該 callback，不含任何 LGPL 程式碼。
 
 求值順序細節：
 
@@ -100,18 +106,24 @@ LGPL 檔案擴大、修改紀錄冗長；改以獨立 MIT 模組，index.js 只�
 
 | 原節點 N 的語境 | 葉的形態 | 葉／最後一層決策的出邊 |
 |------------------|----------|------------------------|
-| 敘述語境（運算式敘述、宣告、指派、`return`、`throw`、for 的 init／update、參數初始化） | 合成敘述（剩餘運算＋def） | 複製 N 的 normal 出邊；`return` 接 exit、`throw` 接例外目標 |
+| 敘述語境（運算式敘述、宣告、指派、`return`、`throw`、for 的 init／update、參數初始化） | 合成敘述（剩餘運算＋def） | 複製 N 的 normal 出邊；`return` 葉接 exit、`throw` 葉接 N 既有的例外目標；`return`／`throw` 葉即使無 use／def 也建節點（D15） |
 | 條件語境（if／while／do-while／for 的 test） | 決策節點（測試葉運算元） | 複製 N 的 true／false 出邊；不複製本體 |
 | switch 判斷式 | 求值葉運算元的節點 | 接到第一個 case 比對節點；case 節點不再讀判斷式 |
-| for-in／for-of 的右側 | 求值葉運算元的節點 | 只攔截**迴圈外**進入迴圈節點的邊（迴圈本體回邊不經過決策），葉接迴圈節點；迴圈節點不再讀右側 |
+| case 測試式（`case c ? 1 : 2:`） | 決策節點（以葉運算元與判斷式比對） | 複製 case 節點的 true（進入本體）／false（下一個 case 比對）出邊；不複製本體 |
+| for-in／for-of 的右側 | 求值葉運算元的節點（葉運算元只剩佔位節點時不建節點，決策直接接迴圈節點） | 只攔截**迴圈外**進入迴圈節點的邊（迴圈本體回邊不經過決策），葉接迴圈節點；迴圈節點不再讀右側：branchsplitter 在迴圈節點設 `loopRightSplit = true`，`defuseanalyzer` 的 `useLoopHead` 遇此旗標略過 `right` |
+| `with` 物件（`with (c ? o1 : o2)`） | 求值葉運算元的節點（c-use） | 複製 with 節點的 normal 出邊（進入本體）；with 節點本身被取代 |
+| 被 label 標記的敘述（含巢狀 label `a: b: for (…)`） | `LabeledStatement` 本身沒有節點，依被標記敘述的語境處理 | label 解析（`break l`／`continue l` 的目標）在拆分前完成；拆分只把原節點的入邊改接到決策，故跳到被拆節點（如 for 更新式）的 `continue` 邊自動改接到其決策 |
+| 含 `extends` 的 class 宣告（`class A extends (c ? B : C) {}`） | 合成宣告（`superClass` 換成葉運算元，`ClassBody` 與原 AST 共用） | 同敘述語境；`ClassBody` 只有一份 scope；每個葉都是 static 成員串接（R5）的起點 |
 
-- 例外邊：每個拆出節點各自以 `expressionThrows(自己的 astNode＋preEvaluated)` 判斷是否接 N 的例外目標。
+- 例外邊：每個拆出節點各自以 `expressionThrows(自己的 analyzedExpressions)` 判斷是否接例外目標；例外目標
+  取**原節點 N 既有的 EXCEPTION 出邊**（不重新計算 try／catch 目標）。`expressionThrows` 由 index.js 以
+  `split(allNodes, { expressionThrows })` 傳入（R2 模組介面）。
 - `??` 位於條件語境（`if (a ?? b)`）時，T 分支的值（`a`，非 null）真假未知：建一個不讀任何變數的決策節點
   `L<n>:T`（等效 `if (a != null) { if (<a 的值>) … }`，依 Clarification 不重讀 `a`）；`||`／`&&` 的已知真值
   分支則直接接 N 的 true／false 目標（spec US5 情境 4）。
 
-**Rationale**：spec D12、Clarifications 2026-11-16 的五個語境規則。for-in／for-of 右側是 spec 未逐例列出
-但 FR-008 涵蓋的語境（ES2015 golden fixture `for (const { id } of saved ?? [])`），右側只在進入迴圈前求值
+**Rationale**：spec D12、D15、Clarifications 2026-11-16 的語境規則。for-in／for-of 右側見 spec US5 情境 16 與
+Edge Cases（ES2015 golden fixture `for (const { id } of saved ?? [])` 亦屬此語境），右側只在進入迴圈前求值
 一次，故只攔截入口邊。
 
 **Alternatives considered**：for-of 右側沿用「迴圈節點每次迭代都讀右側」的現狀並把決策放在迴圈節點內——
@@ -132,8 +144,9 @@ LGPL 檔案擴大、修改紀錄冗長；改以獨立 MIT 模組，index.js 只�
 **Alternatives considered**：把 use 歸屬 entry（KI §2 原議）——spec D4 已否決；在 esgraph 內插節點——
 esgraph 不知道參數，否決。
 
-**限制**：初始化節點無條件定義（不模擬「僅在 undefined 時」）；參數解構的 computed key 不在範圍內（現況不記
-use，維持）。一行內同時有參數與本體敘述時標記碰撞，屬 spec「延後釐清」的已知限制。
+**限制**：初始化節點無條件定義（不模擬「僅在 undefined 時」；呼叫端有傳值時 entry 上的 def 視為被覆寫，可能
+漏報，spec Assumptions、README Limits 註明）；參數解構的 computed key 不在範圍內（現況不記 use，維持）。一行內
+同時有參數預設值與本體敘述時標記碰撞，屬 spec「表示法」所列已知限制（驗收程式參數預設值與本體分行）。
 
 ## R5. class 欄位初始化式與 static block 的 scope（FR-006、D5、D7）
 
@@ -169,7 +182,11 @@ block，序號不變（SC-004）。
 - `getJumpTarget` 支援 `label`：沿 `cfg.parent` 往上找 `label.name` 相同的 `LabeledStatement`；`break l`
   → `getSuccessor(labeled)`；`continue l` → labeled 的 body 迴圈的 continue 目標（既有 switch 分派）。
 - `WithStatement`：自己一個節點（求值物件），`connect(getEntry(body))`、`mayThrow`；去除 `.cfg` 的 walker
-  將其 `astNode` 改指 `node.object`（同 `ExpressionStatement` 的做法），避免 USE 走訪到本體。
+  將其 `astNode` 改指 `node.object`（同 `ExpressionStatement` 的做法），避免 USE 走訪到本體；並設
+  `FlowNode.isWithObject = true`。
+- **with 物件記 c-use（例外）**：`astNode` 根為識別字（`with (o)`）時，defuseanalyzer 的根識別字防護會漏掉
+  `o`；`isWithObject` 為 true 的節點不受該防護，物件運算式一律以 c-use 走訪（spec US1 情境 5 的 `o: L1 -> L2`）。
+  `a;` 這類運算式敘述不設旗標，維持現狀。
 - `DebuggerStatement`：`connectNext`。
 - 移除檔頭 `TODO: labeled break/continue`、`TODO: WithStatement`；檔頭修改紀錄加一行。
 
@@ -182,8 +199,10 @@ block，序號不變（SC-004）。
 - **FR-007**：刪除 `AssignmentExpression` handler 中 `node.right.type === 'AssignmentExpression'` 時的
   `recurse(node.right.left)`，以及 `VariableDeclarator` 中同型的 `recurse(node.init.left)`；內層由
   `recurse(node.right)` 依其運算子決定是否讀目標（複合／邏輯指派會讀）。
-- **FR-009**：`Identifier` handler 的根節點防護改為：`astNode` 根即識別字時，決策節點記 p-use、拆分產生的
-  葉記 c-use；其餘非拆分、非決策的單一識別字運算式敘述（`a;`）維持現狀（不在本輪 FR 範圍）。
+- **FR-009**：`Identifier` handler 的根節點防護改為：**依每個 `analyzedExpressions` 根各自判斷**——`astNode`
+  根即識別字時，決策節點記 p-use、拆分產生的葉記 c-use、`isWithObject` 節點記 c-use（R6）；其餘非拆分、非決策
+  的單一識別字運算式敘述（`a;`）維持現狀（不在本輪 FR 範圍）。`preEvaluated` 的每個根**一律以 c-use 語境走訪、
+  不受防護影響**（`x = y + (c ? a : b)` 的前段 `y` 根即識別字，若誤套防護會漏記 spec US5 情境 8 的 `y: L1 -> L2`）。
 - **FR-011**：`ScopeTree.buildScopeTree` 結束後做一次命名後處理：同一個父 scope 的子 scope 依原始碼順序，
   第一個保留原名，其後取最小的 `k ≥ 1` 使 `name_k` 不在「該父 scope 所有子 scope 的原名」與「已指派名」中；
   `Scope` 新增 `_name` 的內部 setter；重建 `_mapFromNameToScope`。匿名與 block scope 名稱本就唯一，不受影響。
@@ -210,7 +229,8 @@ def／use 的地方，改走訪 `[…cfgNode.preEvaluated（c-use 語境）, cfg
   由 Pair 區分，兩種字串都輸出。
 - 新增 `pUseTargetsExist(model)`／內建檢查：任一 p-use 的決策節點缺 true 或 false 目標即拋錯（FR-010，
   現況行為保留並以明確訊息呈現）。
-- 檔頭註解改寫記法說明；既有 4 筆 p-use 期望字串（`tests/dujs/es2015.js`）依新記法更新。
+- 檔頭註解改寫記法說明，並註明已知限制：同一行有多個節點來源時標記可能碰撞、p-use 省略記法可能有歧義，
+  不加序號、不拋錯（spec「表示法」）；既有 p-use 期望字串 4 處 9 筆（`tests/dujs/es2015.js`）依新記法更新。
 
 ## R10. dot／golden 輸出
 
@@ -222,8 +242,8 @@ def／use 的地方，改走訪 `[…cfgNode.preEvaluated（c-use 語境）, cfg
 - `lib/esgraph/dot.js`（未設 label 時取 source 片段）：合成節點的 `range` 取被替換的原節點，故切出的片段
   就是該部分原始碼，**不需修改**。
 - 輸出檔格式（檔名、dot 結構、def-use 表欄位）不變（spec Assumptions）。
-- Golden 更新流程：`UPDATE_GOLDEN=1 npm test` 後逐檔 `git diff`，每一處差異在 PR 說明中對應到 FR
-  （FR-013、SC-004）。預期變更：ES5 fixtures 無（已 grep 確認無 `?:`／`&&`／`||`、`new`、連鎖指派、
+- Golden 更新流程：`UPDATE_GOLDEN=1 npm test` 後逐檔 `git diff`，每一處差異記入稽核工作檔
+  `specs/001-fix-known-issues/golden-diff.md`（對應到 FR），最後由 T053 彙整進 PR 說明（FR-013、SC-004）。預期變更：ES5 fixtures 無（已 grep 確認無 `?:`／`&&`／`||`、`new`、連鎖指派、
   單一識別字條件、labeled／`with`／`debugger`；`switch (m)` 的判斷式不可拆，case 讀判斷式的行為不變）；ES2015 fixture 因 L11（`||` 於箭頭運算式本體，
   FR-008）、L16（`new` 參數，FR-004）、L18（預設參數，FR-005）、L29（`??` 於 for-of 右側，FR-008）改變；
   esgraph 上游 fixture `maythrow.js` 的 `1 && call();` 因 FR-008 改變。
@@ -237,18 +257,19 @@ def／use 的地方，改走訪 `[…cfgNode.preEvaluated（c-use 語境）, cfg
 - **產生器**：以 `fc.letrec` 產生小型運算式樹（識別字池 `a`…`e`、數字字面值、`?:`、`&&`、`||`、`??`、
   `+`、單參數呼叫 `g(x)`），深度上限 4；包進敘述模板（`var x = E;`、`x = E;`、`x ||= E;`、`if (E) {…}`、
   `while (E) {…}`、`switch (E) {…}`、函式中的 `return E;`、帶預設值參數 `function k(p = E)`），一行一個敘述
-  （避開 spec 延後釐清的標記碰撞）。
+  （避開 spec「表示法」所列的標記碰撞限制）。
 - **性質**（皆以 CFG／def-use 結果驗證，不比對固定字串）：
   - P1（FR-010、SC-003）：每筆 p-use 的決策節點同時有 true 與 false 目標，且目標在模型圖中。
-  - P2（D12 每葉自有 def、無匯合 def）：敘述語境中定義 `x` 的敘述，從其第一個決策出發的每條路徑恰好經過
-    一個定義 `x` 的拆出節點；定義 `x` 的節點都不是決策節點；不存在 `branchPath` 為空而定義 `x` 的匯合節點
-    （有拆分時）。
+  - P2（D12 每葉自有 def、無匯合 def）：敘述語境中定義 `x` 的敘述，從其第一個決策出發的每條路徑**至多**經過
+    一個定義 `x` 的拆出節點，且經過 0 個的情況只出現在邏輯指派的空分支（`x ||= E` 的 T 等）；定義 `x` 的節點
+    都不是決策節點；不存在 `branchPath` 為空而定義 `x` 的匯合節點（有拆分時）。
   - P3（不重讀）：同一敘述的每條路徑上，原始碼中每個識別字出現處至多產生一次 use。
   - P4（分支內 use）：只出現在 `?:` 某一分支運算元內的識別字，其 use 只出現在路徑經過該分支的節點。
   - P5（標記）：同一敘述拆出節點的 `branchPath` 兩兩不同，且每個非空路徑的前綴節點存在。
-  - P6（空分支）：拆出節點不存在「沒有 use、沒有 def、沒有呼叫且不是決策」而又位於敘述語境的節點。
-- `numRuns` 預設 100；可由環境變數 `FC_NUM_RUNS` 覆寫（§CP-3 不寫死可調參數）；失敗時 fast-check 印出 seed
-  與縮小後的反例，可重現。
+  - P6（空分支）：拆出節點不存在「沒有 use、沒有 def、沒有呼叫且不是決策」而又位於敘述語境的節點；**例外**：
+    `return`／`throw` 的葉（spec D15）。
+- `numRuns` 預設 100，可由環境變數 `FC_NUM_RUNS` 覆寫；`seed` 預設固定值（每次執行結果可重現），可由環境變數
+  `FC_SEED` 覆寫（§CP-3 不寫死可調參數）；失敗時印出所用 seed 與縮小後的反例，以 `FC_SEED=<seed>` 重現。
 
 **Rationale**：使用者選型；tech-standards §測試工具表建議 PBT 與 ISP 互補。
 
@@ -267,4 +288,5 @@ US5 情境 10（`var x = log(c ? a : b);` 的兩個葉「各自連到同一個 `
 | B | 擴充呼叫點偵測：指派右側、宣告初始值、`return` 的頂層呼叫也連結（全面，非僅葉） | 解除部分 README 限制；ES5／ES2015 golden 可能因非本 spec FR 的原因改變，需新增 FR 並修改 SC-004 |
 | C | 僅拆出的葉特例連結 | 同一寫法拆與不拆行為不一致；不建議 |
 
-在裁決前，plan 以方案 A 規劃（不改呼叫點偵測規則）；若選 B，tasks 需新增一項並更新 spec。
+**已裁決（2026-11-16）：方案 A**。spec 情境 10 已改為呼叫敘述 `log(c ? a : b);`，`var x = …` 形式另列情境 10b
+只驗 pair；呼叫點偵測規則不變（tasks T033）。

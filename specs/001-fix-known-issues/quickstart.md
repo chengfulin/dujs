@@ -41,11 +41,13 @@ for f in labeled with debugger; do node <專案根>/bin/dujs.js -js $f.js; echo 
 ## 4. 不變量（SC-003）
 
 ```bash
-npx mocha tests/dujs/branchsplit.property.js                 # 預設 100 runs
+npx mocha tests/dujs/branchsplit.property.js                 # 預設 100 runs、固定 seed
 FC_NUM_RUNS=1000 npx mocha tests/dujs/branchsplit.property.js
+FC_SEED=<seed> npx mocha tests/dujs/branchsplit.property.js   # 換 seed 探索，或重現失敗
 ```
 
-預期：P1–P6 全部成立（性質定義見 [research.md](./research.md) R11）；失敗時輸出 seed 與縮小後的反例。
+預期：P1–P6 全部成立（性質定義見 [research.md](./research.md) R11）；失敗時輸出所用 seed 與縮小後的反例，
+以 `FC_SEED=<該 seed>` 重現。
 
 ## 5. Golden 差異稽核（FR-013、SC-004）
 
@@ -66,5 +68,7 @@ git diff tests/golden tests/esgraph/tests
 
 - `docs/known-issues.md`：§1–§6、§8 移除或標為已修正；§7、§9 保留。
 - `README.md` Limits：移除「Labeled break/continue」；新增 `with` 不推斷物件屬性、實例欄位初始化式不接入外層
-  流程、並列條件使節點數以乘積成長。
+  流程、並列條件使節點數以乘積成長（分析壓縮檔可能耗盡資源而卡住，建議分析原始碼）、帶預設值參數的初始化節點
+  一律定義該參數（可能漏報）。
+- `tests/esgraph/tests/README.md` 有 `maythrow.js` 的帶日期修改說明。
 - `lib/esgraph/index.js` 檔頭與 `THIRD_PARTY_NOTICES.md` 有本輪修改紀錄。

@@ -14,9 +14,9 @@
       "done": true
     },
     "analyze": {
-      "done": false,
-      "findings": null,
-      "remediated": null
+      "done": true,
+      "findings": 22,
+      "remediated": 22
     },
     "implement": {
       "done": false,
