@@ -358,7 +358,9 @@ for-in／for-of 右側拆分時，第一個決策與迴圈節點同為 `L<行>`�
 **Acceptance Scenarios**:
 
 1. **Given** KI §8 的程式（兩個 block 各宣告 `function f() {}`），**When** 分析，**Then** scope 名稱為
-   `$DOMAIN.$PAGE_0.f` 與 `$DOMAIN.$PAGE_0.f_1`，且以這兩個名稱各自查到不同的 scope。
+   `$DOMAIN.$PAGE_0.f` 與 `$DOMAIN.$PAGE_0.f_1`，且以這兩個名稱在該 page 的 scope tree 各自查到不同的 scope
+   （`getScopeByName` 於 page scope tree 內查詢，名稱不含 `$DOMAIN.` 前綴：`$PAGE_0.f`、`$PAGE_0.f_1`；
+   2026-11-16 實作中依既有 API 釐清）。
    [SRC KI §8] [SRC USR D6]
 2. **Given** 三個同名函式，**When** 分析，**Then** 名稱依原始碼順序為 `f`、`f_1`、`f_2`。[SRC USR D6]
 3. **Given** 沒有重名的程式（含既有 golden 測試的 fixtures），**When** 分析，**Then** scope 名稱與現在完全

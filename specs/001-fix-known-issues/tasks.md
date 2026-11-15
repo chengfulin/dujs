@@ -193,13 +193,13 @@ FR-010／D12 不變量以 fast-check 性質測試（`tests/dujs/branchsplit.prop
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T046 [US6] 新增 `tests/dujs/scopenames.js`：US6-1（`$DOMAIN.$PAGE_0.f`、`$DOMAIN.$PAGE_0.f_1`，`getScopeByName` 各查到不同 scope）、US6-2（`f`、`f_1`、`f_2`）、US6-3（無重名名稱不變）、US6-4（原始碼已有 `f_1` 與兩個 `f` 時全部唯一、跳過已用名）、US6-5（`$DOMAIN.$PAGE_0.$BLOCK_0.f`）
+- [X] T046 [US6] 新增 `tests/dujs/scopenames.js`：US6-1（`$DOMAIN.$PAGE_0.f`、`$DOMAIN.$PAGE_0.f_1`，`getScopeByName` 各查到不同 scope）、US6-2（`f`、`f_1`、`f_2`）、US6-3（無重名名稱不變）、US6-4（原始碼已有 `f_1` 與兩個 `f` 時全部唯一、跳過已用名）、US6-5（`$DOMAIN.$PAGE_0.$BLOCK_0.f`）
 
 ### Implementation for User Story 6
 
-- [ ] T047 [P] [US6] 在 `lib/dujs/scope.js` 為 `_name` 新增內部 setter（不改公開 API；data-model §4）
-- [ ] T048 [US6] 在 `lib/dujs/scopetree.js` 的 `buildScopeTree` 結束後做命名後處理：同父 scope 的子 scope 依原始碼順序，第一個保留原名，其後取最小 `k ≥ 1` 使 `name_k` 不在兄弟原名與已指派名中；重建 `_mapFromNameToScope`（FR-011、research R7；與 T025 同檔，須在 US3 之後或協調合併）
-- [ ] T049 [US6] 執行 `npx mocha tests/dujs/scopenames.js` 與 `UPDATE_GOLDEN=1 npm test`：`tests/golden/` 相對 US5 完成後零差異（fixtures 無同名 scope，SC-004）
+- [X] T047 [P] [US6] 在 `lib/dujs/scope.js` 為 `_name` 新增內部 setter（不改公開 API；data-model §4）
+- [X] T048 [US6] 在 `lib/dujs/scopetree.js` 的 `buildScopeTree` 結束後做命名後處理：同父 scope 的子 scope 依原始碼順序，第一個保留原名，其後取最小 `k ≥ 1` 使 `name_k` 不在兄弟原名與已指派名中；重建 `_mapFromNameToScope`（FR-011、research R7；與 T025 同檔，須在 US3 之後或協調合併）
+- [X] T049 [US6] 執行 `npx mocha tests/dujs/scopenames.js` 與 `npm test`（golden 比對模式；零差異時與 `UPDATE_GOLDEN=1` 等價）：`tests/golden/` 相對 US5 完成後零差異（fixtures 無同名 scope，SC-004）
 
 **Checkpoint**: 所有 user story 皆可獨立運作
 
