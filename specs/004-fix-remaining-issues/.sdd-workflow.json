@@ -60,7 +60,8 @@
           "reviewed": true,
           "committed": true
         }
-      }
+      },
+      "done": true
     }
   },
   "brief": {

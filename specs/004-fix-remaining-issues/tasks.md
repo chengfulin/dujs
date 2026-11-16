@@ -252,7 +252,7 @@ description: "Task list for feature 004-fix-remaining-issues"
 - [X] T089 [P] `lib/dujs/callresolver.js` 的 `definitionsOnThePage`（US2 審查 SHOULD-FIX）：以 scopeTree 為鍵的 WeakMap 快取「變數 → 定義清單」索引，避免每個呼叫點重掃全頁 GEN（不改行為）
 - [X] T090 `eslint-suppressions.json`（US5 審查 R1）：移除已刪除的 `lib/dujs/inputreader.js` 殘留項（只刪該項，不跑全域 prune）；抑制數由 119 變 118，T084 的抑制數檢查改為 118
 - [X] T091 [P] `docs/known-issues.md` 新節（併入 T080 新增的「found by `004-fix-remaining-issues`」節）：記錄 MDN 範例研究的發現——`localStorage.removeItem` 不視為定義（`lib/dujs/globalscopectrl.js` 的 `localStorageSetterNames` 只有 setItem），以及 US3 P8 的死碼 pair（無條件遞迴後不可達節點仍有 `x: L5 -> L9`）
-- [ ] T085 準備 PR（目標 `develop`）：以 Skill `mattpocock-skills:pr` 撰寫內容，必含 (1) golden 差異摘要與 `golden-diff.md` 連結；(2) 既有測試修改清單（golden-diff 各節「單元測試期望」）；(3) 驗收預期更正（若有）；(4) plan 裁決 U1／U3 的落實、analyze 裁決（H3 對 class 放寬取代 U2、呼叫解析統一為嚴格規則 FR-018 的行為改變）與 known-issues 新增的節；(5) 003 契約修訂（回邊取代遇環丟錯）；(6) CLI 行為變更（exit status、輸出目錄唯一化）；(7) 連結 spec（憲章 §CP-5）。PR 由 orchestrator 建立
+- [X] T085 準備 PR（目標 `develop`）：以 Skill `mattpocock-skills:pr` 撰寫內容，必含 (1) golden 差異摘要與 `golden-diff.md` 連結；(2) 既有測試修改清單（golden-diff 各節「單元測試期望」）；(3) 驗收預期更正（若有）；(4) plan 裁決 U1／U3 的落實、analyze 裁決（H3 對 class 放寬取代 U2、呼叫解析統一為嚴格規則 FR-018 的行為改變）與 known-issues 新增的節；(5) 003 契約修訂（回邊取代遇環丟錯）；(6) CLI 行為變更（exit status、輸出目錄唯一化）；(7) 連結 spec（憲章 §CP-5）。PR 由 orchestrator 建立
 
 ---
 
