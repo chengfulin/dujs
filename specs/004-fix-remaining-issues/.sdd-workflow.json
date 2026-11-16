@@ -54,6 +54,11 @@
           "validated": true,
           "reviewed": true,
           "committed": true
+        },
+        "US6": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
         }
       }
     }

@@ -262,29 +262,37 @@ CLI 只改參數解析、exit status 與輸出目錄名稱，分析與 .dot 內�
 
 ## §15（US6，FR-011）
 
+拆分呼叫點的 CALL RETURN 標籤帶分支路徑：`toDotWithLabelLine`（CLI 預設）`callReturn (<line>:<path>)`、`toDotWithLabelLoc` `callReturn (L<line>:C<col>:<path>)`；`labelPath` 為空的 CALL RETURN 與其他節點不變（contracts/output.md §1）。只有 graph.dot 的節點標籤改變：dupairs.dot 以行號與 `entry_*`／`exit_*` 標示 pair 端點，沒有列出 CALL RETURN，因此不變；邊與節點編號不變。
+
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異 |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異（呼叫點皆未拆分，`callReturn`／`callReturn_a`… 逐位元組相同，US6-2） |
+| `expected-fixes004/` | 3 檔差異，皆來自 fixture 第 41 行 `log(c ? a : b);`（dot 行號 42）的兩個 CALL RETURN；無新增、無刪除檔 |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
+| `expected-fixes004/` | `inter-page/0.graph.dot` | 第 59、70、72、75 行（`n216`、`n227`、`n229`、`n232`） | `n216` `callReturn_h` → `callReturn (42:T)`、`n232` `callReturn_k` → `callReturn (42:F)`（L41 拆分呼叫點的 T／F 分支）；兩者離開同名群組後其餘未拆分的 CALL RETURN 去重字母依序重排：`n227` `callReturn_i` → `callReturn_h`、`n229` `callReturn_j` → `callReturn_i` | `f60746548436` → `dbe14af147e1` | FR-011 |
+| `expected-fixes004/` | `page0/intra-pages/0.graph.dot` | 第 58、69、71、74 行（`n91`、`n102`、`n104`、`n107`） | 同上：`n91` `callReturn_h` → `callReturn (42:T)`、`n107` `callReturn_k` → `callReturn (42:F)`；`n102` `_i` → `_h`、`n104` `_j` → `_i` | `e0ceea19a82e` → `26c9d70364b5` | FR-011 |
+| `expected-fixes004/` | `page0/inter-procedurals/2.graph.dot` | 第 58、69、71、74 行（`n91`、`n102`、`n104`、`n107`） | 同上 | `a63d2e7f7762` → `41e81ffde555` | FR-011 |
 
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/cfggraphconverter.js`（新增） | acceptance US6 #1（`us6-1.js`：`callReturn (4:T)`／`(4:F)`、`callReturn (L4:C0:T)`／`(L4:C0:F)`，pair 不變）、#2（`f();` 未拆分呼叫點：`callReturn_a`／`_b`、`callReturn (L3:C0)`／`(L4:C0)` 不變，其他節點含 CALL 不變）、拆分與未拆分並存（未拆分者維持 `callReturn`）；既有 `tests/dujs/branchsplit.js` 的 CALL RETURN `labelPath` 斷言不變、仍通過 | FR-011 |
 
 ## §14（US6，FR-012）
 
+for-in／for-of 右側拆分時，前驅與迴圈 body 都有 AST range 者維持範圍判定（不變）；任一沒有 range 時改以支配關係判定（從 entry 不經過迴圈節點不可達才算本體內，每次拆分至多走訪一次）。parser 產生的節點皆有 range，既有 fixture 走不到新分支，四個 case 零差異（R11）；KI §14 沒有重現程式，以單元測試驗證（SC-002 排除 §14）。
+
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異 |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異 |
+| `expected-fixes004/` | 無差異 |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
@@ -293,6 +301,7 @@ CLI 只改參數解析、exit status 與輸出目錄名稱，分析與 .dot 內�
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/esgraph/branchsplitlooppred.js`（新增） | acceptance US6 #3（手建 CFG，本體前驅 astNode 無 range → 邊仍指向 loop 節點）、#3'（外層 `while` 經 `break` 繞回、無 range 的迴圈外前驅 → 重導到右側決策）、迴圈 body 本身無 range 時也以支配關係判定（orchestrator 裁決）、#4（`us6-4.js` 的頁面 intra-procedural pair 不變）；既有 `tests/dujs/branchsplit.js`、`branchsplit.property.js`、`es2015.js` 不變、仍通過 | FR-012 |
 
 ## 驗收預期更正
 

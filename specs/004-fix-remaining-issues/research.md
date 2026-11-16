@@ -232,6 +232,10 @@ M 與 N 的 pair 相同（都是 `c` 經回邊回到 L4 的 p-use 與 entry 殘�
   US6-4 結果與修正前相同、golden 零差異。
 - 驗證：單元層級在 `tests/esgraph/` 以手建 CFG（本體前驅的 `astNode` 無 range）呼叫拆分，斷言該前驅的邊仍指向 loop 節點；並建「外層迴圈＋break」
   的無 range 版本斷言外層前驅被重導到右側決策。
+- 實作時補充（US6 審查）：迴圈 body 本身沒有 range 時，所有前驅都改走支配關係判定（orchestrator 裁決）。已知邊角：
+  (a) 從 entry 本來就到不了的死碼前驅會被判為本體內、邊不重導——它不在分析範圍內，不影響任何 pair；
+  (b) do-while 以 for-of 為第一條敘述時，回邊前驅（while 測試節點）只能經過 loop 到達，若它沒有 range 也會被判為本體內。
+  parser 產生的節點都有 range，兩者只在手建 CFG 時出現。
 
 ## R12 Golden（FR-013）
 

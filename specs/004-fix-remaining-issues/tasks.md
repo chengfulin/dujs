@@ -227,15 +227,15 @@ description: "Task list for feature 004-fix-remaining-issues"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T074 [P] [US6] 新增 `tests/dujs/cfggraphconverter.js`（MIT）：acceptance US6 #1——`us6-1.js`（`log(c ? a : b);`）的 inter-procedural 模型以 `toDotWithLabelLine` 轉換得 `callReturn (<line>:T)`、`callReturn (<line>:F)`（行號依轉換器輸入；CLI 輸出為 `callReturn (5:T)`／`(5:F)`），以 `toDotWithLabelLoc` 得 `callReturn (L4:C0:T)`、`callReturn (L4:C0:F)`；pair 不變；#2——未拆分呼叫點（一律用 `f();` 呼叫敘述，不依賴 US2）標籤與修正前相同（`callReturn`、同名 `_a`／`_b`；loc 版 `callReturn (L<line>:C<col>)`）；其他節點（含 CALL）標籤不變
-- [ ] T075 [P] [US6] 新增 `tests/esgraph/branchsplitlooppred.js`（MIT）：#3——手建 CFG，for-of 右側拆分，本體中一個前驅的 `astNode` 沒有 range，拆分後該前驅的邊仍指向 loop 節點；#3'——無 range 的前驅在迴圈外（外層 `while` 經 `break` 可繞回、從 entry 不經 loop 可達），被重導到右側決策；#4——`us6-4.js` 的頁面 intra-procedural pair 與 acceptance 相同（不變）
+- [X] T074 [P] [US6] 新增 `tests/dujs/cfggraphconverter.js`（MIT）：acceptance US6 #1——`us6-1.js`（`log(c ? a : b);`）的 inter-procedural 模型以 `toDotWithLabelLine` 轉換得 `callReturn (<line>:T)`、`callReturn (<line>:F)`（行號依轉換器輸入；CLI 輸出為 `callReturn (5:T)`／`(5:F)`），以 `toDotWithLabelLoc` 得 `callReturn (L4:C0:T)`、`callReturn (L4:C0:F)`；pair 不變；#2——未拆分呼叫點（一律用 `f();` 呼叫敘述，不依賴 US2）標籤與修正前相同（`callReturn`、同名 `_a`／`_b`；loc 版 `callReturn (L<line>:C<col>)`）；其他節點（含 CALL）標籤不變
+- [X] T075 [P] [US6] 新增 `tests/esgraph/branchsplitlooppred.js`（MIT）：#3——手建 CFG，for-of 右側拆分，本體中一個前驅的 `astNode` 沒有 range，拆分後該前驅的邊仍指向 loop 節點；#3'——無 range 的前驅在迴圈外（外層 `while` 經 `break` 可繞回、從 entry 不經 loop 可達），被重導到右側決策；#4——`us6-4.js` 的頁面 intra-procedural pair 與 acceptance 相同（不變）
 
 ### 實作
 
-- [ ] T076 [US6] `lib/dujs/cfggraphconverter.js`：CALL RETURN 的 `labelPath` 非空時，line 版標籤 `callReturn (<line>:<path>)`（同名仍加 `_a`、`_b`，去重在之後執行）、loc 版 `callReturn (L<line>:C<col>:<path>)`；`<path>` 取 `branchLabel.pathOf(node)`；`labelPath` 空者完全不變
-- [ ] T077 [US6] `lib/esgraph/branchsplitter.js`（MIT）：`isInsideLoopBody(prev, loop, entryNode)`——有 range 維持範圍判定；無 range 時從 entry 不經 loop 節點做可達性走訪（每次拆分最多一次），不可達才算本體內；`split` 傳入 entry
-- [ ] T078 [US6] Golden（序列化）：既有三個 case 預期零差異（R9、R11）；`expected-fixes004/` 的 §15（L41）差異（dupairs 中 CALL RETURN 標籤）逐處判讀、更新 manifest；填 `golden-diff.md` §15（四個 case）與 §14（四個 case「無差異」、「單元測試期望」列 `tests/esgraph/branchsplitlooppred.js` 新增）
-- [ ] T079 [US6] US6 閘門（全程規則的閘門指令；golden 檢查 `tests/golden/manifest.json`、`specs/004-fix-remaining-issues/golden-diff.md`）
+- [X] T076 [US6] `lib/dujs/cfggraphconverter.js`：CALL RETURN 的 `labelPath` 非空時，line 版標籤 `callReturn (<line>:<path>)`（同名仍加 `_a`、`_b`，去重在之後執行）、loc 版 `callReturn (L<line>:C<col>:<path>)`；`<path>` 取 `branchLabel.pathOf(node)`；`labelPath` 空者完全不變
+- [X] T077 [US6] `lib/esgraph/branchsplitter.js`（MIT）：`isInsideLoopBody(prev, loop, entryNode)`——有 range 維持範圍判定；無 range 時從 entry 不經 loop 節點做可達性走訪（每次拆分最多一次），不可達才算本體內；`split` 傳入 entry
+- [X] T078 [US6] Golden（序列化）：既有三個 case 預期零差異（R9、R11）；`expected-fixes004/` 的 §15（L41）差異（dupairs 中 CALL RETURN 標籤）逐處判讀、更新 manifest；填 `golden-diff.md` §15（四個 case）與 §14（四個 case「無差異」、「單元測試期望」列 `tests/esgraph/branchsplitlooppred.js` 新增）
+- [X] T079 [US6] US6 閘門（全程規則的閘門指令；golden 檢查 `tests/golden/manifest.json`、`specs/004-fix-remaining-issues/golden-diff.md`）
 
 **Checkpoint**: US6 完成——SC-002 的 §15，§14 以單元測試驗證。
 
