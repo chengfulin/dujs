@@ -2,9 +2,11 @@
  * Test cases for class field initializers and static blocks as scopes
  * (specs/001-fix-known-issues, User Story 3, FR-006)
  *
- * Instance field initializers get their own scopes but are not connected to
- * the enclosing flow (README notes it); static field initializers and static
- * blocks are connected at the class definition node in source order.
+ * Instance field initializers get their own scopes; 001 D7 "instance field
+ * initializers are not connected to the flow" is superseded by 004 FR-003: a
+ * `new A();` statement is connected to the instance field initializers (in
+ * source order) and then the constructor. Static field initializers and
+ * static blocks are connected at the class definition node in source order.
  */
 require('should');
 var analyze = require('../helpers/analyze');
