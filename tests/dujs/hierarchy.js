@@ -289,6 +289,108 @@ describe('hierarchy', function () {
 		});
 	});
 
+	describe('back call edges (specs/004-fix-remaining-issues contracts/model-api.md §1)', function () {
+		/// f calls itself and g, g calls f, the page calls f
+		var RECURSION = [
+			'function f(n) { if (n) { f(n - 1); } g(); }',
+			'function g() { f(0); }',
+			'f(1);'
+		].join('\n');
+		var page;
+
+		beforeEach(function () {
+			page = intraProceduralModelsOf(RECURSION);
+		});
+
+		it('should record a back call edge without adding its callee unit to the units', function () {
+			var model = hierarchy.createCallHierarchyModel(page.modelOf('f'));
+			var edge = hierarchy.addCallEdge(model, {
+				callSite: nodeAt(page.modelOf('f'), 1, 'f'),
+				calleeModel: page.modelOf('f'),
+				back: true
+			});
+			edge.kind.should.eql('call');
+			edge.back.should.be.true();
+			edge.callee.kind.should.eql('function');
+			(edge.callee.scope === page.scopeOf('f')).should.be.true();
+			(edge.callee.model === page.modelOf('f')).should.be.true();
+			(edge.calleeModel === page.modelOf('f')).should.be.true();
+			edge.callReturn.type.should.eql(FlowNode.CALL_RETURN_NODE_TYPE);
+			Object.isFrozen(edge).should.be.true();
+			model.hierarchy.edges.should.eql([edge]);
+			model.hierarchy.units.should.have.length(1);
+			(model.hierarchy.units[0] === model.hierarchy.main).should.be.true();
+			/// the target is related already: not added twice
+			model.relatedScopes.map(String).should.eql(['$DOMAIN.$PAGE_0.f']);
+		});
+
+		it('should add the target of a back call edge to the related scopes', function () {
+			var model = hierarchy.createCallHierarchyModel(page.modelOf('g'));
+			hierarchy.addCallEdge(model, {callSite: nodeAt(page.modelOf('g'), 2, 'f'), calleeModel: page.modelOf('f'), back: true});
+			model.relatedScopes.map(String).should.eql(['$DOMAIN.$PAGE_0.g', '$DOMAIN.$PAGE_0.f']);
+			model.hierarchy.units.should.have.length(1);
+		});
+
+		it('should mark a call edge not back by default', function () {
+			var model = hierarchy.createCallHierarchyModel(page.modelOf(''));
+			var edge = hierarchy.addCallEdge(model, {callSite: nodeAt(page.modelOf(''), 3, 'f'), calleeModel: page.modelOf('f')});
+			edge.back.should.be.false();
+			model.hierarchy.units.should.have.length(2);
+		});
+
+		it('should reject a back call edge to an inter-procedural model', function () {
+			var calleeModel = hierarchy.createCallHierarchyModel(page.modelOf('g')),
+				model = hierarchy.createCallHierarchyModel(page.modelOf('f'));
+			(function () {
+				hierarchy.addCallEdge(model, {callSite: nodeAt(page.modelOf('f'), 1, 'g'), calleeModel: calleeModel, back: true});
+			}).should.throw();
+			model.hierarchy.edges.should.have.length(0);
+		});
+
+		it('should give no open target and no back edge without back call edges', function () {
+			var model = hierarchy.createCallHierarchyModel(page.modelOf(''));
+			hierarchy.addCallEdge(model, {callSite: nodeAt(page.modelOf(''), 3, 'f'), calleeModel: page.modelOf('f')});
+			hierarchy.openTargetsOf(model).should.eql([]);
+			hierarchy.hasBackEdge(model).should.be.false();
+			hierarchy.openTargetsOf(page.modelOf('f')).should.eql([]);
+			hierarchy.hasBackEdge(page.modelOf('f')).should.be.false();
+		});
+
+		it('should give the targets of the back call edges out of the subtree as open targets', function () {
+			/// g -> back f: open (f is not the main scope of any model of the subtree)
+			var modelOfG = hierarchy.createCallHierarchyModel(page.modelOf('g'));
+			hierarchy.addCallEdge(modelOfG, {callSite: nodeAt(page.modelOf('g'), 2, 'f'), calleeModel: page.modelOf('f'), back: true});
+			hierarchy.freeze(modelOfG);
+			hierarchy.openTargetsOf(modelOfG).should.have.length(1);
+			(hierarchy.openTargetsOf(modelOfG)[0] === page.scopeOf('f')).should.be.true();
+			hierarchy.hasBackEdge(modelOfG).should.be.true();
+			/// f -> back f, f -> g (g -> back f): closed
+			var modelOfF = hierarchy.createCallHierarchyModel(page.modelOf('f'));
+			hierarchy.addCallEdge(modelOfF, {callSite: nodeAt(page.modelOf('f'), 1, 'f'), calleeModel: page.modelOf('f'), back: true});
+			hierarchy.addCallEdge(modelOfF, {callSite: nodeAt(page.modelOf('f'), 1, 'g'), calleeModel: modelOfG});
+			hierarchy.freeze(modelOfF);
+			hierarchy.openTargetsOf(modelOfF).should.eql([]);
+			hierarchy.hasBackEdge(modelOfF).should.be.true();
+			/// the page -> f: closed, with back edges in the subtree
+			var modelOfPage = hierarchy.createCallHierarchyModel(page.modelOf(''));
+			hierarchy.addCallEdge(modelOfPage, {callSite: nodeAt(page.modelOf(''), 3, 'f'), calleeModel: modelOfF});
+			hierarchy.openTargetsOf(modelOfPage).should.eql([]);
+			hierarchy.hasBackEdge(modelOfPage).should.be.true();
+			modelOfPage.relatedScopes.map(String).should.eql([
+				'$DOMAIN.$PAGE_0',
+				'$DOMAIN.$PAGE_0.f',
+				'$DOMAIN.$PAGE_0.g'
+			]);
+		});
+
+		it('should give each open target once', function () {
+			var modelOfG = hierarchy.createCallHierarchyModel(page.modelOf('g'));
+			var first = hierarchy.addCallEdge(modelOfG, {callSite: nodeAt(page.modelOf('g'), 2, 'f'), calleeModel: page.modelOf('f'), back: true});
+			hierarchy.addCallEdge(modelOfG, {callSite: first.callReturn, calleeModel: page.modelOf('f'), back: true});
+			hierarchy.openTargetsOf(modelOfG).should.have.length(1);
+		});
+	});
+
 	describe('createIntraPageModel', function () {
 		var page;
 

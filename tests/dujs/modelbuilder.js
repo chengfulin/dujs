@@ -724,7 +724,10 @@ describe('ModelBuilder upper models as hierarchies', function () {
 			]);
 		});
 
-		it('should read the reach-in definitions of the inter-procedural model analyzed last', function () {
+		/// plan U3 (a): the inter-procedural model mainly related to the page is
+		/// taken first; here it is the one analyzed last as well (cyc-handler in
+		/// callcycles.js has a model of a cycle analyzed after the page model)
+		it('should read the reach-in definitions of the inter-procedural model of the page first', function () {
 			var result = analyzeProbe('a2'),
 				pageModels = modelCtrl.collectionOfPageModels.get(result.scopeTree),
 				lookup = modelBuilder._testonly_._reachInsForHandlerLookup;

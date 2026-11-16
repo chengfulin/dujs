@@ -1,11 +1,13 @@
 /*
  * Test cases of the DOT representation of the hierarchies of upper models
  * (lib/dujs/hierarchydot.js, specs/003-hierarchical-models
- * contracts/hierarchy-output.md §2, spec US2).
+ * contracts/hierarchy-output.md §2, spec US2), with the back call edges of
+ * specs/004-fix-remaining-issues (FR-015, contracts/output.md §2).
  * Original dujs code, MIT License (see LICENSE).
  */
 require('should');
-var path = require('path');
+var fs = require('fs'),
+	path = require('path');
 var analyze = require('../helpers/analyze'),
 	scopeCtrl = require('../../lib/dujs/scopectrl'),
 	modelCtrl = require('../../lib/dujs/modelctrl'),
@@ -82,6 +84,8 @@ function goldenPages(fixtures) {
 
 var CALL = 'color="blue", label="call"',
 	RETURN = 'color="blue", style="dashed", label="return"',
+	BACK_CALL = 'color="blue", style="bold", label="recursive call"',
+	BACK_RETURN = 'color="blue", style="bold,dashed", label="recursive return"',
 	ON_EVENT = 'color="green", label="onEvent"',
 	LOAD = 'style="dotted", label="loadStorage"',
 	SAVE = 'style="dotted", label="saveStorage"',
@@ -260,6 +264,74 @@ describe('hierarchydot', function () {
 			var dot = hierarchyDot.convertHierarchyToDot(modelCtrl.interPageModel);
 			nodeLinesOf(dot).should.eql([DOMAIN_NODE, 'h1 [label="page0"]']);
 			edgeLinesOf(dot).should.eql(['h0 -> h1 [' + LOAD + ']']);
+		});
+	});
+
+	// specs/004-fix-remaining-issues FR-015, contracts/output.md §2: back call edges
+	describe('back call edges', function () {
+		var PROBES004 = path.join(__dirname, 'cases', 'probes004'),
+			A0 = '$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0',
+			A1 = '$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1';
+
+		function analyzeProbe(name) {
+			analyze(fs.readFileSync(path.join(PROBES004, name + '.js'), 'utf8'));
+		}
+
+		// cyc-1: m calls this.m(), a self loop of the unit of m
+		it('should draw a recursive call and a recursive return as self loops for cyc-1', function () {
+			analyzeProbe('cyc-1');
+			var dot = hierarchyDot.convertHierarchyToDot(interProceduralModelOf(A0));
+			nodeLinesOf(dot).should.eql(['h0 [label="' + A0 + '"]']);
+			edgeLinesOf(dot).should.eql(['h0 -> h0 [' + BACK_CALL + ']', 'h0 -> h0 [' + BACK_RETURN + ']']);
+		});
+
+		// cyc-1: the page calls m, then the back call edge of m without going down
+		it('should draw the back call edge of a callee of the page model for cyc-1', function () {
+			analyzeProbe('cyc-1');
+			var dot = hierarchyDot.convertHierarchyToDot(interProceduralModelOf('$DOMAIN.$PAGE_0'));
+			nodeLinesOf(dot).should.eql(['h0 [label="$DOMAIN.$PAGE_0"]', 'h1 [label="' + A0 + '"]']);
+			edgeLinesOf(dot).should.eql([
+				'h0 -> h1 [' + CALL + ']',
+				'h1 -> h1 [' + BACK_CALL + ']',
+				'h1 -> h1 [' + BACK_RETURN + ']',
+				'h1 -> h0 [' + RETURN + ']'
+			]);
+		});
+
+		// cyc-2: M calls n, whose open unit has a back call edge to m (the example of output.md §2)
+		it('should draw the model M of cyc-2 as the example of the contract', function () {
+			analyzeProbe('cyc-2');
+			var dot = hierarchyDot.convertHierarchyToDot(interProceduralModelOf(A0));
+			nodeLinesOf(dot).should.eql(['h0 [label="' + A0 + '"]', 'h1 [label="' + A1 + '"]']);
+			edgeLinesOf(dot).should.eql([
+				'h0 -> h1 [' + CALL + ']',
+				'h1 -> h0 [' + BACK_CALL + ']',
+				'h0 -> h1 [' + BACK_RETURN + ']',
+				'h1 -> h0 [' + RETURN + ']'
+			]);
+		});
+
+		// the edges of a pair of units are deduplicated with their kind
+		it('should keep the call, back call and return edges of the same pair of scopes', function () {
+			analyzeProbe('cyc-2');
+			var edges = edgeLinesOf(hierarchyDot.convertHierarchyToDot(interProceduralModelOf(A1)));
+			edges.should.eql([
+				'h0 -> h1 [' + CALL + ']',
+				'h1 -> h0 [' + BACK_CALL + ']',
+				'h0 -> h1 [' + BACK_RETURN + ']',
+				'h1 -> h0 [' + RETURN + ']'
+			]);
+			edges.filter(function (line) {
+				return line.indexOf('h1 -> h0 ') === 0;
+			}).should.have.length(2);
+		});
+
+		// without a back call edge the output is the same as before
+		it('should not draw a recursive edge for a model without a back call edge', function () {
+			analyzeProbe('cyc-handler-nocyc');
+			var dot = hierarchyDot.convertHierarchyToDot(interProceduralModelOf(A0));
+			dot.should.not.match(/recursive/);
+			edgeLinesOf(dot).should.eql(['h0 -> h1 [' + CALL + ']', 'h1 -> h0 [' + RETURN + ']']);
 		});
 	});
 

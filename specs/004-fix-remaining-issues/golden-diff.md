@@ -73,32 +73,55 @@
 
 ## §7（US3，FR-004、FR-005）
 
+fixture 的匿名 scope：`$A0`＝L11 `static self`、`$A1`＝L12 static block、`$A2`＝L15 欄位 `count = x;`、`$A3`＝L16 constructor、`$A4`＝L19 `add`、
+`$A5`＝L24 `bump`、`$A6`＝L31 static `reset`（`$Ak` ＝ `$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_k`；dot 行號＝fixture 行號＋1）。L35 `new Counter().add(2);`
+依序連 `$A2`、`$A3`、`$A4`；L37 `counter.bump();` 連 `$A5`；L38 `Counter.reset();` 連 `$A6`。`add`↔`bump` 互相呼叫的回邊見 FR-015 子表，`add` 的
+`t` 繞過見 FR-016 子表；同一檔的差異分記於各表，雜湊只在本表列一次。
+
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異 |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異（呼叫敘述的連結只新增 class 方法與 `new A().m()` 形式，既有 fixture 沒有此形式；hierarchydot 的回邊屬性只在 `edge.back` 時使用） |
+| `expected-fixes004/` | 7 檔差異、新增 6 檔（`page0/inter-procedurals/1.*`、`2.*`）；inter-procedural 模型由 1 個變 3 個：0＝`add` 的模型 `[$A4, $A5]`（13 節點）、1＝頁面模型（原 0，66 節點）、2＝`bump` 的模型 `[$A5, $A4]`（13 節點），序號依登記順序（`add`／`bump` 的環模型先於頁面模型完成）；intra-page 由 41 節點變 68 節點 |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
+| `expected-fixes004/` | `page0/intra-pages/0.graph.dot` | dot L36–L39 的節點及其後全部節點與邊 | L35（dot 36）由一般節點改為 `call_d`（→ `$A2` `entry_e`、`16`、`exit_d`）、`call_e`（→ `$A3` `entry_f`、`18`、`exit_e`）、`call_f`（→ `$A4` `entry_g`、`21`、`call_g` → `$A5` `entry_h`、`26`、`27`、`call_h`（回邊，見 FR-015）、`callReturn_c`、`exit_f`、`30`、`callReturn_d`、`23`、`exit_g`）、`callReturn_e`；L37（dot 38）改為 `call_i`／`callReturn_f`（共用同一份 `$A5` 複本，與既有 `log` 兩次呼叫共用複本相同）；L38（dot 39）改為 `call_j` → `$A6` `entry_i`、`33`、`exit_h`、`callReturn_g`；其後 `log`、`h` 的標籤字母順延（`call_d`→`call_k`、`entry_e`→`entry_j`、`call_e`→`call_l`、`entry_f`→`entry_k`、`call_f`→`call_m` 等，編號連帶） | `de490b005751` → `2c49191ebc8f` | FR-004、FR-005、FR-003 |
+| `expected-fixes004/` | `page0/intra-pages/0.dupairs.dot` | `c`、`x`、`y`、`counter`、`Counter` 列與 `log`、`h`、`a`、`b`、`p` 的標籤；新增 `n`、`t` 列 | `x`：`(7,52)` 消失（L38 `Counter.reset()` 的 `x = 0` 在所有路徑上覆寫），新增 `(7,16)`（欄位 `count = x;` 讀 `P` 的 `x = v`）、`(7,entry_e)`（§18 殘留：欄位 entry）、`(33,52)`（`reset` 的 `x = 0` 到 `console.log`）；`y`：新增 `(23,52)`（`add` 的 `y = t`）；`counter`：`(37,38)` → `(37,call_i)`；`Counter`：`(call_b,36)` → `(call_b,call_d)`、`(call_b,39)` → `(call_b,call_j)`；新增 `n`：`(entry_g,21)`（`add` 的參數）；`c` 的 `(27,…)`、`(2,(26,…))`、`(2,entry_h)` 見 FR-015 子表；`t` 見 FR-016 子表；`a`、`b`、`c`、`log`、`h`、`p` 其餘為標籤順延（`call_d`→`call_k`、`call_f`→`call_m`、`call_e`→`call_l`、`entry_f`→`entry_k`） | `c3d7645b7aa6` → `41037642281e` | FR-004、FR-005、FR-003 |
+| `expected-fixes004/` | `inter-page/0.graph.dot` | 同 intra-page graph | 同上（inter-page 展開圖，42 → 69 節點） | `f37181acd098` → `472b7bc163d1` | FR-004、FR-005、FR-003 |
+| `expected-fixes004/` | `inter-page/0.dupairs.dot` | 同 intra-page dupairs | 同上（與 `page0/intra-pages/0.dupairs.dot` 逐位元組相同） | `c3d7645b7aa6` → `41037642281e` | FR-004、FR-005、FR-003 |
+| `expected-fixes004/` | `page0/inter-procedurals/1.graph.dot`（新增） | 全檔 | 頁面模型（原 `0.graph.dot`，序號改為 1）：內容同 `page0/intra-pages/0.graph.dot`，只差頁面模型沒有 `loop`／`loopReturn` 兩個節點與其三條邊（66 節點） | 新增 → `77c50f8c3fb1` | FR-004、FR-005、FR-003 |
+| `expected-fixes004/` | `page0/inter-procedurals/1.dupairs.dot`（新增） | 全檔 | 頁面模型的 pair，與 `page0/intra-pages/0.dupairs.dot` 逐位元組相同（差異同上） | 新增 → `41037642281e` | FR-004、FR-005、FR-003 |
+| `expected-fixes004/` | `page0/inter-procedurals/1.hierarchy.dot`（新增） | 全檔 | 頁面階層（原 `0.hierarchy.dot`）：`h0`（頁面）之下依呼叫點順序為 `P`、`$A0`、`$A1`、`$A2`、`$A3`、`$A4`、`$A5`、`$A6`、`log`、`h`（新增 `$A2`–`$A6`，原 `log`／`h` 編號順延為 `h9`／`h10`）；`h6`（`add`）→ `h7`（`bump`）一般 call／return 與 `h7 → h6` recursive call／recursive return（FR-015）；`h0 → h7`（L37）一般 call／return | 新增 → `d336eb38142c` | FR-004、FR-005、FR-015 |
 
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/expansion.js` 約 1026–1043 行 | `describe('call cycle')` → `describe('model cycle')`、`it('should throw for a call cycle built by hand')` → `it('should throw for a model cycle built by hand')`（加註：modelBuilder 建的呼叫環改為回邊）；兩處斷言 `/^call cycle in hierarchy: …/`、`/^call cycle in hierarchy/` → `/^model cycle in hierarchy: …/`、`/^model cycle in hierarchy/`（手建的模型環仍拋錯，訊息改名） | FR-015 |
+| `tests/dujs/modelbuilder.js` 730 行 | 標題「…of the inter-procedural model analyzed last」→「…of the inter-procedural model of the page first」（加註 plan U3 (a)）；斷言不變（該測試中頁面模型也是最後分析者） | FR-015（plan U3） |
+| `tests/dujs/methodcalls.js`、`tests/dujs/callcycles.js`（新增）；`tests/dujs/expansion.js`、`tests/dujs/hierarchy.js`、`tests/dujs/hierarchydot.js`、`tests/dujs/modelbuilder.js`（新增測試，既有斷言不變） | acceptance US3 #1–#7、FR-015、FR-016 `byp-3`、Edge cases 的單元與探針測試；回邊的展開、bypass、`open hierarchy` 錯誤與 hierarchy.dot 回邊屬性 | FR-004、FR-005、FR-015、FR-016、FR-017 |
 
 ### FR-015
 
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異 |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異（既有 fixture 沒有呼叫環） |
+| `expected-fixes004/` | `add`（L21 `this.bump()`）↔ `bump`（L27 `this.add(1)`）成環：頁面模型以 L27 為回邊（`h7 → h6`，見 §7 表 `1.hierarchy.dot`）；新增兩個環模型 `[$A4, $A5]`（0.*）與 `[$A5, $A4]`（2.*），各以環上第二個呼叫點為回邊；頁面 pair 新增環造成的 `c` 列 |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
+| `expected-fixes004/` | `page0/intra-pages/0.dupairs.dot`、`inter-page/0.dupairs.dot`、`page0/inter-procedurals/1.dupairs.dot` | `c` 列 | 新增 `(27,(26,27))`、`(27,(26,30))`、`(2,(26,27))`、`(2,(26,30))`（L25 `if (c)` 的 p-use：L1 的定義與 L26 `c = 0` 經 L27 回邊重入 `add` → `bump` 到達）、`(27,entry_h)`、`(2,entry_h)`（§18 殘留：`bump` 的 entry）、`(27,(42,call_k))`、`(27,(42,call_m))`（L26 的 `c = 0` 到 L41 `log(c ? a : b)`） | 見 §7 表 | FR-015 |
+| `expected-fixes004/` | `page0/intra-pages/0.graph.dot`、`inter-page/0.graph.dot`、`page0/inter-procedurals/1.graph.dot` | `call_h`、`callReturn_c` | `bump` 內 L27 的 `call_h` 以 `call` 邊指向已存在的 `add` 複本 `entry_g`、`exit_g` 以 `return` 邊回到 `callReturn_c`，不重複展開 `add`（回邊） | 見 §7 表 | FR-015 |
+| `expected-fixes004/` | `page0/inter-procedurals/0.hierarchy.dot` | 全檔 | 原為頁面階層（移至 `1.hierarchy.dot`）；現為 `add` 的模型：`h0`＝`$A4`、`h1`＝`$A5`，`h0 → h1` call／return，`h1 → h0` recursive call（bold）／recursive return（bold,dashed） | `5994e108afbc` → `b7b7d8290c1e` | FR-015 |
+| `expected-fixes004/` | `page0/inter-procedurals/0.graph.dot` | 全檔 | 原為頁面模型（移至 `1.graph.dot`）；現為 `add` 的模型 13 節點：`entry_a`、`21`、`call_a` → `bump`（`entry_b`、`26`、`27`、`call_b`（回邊 → `entry_a`）、`callReturn_a`、`exit_a`、`30`）、`callReturn_b`、`23`、`exit_b` | `96ec8627c134` → `15aa29de3b01` | FR-015 |
+| `expected-fixes004/` | `page0/inter-procedurals/0.dupairs.dot` | 全檔 | 原為頁面 pair（移至 `1.dupairs.dot`）；現為 `add` 模型的 pair：`c`：`(27,entry_b)`、`(27,(26,27))`、`(27,(26,30))`；`n`：`(entry_a,21)`；`t`：`(21,23)`（FR-016） | `c3d7645b7aa6` → `bdf4ba013185` | FR-015、FR-016 |
+| `expected-fixes004/` | `page0/inter-procedurals/2.hierarchy.dot`（新增） | 全檔 | `bump` 的模型：`h0`＝`$A5`、`h1`＝`$A4`，`h0 → h1` call／return，`h1 → h0` recursive call／recursive return | 新增 → `c039426dfc3e` | FR-015 |
+| `expected-fixes004/` | `page0/inter-procedurals/2.graph.dot`（新增） | 全檔 | `bump` 的模型 13 節點：`bump` 為主體、L27 呼叫展開 `add`，`add` 內 L21 為回邊 | 新增 → `f9edebfc6ee8` | FR-015 |
+| `expected-fixes004/` | `page0/inter-procedurals/2.dupairs.dot`（新增） | 全檔 | `c`：`(27,entry_a)`、`(27,(26,27))`、`(27,(26,30))`；`n`：`(entry_b,21)`；`t`：`(21,23)`（與 0 號模型同組 pair，標籤字母依節點順序不同） | 新增 → `2a3b853d5805` | FR-015、FR-016 |
 
 ### FR-016（Fable A1）
 
@@ -109,21 +132,23 @@
 | `expected/` | 無差異 |
 | `expected-es2015/` | 無差異 |
 | `expected-interprocedural/` | 無差異 |
-| `expected-fixes004/` | 無差異（fixture 中被連結呼叫的呼叫點，到達定義都是被呼叫端看得到、也不是其區域變數的定義，bypass 集合為空；KI §16 後果段的恢復見探針 `ki16b`、`ki16`，不在 golden fixture 中） |
+| `expected-fixes004/` | Foundational：無差異（當時 fixture 中被連結呼叫的呼叫點，到達定義都是被呼叫端看得到、也不是其區域變數的定義，bypass 集合為空；KI §16 後果段的恢復見探針 `ki16b`、`ki16`，不在 golden fixture 中）。US3：L19–L23 `add` 連上後出現 1 筆繞過（`t`），見下表 |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
+| `expected-fixes004/` | `page0/intra-pages/0.dupairs.dot`、`inter-page/0.dupairs.dot`、`page0/inter-procedurals/{0,1,2}.dupairs.dot` | 新增 `t` 列 | `(21,23)`：`add` 的 L20 `var t = n;` 跨過 L21 `this.bump()` 到 L22 `y = t;`——`t` 是 `add` 的區域變數，`bump` 看不到，經 bypass 由 CALL 直達 CALL RETURN；沒有 FR-016 時遞迴重入 `add` 的 `var t` 會蓋掉它 | 見 §7、FR-015 表 | FR-016 |
 
 ### FR-017
 
-欄位 `f = new B();` 依 FR-018 class 放寬會連（`probes/field-new.js`，`tests/dujs/newcallsite.js`）；欄位 `f = this.m();` 屬 US3。
+欄位 `f = new B();` 依 FR-018 class 放寬會連（`probes/field-new.js`，`tests/dujs/newcallsite.js`）；欄位 `f = this.m();` 由 US3 連結（`probes/us3-5.js`，
+`tests/dujs/methodcalls.js`）。
 
 | case | 結果 |
 |------|------|
 | `expected/` | 無差異 |
 | `expected-es2015/` | 無差異 |
 | `expected-interprocedural/` | 無差異 |
-| `expected-fixes004/` | 無差異（fixture 沒有值為 `new B()` 的實例欄位；L15 `count = x;` 不是呼叫） |
+| `expected-fixes004/` | 無差異（fixture 沒有值為 `new B()` 或 `this.m()` 的實例欄位；L15 `count = x;` 不是呼叫，其被 L35 連上記於 §7 表） |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|

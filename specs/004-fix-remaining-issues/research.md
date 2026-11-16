@@ -128,7 +128,7 @@
   2. `C` 已在本次 DFS 的 `built`（Map：scope → 本次為它建的模型）→ 重用；
   3. `C` 有已登記的 inter-procedural 模型且該模型 `hasBackEdge` 為 false → 重用（無環時即既有行為）；
   4. 否則以 `stack.concat([scope])` 遞迴建 `C`。
-  模型建好後放入 `built`；**封閉**且有 hierarchy 時登記（同一 scope 只登記第一個；登記條件由「relatedScopes > 1」改為「有 hierarchy」，
+  模型建好後放入 `built`；**封閉**且有 hierarchy 時登記（同一 scope 只登記第一個，已登記 scope 的重建模型只 freeze、不展開——它只經 hierarchy 被使用；登記條件由「relatedScopes > 1」改為「有 hierarchy」，
   讓只呼叫自己的 `m` 也登記）；**開放**模型不登記、不展開（不設 `graph`），只作為外層模型的子單位。
   `buildInterProceduralModels` 的略過條件改為「已有登記模型，或曾被建過且沒有呼叫邊」；只被建成開放模型的 scope 之後仍以空堆疊為根再建一次。
 - **Rationale**：(1) 原本的無限遞迴來自「建 callee model 時在登記前再次進入自己」，以堆疊判定即可；(2) 由下而上建立並凍結的流程不變，回邊不需要
