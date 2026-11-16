@@ -17,6 +17,16 @@
       "done": true,
       "findings": 16,
       "remediated": 16
+    },
+    "implement": {
+      "done": false,
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      }
     }
   },
   "brief": {
