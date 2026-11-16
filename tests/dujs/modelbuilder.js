@@ -15,6 +15,13 @@ var scopeCtrl = require('../../lib/dujs/scopectrl'),
     defuseAnalyzer = require('../../lib/dujs/defuseanalyzer'),
 	hierarchy = require('../../lib/dujs/hierarchy'),
 	expansion = require('../../lib/dujs/expansion');
+var fs = require('fs'),
+	path = require('path'),
+	analyze = require('../helpers/analyze'),
+	executor = require('../../lib/dujs/defuseanalysisexecutor'),
+	FlowNode = require('../../lib/esgraph/flownode');
+
+var PROBES = path.join(__dirname, 'cases', 'probes');
 
 /**
  * Freeze the hierarchy of a model built by hand and set its graph and
@@ -591,14 +598,6 @@ describe('ModelBuilder', function () {
  * tasks T027 and T033). The expected values are the output of the program
  * before the refactoring (e68bb2d) for the same programs.
  */
-var fs = require('fs'),
-	path = require('path'),
-	analyze = require('../helpers/analyze'),
-	executor = require('../../lib/dujs/defuseanalysisexecutor'),
-	FlowNode = require('../../lib/esgraph/flownode');
-
-var PROBES = path.join(__dirname, 'cases', 'probes');
-
 /**
  * Analyze a probe program of tests/dujs/cases/probes
  * @param {string} name

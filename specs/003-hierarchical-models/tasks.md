@@ -165,9 +165,9 @@ description: "Task list for feature 003-hierarchical-models"
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T064 全量驗證：quickstart §2 全部指令；`npx c8 npm test` 確認 `lib/dujs/hierarchy.js`、`lib/dujs/expansion.js`、`lib/dujs/hierarchydot.js` 與 `FlowNode.copyNodes` 有測試覆蓋；`eslint-suppressions.json` 仍 119 筆
-- [ ] T065 基準完整性：`git -C <專案根> diff <Setup commit> HEAD -- tests/golden/expected tests/golden/expected-es2015 tests/golden/expected-interprocedural` 只有新增的 `.hierarchy.dot`；`manifest.json` 只有 `added` 變動；`git -C <專案根> diff bf07818 HEAD -- bin lib/esgraph/dot.js lib/analyses` 為空；`git -C <專案根> diff bf07818 HEAD -- lib/esgraph/index.js` 濾掉檔頭「Modified by」修改紀錄（T055）後為空（plan「明確不受影響」）
-- [ ] T066 整理 `specs/003-hierarchical-models/test-rewrites.md`：每一筆改寫都有改寫前／後、R13 對應列、空轉檢查證據；`tests/dujs/modelbuilder.js` 私有測試的改寫（plan 風險 7）逐條列出；確認無 R13 以外的改寫
+- [X] T064 全量驗證：quickstart §2 全部指令；`npx c8 npm test` 確認 `lib/dujs/hierarchy.js`、`lib/dujs/expansion.js`、`lib/dujs/hierarchydot.js` 與 `FlowNode.copyNodes` 有測試覆蓋；`eslint-suppressions.json` 仍 119 筆
+- [X] T065 基準完整性：`git -C <專案根> diff <Setup commit> HEAD -- tests/golden/expected tests/golden/expected-es2015 tests/golden/expected-interprocedural` 只有新增的 `.hierarchy.dot`；`manifest.json` 只有 `added` 變動；`git -C <專案根> diff bf07818 HEAD -- bin lib/esgraph/dot.js lib/analyses` 為空；`git -C <專案根> diff bf07818 HEAD -- lib/esgraph/index.js` 濾掉檔頭「Modified by」修改紀錄（T055）後為空（plan「明確不受影響」）
+- [X] T066 整理 `specs/003-hierarchical-models/test-rewrites.md`：每一筆改寫都有改寫前／後、R13 對應列、空轉檢查證據；`tests/dujs/modelbuilder.js` 私有測試的改寫（plan 風險 7）逐條列出；確認無 R13 以外的改寫
 - [ ] T067 準備 PR（目標 `develop`）：以 Skill `mattpocock-skills:pr` 撰寫內容，必含 (1) 測試改寫逐條對照清單（取自 `test-rewrites.md`）；(2) 階層圖人工核對紀錄；(3) `eslint.config.js` `caughtErrorsIgnorePattern` 規則設定與理由；(4) LGPL 檔頭／`THIRD_PARTY_NOTICES.md` 修改紀錄；(5) N1 行為修正與 known-issues 新節；(6) golden 驗證（baseline 0 差異、`added` 清單）；(7) 連結 spec（`specs/003-hierarchical-models/spec.md`，憲章 §CP-5）。PR 由 orchestrator 建立
 
 ---

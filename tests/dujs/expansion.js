@@ -19,7 +19,12 @@ var fs = require('fs'),
 	path = require('path'),
 	analyze = require('../helpers/analyze'),
 	modelCtrl = require('../../lib/dujs/modelctrl'),
-	FlowNode = require('../../lib/esgraph/flownode');
+	FlowNode = require('../../lib/esgraph/flownode'),
+	executor = require('../../lib/dujs/defuseanalysisexecutor'),
+	scopeCtrl = require('../../lib/dujs/scopectrl'),
+	hierarchy = require('../../lib/dujs/hierarchy'),
+	expansion = require('../../lib/dujs/expansion'),
+	factoryFlowNode = require('../../lib/esgraph/flownodefactory');
 
 var PROBES = path.join(__dirname, 'cases', 'probes');
 
@@ -615,11 +620,6 @@ describe('pre-refactor characterization (probes)', function () {
  * (index, cfgId, type), connections, prev and next, as indices into the node
  * array (targets out of the array omitted, as in the .dot output).
  */
-var executor = require('../../lib/dujs/defuseanalysisexecutor'),
-	scopeCtrl = require('../../lib/dujs/scopectrl'),
-	hierarchy = require('../../lib/dujs/hierarchy'),
-	expansion = require('../../lib/dujs/expansion'),
-	factoryFlowNode = require('../../lib/esgraph/flownodefactory');
 
 /**
  * Build and analyze the intra-procedural models of a page only
