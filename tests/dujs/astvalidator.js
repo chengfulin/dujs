@@ -1,7 +1,6 @@
 /*
  * Test cases for ASTValidator module
  * @lastmodifedBy ChengFuLin
- * @lastmodifiedDate 2015-08-17
  */
 var should = require('should');
 var validatorAST = require('../../lib/dujs/astvalidator');

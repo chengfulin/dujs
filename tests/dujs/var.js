@@ -1,7 +1,6 @@
 /**
  * Test cases for Var
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-07-27
  */
 var Var = require('../../lib/dujs/var'),
     should = require('should');

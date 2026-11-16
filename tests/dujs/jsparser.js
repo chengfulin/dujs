@@ -1,7 +1,6 @@
 /*
  * Test cases for JSParser module
  * @lastmodifiedBy ChengFuLin
- * @lastmodifiedDate 2015-08-19
  */
 var should = require('should');
 var parser = require('../../lib/dujs/jsparser');

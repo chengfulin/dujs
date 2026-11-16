@@ -80,7 +80,7 @@ describe('ES2015+ modeling', function () {
 				'}'
 			].join('\n'));
 			var pairs = pairsOf(result.intraProcedural(PAGE + '.f'), 'x');
-			pairs.should.containDeep(['x: L2 -> L3>L4', 'x: L2 -> L3>L7', 'x: L2 -> L7', 'x: L4 -> L5']);
+			pairs.should.containDeep(['x: L2 -> L3>L4:T', 'x: L2 -> L3>L7:F', 'x: L2 -> L7', 'x: L4 -> L5']);
 			pairs.should.not.containEql('x: L4 -> L7');
 			pairs.should.not.containEql('x: L2 -> L5');
 		});
@@ -101,7 +101,7 @@ describe('ES2015+ modeling', function () {
 			loop.type.should.eql('block');
 			loop.hasLocalVariable('i').should.eql(true);
 			var pairs = result.intraProcedural(PAGE + '.g');
-			pairs.should.containDeep(['i: L3 -> L3>L4', 'i: L3 -> L3>L6']);
+			pairs.should.containDeep(['i: L3 -> L3>L4:T', 'i: L3 -> L3>L6:F']);
 			pairsOf(pairs, 'total').should.eql([
 				'total: L2 -> L4', 'total: L2 -> L6', 'total: L4 -> L4', 'total: L4 -> L6'
 			]);
@@ -202,8 +202,9 @@ describe('ES2015+ modeling', function () {
 			['id', 'name', 'first', 'last', 'others'].forEach(function (name) {
 				h.params.has(name).should.eql(true);
 			});
+			/// FR-005: `last = 1` is initialized at its own node on line 1 (was `last: entry -> L2`)
 			result.intraProcedural(PAGE + '.h').should.eql([
-				'first: entry -> L2', 'id: entry -> L2', 'last: entry -> L2', 'name: entry -> L2', 'others: entry -> L2'
+				'first: entry -> L2', 'id: entry -> L2', 'last: L1 -> L2', 'name: entry -> L2', 'others: entry -> L2'
 			]);
 		});
 
@@ -255,7 +256,7 @@ describe('ES2015+ modeling', function () {
 			var pairs = result.intraProcedural(PAGE + '.g');
 			pairsOf(pairs, 'last').should.eql(['last: L10 -> L12', 'last: L2 -> L12']);
 			/// continue/break are not nodes: their branches go to the loop node (L3) and after the loop (L12)
-			pairs.should.containDeep(['x: L3 -> L4>L3', 'x: L3 -> L4>L7', 'x: L3 -> L7>L12', 'x: L3 -> L7>L10', 'x: L3 -> L10']);
+			pairs.should.containDeep(['x: L3 -> L4>L3:T', 'x: L3 -> L4>L7:F', 'x: L3 -> L7>L12:T', 'x: L3 -> L7>L10:F', 'x: L3 -> L10']);
 		});
 
 		it('should define variables of a destructuring pattern in the loop head', function () {
@@ -401,8 +402,11 @@ describe('ES2015+ modeling', function () {
 				'var v = o?.a?.b ?? t;',
 				'console.log(v);'
 			].join('\n'));
+			// FR-008: `??` on L5 is split into the decision `o?.a?.b` (L5) and the leaves
+			// L5:T (`v = o?.a?.b`) and L5:F (`v = t`), so `t` is used and `v` is defined in the leaves
 			result.intraProcedural().should.containDeep([
-				'name: L1 -> L2', 's: L2 -> L3', 't: L3 -> L5', 'o: L4 -> L5', 'v: L5 -> L6'
+				'name: L1 -> L2', 's: L2 -> L3', 't: L3 -> L5:F', 'o: L4 -> L5',
+				'v: L5:T -> L6', 'v: L5:F -> L6'
 			]);
 		});
 
@@ -425,8 +429,12 @@ describe('ES2015+ modeling', function () {
 				'n <<= 1;',
 				'console.log(n);'
 			].join('\n'));
+			// FR-008: `n ??= 1` on L2 is split into the decision `n` (L2) and the assigning leaf L2:F;
+			// FR-009: the single-identifier decision `n` is a p-use (L2>L3:T, L2>L2:F) and the def on L1
+			// also reaches L3 through the true branch
 			pairsOf(result.intraProcedural(), 'n').should.eql([
-				'n: L1 -> L2', 'n: L2 -> L3', 'n: L3 -> L4', 'n: L4 -> L5'
+				'n: L1 -> L2>L2:F', 'n: L1 -> L2>L3:T', 'n: L1 -> L3',
+				'n: L2:F -> L3', 'n: L3 -> L4', 'n: L4 -> L5'
 			]);
 		});
 
@@ -453,7 +461,7 @@ describe('ES2015+ modeling', function () {
 				'}'
 			].join('\n'));
 			result.intraProcedural(PAGE + '.load').should.eql(['res: L2 -> L3', 'url: entry -> L2']);
-			result.intraProcedural(PAGE + '.gen').should.containDeep(['i: L6 -> L8', 'i: L9 -> L8', 'i: L9 -> L7>L8']);
+			result.intraProcedural(PAGE + '.gen').should.containDeep(['i: L6 -> L8', 'i: L9 -> L8', 'i: L9 -> L7>L8:T']);
 		});
 	});
 });

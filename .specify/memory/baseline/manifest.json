@@ -1,0 +1,17 @@
+{
+  "repo": "chengfulin/sdd-baseline",
+  "head_commit": "4a4b2be0e792e6036f1b9e6b79c35818370fddc0",
+  "constitution_version": "5.6.0",
+  "tech_standards_version": "1.3.2",
+  "fetched_at": "2026-10-28T10:08:49Z",
+  "files": {
+    "README.md": "2af7fde3688713fe8508400ca8aaa47ff891f802",
+    "constitution-api.md": "bd638e1eb53dd068c4cf1b8f1e3c0f8c295aa6e3",
+    "constitution-deployment.md": "7deb73caf74f3b6c27411b18635a35f4fe6dac2c",
+    "constitution-frontend.md": "a067ee3696a60e4ed978dd9086503d5ccae0c072",
+    "constitution-microservice.md": "40d9f392751ab0346513e689cb121efac791afd1",
+    "constitution-shell.md": "8698a335a8da9390fd0e71172467fe5d504d67bb",
+    "constitution.md": "198fe857823bbe12585791fb837a9b2e3aced348",
+    "tech-standards.md": "e60f1f9378c64e82d88b4a145f6d73b76e07f631"
+  }
+}

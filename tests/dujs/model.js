@@ -1,7 +1,6 @@
 /*
  * Test cases for Model module
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-05
  */
 var Model = require('../../lib/dujs/model'),
     factoryScope = require('../../lib/dujs/scopefactory'),

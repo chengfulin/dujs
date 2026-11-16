@@ -1,7 +1,6 @@
 /*
  * Test cases for RangeFactory module
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-04
  */
 var factoryRange = require('../../lib/dujs/rangefactory'),
     should = require('should');

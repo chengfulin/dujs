@@ -1,0 +1,60 @@
+{
+  "feature": "001-fix-known-issues",
+  "steps": {
+    "specify": {
+      "done": true
+    },
+    "clarify": {
+      "done": true
+    },
+    "plan": {
+      "done": true
+    },
+    "tasks": {
+      "done": true
+    },
+    "analyze": {
+      "done": true,
+      "findings": 22,
+      "remediated": 22
+    },
+    "implement": {
+      "done": true,
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US2": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US3": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US4": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US5": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US6": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      }
+    }
+  },
+  "brief": {
+    "artifact_url": "https://claude.ai/artifact/QLp6iYySsTeY4wyaZTSjUK"
+  }
+}

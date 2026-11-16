@@ -39,6 +39,14 @@ node bin/dujs.js -js [src_file_page1_1] [src_file_page1_2] ... [src_file_page1_i
 
 Result files will located under the <strong>out-[year]-[month]-[day]-[hour]-[minute]-[second]</strong> directory
 
+In the `.dot` outputs a node is labeled with its line number as dujs prints it
+(one more than the line in the source file, since dujs prepends a line to the
+analyzed source). Conditional
+expressions and short-circuit operators (`?:`, `&&`, `||`, `??`, `&&=`, `||=`,
+`??=`) are split into a decision node and branch nodes; a node created inside a
+branch is labeled `<line>:<path>`, where `<path>` is its sequence of `T`/`F`
+branches (e.g. `2:TF`).
+
 ## Supported syntax
 ES5 and ES2015+: `let`/`const` block scopes, arrow functions, classes,
 destructuring, default and rest parameters, spread, `for...of`, ES modules
@@ -53,7 +61,11 @@ compound and logical assignments, async functions and generators.
     <li>HTML DOM object</li>
     <li>Only call statements (<code>f();</code>) are connected as inter-procedural call sites; calls inside other expressions (<code>x = f()</code>, <code>return f()</code>) are not</li>
     <li>Object properties, <code>this</code> and aliases are not tracked: assigning to <code>a.b</code> defines <code>a</code></li>
-    <li>Labeled <code>break</code>/<code>continue</code>; <code>catch</code> parameters are not variables</li>
+    <li><code>catch</code> parameters are not variables</li>
+    <li>Names in the body of a <code>with</code> statement are resolved by the normal scope rules; they are not inferred to be properties of the object</li>
+    <li>Instance field initializers of a class are analyzed as scopes of their own, but are not connected into the flow of the enclosing code (static field initializers and static blocks are)</li>
+    <li>Splitting conditions makes the number of nodes grow as the product of the parallel conditions in one statement; analyzing minified code may exhaust resources and hang, so analyze the original source instead</li>
+    <li>The initialization node of a parameter with a default value always defines the parameter; "only when <code>undefined</code> is passed" is not modeled, so when the caller passes a value, the definition at the entry node is treated as overwritten and pairs may be missed</li>
     <li>The files of a page are concatenated, so imports between module files are not resolved</li>
 </ul>
 
@@ -61,6 +73,15 @@ See [docs/known-issues.md](docs/known-issues.md) for confirmed issues that are n
 
 ##Demo
 [Single page sample](http://chengfulin.github.io/dujs/)
+
+## SDD 導入宣告
+
+| 項目 | 值 |
+|------|-----|
+| 目前導入階段 | 第 1 階段（對齊基礎）|
+| 服務風險分級 | 未分級（階段一）|
+| 應用類型 | 工具服務（函式庫＋CLI）|
+| 憲章基線 | chengfulin/sdd-baseline v5.6.0@4a4b2be |
 
 ## License
 dujs is released under the [MIT License](LICENSE), except for the files derived

@@ -1,7 +1,6 @@
 /*
  * Test cases for FlowNode class
  * @lastmodifiedBy ChengFuLin
- * @lastmodifiedDate 2015-09-08
  */
 var FlowNode = require('../../lib/esgraph/flownode'),
     Set = require('../../lib/analyses').Set,
@@ -681,6 +680,76 @@ describe('FlowNode', function () {
                 nodeB._testonly_._kill.has(1).should.eql(true);
                 nodeB._testonly_._kill.has(2).should.eql(true);
             });
+        });
+    });
+    /// fields for branch splitting, with statements and loop heads (data-model §1)
+    describe('branch splitting fields', function () {
+        var node;
+        beforeEach(function () {
+            node = new FlowNode(FlowNode.NORMAL_NODE_TYPE, {type: 'Identifier', name: 'a'});
+        });
+
+        it('should have empty preEvaluated by default', function () {
+            node.preEvaluated.should.eql([]);
+        });
+
+        it('should have empty branchPath by default', function () {
+            node.branchPath.should.eql('');
+        });
+
+        it('should have null splitOrigin by default', function () {
+            should(node.splitOrigin).be.null();
+        });
+
+        it('should have false isWithObject by default', function () {
+            node.isWithObject.should.eql(false);
+        });
+
+        it('should have false loopRightSplit by default', function () {
+            node.loopRightSplit.should.eql(false);
+        });
+
+        it('should support to assign the new fields', function () {
+            var pre = {type: 'Identifier', name: 'b'}, origin = {type: 'ExpressionStatement'};
+            node.preEvaluated = [pre];
+            node.branchPath = 'TF';
+            node.splitOrigin = origin;
+            node.isWithObject = true;
+            node.loopRightSplit = true;
+            node.preEvaluated.should.eql([pre]);
+            node.branchPath.should.eql('TF');
+            node.splitOrigin.should.equal(origin);
+            node.isWithObject.should.eql(true);
+            node.loopRightSplit.should.eql(true);
+        });
+
+        it('should have analyzedExpressions equal to the astNode by default', function () {
+            node.analyzedExpressions.should.eql([node.astNode]);
+            node.analyzedExpressions[0].should.equal(node.astNode);
+        });
+
+        it('should have analyzedExpressions equal to preEvaluated followed by astNode', function () {
+            var first = {type: 'Identifier', name: 'b'}, second = {type: 'Identifier', name: 'c'};
+            node.preEvaluated = [first, second];
+            var exprs = node.analyzedExpressions;
+            exprs.length.should.eql(3);
+            exprs[0].should.equal(first);
+            exprs[1].should.equal(second);
+            exprs[2].should.equal(node.astNode);
+        });
+
+        it('should have read-only analyzedExpressions', function () {
+            var original = node.analyzedExpressions;
+            (function () {
+                node.analyzedExpressions = [];
+            }).should.throw();
+            node.analyzedExpressions.should.eql(original);
+        });
+
+        it('should not expose preEvaluated through analyzedExpressions', function () {
+            node.analyzedExpressions.push({type: 'Identifier', name: 'x'});
+            node.preEvaluated.should.eql([]);
+            node.analyzedExpressions.length.should.eql(1);
         });
     });
 });

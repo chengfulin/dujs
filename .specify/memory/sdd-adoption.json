@@ -1,0 +1,10 @@
+{
+  "baseline_repo": "chengfulin/sdd-baseline",
+  "baseline_version": "5.6.0",
+  "baseline_commit": "4a4b2be0e792e6036f1b9e6b79c35818370fddc0",
+  "adoption_phase": 1,
+  "app_type": "tool-service",
+  "risk_tier": null,
+  "loaded_docs": ["constitution.md"],
+  "adopted_at": "2026-11-11T10:00:00Z"
+}

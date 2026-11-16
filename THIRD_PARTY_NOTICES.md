@@ -29,9 +29,10 @@ arpad.borsos@googlemail.com).
 | `tests/esgraph/test.js` | upstream test runner |
 | `tests/esgraph/tests/*.js` | upstream test fixtures |
 
-`lib/esgraph/flownode.js`, `lib/esgraph/flownodefactory.js` and the other files
-under `tests/esgraph/` are original dujs code (MIT); they live in this directory
-only because the forked CFG builder uses them.
+`lib/esgraph/flownode.js`, `lib/esgraph/flownodefactory.js`,
+`lib/esgraph/branchsplitter.js` and the other files under `tests/esgraph/` are
+original dujs code (MIT); they live in this directory only because the forked
+CFG builder uses them.
 
 ### Modifications
 
@@ -58,6 +59,26 @@ only because the forked CFG builder uses them.
   - ES module declarations: `import`, `export * from` and `export { ... }` are
     statement nodes; an exported declaration (`export const`, `export function`,
     `export default class`, ...) is analyzed as the declaration itself.
+- 2026-11-16, by ChengFuLin
+  - `LabeledStatement`: has no node of its own and is entered at its body;
+    labeled `break l` jumps to the successor of the labeled statement and
+    labeled `continue l` to the continue target of the labeled loop.
+    Unlabeled `break`/`continue` are unchanged.
+  - `WithStatement`: a node evaluating the object expression (the node refers
+    to the object, flagged by `FlowNode.isWithObject`), followed by the body.
+  - `DebuggerStatement`: a plain statement node.
+  - Conditional expressions and short-circuit operators (`?:`, `&&`, `||`,
+    `??`, `&&=`, `||=`, `??=`) are split into decision and leaf nodes: after
+    the edges are connected and before the nodes are ordered and numbered,
+    `lib/esgraph/index.js` calls `branchsplitter.split(entryNode,
+    { expressionThrows })`, passing its own `expressionThrows` as a callback.
+    The splitting algorithm is in `lib/esgraph/branchsplitter.js`, which is
+    original dujs code (MIT) and contains no esgraph code; `index.js` only
+    gained the call.
+  - Test fixture `tests/esgraph/tests/maythrow.js`: the expected DOT output
+    was updated for the split of `1 && call()` into a decision node `1` and the
+    leaf `call()` (the empty false branch gets no node); the change is recorded
+    in `tests/esgraph/tests/README.md`.
 
 The full history is in `git log -- lib/esgraph tests/esgraph`.
 

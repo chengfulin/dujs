@@ -1,0 +1,352 @@
+<title>修正已知問題</title>
+<style>
+:root{
+  --bg:#FFFBF2; --card:#FFFFFF; --ink:#1F2937; --sub:#5B6470; --line:#E6E0D2; --th:#F4EFE3;
+  --blue:#2B59C3; --blue-soft:#DCE6FA;
+  --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
+  --coral:#E4573D; --coral-soft:#FBDDD6;
+  --green:#3A9D6B; --green-soft:#D8F0E3;
+  --grey:#AEB6C0;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+    --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+  --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding-block:32px 72px;padding-inline:20px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:900;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
+.meta{color:var(--sub);font-size:.9rem}
+.note{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:8px 12px;margin:10px 0;font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin:16px 0;display:grid;gap:12px}
+.panel h3{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;line-height:1.2;margin:0;text-wrap:balance}
+.num{display:inline-block;font-weight:900;font-size:.75rem;letter-spacing:.15em;color:var(--blue);background:var(--blue-soft);padding:2px 10px;border-radius:999px;width:max-content}
+.pic{overflow-x:auto}
+.pic svg{display:block;width:100%;min-width:640px;height:auto}
+.cap{font-size:1.05rem;font-weight:500;max-width:52ch;margin:0}
+.cap b{font-weight:900}
+.cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
+text{font-family:var(--sans)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+ul{margin:6px 0;padding-left:20px}
+li small{color:var(--sub)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--th)}
+.ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
+code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+.mermaid{min-width:640px;text-align:center}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 100 110"><circle cx="50" cy="28" r="20" fill="currentColor"/><path d="M12 108 a38 38 0 0 1 76 0 z" fill="currentColor"/></symbol>
+    <symbol id="doc" viewBox="0 0 100 120"><path d="M14 6 h50 l22 22 v86 h-72 z" fill="currentColor"/><path d="M64 6 v22 h22" fill="none" stroke="#FFFFFF" stroke-width="4"/><g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"><path d="M28 50 h44 M28 68 h44 M28 86 h30"/></g></symbol>
+    <symbol id="sheet" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="6" fill="currentColor"/><g stroke="#FFFFFF" stroke-width="3"><path d="M4 28 h112 M4 50 h112 M4 72 h112 M40 4 v92 M78 4 v92"/></g></symbol>
+    <symbol id="term" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="8" fill="currentColor"/><rect x="4" y="4" width="112" height="18" rx="8" fill="#FFFFFF" opacity=".35"/><path d="M22 44 l16 12 l-16 12" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M48 68 h30" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/></symbol>
+    <symbol id="warn" viewBox="0 0 100 100"><path d="M50 8 L96 90 H4 Z" fill="currentColor"/><path d="M50 36 v26" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="76" r="5" fill="#FFFFFF"/></symbol>
+    <symbol id="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="currentColor"/><path d="M28 52 l15 15 l30 -34" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grey)"/></marker>
+  </defs>
+</svg>
+
+<main>
+<h1>修正已知問題（#1–#6、#8）</h1>
+<div class="meta">analyze · 第 1 輪（承 plan 第 1 輪）· 2026-11-16 · 分支 <code>001-fix-known-issues</code></div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
+
+<h2>看懂它</h2>
+
+<section class="panel">
+  <span class="num">01 · 背景</span>
+  <h3>研究者想知道變數在哪被設定、哪被讀取</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="研究者把一段網頁程式交給分析工具，得到設定與讀取的配對表">
+    <use href="#person" x="50" y="40" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">研究者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">想看</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">一段網頁程式</text>
+    <g font-size="17" fill="var(--ink)" font-family="ui-monospace,Menlo,monospace"><text x="280" y="102">var a = 1;</text><text x="280" y="134">console.log(a);</text></g>
+    <g font-size="15" font-weight="700"><text x="440" y="102" fill="var(--green)">← 設定 a</text><text x="470" y="134" fill="var(--blue)">← 讀取 a</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">網頁程式：變數有設定也有讀取</text>
+    <use href="#sheet" x="650" y="55" width="150" height="125" color="var(--green)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">設定→讀取配對</text>
+  </svg></div>
+  <p class="cap">使用者是<b>研究者與工具開發者</b>，用 dujs 取得變數的設定與讀取配對。<small>來源：User Scenarios &amp; Testing 開頭</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">02 · 要解決的問題</span>
+  <h3>有些寫法讓分析中止，有些被漏看或看錯</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="三種寫法分別導致中止、漏看、多報">
+    <use href="#person" x="50" y="40" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">研究者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">遇到</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">三種常見寫法</text>
+    <g font-size="16" fill="var(--ink)" font-family="ui-monospace,Menlo,monospace"><text x="280" y="102">l: a = 2;</text><text x="280" y="134">new X(a);</text><text x="280" y="166">a = b = 1;</text></g>
+    <g font-size="16" font-weight="900" fill="var(--coral)"><text x="440" y="102">→ 分析中止</text><text x="440" y="134">→ 漏看 a</text><text x="440" y="166">→ 多報 b</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">同一個工具，結果卻出錯</text>
+    <use href="#warn" x="665" y="55" width="120" height="120" color="var(--coral)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--coral)">結果不可信</text>
+  </svg></div>
+  <p class="cap">共 <b>7 個已知問題</b>：中止、漏看、多報、名稱重複等；其中「分析中止」會讓工具完全不可用。<small>來源：US1～US6 的 Why this priority</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">03 · 目的</span>
+  <h3>讓這些寫法都能分析，而且分析得對</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="七個已知問題逐一修正後的四項改善">
+    <use href="#doc" x="60" y="45" width="100" height="120" color="var(--blue)"/>
+    <text x="105" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">7 個已知問題</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">逐一修</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--green)">修好之後</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="96">寫法不再讓分析中止</text><text x="280" y="126">漏看的讀取補回來</text><text x="280" y="156">看錯的配對拿掉</text><text x="280" y="186">同名函式可分別查到</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">範圍：本輪處理 7 個，其餘不動</text>
+    <use href="#check" x="665" y="55" width="120" height="120" color="var(--green)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--green)">結果可信</text>
+  </svg></div>
+  <p class="cap">本輪只修 <b>#1–#6、#8</b>；#7（class 方法呼叫）與 #9（程式風格）明確排除。<small>來源：範圍決策 D1、Assumptions</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">04 · 預期結果</span>
+  <h3>每個問題都有測試、不再重現</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="同一段程式的結果：應出現與不應出現的配對">
+    <use href="#term" x="55" y="50" width="130" height="108" color="var(--ink)"/>
+    <text x="105" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">執行分析</text>
+    <path d="M200 110 h40" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">同一段程式的結果</text>
+    <g font-size="16" fill="var(--ink)"><text x="280" y="102">a：第 2 行 → 第 3 行</text><text x="280" y="134">a：第 1 行 → 第 3 行</text><text x="280" y="170" font-size="15" fill="var(--sub)">既有範例輸出：不變</text></g>
+    <g font-size="15" font-weight="700"><text x="490" y="102" fill="var(--green)">應出現</text><text x="490" y="134" fill="var(--coral)">不應出現</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">第 2 行已覆蓋第 1 行的設定</text>
+    <use href="#check" x="665" y="55" width="120" height="120" color="var(--green)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--green)">7 個問題 0 個仍重現</text>
+  </svg></div>
+  <p class="cap">看得出成功：<b>重現輸入全有測試、CLI 不再中止、沒有目標的配對為 0</b>。<small>來源：Success Criteria SC-001～SC-005；US1 情境 1</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">流程</span>
+  <h3>分析主流程一條線，原本出錯處往下看</h3>
+  <div class="pic"><svg viewBox="0 0 860 350" role="img" aria-label="五步分析流程與兩條原本會出錯的支線">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">讀入程式</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">命令列或函式庫</text>
+      <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">建流程圖</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">條件拆出分支</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">找設定與讀取</text>
+      <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">配成對</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">含分支目標</text>
+      <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">輸出結果</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">結束碼 0</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M168 100 h14"/><path d="M338 100 h14"/><path d="M508 100 h14"/><path d="M678 100 h14"/></g>
+    <g stroke="var(--coral)" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arr)"><path d="M264 150 v50"/><path d="M604 150 v50"/></g>
+    <rect x="164" y="210" width="200" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="264" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">遇到標籤／with</text>
+    <text x="264" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">原本：整個分析中止</text>
+    <text x="264" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">現在：照常建圖不拋錯</text>
+    <rect x="504" y="210" width="200" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="604" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">配對沒有目標</text>
+    <text x="604" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">原本：輔助工具拋錯</text>
+    <text x="604" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">現在：每筆都有目標</text>
+  </svg></div>
+  <p class="cap">本輪改動落在<b>建流程圖與配對</b>兩步；輸出格式與命令列參數不變。<small>來源：US1、US5、Assumptions</small></p>
+  <ul>
+    <li>條件 <code>?:</code>、<code>&amp;&amp;</code>、<code>||</code>、<code>??</code>（含 <code>||=</code> 等）一律比照等效 if/else 拆分，每個葉分支各自定義，不在匯合點定義（見下兩格）。<small>US5、D3、D8、D12</small></li>
+    <li>帶預設值的參數在函式 entry 之後各有初始化節點；沒有預設值的維持在 entry。<small>US2、D4</small></li>
+  </ul>
+</section>
+
+<section class="panel">
+  <span class="num">圖解 A · 舊做法（已取代）</span>
+  <h3>先拆開再匯合，只剩一個定義</h3>
+  <div class="pic"><svg viewBox="0 0 860 300" role="img" aria-label="舊做法：x = log(c ? a : b) 拆成兩支後匯合，匯合點只有一個 x 的定義">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="30" y="100" width="170" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="115" y="140">L2 決策</text><text x="115" y="166" font-size="14" font-weight="400" fill="var(--sub)">判斷 c</text>
+      <rect x="300" y="10" width="170" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="385" y="50">取 a</text><text x="385" y="76" font-size="14" font-weight="400" fill="var(--sub)">c 為真時</text>
+      <rect x="300" y="190" width="170" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="385" y="230">取 b</text><text x="385" y="256" font-size="14" font-weight="400" fill="var(--sub)">c 為假時</text>
+      <rect x="560" y="100" width="270" height="100" rx="10" fill="var(--coral-soft)" stroke="var(--coral)" stroke-width="2.5"/><text x="695" y="132" fill="var(--coral)">L2 匯合後才定義</text><text x="695" y="158" font-size="14" font-weight="400" fill="var(--ink)">x = log(a 或 b)</text><text x="695" y="182" font-size="14" font-weight="400" fill="var(--sub)">只有 1 個 def</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M200 130 L296 70"/><path d="M200 170 L296 230"/><path d="M470 60 L556 125"/><path d="M470 240 L556 175"/></g>
+    <g font-size="15" fill="var(--sub)"><text x="236" y="92">T</text><text x="236" y="222">F</text></g>
+  </svg></div>
+  <p class="cap">匯合後只留一個 <b>def</b>，看不出「哪個分支的值流到 L3」。<small>來源：D12 括號說明（取代原建模）</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">圖解 B · 新做法（D12）</span>
+  <h3>每個葉分支各自定義，像寫成 if/else</h3>
+  <div class="pic"><svg viewBox="0 0 860 300" role="img" aria-label="新做法：x = log(c ? a : b) 拆成 L2:T 與 L2:F 兩個葉節點，各自定義 x">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="30" y="100" width="170" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="115" y="140">L2 決策</text><text x="115" y="166" font-size="14" font-weight="400" fill="var(--sub)">判斷 c（p-use）</text>
+      <rect x="300" y="10" width="260" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="430" y="38" fill="var(--green)">L2:T　x = log(a)</text><text x="430" y="64" font-size="14" font-weight="400" fill="var(--ink)">x 的 def 之一</text><text x="430" y="88" font-size="14" font-weight="400" fill="var(--sub)">x: L2:T -&gt; L3</text>
+      <rect x="300" y="190" width="260" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="430" y="218" fill="var(--green)">L2:F　x = log(b)</text><text x="430" y="244" font-size="14" font-weight="400" fill="var(--ink)">x 的 def 之二</text><text x="430" y="268" font-size="14" font-weight="400" fill="var(--sub)">x: L2:F -&gt; L3</text>
+      <rect x="650" y="100" width="180" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="740" y="140">L3</text><text x="740" y="166" font-size="14" font-weight="400" fill="var(--sub)">console.log(x)</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M200 130 L296 70"/><path d="M200 170 L296 230"/><path d="M560 60 L646 125"/><path d="M560 240 L646 175"/></g>
+    <g font-size="15" fill="var(--sub)"><text x="236" y="92">T</text><text x="236" y="222">F</text></g>
+  </svg></div>
+  <p class="cap">x 在 <b>L2:T、L2:F 各有一個 def</b>，分支來源一目了然；若寫成呼叫敘述 <code>log(c ? a : b);</code>，兩個葉各自是 log 的呼叫點。<small>來源：D12、US5 情境 10、10b</small></p>
+</section>
+
+<h3>記法怎麼讀</h3>
+<div class="box"><table>
+<tr><th>記法</th><th>讀法</th></tr>
+<tr><td><code>a: L1 -&gt; L2&gt;L2:F</code></td><td>a 在 L1 定義；L2 的決策判斷 a 為 false，走進葉節點 <code>L2:F</code>。目標已帶路徑（末碼 F 即分支），不再加 <code>:F</code>。</td></tr>
+<tr><td><code>b: L1 -&gt; L2:T&gt;L2:TF</code></td><td>決策節點 <code>L2:T</code>（在 a 的 true 分支內才求值的 b）判斷為 false，進入 <code>L2:TF</code>。</td></tr>
+<tr><td><code>a: L1 -&gt; L4&gt;L5:T</code></td><td>L4 的決策判斷為 true，進入 L5；目標不帶路徑，所以補 <code>:T</code> 標出分支。</td></tr>
+<tr><td><code>x: L2:T -&gt; L3</code></td><td>x 在葉節點 <code>L2:T</code> 定義，於 L3 被讀取（c-use）。</td></tr>
+</table></div>
+<p class="cap"><small>來源：D13、表示法、Clarifications 2026-11-16 第 3 條</small></p>
+
+<section class="panel">
+  <span class="num">架構 · plan 起</span>
+  <h3>新增一個拆分模組，其餘沿用既有管線</h3>
+  <div class="pic"><div class="mermaid">
+flowchart LR
+  CLI["bin/dujs.js<br/>CLI 不變"] --> ESG["esgraph/index.js<br/>基本 CFG + labeled/with/debugger"]
+  ESG --> BS["esgraph/branchsplitter.js 新<br/>拆決策節點與葉節點"]
+  BS --> FN["flownode.js<br/>branchPath 等新欄位"]
+  SC["scopetree.js / scope.js<br/>欄位與 static scope、名稱唯一化"] --> MB
+  BS --> MB["modelbuilder.js<br/>參數初始化、static 串接、呼叫點"]
+  MB --> DU["defuseanalyzer.js<br/>new 參數、連鎖指派、走訪 analyzedExpressions"]
+  DU --> CV["cfggraphconverter.js<br/>label L行:路徑"]
+  CV --> OUT[("out-時間/*.dot<br/>格式不變")]
+  PT["tests/helpers/analyze.js<br/>+ fast-check 性質測試"] -.驗證.-> DU
+  DEP["espree、walkes<br/>既有依賴"] --> ESG
+  FC["fast-check<br/>新 devDependency"] -.-> PT
+  </div></div>
+  <ul>
+    <li>拆分在基本 CFG 建好後、排序編號前一次完成；下游走訪器經 <code>analyzedExpressions</code> 取得合成運算式，不需理解替換。<small>research R1–R3、R8</small></li>
+    <li>參數初始化與 class 欄位／static block 都沿用「合成 AST」手法，重用既有 scope 與呼叫連結。<small>research R4、R5</small></li>
+    <li>LGPL 衍生檔（<code>esgraph/index.js</code>）只加呼叫點與 labeled／with／debugger；新邏輯放 MIT 新檔。<small>plan Structure Decision</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（analyze · 第 1 輪）</h2>
+<p class="meta">來源：speckit-analyze 與 sdd-spec-clarifier 兩份發現表；以下 4 項 CRITICAL／HIGH 全列，其餘 MEDIUM 以下為「同意套用」的修正方案。</p>
+<h3>CRITICAL／HIGH 發現</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>一句話說明</th><th>建議處置</th></tr>
+<tr><td>C1</td><td class="no">CRITICAL</td><td>spec US4 情境 3；T029</td><td><code>a ||= b ||= 1</code> 依 D8／D12 會被拆分，<code>b</code> 變成決策 <code>L2:F</code> 的 p-use，情境寫的 <code>b: L&lt;def&gt; -&gt; L&lt;該行&gt;</code> c-use 無法成立；T029 以「b 的 use 存在」迴避</td><td>判斷點 1</td></tr>
+<tr><td>F2</td><td class="no">HIGH</td><td>defuseanalyzer；T039、T032；research R7</td><td>根識別字防護看 <code>cfgNode.astNode.type</code>；改走訪 <code>analyzedExpressions</code> 後，US5 情境 8 的決策節點為 Identifier <code>c</code>，preEvaluated 的 <code>y</code> use 會被擋、漏記 <code>y: L1 -&gt; L2</code></td><td>T039 與 R7 明訂「防護依每個 analyzedExpressions 根各自判斷；preEvaluated 一律 c-use、不受防護影響」；T032 測試要抓得到</td></tr>
+<tr><td>H1</td><td class="no">HIGH</td><td>spec（缺）；research R3；tasks</td><td>for-in／for-of 右側（ES2015 golden L29 <code>saved ?? []</code>）spec 無情境、FR、Edge Case；R3 要求迴圈節點不再讀右側，卻無任務實作</td><td>spec 補 for-of 情境與 Edge Case；tasks 補「迴圈節點不重讀右側」任務與測試</td></tr>
+<tr><td>H2</td><td class="no">HIGH</td><td>spec D12／Edge Case；V4／P6；R3</td><td><code>return a || b</code>（golden L11）的 T 葉只剩 <code>return &lt;a 的值&gt;</code>，無 use／def；spec 只說「沒有運算的分支不建節點」，未涵蓋 return／throw，而 R3 又把 return 列為接 exit 的葉</td><td>判斷點 2</td></tr>
+</table></div>
+<p class="meta">MEDIUM 以下（F1、F3–F8、F10、M2、M3、M5、其他）彙總如下；F9、M1、M4 另列。</p>
+<h3>同意套用的修正方案（MEDIUM／LOW）</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>問題</th><th>修正</th></tr>
+<tr><td>F1</td><td><code>with</code> 節點 astNode 改指 <code>o</code> 後，R7 防護漏記 <code>o: L1 -&gt; L2</code>（US1 情境 5）</td><td>R6／R7 補例外、plan 影響表補（T016 已做）</td></tr>
+<tr><td>F3</td><td>US2 情境 8 依賴 US5，但 Independent Test 寫可獨立</td><td>spec 註明情境 8 於 US5 完成後驗證</td></tr>
+<tr><td>F4</td><td>US1 情境 3 無 pair 期望（外層 init／test／update 同在 L2）</td><td>spec 補「以 CFG 驗證 <code>continue outer</code> 唯一 normal 後繼為外層更新式」</td></tr>
+<tr><td>F5</td><td><code>golden-diff.md</code> 工作檔 plan 未列</td><td>plan 結構與 R10 補列，T053 彙整進 PR</td></tr>
+<tr><td>F6</td><td><code>tests/esgraph/tests/maythrow.js</code>（LGPL fixture）不能加檔頭</td><td>T042 在該目錄 README 追加日期修改說明；T052 核對清單納入；共通約定改「fixture 記目錄 README」</td></tr>
+<tr><td>F7</td><td><code>expressionThrows</code> 是 ControlFlowGraph 內巢狀函式，介面未定</td><td>定介面 <code>branchsplitter.split(allNodes, { expressionThrows: fn })</code>，由 index.js 傳 callback；例外目標取原節點既有 EXCEPTION 出邊（寫進 R3）</td></tr>
+<tr><td>F8、F10</td><td>plan／R9 把既有 p-use 寫成 4 筆（實為 4 處 9 筆）；影響表漏 <code>variableanalyzer.js</code></td><td>改正數字、補列影響表（另補 <code>flownodetest.js</code>、<code>analyzehelper.js</code>、<code>golden-diff.md</code>）</td></tr>
+<tr><td>M2</td><td>性質 P2「每條路徑恰一個 def」對 <code>x ||= E</code> 不成立</td><td>改為「至多一個 def，空分支只出現在邏輯指派」</td></tr>
+<tr><td>M3</td><td>fast-check 隨機 seed 不可重複</td><td>預設固定 seed、<code>FC_SEED</code> 可覆寫、失敗印 seed 與反例</td></tr>
+<tr><td>M5</td><td>預設參數初始化節點無條件定義，呼叫端有傳值時 entry 的 def 被 kill 造成漏報，只記在 research</td><td>寫進 spec Assumptions 與 README Limits（T050）</td></tr>
+<tr><td>其他</td><td>R3 語境表漏 case 測試式、with 物件、巢狀 label、含 extends 的 class；T016 的 with 標記欄位不在 data-model；R12 末段與 plan「待裁決事項」過時；spec D5／D6 排序在 D11 之後</td><td>逐項補表、補欄位、刪過時段落、調整排序</td></tr>
+</table></div>
+<p class="meta">標記碰撞（F9、M1）見下方「次要疑點」。</p>
+
+<h2>plan 既定事項（上輪，未變）</h2>
+<h3>技術選型</h3>
+<div class="box"><table>
+<tr><th>項目</th><th>選擇</th><th>狀態</th></tr>
+<tr><td>語言／執行環境</td><td>JavaScript（CommonJS）、Node.js ≥ 24</td><td>沿用</td></tr>
+<tr><td>解析與走訪</td><td>espree ^11.2.0、walkes ^0.2.1</td><td>沿用</td></tr>
+<tr><td>測試／覆蓋率／lint</td><td>mocha ^12 ＋ should ^13、c8 ^12、eslint ^10</td><td>沿用</td></tr>
+<tr><td>性質測試</td><td>fast-check ^4.10.2（devDependency；<code>FC_NUM_RUNS</code> 可調，預設 100 runs）</td><td class="no">新增</td></tr>
+</table></div>
+<h3>偏離 tech-standards（§CP-6 記錄）</h3>
+<div class="box"><table>
+<tr><th>項目</th><th>規範建議</th><th>本專案做法</th><th>使用者理由</th></tr>
+<tr><td>PBT 執行框架</td><td>fast-check（舉例 Jest／Vitest）</td><td>fast-check 搭配既有 mocha</td><td>既有系統相容、同專案選型一致</td></tr>
+<tr><td>Mutation testing</td><td>Stryker</td><td>本輪不導入</td><td>本輪範圍只加 PBT</td></tr>
+</table></div>
+<h3>plan 執行者自行決定（請知悉，非 spec 內容）</h3>
+<div class="box"><table>
+<tr><th>決定</th><th>出處</th></tr>
+<tr><td><code>if (a ?? b)</code> 的 true 分支建一個不讀任何變數的決策節點（<code>a</code> 真假未知，且不重讀）</td><td>research R3</td></tr>
+<tr><td>複合指派 <code>x += …</code>：x 的讀取放決策節點，葉為單純指派</td><td>research R2</td></tr>
+<tr><td>預設參數初始化節點一律定義參數，不模擬「僅 undefined 時」</td><td>research R4</td></tr>
+<tr><td>欄位與 static block 的 scope 佔用 <code>$ANONYMOUS_FUN_&lt;n&gt;</code> 序號，會位移其後匿名函式編號（既有 golden 無此語法，不受影響）</td><td>research R5</td></tr>
+</table></div>
+
+<h2>工程師要決定的事</h2>
+
+<h3>驗收條件盤點</h3>
+<div class="box"><table>
+<tr><th>Story</th><th>可驗證的情境</th><th>不可驗證／缺（原因）</th></tr>
+<tr><td>US1 labeled／with／debugger</td><td class="ok">1、2、4、5、6、7</td><td class="no">3：未給 pair 預期（F4 修正後改以 CFG 驗證 <code>continue outer</code> 唯一 normal 後繼為外層更新式，屬可驗證）</td></tr>
+<tr><td>US2 預設參數與 new</td><td class="ok">1、2、3、4、6、8</td><td class="no">5：未給完整程式與行號，只說「有初始化節點、d 記為 use」；7：未給程式行號與 pair 字串；8：依賴 US5，須於 US5 完成後驗證（F3）</td></tr>
+<tr><td>US3 class 欄位／static block</td><td class="ok">1、2、3、4</td><td class="no">5：「既有行為不變」未指定 computed key、extends 的輸入（由既有測試涵蓋）</td></tr>
+<tr><td>US4 連鎖指派</td><td class="ok">1、2</td><td class="no">3：以 <code>L&lt;def&gt;</code> 佔位、未給具體 pair；其中 <code>a ||= b ||= 1</code> 的期望依 D8／D12 無法成立（C1，見判斷點 1）</td></tr>
+<tr><td>US5 條件與短路</td><td class="ok">1–9、12（上輪「T／F 分不出」已由 D13 解決）；7 為通則，可驗證</td><td class="no">缺：for-in／for-of 右側含條件式（如 <code>saved ?? []</code>）無情境（H1）；<code>return a || b</code> 的 return 葉是否建節點未定（H2）；10／10b：已拆為呼叫敘述（驗呼叫連結）與宣告形式（只驗 pair），皆可驗證；11：只說 scope 一個、pair 不重複，未給 pair 字串（<code>run</code> 也未宣告）</td></tr>
+<tr><td>US6 同名 scope</td><td class="ok">1、2、3、5</td><td class="no">4：只要求名稱唯一，未給預期名稱（原始碼自帶 <code>f_1</code> 的出現順序未定）</td></tr>
+</table></div>
+
+<h3>tech-standards 缺漏或變更</h3>
+<p>缺漏：規範未涵蓋「Node.js 靜態分析函式庫＋CLI」的選型，依既有專案堆疊（見上「技術選型」）。偏離：2 項（PBT 搭 mocha、本輪不導入 Stryker），理由見「偏離 tech-standards」。</p>
+
+<h3>CRITICAL／HIGH 衝突與影響</h3>
+<div class="box"><table>
+<tr><th>憲章條款</th><th>衝突內容</th><th>受影響 story</th></tr>
+<tr><td>§CP-1 Spec 與實作可追溯</td><td>C1：US4 情境 3 的字面期望在 D8／D12 下不可滿足，實作無法與 spec 一致</td><td>US4（牽動 US5）</td></tr>
+<tr><td>§CP-1</td><td>H1／H2：for-of 右側與 return／throw 葉只存在於 research／plan 設計，spec 無對應條文</td><td>US5</td></tr>
+<tr><td>§CP-1</td><td>F2：T039 若照原寫法會漏記 <code>y: L1 -&gt; L2</code>，與 US5 情境 8 不符（已有修正方案）</td><td>US5、US2 情境 8</td></tr>
+</table></div>
+
+<h3>本輪判斷點</h3>
+<p class="meta">本輪 3 個判斷點已由使用者裁決（D14 US4-3 移到 US5 情境 14；D15 return／throw 葉一律建節點；D16 維持不設上限、README 註明壓縮檔可能卡住），修正方案全數同意套用；改列於「已決事項」。</p>
+
+<h3>次要疑點</h3>
+<div class="box"><table>
+<tr><th>疑點</th><th>出處</th></tr>
+<tr><td>標記碰撞（F9、M1，使用者延後到本輪重評）：同一行多個敘述（<code>var a = c ? 1 : 2, b = d ? 3 : 4;</code>）、單行 <code>if (a) x = c ? 1 : 2;</code>、同一 <code>for</code> 的 init／test／update 各自拆分、參數預設值與本體同行，記法會歧義；壓縮過的 client-side JS 常整檔同一行，可能是常態。三案：A 記為已知限制、驗收一行一個節點來源；B 記法加序號；C helper 遇碰撞拋錯（會打壞既有 <code>for(;;)</code> 測試靠字串去重）。</td><td>Clarifications「延後釐清」；FR-014</td></tr>
+<tr><td>條件位於 <code>for</code> 更新式、箭頭函式運算式本體時，spec 靠 D12 通則類推（情境 12 為 <code>return</code> 的例子），未逐一列出。</td><td>D12；US5 情境 12</td></tr>
+<tr><td>US2 情境 5、情境 7 缺具體 pair 預期（US1 情境 3 已由 F4 補、US4 情境 3 見判斷點 1）</td><td>見驗收條件盤點</td></tr>
+<tr><td>原始碼自帶 <code>f_1</code> 且在兩個同名 <code>f</code> 之後時，誰得到 <code>f_1_1</code>？</td><td>FR-011；US6 情境 4</td></tr>
+</table></div>
+
+<h3>已決事項（不再詢問）</h3>
+<div class="box"><table>
+<tr><th>編號</th><th>決定</th></tr>
+<tr><td>D1</td><td>本輪只修 #1–#6、#8；#7、#9 不做</td></tr>
+<tr><td>D2</td><td>labeled break／continue 完整建模；<code>debugger</code> 當一般敘述；<code>with</code> 內名稱照一般規則解析並在 README 註明</td></tr>
+<tr><td>D3、D8</td><td>條件與短路運算（含 <code>||=</code>、<code>&amp;&amp;=</code>、<code>??=</code>）拆分支；可選鏈 <code>?.</code> 不拆</td></tr>
+<tr><td>D4</td><td>帶預設值的參數在 entry 之後各有初始化節點（use 與 def 同在該節點）</td></tr>
+<tr><td>D5、D7</td><td>欄位初始化式與 static block 各自成 scope；static 者接在 class 宣告節點，實例欄位不接入外層（README 註明）</td></tr>
+<tr><td>D6</td><td>同父同名 scope 依出現順序加 <code>_1</code>、<code>_2</code> 後綴</td></tr>
+<tr><td>D9</td><td>測試輔助工具的 p-use 記法加分支標記 <code>:T</code>／<code>:F</code>（目標帶路徑時省略，見 D13）</td></tr>
+<tr><td>D10</td><td>預設值運算式內的條件與短路比照 D3 拆分支；該參數在每個葉分支各自定義（依 D12）</td></tr>
+<tr><td>D11</td><td>參數解構中每個帶預設值的名稱各一個初始化節點，依出現順序</td></tr>
+<tr><td>D12</td><td>?:／&amp;&amp;／||／??／邏輯指派一律等效 if/else；剩餘運算與 def 在每個葉分支複製；不在匯合點定義、不引入暫存變數</td></tr>
+<tr><td>D13</td><td>拆出的節點標 <code>L&lt;行&gt;:&lt;路徑&gt;</code>；p-use 目標帶路徑時省略 <code>:T</code>／<code>:F</code></td></tr>
+<tr><td>D14</td><td>US4 情境 3 只留 <code>a = b += 1</code>；<code>a ||= b ||= 1</code> 移到 US5 情境 14，以拆分記法精確比對</td></tr>
+<tr><td>D15</td><td>return／throw 的葉即使沒有 use／def 也一律建節點（US5 情境 15）</td></tr>
+<tr><td>D16</td><td>維持不設複製上限；README 註明以壓縮檔為分析目標可能卡住，建議分析原始碼</td></tr>
+<tr><td>analyze 修正</td><td>F1–F10、H1（for-of 右側，US5 情境 16）、M1（標記碰撞記為已知限制）、M2、M3（fast-check 固定 seed）、M5 等全數套用</td></tr>
+<tr><td>R12（plan）</td><td>US5 情境 10 拆為 10（<code>log(c ? a : b);</code> 驗兩葉連到 log）與 10b（<code>var x = log(…)</code> 只驗 pair）；呼叫點規則不變</td></tr>
+<tr><td>plan 選型</td><td>沿用既有堆疊；新增 fast-check 做性質測試；偏離 tech-standards 兩項（mocha、不導入 Stryker）</td></tr>
+<tr><td>釐清 2026-11-16</td><td>既有決策節點條件中不複製本體；左運算元不重讀；空分支不建節點直接接後繼；呼叫點隨葉複製、函式／class 運算式只一個 scope；複製數不設上限（README 註明；本輪因壓縮程式 2^N 新事證重提，見判斷點 3）；switch 判斷式比照既有決策節點，不複製 case 本體（US5 情境 13）</td></tr>
+</table></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true,theme:(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches&&document.documentElement.getAttribute('data-theme')!=='light')||document.documentElement.getAttribute('data-theme')==='dark'?'dark':'default'});</script>

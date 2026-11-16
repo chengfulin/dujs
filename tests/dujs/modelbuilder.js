@@ -1,7 +1,6 @@
 /*
  * Test cases for ModelBuilder module
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-31
  */
 var should = require('should'),
 	jsParser = require('../../lib/dujs/jsparser');

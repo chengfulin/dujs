@@ -1,7 +1,6 @@
 /**
  * Test cases for VarFactory
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-07-27
  */
 var varFactory = require('../../lib/dujs/varfactory');
 require('should');
