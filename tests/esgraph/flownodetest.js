@@ -682,23 +682,21 @@ describe('FlowNode', function () {
             });
         });
     });
-    /// fields for branch splitting, with statements and loop heads (data-model §1)
+    /// fields for branch splitting, with statements and loop heads
+    /// (specs/002-small-refactors data-model §1: split and labelPath replace preEvaluated, branchPath and splitOrigin)
     describe('branch splitting fields', function () {
-        var node;
+        var node, origin;
         beforeEach(function () {
             node = new FlowNode(FlowNode.NORMAL_NODE_TYPE, {type: 'Identifier', name: 'a'});
+            origin = {type: 'ExpressionStatement'};
         });
 
-        it('should have empty preEvaluated by default', function () {
-            node.preEvaluated.should.eql([]);
+        it('should have null split by default', function () {
+            should(node.split).be.null();
         });
 
-        it('should have empty branchPath by default', function () {
-            node.branchPath.should.eql('');
-        });
-
-        it('should have null splitOrigin by default', function () {
-            should(node.splitOrigin).be.null();
+        it('should have empty labelPath by default', function () {
+            node.labelPath.should.eql('');
         });
 
         it('should have false isWithObject by default', function () {
@@ -709,47 +707,160 @@ describe('FlowNode', function () {
             node.loopRightSplit.should.eql(false);
         });
 
-        it('should support to assign the new fields', function () {
-            var pre = {type: 'Identifier', name: 'b'}, origin = {type: 'ExpressionStatement'};
-            node.preEvaluated = [pre];
-            node.branchPath = 'TF';
-            node.splitOrigin = origin;
+        it('should have false discriminantSplit by default', function () {
+            node.discriminantSplit.should.eql(false);
+        });
+
+        it('should support to assign the flags', function () {
             node.isWithObject = true;
             node.loopRightSplit = true;
-            node.preEvaluated.should.eql([pre]);
-            node.branchPath.should.eql('TF');
-            node.splitOrigin.should.equal(origin);
+            node.discriminantSplit = true;
             node.isWithObject.should.eql(true);
             node.loopRightSplit.should.eql(true);
+            node.discriminantSplit.should.eql(true);
         });
 
-        it('should have analyzedExpressions equal to the astNode by default', function () {
-            node.analyzedExpressions.should.eql([node.astNode]);
-            node.analyzedExpressions[0].should.equal(node.astNode);
+        describe('split', function () {
+            it('should store a copy of a valid split', function () {
+                var pre = {type: 'Identifier', name: 'b'}, info = {path: 'TF', origin: origin, preEvaluated: [pre]};
+                node.split = info;
+                node.split.should.not.equal(info);
+                node.split.path.should.eql('TF');
+                node.split.origin.should.equal(origin);
+                node.split.preEvaluated.should.eql([pre]);
+                node.split.preEvaluated[0].should.equal(pre);
+                node.split.preEvaluated.should.not.equal(info.preEvaluated);
+            });
+
+            it('should have empty preEvaluated when it is omitted', function () {
+                node.split = {path: '', origin: origin};
+                node.split.preEvaluated.should.eql([]);
+            });
+
+            it('should not keep the changes of the assigned object and array', function () {
+                var pre = [{type: 'Identifier', name: 'b'}], info = {path: 'T', origin: origin, preEvaluated: pre};
+                node.split = info;
+                info.path = 'F';
+                pre.push({type: 'Identifier', name: 'c'});
+                node.split.path.should.eql('T');
+                node.split.preEvaluated.length.should.eql(1);
+            });
+
+            it('should return the same frozen object', function () {
+                node.split = {path: 'T', origin: origin, preEvaluated: []};
+                node.split.should.equal(node.split);
+                Object.isFrozen(node.split).should.eql(true);
+                Object.isFrozen(node.split.preEvaluated).should.eql(true);
+            });
+
+            it('should throw on writing the frozen split in strict mode', function () {
+                node.split = {path: 'T', origin: origin, preEvaluated: []};
+                (function () {
+                    node.split.path = 'F';
+                }).should.throw();
+                (function () {
+                    node.split.preEvaluated.push({type: 'Identifier', name: 'b'});
+                }).should.throw();
+                node.split.path.should.eql('T');
+                node.split.preEvaluated.should.eql([]);
+            });
+
+            it('should be cleared by null or undefined', function () {
+                node.split = {path: 'T', origin: origin};
+                node.split = null;
+                should(node.split).be.null();
+                node.split = {path: 'T', origin: origin};
+                node.split = undefined;
+                should(node.split).be.null();
+            });
+
+            it('should ignore invalid values', function () {
+                var valid = {path: 'T', origin: origin};
+                node.split = valid;
+                var stored = node.split;
+                [
+                    'T',
+                    1,
+                    true,
+                    {origin: origin},
+                    {path: 1, origin: origin},
+                    {path: 'F'},
+                    {path: 'F', origin: null},
+                    {path: 'F', origin: 'statement'},
+                    {path: 'F', origin: origin, preEvaluated: {type: 'Identifier', name: 'b'}},
+                    {path: 'F', origin: origin, preEvaluated: null}
+                ].forEach(function (invalid) {
+                    node.split = invalid;
+                    node.split.should.equal(stored);
+                });
+            });
+
+            it('should not change labelPath', function () {
+                node.split = {path: 'T', origin: origin};
+                node.labelPath.should.eql('');
+            });
         });
 
-        it('should have analyzedExpressions equal to preEvaluated followed by astNode', function () {
-            var first = {type: 'Identifier', name: 'b'}, second = {type: 'Identifier', name: 'c'};
-            node.preEvaluated = [first, second];
-            var exprs = node.analyzedExpressions;
-            exprs.length.should.eql(3);
-            exprs[0].should.equal(first);
-            exprs[1].should.equal(second);
-            exprs[2].should.equal(node.astNode);
+        describe('labelPath', function () {
+            it('should support to assign a string', function () {
+                node.labelPath = 'TF';
+                node.labelPath.should.eql('TF');
+                node.labelPath = '';
+                node.labelPath.should.eql('');
+            });
+
+            it('should ignore non-string values', function () {
+                node.labelPath = 'T';
+                [null, undefined, 1, ['F'], {path: 'F'}].forEach(function (invalid) {
+                    node.labelPath = invalid;
+                    node.labelPath.should.eql('T');
+                });
+            });
+
+            it('should not change split', function () {
+                node.labelPath = 'T';
+                should(node.split).be.null();
+            });
         });
 
-        it('should have read-only analyzedExpressions', function () {
-            var original = node.analyzedExpressions;
-            (function () {
-                node.analyzedExpressions = [];
-            }).should.throw();
-            node.analyzedExpressions.should.eql(original);
-        });
+        describe('analyzedExpressions', function () {
+            it('should be the astNode when not split', function () {
+                node.analyzedExpressions.should.eql([node.astNode]);
+                node.analyzedExpressions[0].should.equal(node.astNode);
+            });
 
-        it('should not expose preEvaluated through analyzedExpressions', function () {
-            node.analyzedExpressions.push({type: 'Identifier', name: 'x'});
-            node.preEvaluated.should.eql([]);
-            node.analyzedExpressions.length.should.eql(1);
+            it('should be the astNode for a split node without preEvaluated', function () {
+                node.split = {path: 'T', origin: origin};
+                node.analyzedExpressions.should.eql([node.astNode]);
+            });
+
+            it('should be split.preEvaluated followed by the astNode', function () {
+                var first = {type: 'Identifier', name: 'b'}, second = {type: 'Identifier', name: 'c'};
+                node.split = {path: '', origin: origin, preEvaluated: [first, second]};
+                var exprs = node.analyzedExpressions;
+                exprs.length.should.eql(3);
+                exprs[0].should.equal(first);
+                exprs[1].should.equal(second);
+                exprs[2].should.equal(node.astNode);
+            });
+
+            it('should be read-only', function () {
+                var original = node.analyzedExpressions;
+                (function () {
+                    node.analyzedExpressions = [];
+                }).should.throw();
+                node.analyzedExpressions.should.eql(original);
+            });
+
+            it('should be a new array each time', function () {
+                node.split = {path: '', origin: origin, preEvaluated: [{type: 'Identifier', name: 'b'}]};
+                var exprs = node.analyzedExpressions;
+                exprs.should.not.equal(node.analyzedExpressions);
+                Object.isFrozen(exprs).should.eql(false);
+                exprs.push({type: 'Identifier', name: 'x'});
+                node.split.preEvaluated.length.should.eql(1);
+                node.analyzedExpressions.length.should.eql(2);
+            });
         });
     });
 });

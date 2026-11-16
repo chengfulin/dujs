@@ -13,7 +13,8 @@ var analyze = require('../helpers/analyze'),
 	modelCtrl = require('../../lib/dujs/modelctrl'),
 	jsParser = require('../../lib/dujs/jsparser'),
 	cfgBuilder = require('../../lib/dujs/cfgbuilder'),
-	FlowNode = require('../../lib/esgraph/flownode');
+	FlowNode = require('../../lib/esgraph/flownode'),
+	pathOf = require('../../lib/esgraph/branchlabel').pathOf;
 
 var PAGE = '$DOMAIN.$PAGE_0',
 	ANONYMOUS = PAGE + '.$ANONYMOUS_FUN_';
@@ -176,6 +177,40 @@ program('a?.b', [
 	'var x = a?.b;',
 	'console.log(x);'
 ]);
+/// characterization of the branch labels and flags (specs/002-small-refactors, User Story 2)
+program('call leaf', [
+	'var c = 1, a = 1, b = 2;',
+	'c ? f(a) : g(b);',
+	'console.log(c);',
+	'function f(v) { return v; }',
+	'function g(v) { return v; }'
+]);
+program('call before decision', [
+	'var c = 1, a = 1, b = 2, d = 3, x = 0;',
+	'x = c ? (f() ? a : b) : d;',
+	'console.log(x);',
+	'function f() { return a; }'
+]);
+program('assignment ?:', [
+	'var c = 1, a = 1, b = 2, x = 0;',
+	'x = c ? a : b;',
+	'console.log(x);'
+]);
+program('with ?:', [
+	'var c = 1, o = {}, p = {}, y = 0;',
+	'with (c ? o : p) {',
+	'  y = 1;',
+	'}'
+]);
+program('switch ?: two cases', [
+	'var c = 1, a = 1, b = 2;',
+	'switch (c ? a : b) {',
+	'  case 1:',
+	'    a = 2;',
+	'  case 2:',
+	'    b = 3;',
+	'}'
+]);
 
 function pairsOf(pairs, name) {
 	'use strict';
@@ -213,18 +248,18 @@ function cfgOf(code) {
 	return cfgBuilder.getCFG(jsParser.parseAST(code));
 }
 
-function nodesAt(nodes, line, branchPath) {
+function nodesAt(nodes, line, path) {
 	'use strict';
 	return nodes.filter(function (node) {
-		return node.line === line && node.branchPath === branchPath &&
+		return node.line === line && pathOf(node) === path &&
 			node.type !== FlowNode.ENTRY_NODE_TYPE && node.type !== FlowNode.EXIT_NODE_TYPE;
 	});
 }
 
-function theNodeAt(nodes, line, branchPath) {
+function theNodeAt(nodes, line, path) {
 	'use strict';
-	var found = nodesAt(nodes, line, branchPath);
-	found.length.should.eql(1, 'number of nodes at L' + line + (branchPath ? ':' + branchPath : ''));
+	var found = nodesAt(nodes, line, path);
+	found.length.should.eql(1, 'number of nodes at L' + line + (path ? ':' + path : ''));
 	return found[0];
 }
 
@@ -239,7 +274,7 @@ function isDecision(node) {
 function shouldFlowOnlyTo(leaf, successor) {
 	'use strict';
 	isDecision(leaf).should.eql(false);
-	(leaf.normal === successor).should.eql(true, 'normal successor of L' + leaf.line + ':' + leaf.branchPath);
+	(leaf.normal === successor).should.eql(true, 'normal successor of L' + leaf.line + ':' + pathOf(leaf));
 }
 
 function shouldNotContainAny(pairs, unexpected) {
@@ -436,16 +471,16 @@ describe('Splitting conditional and short-circuit expressions', function () {
 			return node.type === FlowNode.CALL_NODE_TYPE && node.line === 2;
 		});
 		calls.map(function (node) {
-			return node.branchPath;
+			return pathOf(node);
 		}).sort().should.eql(['F', 'T']);
 		calls.forEach(function (node) {
-			(node.call === logEntry).should.eql(true, 'L2:' + node.branchPath + ' calls the entry of log');
+			(node.call === logEntry).should.eql(true, 'L2:' + pathOf(node) + ' calls the entry of log');
 		});
 		/// FlowNode attribute, not the label: labelWithLoc of CALL_RETURN does not show the path
 		nodes.filter(function (node) {
 			return node.type === FlowNode.CALL_RETURN_NODE_TYPE && node.line === 2;
 		}).map(function (node) {
-			return node.branchPath;
+			return pathOf(node);
 		}).sort().should.eql(['F', 'T']);
 	});
 
@@ -582,7 +617,7 @@ describe('Splitting conditional and short-circuit expressions', function () {
 			});
 			loop.length.should.eql(1);
 			var decision = nodes.filter(function (node) {
-				return node.line === 2 && node.branchPath === '' && node !== loop[0];
+				return node.line === 2 && pathOf(node) === '' && node !== loop[0];
 			});
 			decision.length.should.eql(1);
 			isDecision(decision[0]).should.eql(true);
@@ -641,8 +676,194 @@ describe('Splitting conditional and short-circuit expressions', function () {
 			var code = CODE['a?.b'];
 			analyze(code).intraProcedural().should.containDeep(['a: L1 -> L2', 'x: L2 -> L3']);
 			cfgOf(code)[2].filter(function (node) {
-				return node.branchPath !== '';
+				return pathOf(node) !== '';
 			}).should.eql([]);
+		});
+	});
+
+	/// characterization (specs/002-small-refactors, User Story 2): expected values are taken
+	/// from the behavior before the FlowNode branch fields are refactored
+	describe('characterization of branch labels and flags', function () {
+		/// nodes of the only inter-procedural model at a line, as "<type> <label>"
+		function interProceduralNodesAt(result, line) {
+			var models = pageModelsOf(result).interProceduralModels;
+			models.length.should.eql(1);
+			return {
+				model: models[0],
+				nodes: models[0].graph[2].filter(function (node) {
+					return node.line === line;
+				})
+			};
+		}
+
+		function typedLabels(nodes) {
+			return nodes.map(function (node) {
+				return node.type + ' ' + analyze.nodeLabel(node);
+			});
+		}
+
+		// (a1) the call site is not a decision node: it becomes the call node itself
+		it('should label call nodes changed from split call sites and their call returns', function () {
+			var found = interProceduralNodesAt(analyze(CODE['call leaf']), 2);
+			typedLabels(found.nodes).should.eql([
+				'normal L2',
+				'call L2:T',
+				'callReturn L2:T',
+				'call L2:F',
+				'callReturn L2:F'
+			]);
+			found.nodes.map(function (node) {
+				return pathOf(node);
+			}).should.eql(['', 'T', 'T', 'F', 'F']);
+			/// the changed call sites keep their split and label path; their call returns are not split
+			[1, 3].forEach(function (index) {
+				var callSite = found.nodes[index], callReturn = found.nodes[index + 1];
+				(callSite.split !== null).should.eql(true);
+				callSite.labelPath.should.eql(callSite.split.path);
+				(callReturn.split === null).should.eql(true);
+				callReturn.labelPath.should.eql(callSite.labelPath);
+			});
+			analyze.pairsOfModel(found.model).should.eql([
+				'a: L1 -> L2:T',
+				'b: L1 -> L2:F',
+				'c: L1 -> L2>L2:F',
+				'c: L1 -> L2>L2:T',
+				'c: L1 -> L3',
+				'console: entry -> L3',
+				'f: entry -> L2:T',
+				'g: entry -> L2:F',
+				'v: entry -> L4',
+				'v: entry -> L5'
+			]);
+		});
+
+		// (a2) the call site is a decision node: a new call node is inserted before it
+		it('should label call nodes inserted before split decision nodes and their call returns', function () {
+			var found = interProceduralNodesAt(analyze(CODE['call before decision']), 2);
+			typedLabels(found.nodes).should.eql([
+				'normal L2',
+				'call L2:T',
+				'callReturn L2:T',
+				'normal L2:T',
+				'normal L2:TT',
+				'normal L2:TF',
+				'normal L2:F'
+			]);
+			found.nodes.map(function (node) {
+				return pathOf(node);
+			}).should.eql(['', 'T', 'T', 'T', 'TT', 'TF', 'F']);
+			(found.nodes[1].dujsDecisionCalledBefore === found.nodes[3]).should.eql(true);
+			/// the inserted call node and the call return are not split and take the label path of the decision node
+			(found.nodes[3].split !== null).should.eql(true);
+			found.nodes[3].labelPath.should.eql(found.nodes[3].split.path);
+			[found.nodes[1], found.nodes[2]].forEach(function (node) {
+				(node.split === null).should.eql(true);
+				node.labelPath.should.eql(found.nodes[3].labelPath);
+			});
+			analyze.pairsOfModel(found.model).should.eql([
+				'a: L1 -> L2:TT',
+				'a: L1 -> L4',
+				'a: L1 -> entry',
+				'b: L1 -> L2:TF',
+				'c: L1 -> L2>L2:F',
+				'c: L1 -> L2>L2:T',
+				'console: entry -> L3',
+				'd: L1 -> L2:F',
+				'f: entry -> L2:T>L2:TF',
+				'f: entry -> L2:T>L2:TT',
+				'x: L2:F -> L3',
+				'x: L2:TF -> L3',
+				'x: L2:TT -> L3'
+			]);
+		});
+
+		// (b) the decision node of x = c ? a : b and its two leaves
+		it('should label the decision node and the leaves of a conditional assignment', function () {
+			var code = CODE['assignment ?:'],
+				nodes = cfgOf(code)[2].filter(function (node) {
+					return node.line === 2;
+				});
+			nodes.map(function (node) {
+				return analyze.nodeLabel(node) + ' ' + JSON.stringify(pathOf(node));
+			}).should.eql(['L2 ""', 'L2:T "T"', 'L2:F "F"']);
+			isDecision(nodes[0]).should.eql(true);
+			/// the three nodes share the original statement; nothing is evaluated before c
+			nodes.forEach(function (node) {
+				(node.split.origin === nodes[0].split.origin).should.eql(true);
+				node.labelPath.should.eql(node.split.path);
+				node.split.preEvaluated.should.eql([]);
+			});
+			nodes[0].split.origin.type.should.eql('AssignmentExpression');
+			nodes[0].split.origin.loc.start.line.should.eql(2);
+			analyze(code).intraProcedural().should.eql([
+				'a: L1 -> L2:T',
+				'b: L1 -> L2:F',
+				'c: L1 -> L2>L2:F',
+				'c: L1 -> L2>L2:T',
+				'console: entry -> L3',
+				'x: L2:F -> L3',
+				'x: L2:T -> L3'
+			]);
+		});
+
+		// (b) the expressions evaluated before the condition belong to the decision node only
+		it('should keep the expressions evaluated before the condition in the split of the decision node', function () {
+			var nodes = cfgOf('var c = 1, a = 1, b = 2, y = 0, x = 0;\nx = y + (c ? a : b);')[2].filter(function (node) {
+				return node.line === 2 && node.split !== null;
+			});
+			nodes.map(pathOf).should.eql(['', 'T', 'F']);
+			nodes[0].split.preEvaluated.map(function (expression) {
+				return expression.type + ' ' + expression.name;
+			}).should.eql(['Identifier y']);
+			nodes[1].split.preEvaluated.should.eql([]);
+			nodes[2].split.preEvaluated.should.eql([]);
+		});
+
+		/// [label, isWithObject, loopRightSplit, discriminantSplit] of the nodes of a CFG
+		function flagsOf(code) {
+			return cfgOf(code)[2].filter(function (node) {
+				return node.type === FlowNode.NORMAL_NODE_TYPE;
+			}).map(function (node) {
+				return [analyze.nodeLabel(node), node.isWithObject, node.loopRightSplit, node.discriminantSplit];
+			});
+		}
+
+		// (c) the with object leaves of a split with object
+		it('should keep isWithObject of the leaves of a split with object', function () {
+			flagsOf(CODE['with ?:']).should.eql([
+				['L1', false, false, false],
+				['L2', false, false, false],
+				['L2:T', true, false, false],
+				['L3', false, false, false],
+				['L2:F', true, false, false]
+			]);
+		});
+
+		// (c) the loop node of for-of with a split right side
+		it('should keep loopRightSplit of the loop node of a split right side', function () {
+			flagsOf(CODE['US5-16']).should.eql([
+				['L1', false, false, false],
+				['L2', false, false, false],
+				['L2:T', false, false, false],
+				['L2', false, true, false],
+				['L3', false, false, false],
+				['L5', false, false, false],
+				['L2:F', false, false, false]
+			]);
+		});
+
+		// (c) every case node of a switch with a split discriminant
+		it('should keep discriminantSplit of the case nodes of a split discriminant', function () {
+			flagsOf(CODE['switch ?: two cases']).should.eql([
+				['L1', false, false, false],
+				['L2', false, false, false],
+				['L2:T', false, false, false],
+				['L3', false, false, true],
+				['L4', false, false, false],
+				['L6', false, false, false],
+				['L5', false, false, true],
+				['L2:F', false, false, false]
+			]);
 		});
 	});
 

@@ -288,7 +288,9 @@ CALL RETURN node. In the dot output the label of a CALL RETURN node is
 `callReturn (L<line>:C<col>)` (`labelWithLoc` in
 `lib/dujs/cfggraphconverter.js`), without the branch path, so both nodes are
 labeled `callReturn (L2:C0)`. The nodes themselves are distinct and keep the
-branch path (`FlowNode.branchPath`); only the label is ambiguous (review #8).
+branch path in `FlowNode.labelPath` (a split node has `labelPath === split.path`;
+a CALL RETURN node takes the `labelPath` of its call site); only the label is
+ambiguous (review #8).
 
 ### 16. The call of a decision node is inserted before it
 
@@ -352,3 +354,28 @@ defaults twice). So `y = x` reads `x` inside the same node and
 `x: L1 -> L1` (the def of `x` used by the default of `y`) is not found.
 Without the outer default (`function h({x = d, y = x})`) each nested default
 still has its own initialization node, as in US2 scenario 7.
+
+## Found while refactoring (feature `002-small-refactors`)
+
+### 18. The entry node of a function uses the variables of statements in its body
+
+```js
+function f() {
+  switch (x) { case a: b; }
+  a;
+  for (k in o) { b; }
+}
+```
+
+The AST of the entry node of a function is the whole function body, and
+`findUSESet` walks it like any other node. It does not enter the cases of a
+nested `switch` or the body of a nested `for-in`/`for-of`, but it reads the
+other expressions: the entry node of `f` has the c-use `{x}` and the p-use
+`{a, o}` (a nested `case` turns the following identifiers into p-uses until a
+binary, call, unary or conditional expression resets it). These uses are also
+found at the nodes of the statements themselves, so the entry node gets extra
+pairs (for example `(5,entry_b)` in the golden `inter-page/0.dupairs.dot` of the
+ES2015+ fixture). Feature `002-small-refactors` keeps this behavior (the
+golden output must not change); `usedExpressionsOf` decides only the
+expressions read by the node itself, and the handlers for nested
+`switch`/`for-in`/`for-of` stay in the walk of `findUSESet`.

@@ -21,7 +21,8 @@ require('should');
 var fc = require('fast-check'),
 	analyze = require('../helpers/analyze'),
 	modelCtrl = require('../../lib/dujs/modelctrl'),
-	FlowNode = require('../../lib/esgraph/flownode');
+	FlowNode = require('../../lib/esgraph/flownode'),
+	pathOf = require('../../lib/esgraph/branchlabel').pathOf;
 
 var NUM_RUNS = parseInt(process.env.FC_NUM_RUNS, 10) || 100,
 	SEED = parseInt(process.env.FC_SEED, 10);
@@ -267,22 +268,49 @@ function analyzeProgram(statements) {
 		splitNodes = [];
 	pageModels.intraProceduralModels.forEach(function (model) {
 		model.graph[2].forEach(function (node) {
-			if (!!node.splitOrigin && splitNodes.indexOf(node) === -1) {
+			if (node.split !== null && splitNodes.indexOf(node) === -1) {
 				splitNodes.push(node);
 			}
 		});
 	});
 	var groups = program.statements.map(function (statement) {
 		var nodes = splitNodes.filter(function (node) {
-			return node.splitOrigin.loc.start.line === statement.line;
+			return node.split.origin.loc.start.line === statement.line;
 		});
 		var byPath = {};
 		nodes.forEach(function (node) {
-			byPath[node.branchPath] = (byPath[node.branchPath] || []).concat([node]);
+			byPath[pathOf(node)] = (byPath[pathOf(node)] || []).concat([node]);
 		});
 		return {statement: statement, nodes: nodes, byPath: byPath};
 	});
 	return {program: program, pageModels: pageModels, groups: groups};
+}
+
+/// the declaration of g making each g(...) of a program a call site of the inter-procedural model
+var CALLEE_G = 'function g(v) { return v; }';
+
+/**
+ * Source of the generated program with g declared as a function (instead of
+ * the variable of HEADER)
+ * @param {Object} program from buildProgram
+ * @returns {String}
+ */
+function withCallsCode(program) {
+	'use strict';
+	return program.code.replace(', g = 0,', ',') + '\n' + CALLEE_G;
+}
+
+/**
+ * Analyze the program with g declared as a function (instead of the variable
+ * of HEADER), so the call sites in split nodes become call nodes
+ * @returns {Object} {program, pageModels}
+ */
+function analyzeProgramWithCalls(statements) {
+	'use strict';
+	var program = buildProgram(statements),
+		code = withCallsCode(program),
+		result = analyze(code);
+	return {program: program, code: code, pageModels: modelCtrl.collectionOfPageModels.get(result.scopeTree)};
 }
 
 /**
@@ -323,13 +351,16 @@ function shouldBeSplit(group) {
 	}
 }
 
-function checkProperty(name, check) {
+function checkProperty(name, check, analyzer) {
 	'use strict';
+	var analyzeOne = analyzer || analyzeProgram;
 	var details = fc.check(fc.property(programArb, function (statements) {
-		check(analyzeProgram(statements));
+		check(analyzeOne(statements));
 	}), {numRuns: NUM_RUNS, seed: SEED});
 	if (details.failed) {
-		var counterexample = !!details.counterexample ? buildProgram(details.counterexample[0]).code : '(none)';
+		var counterexample = !!details.counterexample ? (analyzer === analyzeProgramWithCalls ?
+			withCallsCode(buildProgram(details.counterexample[0])) :
+			buildProgram(details.counterexample[0]).code) : '(none)';
 		console.error('[' + name + '] fast-check seed: ' + details.seed + ' (rerun with FC_SEED=' + details.seed + ')\n' +
 			'[' + name + '] counterexample program:\n' + counterexample);
 		throw new Error(fc.defaultReportMessage(details));
@@ -380,7 +411,7 @@ describe('Properties of splitting conditional and short-circuit expressions', fu
 				group.nodes.forEach(function (node) {
 					if (definedNames(node).indexOf(target) !== -1) {
 						isDecision(node).should.eql(false, 'a decision defines ' + target);
-						node.branchPath.should.not.eql('', 'a merged node defines ' + target);
+						pathOf(node).should.not.eql('', 'a merged node defines ' + target);
 					}
 				});
 				pathsOf(group).forEach(function (path) {
@@ -449,7 +480,7 @@ describe('Properties of splitting conditional and short-circuit expressions', fu
 								if (usedNames(node).indexOf(name) === -1) {
 									return;
 								}
-								var path = node.branchPath;
+								var path = pathOf(node);
 								var onBranch = path.split('').some(function (branch, index) {
 									return branch === side[0] && (group.byPath[path.slice(0, index)] || []).some(function (decision) {
 										return !!decision.astNode && !!decision.astNode.range &&
@@ -497,9 +528,35 @@ describe('Properties of splitting conditional and short-circuit expressions', fu
 						return;
 					}
 					(usedNames(node).length > 0 || definedNames(node).length > 0 || hasCall(node.astNode))
-						.should.eql(true, 'empty split node L' + node.line + ':' + node.branchPath);
+						.should.eql(true, 'empty split node L' + node.line + ':' + pathOf(node));
 				});
 			});
 		});
+	});
+
+	/// data-model §1 (specs/002-small-refactors): labelPath of a split node is its split path; only the
+	/// call nodes inserted before decision nodes and the call return nodes take a label path without split.
+	/// g is declared as a function here, so the split call sites become call nodes (inter-procedural model)
+	it('P7 the label path of a split node is its split path, other labelled nodes are calls', function () {
+		checkProperty('P7', function (analyzed) {
+			var models = analyzed.pageModels,
+				nodes = [];
+			[].concat(models.intraProceduralModels, models.interProceduralModels, models.intraPageModels)
+				.forEach(function (model) {
+					model.graph[2].forEach(function (node) {
+						if (nodes.indexOf(node) === -1) {
+							nodes.push(node);
+						}
+					});
+				});
+			nodes.forEach(function (node) {
+				if (node.split !== null) {
+					node.labelPath.should.eql(node.split.path, 'label path of split node L' + node.line);
+				} else if (node.labelPath !== '') {
+					[FlowNode.CALL_NODE_TYPE, FlowNode.CALL_RETURN_NODE_TYPE].should.containEql(node.type,
+						'node with a label path but no split at L' + node.line + ':' + node.labelPath);
+				}
+			});
+		}, analyzeProgramWithCalls);
 	});
 });
