@@ -67,7 +67,8 @@
           "committed": true
         }
       },
-      "done": true
+      "done": true,
+      "pr_url": "https://github.com/chengfulin/dujs/pull/5"
     }
   },
   "brief": {
