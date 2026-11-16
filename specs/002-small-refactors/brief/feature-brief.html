@@ -1,0 +1,210 @@
+<title>小型重構</title>
+<style>
+:root{
+  --bg:#FFFBF2; --card:#FFFFFF; --ink:#1F2937; --sub:#5B6470; --line:#E6E0D2; --th:#F4EFE3;
+  --blue:#2B59C3; --blue-soft:#DCE6FA;
+  --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
+  --coral:#E4573D; --coral-soft:#FBDDD6;
+  --green:#3A9D6B; --green-soft:#D8F0E3;
+  --grey:#AEB6C0;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+    --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+  --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding-block:32px 72px;padding-inline:20px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:900;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
+.meta{color:var(--sub);font-size:.9rem}
+.note{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:8px 12px;margin:10px 0;font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin:16px 0;display:grid;gap:12px}
+.panel h3{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;line-height:1.2;margin:0;text-wrap:balance}
+.num{display:inline-block;font-weight:900;font-size:.75rem;letter-spacing:.15em;color:var(--blue);background:var(--blue-soft);padding:2px 10px;border-radius:999px;width:max-content}
+.pic{overflow-x:auto}
+.pic svg{display:block;width:100%;min-width:640px;height:auto}
+.cap{font-size:1.05rem;font-weight:500;max-width:52ch;margin:0}
+.cap b{font-weight:900}
+.cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
+text{font-family:var(--sans)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+ul{margin:6px 0;padding-left:20px}
+li small{color:var(--sub)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--th)}
+.ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
+code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 100 110"><circle cx="50" cy="28" r="20" fill="currentColor"/><path d="M12 108 a38 38 0 0 1 76 0 z" fill="currentColor"/></symbol>
+    <symbol id="doc" viewBox="0 0 100 120"><path d="M14 6 h50 l22 22 v86 h-72 z" fill="currentColor"/><path d="M64 6 v22 h22" fill="none" stroke="#FFFFFF" stroke-width="4"/><g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"><path d="M28 50 h44 M28 68 h44 M28 86 h30"/></g></symbol>
+    <symbol id="sheet" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="6" fill="currentColor"/><g stroke="#FFFFFF" stroke-width="3"><path d="M4 28 h112 M4 50 h112 M4 72 h112 M40 4 v92 M78 4 v92"/></g></symbol>
+    <symbol id="warn" viewBox="0 0 100 100"><path d="M50 8 L96 90 H4 Z" fill="currentColor"/><path d="M50 36 v26" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="76" r="5" fill="#FFFFFF"/></symbol>
+    <symbol id="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="currentColor"/><path d="M28 52 l15 15 l30 -34" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grey)"/></marker>
+  </defs>
+</svg>
+
+<main>
+<h1>三項小型重構</h1>
+<div class="meta">feature：002-small-refactors · spec · 第 1 輪 · 2026-11-16 · 目標分支 develop</div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準</div>
+
+<h2>看懂它</h2>
+
+<section class="panel">
+  <span class="num">01 · 背景</span>
+  <h3>維護者手上有個分析工具</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="維護者維護一個分析 JavaScript 程式的工具">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">維護者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">維護</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">dujs 分析工具</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">讀進一段 JavaScript 程式</text><text x="280" y="134">標出每個變數在哪被用到</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">工具：追蹤變數的來龍去脈</text>
+    <use href="#doc" x="670" y="50" width="100" height="120" color="var(--blue)"/>
+    <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">分析結果</text>
+  </svg></div>
+  <p class="cap">維護者要持續修正、擴充<b>分析工具</b>。<small>來源：User Scenarios &amp; Testing 開頭</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">02 · 要解決的問題</span>
+  <h3>程式擠在一起，要查錯很麻煩</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="一支大檔案把三件事混在一起，同一種標籤寫了三處">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">維護者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">想追查</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--coral)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">一支 687 行的大檔案</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">三件事全擠在一起</text><text x="280" y="134">同一種標籤寫了 3 處</text><text x="280" y="166">讀什麼與怎麼讀混在一起</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">查一個錯得整支重跑</text>
+    <use href="#warn" x="665" y="55" width="110" height="110" color="var(--coral)"/>
+    <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">難查、易改壞</text>
+  </svg></div>
+  <p class="cap">現況是<b>難以單獨檢查</b>，下一個功能又要動這裡。<small>來源：User Story 1、2、3 的 Why this priority</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">03 · 目的</span>
+  <h3>把事情拆開，各自可檢查</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="三項重構：拆成三份、標籤只定義一次、讀取規則獨立">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">維護者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">希望</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">三項重構</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="98">① 大檔案拆成三份</text><text x="280" y="130">② 拆分資訊收成一處</text><text x="280" y="162">③ 讀取規則獨立出來</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">每件事可單獨檢查、測試</text>
+    <use href="#sheet" x="665" y="60" width="120" height="100" color="var(--blue)"/>
+    <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">標籤只定義一次</text>
+  </svg></div>
+  <p class="cap">只整理結構、<b>不新增也不修正任何功能</b>。<small>來源：範圍決策 D1；Functional Requirements FR-001、004、007</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">04 · 預期結果</span>
+  <h3>輸出一個字都不能變</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="重構前後的輸出逐位元組相同，測試全過">
+    <use href="#sheet" x="50" y="55" width="120" height="100" color="var(--blue)"/>
+    <text x="105" y="195" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">重構前輸出</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">比對</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--green-soft)" stroke="var(--green)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--green)">兩邊完全一樣</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">輸出檔：0 個差異</text><text x="280" y="134">既有 627+ 個測試全過</text><text x="280" y="166">新增的小測試全過</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">連節點編號都不能動</text>
+    <use href="#check" x="670" y="55" width="110" height="110" color="var(--green)"/>
+    <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">分析結果不變</text>
+  </svg></div>
+  <p class="cap">成功＝<b>0 個差異</b>且測試與 lint 全過。<small>來源：Success Criteria SC-001、002、006</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">流程</span>
+  <h3>三步重構，每步都比對輸出</h3>
+  <div class="pic"><svg viewBox="0 0 860 350" role="img" aria-label="依 US1、US2、US3 順序重構，逐步比對 golden，有差異就當成行為改變">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">拆成三份</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">US1 · P1</text>
+      <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">收攏欄位</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">US2 · P2</text><text x="264" y="132" font-size="14" font-weight="400" fill="var(--sub)">標籤統一</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">抽出讀取規則</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">US3 · P3</text>
+      <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">比對輸出</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">每步結束都做</text>
+      <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">完成</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">測試 lint 全過</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M168 100 h14"/><path d="M338 100 h14"/><path d="M508 100 h14"/><path d="M678 100 h14"/></g>
+    <g stroke="var(--coral)" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arr)"><path d="M94 150 v50"/><path d="M604 150 v50"/></g>
+    <rect x="20" y="210" width="230" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="135" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">節點編號順移</text>
+    <text x="135" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">保持建立節點的順序</text>
+    <text x="135" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">拆模組時最易發生</text>
+    <rect x="480" y="210" width="250" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="605" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">輸出有任何差異</text>
+    <text x="605" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">視為行為改變，回頭修</text>
+    <text x="605" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">不得更新 golden 放行</text>
+    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">每個 story 一個 commit，PR 目標分支 develop</text>
+  </svg></div>
+  <p class="cap">先拆再改欄位、最後抽函式，<b>golden 差異一律不放行</b>。<small>來源：Assumptions；Edge Cases 第 1 項</small></p>
+  <ul>
+    <li>對外呼叫 <code>split(entryNode, { expressionThrows })</code> 不變，呼叫端免改。<small>（FR-002）</small></li>
+    <li>known-issues §13–§17 的既有錯誤行為原樣保留，不在本輪修。<small>（Edge Cases）</small></li>
+  </ul>
+</section>
+
+<h2>工程師要決定的事</h2>
+
+<h3>驗收條件盤點</h3>
+<div class="box"><table>
+<tr><th>Story</th><th>驗收情境（Acceptance Scenarios）</th><th>可驗證？</th></tr>
+<tr><td rowspan="4">US1</td><td>1 直接對 AST 呼叫 decision finder，得第一個條件與已求值運算式</td><td class="ok">可驗證（回傳形狀由 plan 定）</td></tr>
+<tr><td>2 AST rewriter 回傳副本、不改原 AST</td><td class="ok">可驗證</td></tr>
+<tr><td>3 全測試與 golden 與重構前相同</td><td class="ok">可驗證</td></tr>
+<tr><td>4 呼叫端不需修改</td><td class="ok">可驗證</td></tr>
+<tr><td rowspan="5">US2</td><td>1 未拆分節點的拆分資訊為 null</td><td class="ok">可驗證</td></tr>
+<tr><td>2 決策節點與葉節點的 split 內容（路徑、原敘述、已求值運算式）</td><td class="ok">可驗證</td></tr>
+<tr><td>3 呼叫節點與 call return 節點的標籤與重構前相同</td><td class="ok">可驗證</td></tr>
+<tr><td>4 標籤字串只有一處定義</td><td class="ok">可驗證（SC-004 以程式碼搜尋）</td></tr>
+<tr><td>5 with 物件節點、loop／case 原節點旗標行為不變</td><td class="ok">可驗證</td></tr>
+<tr><td rowspan="3">US3</td><td>1 決策節點：條件 p-use、已求值運算式 c-use</td><td class="ok">可驗證</td></tr>
+<tr><td>2 拆分葉節點、with 物件節點：單一識別字 c-use；3 switch case：discriminant p-use；4 c/p-use 集合與重構前相同</td><td class="ok">可驗證</td></tr>
+<tr><td>for-in/for-of loop 節點、一般節點（FR-008 要求測試）</td><td class="ok">已補：US3 情境 4、5</td></tr>
+</table></div>
+
+<h3>tech-standards 缺漏或變更</h3>
+<p>無。規範針對服務後端／前端；本重構為 CLI／函式庫內部，不涉及。</p>
+
+<h3>CRITICAL／HIGH 衝突與影響</h3>
+<p>無（本輪未跑 analyze）。憲章 §CP-4 測試要求由 FR-003、FR-008 的新單元測試承接。</p>
+
+<h3>本輪判斷點（已決：兩題皆採 A，見 spec D5、US3 情境 4–5；次要疑點已補進 FR-003、FR-010、SC-003、SC-006）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>方案（建議標示）</th><th>影響</th><th>出處</th></tr>
+<tr><td>1</td><td>拆分呼叫點產生的呼叫節點與 call return 節點，要不要帶 <code>split</code>？spec 交給 plan，但這兩種節點「不是拆分節點」，帶了就破壞「split 為 null 即未拆分」</td><td>A 不帶 split，標籤 helper 改吃行號與路徑兩個參數（建議）<br>B 帶 split 並加旗標區分</td><td>A 語意乾淨、helper 簽名較寬；B 要改 FR-004 與 Key Entities 的定義</td><td>Assumptions 第 4 項；Edge Cases 第 3 項；FR-004、FR-006</td></tr>
+<tr><td>2</td><td>FR-008 要求測 for-in/for-of loop 節點與一般節點，但 US3 驗收情境沒寫預期讀法，如何補？</td><td>A 補兩條驗收情境，預期值取自現行行為（建議）<br>B 僅以 FR-008 為準，預期值留到 plan／tasks</td><td>A 驗收完整、可直接當測試；B 少改 spec，但預期值無依據</td><td>User Story 3 Acceptance Scenarios；FR-008</td></tr>
+</table></div>
+
+<h3>次要疑點</h3>
+<div class="box"><table>
+<tr><th>疑點</th><th>出處</th></tr>
+<tr><td>FR-003 的「D12 已求值／未求值判定」引用 001 spec 的決策，本 spec 內無定義；REF 為外部連結，審閱者無法直接核對</td><td>FR-003；規格來源</td></tr>
+<tr><td>SC-003「每個模組少於 350 行」是否可行，要待 plan 量過各函式行數才知道（原檔 687 行）</td><td>SC-003</td></tr>
+<tr><td>「lint 抑制檔項目數」未指明是哪個檔案，驗證時需 plan 補明</td><td>FR-010；SC-006</td></tr>
+</table></div>
+</main>
