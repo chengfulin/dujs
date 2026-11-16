@@ -155,54 +155,87 @@ fixture 的匿名 scope：`$A0`＝L11 `static self`、`$A1`＝L12 static block�
 
 ## §10（US4，FR-006）
 
+fixture L42–L49 的 `h`：參數 `{p = a, q = p} = {}`（§17）與 `g = () => q`（§10），本體 `g();`。§10、§11、§17 的差異落在同一批檔案，
+雜湊只在本表列一次；§11、§17 表列各自的差異位置。dot 行號＝fixture 行號＋1。
+
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異（預設值沒有函式：`title = ''`，R7） |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異 |
+| `expected-fixes004/` | 9 檔差異、新增 5 檔（`page0/intra-procedurals/11.*`、`page0/inter-procedurals/3.*`）、無刪除（31 → 36 個 .dot）。L46 的箭頭函式成為 `h` 的子 scope `$DOMAIN.$PAGE_0.h.$ANONYMOUS_FUN_7`（scope 樹中排在最後，`$ANONYMOUS_FUN_0`–`6` 與 intra-procedurals `0`–`9` 不推移，逐位元組相同）；L48 `g();` 連到它。inter-procedural 模型由 3 個變 4 個：0＝`add` 環模型（不變）、1＝`h` 的模型 `[h, h.$A7]`（新，先於頁面模型完成登記）、2＝頁面模型（原 1）、3＝`bump` 環模型（原 2，三檔與原 `2.*` 逐位元組相同）；頁面模型 66 → 72 節點、intra-page 68 → 74 節點 |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
+| `expected-fixes004/` | `page0/intra-procedurals/11.graph.dot`（新增） | 全檔 | 箭頭函式 `h.$ANONYMOUS_FUN_7` 的 intra-procedural 模型：`entry`、`48`（`q`）、`exit` | 新增 → `56a246670a79` | FR-006 |
+| `expected-fixes004/` | `page0/intra-procedurals/11.dupairs.dot`（新增） | 全檔 | 無 pair（`q` 不是箭頭函式自己的定義） | 新增 → `c0f3d8867fc8` | FR-006 |
+| `expected-fixes004/` | `page0/intra-procedurals/10.graph.dot` | 全部節點與邊 | `h` 的 intra-procedural 模型：`43` → `46`（只求值 `{}`）、`44`（`p = a`）、`45`（`q = p`），見 §17；節點編號順延（`n128`→`n130` 起） | `a15271e49574` → `57877a56a9b8` | FR-008、FR-006 |
+| `expected-fixes004/` | `page0/intra-procedurals/10.dupairs.dot` | `p` 列 | 見 §17 | `f582d269c7b3` → `a4b8ca856921` | FR-008 |
+| `expected-fixes004/` | `page0/inter-procedurals/1.hierarchy.dot` | 全檔 | 原為頁面階層（移至 `2.hierarchy.dot`）；現為 `h` 的模型：`h0`＝`h`、`h1`＝`h.$A7`，`h0 → h1` call／return | `d336eb38142c` → `b6ede78c2c16` | FR-006 |
+| `expected-fixes004/` | `page0/inter-procedurals/1.graph.dot` | 全檔 | 原為頁面模型（移至 `2.graph.dot`）；現為 `h` 的模型 11 節點：`entry_a`、`46`、`44`、`45`、`47`、`call`（L48 `g();`）→ `entry_b`、`48`、`exit_a` → `callReturn`、`exit_b` | `77c50f8c3fb1` → `c7e843bc8efc` | FR-006、FR-008 |
+| `expected-fixes004/` | `page0/inter-procedurals/1.dupairs.dot` | 全檔 | 原為頁面 pair（移至 `2.dupairs.dot`）；現為 `h` 模型的 pair：`p`：`(44,45)`；`q`：`(45,entry_b)`（§18 殘留：箭頭函式 entry）、`(45,48)`；`g`：`(47,call)` | `41037642281e` → `2df60ae29939` | FR-006、FR-008 |
+| `expected-fixes004/` | `page0/inter-procedurals/2.hierarchy.dot` | 全檔 | 原為 `bump` 環模型（移至 `3.hierarchy.dot`）；現為頁面階層（原 `1.hierarchy.dot`）多一個 `h11`＝`h.$A7`，`h10 → h11` call／return | `c039426dfc3e` → `a3c90364678e` | FR-006 |
+| `expected-fixes004/` | `page0/inter-procedurals/2.graph.dot` | 全檔 | 原為 `bump` 環模型；現為頁面模型（原 `1.graph.dot`，66 → 72 節點）：`h` 段 `43`、`47`、`49` → `46`（無 exception 邊：`{}` 不會丟例外）、`44`、`45`、`47`、`call_m`（L48）→ `entry_l`、`48`、`exit_j` → `callReturn_i`；其後標籤字母順延（`h` 的 exit `exit_j`→`exit_k`、`callReturn_i`→`callReturn_j`、`log` 的 `call_m`→`call_n`、`callReturn_j`→`callReturn_k`、頁面 `exit_k`→`exit_l`），節點編號連帶 | `f9edebfc6ee8` → `a63d2e7f7762` | FR-006、FR-008 |
+| `expected-fixes004/` | `page0/inter-procedurals/2.dupairs.dot` | `a`、`b`、`c`、`log`、`Counter`、`p`、`q`、`g` 列 | 原為 `bump` 環模型的 pair；現為頁面 pair（原 `1.dupairs.dot`），差異與 `page0/intra-pages/0.dupairs.dot` 相同（下列） | `2a3b853d5805` → `f4bbfec1faec` | FR-006、FR-007、FR-008 |
+| `expected-fixes004/` | `page0/inter-procedurals/3.{hierarchy,graph,dupairs}.dot`（新增） | 全檔 | `bump` 環模型，與原 `2.*` 逐位元組相同（只因 `h` 模型先登記而序號 +1） | 新增 → `c039426dfc3e`／`f9edebfc6ee8`／`2a3b853d5805` | — |
+| `expected-fixes004/` | `page0/intra-pages/0.graph.dot` | `h` 段節點及其後全部節點與邊 | 同 `page0/inter-procedurals/2.graph.dot` 的變更（68 → 74 節點） | `2c49191ebc8f` → `e0ceea19a82e` | FR-006、FR-008 |
+| `expected-fixes004/` | `page0/intra-pages/0.dupairs.dot` | `g`、`q` 列與 `a`、`b`、`c`、`log` 的標籤（§10）；`Counter` 列（§11）；`p` 列與 `a` 的 `43`（§17） | §10：`g`：`(47,49)` → `(47,call_m)`（L48 `g();` 成為 CALL）；`q`：新增 `(45,48)`（箭頭函式本體讀 `q = p`）、`(45,entry_l)`（§18 殘留）；`b`／`c`／`log` 的 `call_m` → `call_n`（標籤順延）。§11、§17 見各節 | `41037642281e` → `f4bbfec1faec` | FR-006、FR-007、FR-008 |
+| `expected-fixes004/` | `inter-page/0.graph.dot` | 同 intra-page graph | 同上（inter-page 展開圖，69 → 75 節點） | `472b7bc163d1` → `f60746548436` | FR-006、FR-008 |
+| `expected-fixes004/` | `inter-page/0.dupairs.dot` | 同 intra-page dupairs | 同上（與 `page0/intra-pages/0.dupairs.dot` 逐位元組相同） | `41037642281e` → `f4bbfec1faec` | FR-006、FR-007、FR-008 |
 
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/paramsandnew.js` 約 144–163 行 | 「should not analyze a default value which is an arrow function again」→「should make a default value which is an arrow function a child scope」（註解同步）；`scopeNames()` 由 `[PAGE, PAGE.f]` 改為 `[PAGE, PAGE.f, PAGE.f.$ANONYMOUS_FUN_0]`，新增斷言 `f` 的子 scope 為該箭頭函式；其餘斷言（合成本體不可列舉、`g: L3 -> L5`、`d` 無 pair）不變 | FR-006 |
+| `tests/dujs/paramdefaults.js`（新增） | acceptance US4 #1、#1'、#2、#5、#5'、#6 與 data-model §6 巢狀預設值順序 | FR-006、FR-008 |
+| `tests/dujs/hierarchy.js`、`tests/dujs/expansion.js`（新增測試，既有斷言不變） | `addCallEdge` 的 `keepGenerateAtCallSite` 欄位（預設 false）；展開時呼叫點（CALL）保留 GEN、CALL RETURN 的 GEN／KILL 為空 | FR-007 |
 
 ## §11（US4，FR-007）
 
+fixture L10–L14 `class Counter { static self = Counter; static { y = Counter; } ... }`：class 名稱改在 static 成員之前定義（class 節點 `call_b`
+保留 GEN），`$A0`（L11）、`$A1`（L13）讀到它。只影響 dupairs，graph／hierarchy 結構不變。
+
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異（既有 fixture 沒有 static 成員，R4） |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異 |
+| `expected-fixes004/` | 4 檔的 `Counter` 列（頁面 pair），雜湊見 §10 表 |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
+| `expected-fixes004/` | `page0/intra-pages/0.dupairs.dot`、`inter-page/0.dupairs.dot`、`page0/inter-procedurals/2.dupairs.dot`（原 `1.dupairs.dot`） | `Counter` 列 | 新增 `(call_b,12)`（L11 `static self = Counter;`）、`(call_b,14)`（L13 `y = Counter;`）、`(call_b,entry_c)`、`(call_b,entry_d)`（§18 殘留：兩個 static 成員的 entry）；原 `(call_b,call_d)`、`(call_b,37)`、`(call_b,call_j)` 不變 | 見 §10 表 | FR-007 |
 
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/classfields.js` 檔頭 1–12 行與約 111 行（原 94 行）測試 | 標題「should chain static members in source order and define the class after them」→「…define the class before them」，註解改為 class 名稱在 static 成員之前定義（R4）；斷言（`D: L2 -> L8`）不變；檔頭說明加一句 class 宣告名稱在 static 成員前定義、class 運算式的變數則否 | FR-007 |
+| `tests/dujs/classfields.js`（新增測試） | acceptance US4 #3、#4；Edge cases `var B = class { static s = B; }`（無 `B: L1 -> …`）、`var B = class Q { static s = Q; }`（無 `Q`／`B` pair） | FR-007 |
 
 ## §17（US4，FR-008）
 
+fixture L42–L45 `function h({ p = a, q = p } = {}, ...)`：外層預設值 `{}`（L45）只求值一次，`p = a`（L43）、`q = p`（L44）各定義一次。
+
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異（既有 fixture 沒有帶外層預設值的解構參數） |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異 |
+| `expected-fixes004/` | `h` 的 intra-procedural（`10.*`）與含 `h` 的各模型的 `p`、`a` 列及 `h` 段節點，雜湊見 §10 表 |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
+| `expected-fixes004/` | `page0/intra-procedurals/10.dupairs.dot` | `p` 列 | `(entry,43)` → `(44,45)`：`q = p` 讀到 `p = a` 的定義（原為整個解構賦值一個節點，`p` 只讀到 entry 的參數定義） | 見 §10 表 | FR-008 |
+| `expected-fixes004/` | `page0/intra-procedurals/10.graph.dot`、`page0/inter-procedurals/{1,2}.graph.dot`、`page0/intra-pages/0.graph.dot`、`inter-page/0.graph.dot` | `h` 段 | 一個 `43` 節點（`{p = a, q = p} = {}`）→ `46`（求值 `{}`，GEN 空）、`44`、`45` 三個節點，依原始碼前序 | 見 §10 表 | FR-008 |
+| `expected-fixes004/` | `page0/intra-pages/0.dupairs.dot`、`inter-page/0.dupairs.dot`、`page0/inter-procedurals/2.dupairs.dot` | `p`、`a` 列 | `p`：`(entry_k,43)` → `(44,45)`；`a`：`(4,43)`、`(2,43)` → `(4,44)`、`(2,44)`（`a` 由 `p = a` 節點讀） | 見 §10 表 | FR-008 |
 
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/paramdefaults.js`（新增） | acceptance US4 #5、#5'、#6、data-model §6（見 §10 表）；既有 `tests/dujs/paramsandnew.js`「should initialize both the default of a pattern parameter and the defaults inside it」（`x: L2 -> L3`）不變、仍通過 | FR-008 |
 
 ## §12（US5，FR-009、FR-010）
 

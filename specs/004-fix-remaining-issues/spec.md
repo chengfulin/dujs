@@ -139,6 +139,10 @@
   無條件遞迴之後的節點從 entry 不可達（死碼），列入 Edge Cases 與 README（analyze N4）；H5 與「延後釐清 M2」的過期敘述以刪除線
   標出（analyze M3、F8、F10）；誤置於 Key Entities 的 U2 註記刪除（analyze F9）。
 
+### Session 2026-11-16（implement US4）
+
+- 實作時確認（依憲章 §CP-1 先改 spec）：`var B = class { static s = B; }` 的「不產生 pair」指不產生來自 class 定義的 pair；`var` 提升的 undefined 定義 `B: entry -> L2` 仍到達 static 成員，符合 JS 語意（Edge Cases 同步）。外層預設值是單一識別字（`{x} = D`）時，其求值節點仍記 `D` 的讀取；static 成員呼叫保留 class 名稱定義時，呼叫點的 GEN 與 KILL 一併保留。
+
 ## 表示法
 
 沿用 `specs/001-fix-known-issues/spec.md`「表示法」：def-use pair 寫成 `<變數>: <def> -> <use>`，`<def>` 為
@@ -322,7 +326,7 @@ dot 輸出中拆分呼叫點的 CALL RETURN 節點可以區分；for-in／for-of
 - 無條件遞迴（`m() { this.m(); x = 1; }` 與 `new A().m();` / `console.log(x);`，`probes/cyc-uncond.js`）：遞迴呼叫之後的節點從 entry
   不可達（死碼），被呼叫端看得到的外層定義（`x@L1`、`console`）到不了之後的 use；不可達的環中產生的定義仍會被分析流出
   （`x: L5 -> L9`）。README 註明。[SRC analyze N4]
-- `var B = class { static s = B; }`、`var B = class Q { static s = Q; }`：本輪不產生 pair（§11 只修 class 宣告），
+- `var B = class { static s = B; }`、`var B = class Q { static s = Q; }`：本輪不產生來自 class 定義的 pair（§11 只修 class 宣告；`var` 提升的 undefined 定義 `B: entry -> …` 仍會到達，符合 JS 語意），
   具名運算式的內部名稱記入 known-issues 新節。[SRC KI §11]
 - 方法 `n(p) { var t = 1; this.m(); y = t + p; }` 連結 `m` 後，`t: L7 -> L9`、`p: entry -> L9` 仍在（FR-016，見 US3-10）。[SRC USR Fable A1]
 - 輸出目錄已存在（同名）時：改用另一個唯一名稱，不覆寫既有目錄。[SRC USR D4]

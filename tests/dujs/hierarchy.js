@@ -287,6 +287,22 @@ describe('hierarchy', function () {
 				hierarchy.addCallEdge(page.modelOf(''), {callSite: nodeAt(page.modelOf(''), 4, 'f'), calleeModel: page.modelOf('f')});
 			}).should.throw();
 		});
+
+		// 004 contracts/model-api.md §1: keepGenerateAtCallSite (FR-007)
+		it('should record keepGenerateAtCallSite on the frozen edge', function () {
+			var edge = hierarchy.addCallEdge(model, {
+				callSite: nodeAt(page.modelOf(''), 4, 'f'),
+				calleeModel: page.modelOf('f'),
+				keepGenerateAtCallSite: true
+			});
+			edge.keepGenerateAtCallSite.should.be.true();
+			Object.isFrozen(edge).should.be.true();
+		});
+
+		it('should not keep the GEN at the call-site by default', function () {
+			var edge = hierarchy.addCallEdge(model, {callSite: nodeAt(page.modelOf(''), 4, 'f'), calleeModel: page.modelOf('f')});
+			edge.keepGenerateAtCallSite.should.be.false();
+		});
 	});
 
 	describe('back call edges (specs/004-fix-remaining-issues contracts/model-api.md §1)', function () {

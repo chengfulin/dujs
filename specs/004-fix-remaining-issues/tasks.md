@@ -173,20 +173,20 @@ description: "Task list for feature 004-fix-remaining-issues"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T052 [P] [US4] 新增 `tests/dujs/paramdefaults.js`（MIT）：acceptance US4 #1（`us4-1b.js`：scope 清單 `P, P.f, P.f.$ANONYMOUS_FUN_0`、intra-page pair 含 `d: L1 -> L3`、inter 清單）、#1'（`us4-1.js` KI §10 原程式 `return g();`：只斷言箭頭函式是 scope 且其 intra-procedural 模型存在、pair 不變、**不連結**——plan U1＝A）、#2（`us4-2.js`）、#5（`us4-5b.js`：intra-page pair、`h` 的 intra-procedural 5 個節點依序 entry、外層預設值求值節點（GEN 空）、`x = d`（GEN `x`）、`y = x`（GEN `y`）、exit；entry 以外 `x`、`y` 各只定義一次）、#5'（`us4-5.js` 單行：5 節點、以節點物件比對 `x` 的定義節點到 `y` 的定義節點有 pair）、#6（`us4-6b.js` 不變，4 節點）；巢狀 `{a: {b = 1} = E} = D` 的初始化節點依序為 `D`、`E`、`b = 1`（data-model §6）
-- [ ] T053 [P] [US4] `tests/dujs/classfields.js`：新增 acceptance US4 #3（`us4-3.js` static block：`Q: L1 -> L3`、`Q: L1 -> entry` 等完整清單）、#4（`us4-4.js` `static s = Q;`）；Edge cases `var B = class { static s = B; }`、`var B = class Q { static s = Q; }` 不產生 `B`／`Q` 在 static 成員中的 pair；既有 92 行測試「should chain static members in source order and define the class after them」斷言（`D: L2 -> L8`）不動，只把標題與註解改為「class 名稱在 static 成員之前定義」（research R4；記下供 T061 列入）
-- [ ] T054 [US4] `tests/dujs/paramsandnew.js` 約 140–152 行：「should not analyze a default value which is an arrow function again」改為斷言新行為——預設值箭頭函式是 scope `f.$ANONYMOUS_FUN_0`（R7；標題與註解同步；記下供 T061 列入 golden-diff §10「單元測試期望」）
-- [ ] T055 [US4] `tests/dujs/hierarchy.js` 與 `tests/dujs/expansion.js`：`addCallEdge(..., {keepGenerateAtCallSite: true})` 的 edge 欄位；展開時呼叫點（類型改為 CALL）保留 GEN、CALL RETURN 的 GEN 為空 Set；未設旗標時行為同前（contracts/model-api §1–§2）
+- [X] T052 [P] [US4] 新增 `tests/dujs/paramdefaults.js`（MIT）：acceptance US4 #1（`us4-1b.js`：scope 清單 `P, P.f, P.f.$ANONYMOUS_FUN_0`、intra-page pair 含 `d: L1 -> L3`、inter 清單）、#1'（`us4-1.js` KI §10 原程式 `return g();`：只斷言箭頭函式是 scope 且其 intra-procedural 模型存在、pair 不變、**不連結**——plan U1＝A）、#2（`us4-2.js`）、#5（`us4-5b.js`：intra-page pair、`h` 的 intra-procedural 5 個節點依序 entry、外層預設值求值節點（GEN 空）、`x = d`（GEN `x`）、`y = x`（GEN `y`）、exit；entry 以外 `x`、`y` 各只定義一次）、#5'（`us4-5.js` 單行：5 節點、以節點物件比對 `x` 的定義節點到 `y` 的定義節點有 pair）、#6（`us4-6b.js` 不變，4 節點）；巢狀 `{a: {b = 1} = E} = D` 的初始化節點依序為 `D`、`E`、`b = 1`（data-model §6）
+- [X] T053 [P] [US4] `tests/dujs/classfields.js`：新增 acceptance US4 #3（`us4-3.js` static block：`Q: L1 -> L3`、`Q: L1 -> entry` 等完整清單）、#4（`us4-4.js` `static s = Q;`）；Edge cases `var B = class { static s = B; }`、`var B = class Q { static s = Q; }` 不產生 `B`／`Q` 在 static 成員中的 pair；既有 92 行測試「should chain static members in source order and define the class after them」斷言（`D: L2 -> L8`）不動，只把標題與註解改為「class 名稱在 static 成員之前定義」（research R4；記下供 T061 列入）
+- [X] T054 [US4] `tests/dujs/paramsandnew.js` 約 140–152 行：「should not analyze a default value which is an arrow function again」改為斷言新行為——預設值箭頭函式是 scope `f.$ANONYMOUS_FUN_0`（R7；標題與註解同步；記下供 T061 列入 golden-diff §10「單元測試期望」）
+- [X] T055 [US4] `tests/dujs/hierarchy.js` 與 `tests/dujs/expansion.js`：`addCallEdge(..., {keepGenerateAtCallSite: true})` 的 edge 欄位；展開時呼叫點（類型改為 CALL）保留 GEN、CALL RETURN 的 GEN 為空 Set；未設旗標時行為同前（contracts/model-api §1–§2）
 
 ### 實作
 
-- [ ] T056 [US4] `lib/dujs/scopetree.js`：`visitFunctionBody` 在本體前於函式 scope 內走訪 `node.params`，使預設值（含解構中）的函式／箭頭函式成為子 scope（research R7）
-- [ ] T057 [US4] `lib/dujs/modelbuilder.js`：`collectParameterDefaults`／`getFunctionBodyStatement` 依原始碼前序展開——`AssignmentPattern` 左側為 Identifier → `name = default` 節點（不變）；左側為 pattern → 先一個只求值外層預設值的 `ExpressionStatement`（range／loc 取預設值）再遞迴收集巢狀預設值（research R8）
-- [ ] T058 [US4] `lib/dujs/hierarchy.js`（`addCallEdge` 接受並凍結 `keepGenerateAtCallSite`）與 `lib/dujs/expansion.js`（`replayCall` 非決策分支：呼叫點 GEN 留在呼叫點、類型改 CALL、CALL RETURN GEN 為空 Set）
-- [ ] T059 [US4] `lib/dujs/modelbuilder.js`：節點 astNode 為 `ClassDeclaration`（或 `export` 包住且有名稱的 `ClassDeclaration`）時，其 static 成員呼叫邊設 `keepGenerateAtCallSite: true`；class 運算式不設（Fable A7）
-- [ ] T060 [US4] T052–T055 全過；`node specs/004-fix-remaining-issues/probes/run.js specs/004-fix-remaining-issues/probes/us4-*.js` 與 acceptance 一致；若 US3 同時進行，先確認 `modelbuilder.js`／`hierarchy.js`／`expansion.js` 的改動已合併
-- [ ] T061 [US4] Golden（序列化）：既有三個 case 預期零差異（R4、R7）；`expected-fixes004/` 的 §11（L11–L14）、§17（L42–L45）、§10（L46–L48）差異逐處判讀、更新 manifest；填 `golden-diff.md` §10、§11、§17；「單元測試期望」：§10 列 `tests/dujs/paramsandnew.js` 約 148 行（T054）、§11 列 `tests/dujs/classfields.js` 92 行標題（T053）
-- [ ] T062 [US4] US4 閘門（全程規則的閘門指令；golden 檢查 `tests/golden/manifest.json`、`specs/004-fix-remaining-issues/golden-diff.md`）
+- [X] T056 [US4] `lib/dujs/scopetree.js`：`visitFunctionBody` 在本體前於函式 scope 內走訪 `node.params`，使預設值（含解構中）的函式／箭頭函式成為子 scope（research R7）
+- [X] T057 [US4] `lib/dujs/modelbuilder.js`：`collectParameterDefaults`／`getFunctionBodyStatement` 依原始碼前序展開——`AssignmentPattern` 左側為 Identifier → `name = default` 節點（不變）；左側為 pattern → 先一個只求值外層預設值的 `ExpressionStatement`（range／loc 取預設值）再遞迴收集巢狀預設值（research R8）
+- [X] T058 [US4] `lib/dujs/hierarchy.js`（`addCallEdge` 接受並凍結 `keepGenerateAtCallSite`）與 `lib/dujs/expansion.js`（`replayCall` 非決策分支：呼叫點 GEN 留在呼叫點、類型改 CALL、CALL RETURN GEN 為空 Set）
+- [X] T059 [US4] `lib/dujs/modelbuilder.js`：節點 astNode 為 `ClassDeclaration`（或 `export` 包住且有名稱的 `ClassDeclaration`）時，其 static 成員呼叫邊設 `keepGenerateAtCallSite: true`；class 運算式不設（Fable A7）
+- [X] T060 [US4] T052–T055 全過；`node specs/004-fix-remaining-issues/probes/run.js specs/004-fix-remaining-issues/probes/us4-*.js` 與 acceptance 一致；若 US3 同時進行，先確認 `modelbuilder.js`／`hierarchy.js`／`expansion.js` 的改動已合併
+- [X] T061 [US4] Golden（序列化）：既有三個 case 預期零差異（R4、R7）；`expected-fixes004/` 的 §11（L11–L14）、§17（L42–L45）、§10（L46–L48）差異逐處判讀、更新 manifest；填 `golden-diff.md` §10、§11、§17；「單元測試期望」：§10 列 `tests/dujs/paramsandnew.js` 約 148 行（T054）、§11 列 `tests/dujs/classfields.js` 92 行標題（T053）
+- [X] T062 [US4] US4 閘門（全程規則的閘門指令；golden 檢查 `tests/golden/manifest.json`、`specs/004-fix-remaining-issues/golden-diff.md`）
 
 **Checkpoint**: US4 完成——SC-002 的 §10、§11、§17。
 

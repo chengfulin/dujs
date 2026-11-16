@@ -1002,6 +1002,34 @@ describe('expansion', function () {
 			(originalDefinitionOfX.definition.fromNode === callSite).should.be.true();
 		});
 
+		// 004 contracts/model-api.md §2: keepGenerateAtCallSite (FR-007)
+		it('should keep the GEN at the call-site with keepGenerateAtCallSite', function () {
+			var page = intraProceduralModelsOf(['function f(v) {}', 'var x;', 'f(x = 1);'].join('\n'));
+			var root = hierarchy.createCallHierarchyModel(page.modelOf('')),
+				callSite = nodeAt(page.modelOf(''), 3, 'f');
+			var edge = hierarchy.addCallEdge(root, {
+				callSite: callSite,
+				calleeModel: page.modelOf('f'),
+				keepGenerateAtCallSite: true
+			});
+			var expanded = expandInto(root);
+			shouldRebuildEveryGEN(expanded);
+			var callNode = expanded.flatNodeOf.get(callSite),
+				callReturn = expanded.flatNodeOf.get(edge.callReturn);
+			callNode.type.should.eql(FlowNode.CALL_NODE_TYPE);
+			(callNode.call === expanded.flatNodeOf.get(page.modelOf('f').graph[0])).should.be.true();
+			var definitionsOfX = callNode.generate.values().filter(function (vardef) {
+				return vardef.variable.name === 'x';
+			});
+			definitionsOfX.should.have.length(1);
+			(definitionsOfX[0].definition.fromNode === callNode).should.be.true();
+			callReturn.generate.size.should.eql(0);
+			callReturn.kill.size.should.eql(0);
+			/// the outgoing edges still move to the CALL RETURN NODE
+			(callNode.normal === null).should.be.true();
+			(callReturn.normal === expanded.flatNodeOf.get(callSite.normal)).should.be.true();
+		});
+
 		it('should rebuild the GEN of every copy with copies (probe a1)', function () {
 			var page = intraProceduralModelsOf(fs.readFileSync(path.join(PROBES, 'a1.js'), 'utf8'));
 			var modelOfF = hierarchy.createCallHierarchyModel(page.modelOf('f'));

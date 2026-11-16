@@ -6,10 +6,26 @@
  * initializers are not connected to the flow" is superseded by 004 FR-003: a
  * `new A();` statement is connected to the instance field initializers (in
  * source order) and then the constructor. Static field initializers and
- * static blocks are connected at the class definition node in source order.
+ * static blocks are connected at the class definition node in source order;
+ * the name of a class declaration is defined at the class node before they
+ * run (004 FR-007), the variable of a class expression is not.
  */
 require('should');
-var analyze = require('../helpers/analyze');
+var fs = require('fs'),
+	path = require('path'),
+	analyze = require('../helpers/analyze');
+
+var PROBES = path.join(__dirname, 'cases', 'probes004');
+
+/**
+ * Analyze a probe program of feature 004
+ * @param {string} name File name without extension
+ * @returns {Object} result of the analyze helper
+ */
+function analyzeProbe(name) {
+	'use strict';
+	return analyze(fs.readFileSync(path.join(PROBES, name + '.js'), 'utf8'));
+}
 
 var PAGE = '$DOMAIN.$PAGE_0',
 	ANONYMOUS = PAGE + '.$ANONYMOUS_FUN_';
@@ -90,8 +106,9 @@ describe('Class field initializers and static blocks', function () {
 		result.intraProcedural(ANONYMOUS + '0').should.containEql('t: L3 -> L4');
 	});
 
-	// static members run in source order; the class name is defined after them
-	it('should chain static members in source order and define the class after them', function () {
+	// static members run in source order; the class name is defined before
+	// them (004 FR-007, research R4), so D at L8 still reads the class node
+	it('should chain static members in source order and define the class before them', function () {
 		var result = analyze([
 			'var v = 1;',
 			'class D {',
@@ -204,5 +221,43 @@ describe('Class field initializers and static blocks', function () {
 		].join('\n'));
 		result.scopeNames().should.eql([PAGE, ANONYMOUS + '0']);
 		pairsOf(result.intraProcedural(), 'k').should.eql(['k: L1 -> L2']);
+	});
+
+	describe('class name defined before the static members (004 US4, FR-007, KI §11)', function () {
+		// US4 #3: the static block reads the class name defined at the class node
+		it('US4-3 should pair the class name with its use in a static block', function () {
+			var result = analyzeProbe('us4-3');
+			result.intraPage().should.eql(['Q: L1 -> L3', 'Q: L1 -> entry', 'console: entry -> L3',
+				'console: entry -> entry']);
+		});
+
+		// US4 #4: a static field initializer reads the class name
+		it('US4-4 should pair the class name with its use in a static field', function () {
+			var result = analyzeProbe('us4-4');
+			result.intraPage().should.eql(['Q: L2 -> L3', 'Q: L2 -> L5', 'Q: L2 -> entry']);
+		});
+
+		// edge case: the variable of a class expression is not defined yet when
+		// its static members run (only its undefined definition at entry reaches)
+		it('should not pair the variable of a class expression in its static members', function () {
+			var result = analyze([
+				'var B = class {',
+				'  static s = B;',
+				'};'
+			].join('\n'));
+			pairsOf(result.intraPage(), 'B').should.not.containEql('B: L1 -> L2');
+			pairsOf(result.intraPage(), 'B').should.not.containEql('B: L1 -> entry');
+		});
+
+		// edge case: the inner name of a named class expression is not a variable (Fable A7)
+		it('should not pair the inner name of a named class expression in its static members', function () {
+			var result = analyze([
+				'var B = class Q {',
+				'  static s = Q;',
+				'};'
+			].join('\n'));
+			pairsOf(result.intraPage(), 'Q').should.eql([]);
+			pairsOf(result.intraPage(), 'B').should.eql([]);
+		});
 	});
 });
