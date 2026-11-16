@@ -200,20 +200,20 @@ description: "Task list for feature 004-fix-remaining-issues"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T063 [P] [US5] 新增 `tests/dujs/cli.js`（MIT）單元層級：以注入 `io`（stdout／stderr 收集器、暫存 `cwd`）呼叫 `cli.run(argv, io)`，覆蓋 contracts/cli.md §1 表 #1–#8（含 `-x --help` 走 help、`-hj` 為未知選項、`--js=a.js` 未知、`a.js -js b.js`、結尾 `-js`／`-js -js`／`-js --`、`--` 後檔名 `-js`）的回傳值、stdout／stderr、是否建目錄；錯誤訊息逐字（`dujs: ` 前綴、單行，用法錯誤後空一行接 usage）、usage 全文逐字；#6 讀檔失敗時不建目錄；#7 以 stub 讓 `defuseAnalysisExecutor.initialize` 拋錯，斷言目錄建後刪除、訊息 `analysis failed: <message>`
-- [ ] T064 [US5] 在 `tests/dujs/cli.js` 新增：`OutputWriter` 的 `ROOT_OUTPUT_DIR` 在 `createRootOutputDirectory()` 前讀取拋錯、之後為實際名稱；名稱已存在時依序用 `_1`、`_2`，不覆寫既有目錄；`report.html` 的 `<img src="../<目錄>/...">` 用實際名稱（contracts/cli.md §3）
-- [ ] T065 [US5] 在 `tests/dujs/cli.js` 新增子行程驗收（`spawnSync`／`spawn` 執行 `bin/dujs.js`，cwd 為暫存目錄）：contracts/cli.md §4 的 US5-1、US5-2、US5-3（`missing.js` 未建目錄；`bad.js` 內容為語法錯誤 `var a = ;`：exit 1、stderr 含 `dujs: analysis failed:`、執行後 cwd 沒有 `out-*`——SC-004 的「分析錯誤」，**以子行程執行 `bin/dujs.js`，不得以 stub 代替**，cli.md §4）、US5-4／SC-005（同一 cwd 同時啟動兩次、重複 10 次：每次兩者 exit 0、各新增 2 個不同 `out-*` 目錄、檔案清單相同、`report.html` 引用自己的目錄）、US5-5（exit 0、stderr 空）；mocha timeout 依實測設定
+- [X] T063 [P] [US5] 新增 `tests/dujs/cli.js`（MIT）單元層級：以注入 `io`（stdout／stderr 收集器、暫存 `cwd`）呼叫 `cli.run(argv, io)`，覆蓋 contracts/cli.md §1 表 #1–#8（含 `-x --help` 走 help、`-hj` 為未知選項、`--js=a.js` 未知、`a.js -js b.js`、結尾 `-js`／`-js -js`／`-js --`、`--` 後檔名 `-js`）的回傳值、stdout／stderr、是否建目錄；錯誤訊息逐字（`dujs: ` 前綴、單行，用法錯誤後空一行接 usage）、usage 全文逐字；#6 讀檔失敗時不建目錄；#7 以 stub 讓 `defuseAnalysisExecutor.initialize` 拋錯，斷言目錄建後刪除、訊息 `analysis failed: <message>`
+- [X] T064 [US5] 在 `tests/dujs/cli.js` 新增：`OutputWriter` 的 `ROOT_OUTPUT_DIR` 在 `createRootOutputDirectory()` 前讀取拋錯、之後為實際名稱；名稱已存在時依序用 `_1`、`_2`，不覆寫既有目錄；`report.html` 的 `<img src="../<目錄>/...">` 用實際名稱（contracts/cli.md §3）
+- [X] T065 [US5] 在 `tests/dujs/cli.js` 新增子行程驗收（`spawnSync`／`spawn` 執行 `bin/dujs.js`，cwd 為暫存目錄）：contracts/cli.md §4 的 US5-1、US5-2、US5-3（`missing.js` 未建目錄；`bad.js` 內容為語法錯誤 `var a = ;`：exit 1、stderr 含 `dujs: analysis failed:`、執行後 cwd 沒有 `out-*`——SC-004 的「分析錯誤」，**以子行程執行 `bin/dujs.js`，不得以 stub 代替**，cli.md §4）、US5-4／SC-005（同一 cwd 同時啟動兩次、重複 10 次：每次兩者 exit 0、各新增 2 個不同 `out-*` 目錄、檔案清單相同、`report.html` 引用自己的目錄）、US5-5（exit 0、stderr 空）；mocha timeout 依實測設定
 
 ### 實作
 
-- [ ] T066 [US5] `lib/dujs/outputwriter.js`：新增 `createRootOutputDirectory()`（`fs.mkdirSync` 非 recursive；`EEXIST` 時試 `名稱_1`、`_2`……；基本名稱 `out-<YYYY>-<MM>-<DD>-<H>-<M>-<S>` 於執行開始時計算）；`ROOT_OUTPUT_DIR` 改為 getter（建立前讀取拋錯）
-- [ ] T067 [US5] `lib/dujs/reportgenerator.js`：`report.html` 路徑與 `<img src>` 改用 `ROOT_OUTPUT_DIR` 的實際名稱（不再讀載入時常數）
-- [ ] T068 [US5] 新增 `lib/dujs/cli.js`（MIT，ES5）：`run(argv, io)` 依 contracts/cli.md §1–§2（`--` 前的 `-js` 對映 `--js`；先掃 help；`parseArgs({strict: true, allowPositionals: true, tokens: true})`；依 tokens 分頁；讀完所有檔（`sourceReader.getSourceFromFiles`）→ 建目錄 → 既有四階段分析與寫出 → `reportGenerator.createReport()`；例外時 `fs.rmSync(目錄, {recursive: true, force: true})`）；usage 文字逐字照 cli.md §1；不再輸出 `*** ERROR: ... ***`
-- [ ] T069 [US5] `bin/dujs.js` 改為只呼叫 `require('../lib/dujs/cli').run(process.argv.slice(2))` 並設定 `process.exitCode`；刪除 `lib/dujs/inputreader.js`（先 `grep -rn "inputreader" lib bin tests` 確認除 `bin/dujs.js` 外無使用者）
-- [ ] T070 [US5] `tests/golden/golden.js` 約 145 行註解「the CLI reports failures on stderr but still exits with 0」更新為新行為（失敗 exit 非零）；若該處有依 exit 0 的斷言，確認仍正確（記下供 T072 列入 golden-diff §12「單元測試期望」）
-- [ ] T071 [US5] T063–T065 全過；依 quickstart §3 在暫存目錄手動檢查（help、無參數、`-js -js a.js`、`missing.js`、並行 3 次產生 6 個不同目錄）
-- [ ] T072 [US5] Golden（序列化）：四個 case 預期全部零差異（US5-5）；填 `golden-diff.md` §12：四個 case「無差異」、目錄名稱規則說明（`_<n>`）、「單元測試期望」列 T070
-- [ ] T073 [US5] US5 閘門（全程規則的閘門指令，含 `tests/golden/manifest.json`、`golden-diff.md` 檢查；另確認 `npm test` 時 cwd 沒有殘留 `out-*`）
+- [X] T066 [US5] `lib/dujs/outputwriter.js`：新增 `createRootOutputDirectory()`（`fs.mkdirSync` 非 recursive；`EEXIST` 時試 `名稱_1`、`_2`……；基本名稱 `out-<YYYY>-<MM>-<DD>-<H>-<M>-<S>` 於執行開始時計算）；`ROOT_OUTPUT_DIR` 改為 getter（建立前讀取拋錯）
+- [X] T067 [US5] `lib/dujs/reportgenerator.js`：`report.html` 路徑與 `<img src>` 改用 `ROOT_OUTPUT_DIR` 的實際名稱（不再讀載入時常數）
+- [X] T068 [US5] 新增 `lib/dujs/cli.js`（MIT，ES5）：`run(argv, io)` 依 contracts/cli.md §1–§2（`--` 前的 `-js` 對映 `--js`；先掃 help；`parseArgs({strict: true, allowPositionals: true, tokens: true})`；依 tokens 分頁；讀完所有檔（`sourceReader.getSourceFromFiles`）→ 建目錄 → 既有四階段分析與寫出 → `reportGenerator.createReport()`；例外時 `fs.rmSync(目錄, {recursive: true, force: true})`）；usage 文字逐字照 cli.md §1；不再輸出 `*** ERROR: ... ***`
+- [X] T069 [US5] `bin/dujs.js` 改為只呼叫 `require('../lib/dujs/cli').run(process.argv.slice(2))` 並設定 `process.exitCode`；刪除 `lib/dujs/inputreader.js`（先 `grep -rn "inputreader" lib bin tests` 確認除 `bin/dujs.js` 外無使用者）
+- [X] T070 [US5] `tests/golden/golden.js` 約 145 行註解「the CLI reports failures on stderr but still exits with 0」更新為新行為（失敗 exit 非零）；若該處有依 exit 0 的斷言，確認仍正確（記下供 T072 列入 golden-diff §12「單元測試期望」）
+- [X] T071 [US5] T063–T065 全過；依 quickstart §3 在暫存目錄手動檢查（help、無參數、`-js -js a.js`、`missing.js`、並行 3 次產生 6 個不同目錄）
+- [X] T072 [US5] Golden（序列化）：四個 case 預期全部零差異（US5-5）；填 `golden-diff.md` §12：四個 case「無差異」、目錄名稱規則說明（`_<n>`）、「單元測試期望」列 T070
+- [X] T073 [US5] US5 閘門（全程規則的閘門指令，含 `tests/golden/manifest.json`、`golden-diff.md` 檢查；另確認 `npm test` 時 cwd 沒有殘留 `out-*`）
 
 **Checkpoint**: US5 完成——SC-004、SC-005、SC-002 的 §12。
 

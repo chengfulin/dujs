@@ -142,7 +142,7 @@ function goldenCase(title, pages, expectedDir) {
 			});
 			var run = spawnSync(process.execPath, args, {cwd: workDir, encoding: 'utf8'});
 			run.status.should.eql(0);
-			// the CLI reports failures on stderr but still exits with 0
+			// the CLI exits with a non-zero status on failure (2: usage, 1: read or analysis error) and reports it on stderr
 			run.stderr.should.eql('');
 			var outDirs = fs.readdirSync(workDir).filter(function (name) {
 				return /^out-/.test(name);

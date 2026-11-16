@@ -239,12 +239,16 @@ fixture L42–L45 `function h({ p = a, q = p } = {}, ...)`：外層預設值 `{}
 
 ## §12（US5，FR-009、FR-010）
 
+CLI 只改參數解析、exit status 與輸出目錄名稱，分析與 .dot 內容不變；golden 比對的是 `out-*` 目錄內的 .dot（目錄名稱不參與比對），四個 case 零差異（US5-5），manifest 不動。
+
+目錄名稱規則：基本名稱沿用 `out-<YYYY>-<MM>-<DD>-<H>-<M>-<S>`（執行開始時計算），以 `fs.mkdirSync`（非 recursive）建立；名稱已存在（`EEXIST`，含同秒並行的另一次執行）時依序改用 `<名稱>_1`、`<名稱>_2`……，不覆寫、不重用既有目錄。`OutputWriter.ROOT_OUTPUT_DIR` 改為 getter，回傳本次建立的名稱（建立前讀取拋錯），`report.html` 與其 `<img src="../<目錄>/...">` 都用實際名稱（contracts/cli.md §3）。
+
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異 |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異 |
+| `expected-fixes004/` | 無差異 |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
@@ -253,6 +257,8 @@ fixture L42–L45 `function h({ p = a, q = p } = {}, ...)`：外層預設值 `{}
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/golden/golden.js` 約 145 行註解 | 「the CLI reports failures on stderr but still exits with 0」→「the CLI exits with a non-zero status on failure (2: usage, 1: read or analysis error) and reports it on stderr」（T070）；其前後斷言 `run.status.should.eql(0)`、`run.stderr.should.eql('')` 不變、仍成立（golden case 皆為成功執行） | FR-009 |
+| `tests/dujs/cli.js`（新增） | contracts/cli.md §1 #1–#7（`cli.run` 單元層級，#7 以 stub 讓 `defuseAnalysisExecutor.initialize` 拋錯）、§3（`ROOT_OUTPUT_DIR` getter、`_1`／`_2`、`report.html` 引用實際目錄）、§4 US5-1…US5-5、SC-004、SC-005（子行程執行 `bin/dujs.js`） | FR-009、FR-010 |
 
 ## §15（US6，FR-011）
 
