@@ -48,7 +48,21 @@
           "T065"
         ],
         "plan_file": "specs/003-hierarchical-models/parallel-plan.json"
-      }
+      },
+      "setup_commit": "e68bb2d76c365f0999dd0de7202145a7c6ed3ff0",
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      },
+      "deferred_should_fix": [
+        "US1 review R1 hierarchy.js createCallReturnTemplate 重複 scope 賦值",
+        "US1 review R2 modelbuilder createInterPageModel 傳入等於預設值的選項／薄包裝",
+        "US1 review R3 hierarchy.js entryOf/exitOf 重複",
+        "US1 review R4 tests require 位置"
+      ]
     }
   },
   "brief": {

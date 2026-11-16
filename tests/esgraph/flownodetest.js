@@ -863,4 +863,212 @@ describe('FlowNode', function () {
             });
         });
     });
+    describe('static method copyNodes', function () {
+        var factoryFlowNode = require('../../lib/esgraph/flownodefactory');
+        var ast, parentAst, scopeObj, origin;
+        var entry, decision, body, other, exit, outside, originals;
+
+        function sameNodes(actual, expected) {
+            actual.length.should.eql(expected.length);
+            actual.forEach(function (n, i) { (n === expected[i]).should.eql(true); });
+        }
+
+        function snapshot(node) {
+            var connections = {};
+            FlowNode.CONNECTION_TYPES.forEach(function (type) {
+                connections[type] = Array.isArray(node[type]) ? [].concat(node[type]) : node[type];
+            });
+            return {
+                cfgId: node.cfgId, type: node.type, astNode: node.astNode, parent: node.parent,
+                line: node.line, col: node.col, scope: node.scope, split: node.split,
+                labelPath: node.labelPath, isWithObject: node.isWithObject,
+                loopRightSplit: node.loopRightSplit, discriminantSplit: node.discriminantSplit,
+                prev: node.prev, next: node.next, connections: connections,
+                kill: node.kill, cuse: node.cuse, puse: node.puse, generate: node.generate,
+                reachIns: node.reachIns, reachOuts: node.reachOuts,
+                extraReachIns: node.extraReachIns, extraReachOuts: node.extraReachOuts,
+                label: node.label, nextSibling: node.nextSibling, original: node.original
+            };
+        }
+
+        beforeEach(function () {
+            ast = {type: 'BinaryExpression'};
+            parentAst = {type: 'IfStatement'};
+            scopeObj = {name: '$DOMAIN.f'};
+            origin = {type: 'IfStatement'};
+
+            entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE);
+            entry.cfgId = 10;
+            decision = new FlowNode(FlowNode.BRANCH_NODE_TYPE, ast, parentAst);
+            decision.cfgId = 11;
+            decision.line = 3;
+            decision.col = 4;
+            decision.scope = scopeObj;
+            decision.split = {path: 'T', origin: origin, preEvaluated: [{type: 'Identifier', name: 'a'}]};
+            decision.labelPath = 'T';
+            decision.isWithObject = true;
+            decision.loopRightSplit = true;
+            decision.discriminantSplit = true;
+            decision.kill = new Set([1]);
+            decision.cuse = new Set([2]);
+            decision.puse = new Set([3]);
+            decision.generate = new Set([4]);
+            decision.reachIns = new Set([5]);
+            decision.reachOuts = new Set([6]);
+            decision.extraReachIns = new Set([7]);
+            decision.extraReachOuts = new Set([8]);
+            decision.label = 'decision label';
+            body = new FlowNode();
+            body.cfgId = 12;
+            other = new FlowNode();
+            other.cfgId = 13;
+            exit = new FlowNode(FlowNode.EXIT_NODE_TYPE);
+            exit.cfgId = 14;
+            outside = new FlowNode(FlowNode.CALL_RETURN_NODE_TYPE);
+            outside.cfgId = 99;
+            decision.nextSibling = body;
+
+            entry.connect(decision);
+            decision.connect(body, FlowNode.TRUE_BRANCH_CONNECTION_TYPE);
+            decision.connect(other, FlowNode.FALSE_BRANCH_CONNECTION_TYPE);
+            decision.connect(exit, FlowNode.EXCEPTION_CONNECTION_TYPE);
+            other.connect(exit);
+            body.connect(exit);
+            /// multi-connection: exit returns to several targets in order, one outside the map
+            exit.connect(other, FlowNode.RETURN_CONNECTION_TYPE);
+            exit.connect(outside, FlowNode.RETURN_CONNECTION_TYPE);
+            exit.connect(body, FlowNode.RETURN_CONNECTION_TYPE);
+            entry.connect(body, FlowNode.ON_EVENT_CONNECTION_TYPE);
+            entry.connect(other, FlowNode.ON_EVENT_CONNECTION_TYPE);
+            originals = [entry, decision, body, other, exit];
+        });
+
+        it('should return a Map from each original to its copy', function () {
+            var map = FlowNode.copyNodes(originals);
+            (map instanceof Map).should.eql(true);
+            map.size.should.eql(5);
+            originals.forEach(function (node) {
+                var copy = map.get(node);
+                FlowNode.isFlowNode(copy).should.eql(true);
+                copy.should.not.equal(node);
+            });
+        });
+
+        it('should keep the attributes of the originals', function () {
+            var map = FlowNode.copyNodes(originals);
+            originals.forEach(function (node) {
+                var copy = map.get(node);
+                ['cfgId', 'type', 'astNode', 'parent', 'line', 'col', 'scope', 'split', 'labelPath',
+                    'isWithObject', 'loopRightSplit', 'discriminantSplit'].forEach(function (key) {
+                    should(copy[key]).equal(node[key]);
+                });
+            });
+            var copy = map.get(decision);
+            copy.cfgId.should.eql(11);
+            copy.astNode.should.equal(ast);
+            copy.parent.should.equal(parentAst);
+            copy.scope.should.equal(scopeObj);
+            copy.split.should.equal(decision.split);
+            copy.labelPath.should.eql('T');
+            copy.isWithObject.should.eql(true);
+            copy.loopRightSplit.should.eql(true);
+            copy.discriminantSplit.should.eql(true);
+        });
+
+        it('should map every connection to the copies in the same order', function () {
+            var map = FlowNode.copyNodes(originals);
+            function mapped(nodes) {
+                return nodes.filter(function (node) {
+                    return map.has(node);
+                }).map(function (node) {
+                    return map.get(node);
+                });
+            }
+            originals.forEach(function (node) {
+                var copy = map.get(node);
+                sameNodes(copy.prev, mapped(node.prev));
+                sameNodes(copy.next, mapped(node.next));
+                FlowNode.CONNECTION_TYPES.forEach(function (type) {
+                    if (FlowNode.MULTI_CONNECTION_TYPE.indexOf(type) !== -1) {
+                        sameNodes(copy[type], mapped(node[type]));
+                    } else if (node[type] === null) {
+                        should(copy[type]).equal(null);
+                    } else {
+                        copy[type].should.equal(map.get(node[type]));
+                    }
+                });
+            });
+            map.get(decision).true.should.equal(map.get(body));
+            map.get(decision).false.should.equal(map.get(other));
+            map.get(decision).exception.should.equal(map.get(exit));
+            sameNodes(map.get(entry).onEvent, [map.get(body), map.get(other)]);
+        });
+
+        it('should keep the order of prev differing from the order of connecting', function () {
+            /// exit.prev is decision, other, body; body.prev is decision, exit, entry (order of connecting)
+            var map = FlowNode.copyNodes(originals);
+            sameNodes(map.get(exit).prev, [map.get(decision), map.get(other), map.get(body)]);
+            sameNodes(map.get(body).prev, [map.get(decision), map.get(exit), map.get(entry)]);
+        });
+
+        it('should omit the targets not in the map', function () {
+            var map = FlowNode.copyNodes(originals);
+            sameNodes(map.get(exit).return, [map.get(other), map.get(body)]);
+            sameNodes(map.get(exit).next, [map.get(other), map.get(body)]);
+            map.get(exit).next.indexOf(outside).should.eql(-1);
+            map.has(outside).should.eql(false);
+        });
+
+        it('should clear the analysis results, label and nextSibling of the copies', function () {
+            var map = FlowNode.copyNodes(originals);
+            var copy = map.get(decision);
+            ['kill', 'cuse', 'puse', 'reachIns', 'reachOuts', 'extraReachIns', 'extraReachOuts',
+                'nextSibling'].forEach(function (key) {
+                should(copy[key]).equal(null);
+            });
+            /// label is the default of a new node of the same type (the converter sets it on writing)
+            should(copy.label).equal(new FlowNode(FlowNode.BRANCH_NODE_TYPE).label);
+            copy.label.should.not.eql('decision label');
+            should(map.get(body).label).equal(null);
+            map.get(exit).label.should.eql(FlowNode.EXIT_NODE_TYPE);
+        });
+
+        it('should set original read-only: null on originals and the original on copies', function () {
+            var map = FlowNode.copyNodes(originals);
+            originals.forEach(function (node) {
+                should(node.original).equal(null);
+                map.get(node).original.should.equal(node);
+            });
+            var copy = map.get(body);
+            (function () {
+                copy.original = other;
+            }).should.throw();
+            copy.original.should.equal(body);
+            should(new FlowNode().original).equal(null);
+        });
+
+        it('should not consume the counter of flownodefactory', function () {
+            var before = factoryFlowNode.counter;
+            FlowNode.copyNodes(originals);
+            factoryFlowNode.counter.should.eql(before);
+        });
+
+        it('should not change the originals', function () {
+            var before = originals.concat([outside]).map(snapshot);
+            FlowNode.copyNodes(originals);
+            var after = originals.concat([outside]).map(snapshot);
+            after.forEach(function (snap, i) {
+                Object.keys(snap).forEach(function (key) {
+                    should(snap[key]).eql(before[i][key]);
+                });
+                snap.prev.forEach(function (n, j) { n.should.equal(before[i].prev[j]); });
+                snap.next.forEach(function (n, j) { n.should.equal(before[i].next[j]); });
+            });
+            sameNodes(outside.prev, [exit]);
+        });
+
+        it('should return an empty Map for no originals', function () {
+            FlowNode.copyNodes([]).size.should.eql(0);
+        });
+    });
 });

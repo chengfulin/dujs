@@ -79,12 +79,13 @@ describe('Defects found by the code review of PR #3', function () {
 		var models = pageModelsOf(result).interProceduralModels;
 		models.length.should.be.above(0);
 		models.forEach(function (model) {
+			var staticEntryOfModel = model.flatNodeOf(staticEntry);
 			model.graph[2].filter(function (node) {
-				return node.type === FlowNode.ENTRY_NODE_TYPE && node !== model.graph[0] && node !== staticEntry;
+				return node.type === FlowNode.ENTRY_NODE_TYPE && node !== model.graph[0] && node !== staticEntryOfModel;
 			}).forEach(function (node) {
 				(node.call === null).should.eql(true, 'an entry node is not a call site');
 			});
-			var callers = callersOf(model, staticEntry);
+			var callers = callersOf(model, staticEntryOfModel);
 			callers.length.should.belowOrEqual(1);
 			callers.forEach(function (node) {
 				node.line.should.eql(2);
@@ -111,7 +112,7 @@ describe('Defects found by the code review of PR #3', function () {
 		].join('\n'));
 		var page = pageModelsOf(result).intraPageModels[0];
 		[['$BLOCK_0.$ANONYMOUS_FUN_0', 3], ['$BLOCK_1.$ANONYMOUS_FUN_1', 7], ['$BLOCK_2.$ANONYMOUS_FUN_2', 12]].forEach(function (member) {
-			var entry = intraProceduralModelOf(result, PAGE + '.' + member[0]).graph[0];
+			var entry = page.flatNodeOf(intraProceduralModelOf(result, PAGE + '.' + member[0]).graph[0]);
 			callersOf(page, entry).map(function (node) {
 				return node.line;
 			}).should.eql([member[1]], member[0]);
@@ -146,7 +147,8 @@ describe('Defects found by the code review of PR #3', function () {
 				(!!node.true && !!node.false).should.eql(true, 'decision L2 has both targets');
 			});
 		});
-		callersOf(pageModelsOf(result).intraPageModels[0], staticEntry).length.should.eql(1);
+		callersOf(pageModelsOf(result).intraPageModels[0],
+			pageModelsOf(result).intraPageModels[0].flatNodeOf(staticEntry)).length.should.eql(1);
 		result.intraPage().should.containDeep(['v: L1 -> L2>L3:T']);
 		result.intraProcedural().should.containDeep(['v: L1 -> L2>L3:T', 'v: L1 -> L2>exit:F']);
 	});
@@ -211,7 +213,7 @@ describe('Defects found by the code review of PR #3', function () {
 		pairs.should.not.containEql('g: L1 -> L7');
 		result.intraProcedural().should.containDeep(['f: entry -> L6>L7:T', 'f: entry -> L6>exit:F']);
 		var page = pageModelsOf(result).intraPageModels[0],
-			fEntry = intraProceduralModelOf(result, PAGE + '.f').graph[0],
+			fEntry = page.flatNodeOf(intraProceduralModelOf(result, PAGE + '.f').graph[0]),
 			decision = decisionsAtLine(page, 6);
 		decision.length.should.eql(1);
 		decision[0].type.should.eql(FlowNode.NORMAL_NODE_TYPE);
