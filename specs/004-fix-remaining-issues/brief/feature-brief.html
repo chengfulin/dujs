@@ -64,7 +64,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>修正其餘已知問題（§7、§10–§12、§14、§15、§17、§20、§21）</h1>
-<p class="meta">feature 004-fix-remaining-issues · spec · 第 1 輪 · 2026-11-16</p>
+<p class="meta">feature 004-fix-remaining-issues · clarify · 第 1 輪 · 2026-11-16</p>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -130,12 +130,12 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <path d="M180 100 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
     <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
     <text x="280" y="62" font-size="18" font-weight="900" fill="var(--green)">x 的來源：第 4 行</text>
-    <g font-size="17" fill="var(--ink)"><text x="280" y="102">失敗時：明確回報「不成功」</text><text x="280" y="134">改變的結果：逐項有記錄</text><text x="280" y="166">沒有說明的改變視為出錯</text></g>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="94">失敗時：明確回報「不成功」</text><text x="280" y="122">改變的結果：逐項有記錄</text><text x="280" y="150">沒有說明的改變視為出錯</text><text x="280" y="178">自己呼叫自己：也能完成分析</text></g>
     <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">成功標準</text>
     <use href="#person" x="670" y="50" width="100" height="110" color="var(--blue)"/>
     <text x="720" y="190" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">研究者可放心用</text>
   </svg></div>
-  <p class="cap">每個驗收情境都有測試，且<b>所有結果差異都對得到某一項修正</b>。<small>來源：spec Success Criteria SC-001–SC-003；FR-013</small></p>
+  <p class="cap">每個驗收情境都有測試，且<b>所有結果差異都對得到某一項修正</b>，遞迴程式也跑得完。<small>來源：spec Success Criteria SC-001–SC-003、SC-006；FR-013</small></p>
 </section>
 
 <section class="panel">
@@ -164,7 +164,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
   <p class="cap">單獨的 <b>new 敘述與可判定的方法呼叫</b>都成為連結點。<small>來源：spec User Story 2、3；FR-002–FR-005</small></p>
   <ul>
     <li>先欄位、後 constructor，取代 001 D7「欄位初始化式不接入流程」。<small>（範圍決策 D3）</small></li>
-    <li>有 <code>extends</code> 時不追 super 鏈，README 註明。<small>（範圍決策 D3、Assumptions）</small></li>
+    <li>有 <code>extends</code> 時不追 super 鏈；遞迴（如 <code>m(){ this.m(); }</code>）改以回邊成環，不再報錯。<small>（D3；FR-015）</small></li>
   </ul>
 </section>
 <div class="note">架構圖：plan 階段起才有，本輪（spec）不產出。</div>
@@ -172,12 +172,27 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <h3>範圍一覽</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>優先</th><th>來源</th><th>一句話</th></tr>
-<tr><td>US1</td><td>P1</td><td>KI §20</td><td>條件中巢狀運算之後的讀取仍是 p-use</td></tr>
+<tr><td>US1</td><td>P1</td><td>KI §20；Fable A5</td><td>條件內的讀取一律 p-use；呼叫（含 <code>new</code>）的引數一律 c-use</td></tr>
 <tr><td>US2</td><td>P1</td><td>KI §21；D3</td><td><code>new</code> 敘述成為 call-site，class 依序連欄位初始化式與 constructor</td></tr>
-<tr><td>US3</td><td>P2</td><td>KI §7；D2</td><td>可靜態判定的 class 方法呼叫連到方法本體（依賴 US2）</td></tr>
-<tr><td>US4</td><td>P2</td><td>KI §10、§11、§17</td><td>補回參數預設值函式、class 名稱 static 內 use、解構內層預設值的 pair</td></tr>
-<tr><td>US5</td><td>P2</td><td>KI §12；D4</td><td>CLI help、失敗 exit 非零、輸出目錄唯一</td></tr>
-<tr><td>US6</td><td>P3</td><td>KI §14、§15</td><td>CALL RETURN 標籤可區分；for-in／of 回邊防禦性修正</td></tr>
+<tr><td>US3</td><td>P2</td><td>KI §7；D2、D6</td><td>可靜態判定的 class 方法呼叫連到方法本體（含 constructor／欄位內的 <code>this.m()</code>；依賴 US2）</td></tr>
+<tr><td>US4</td><td>P2</td><td>KI §10、§11、§17</td><td>補回參數預設值函式、class 宣告名稱 static 內 use、解構內層預設值的 pair</td></tr>
+<tr><td>US5</td><td>P2</td><td>KI §12；D4</td><td>CLI help、失敗 exit 非零（任一頁失敗立即中止）、輸出目錄唯一（D5）</td></tr>
+<tr><td>US6</td><td>P3</td><td>KI §14、§15</td><td>CALL RETURN 標籤可區分；for-in／of 回邊防禦性修正（含外層迴圈＋break 回歸情境）</td></tr>
+</table></div>
+
+<h2>本輪變更（clarify · 第 1 輪）</h2>
+<p class="meta">來源：Clarifications「Session 2026-11-16」與「Fable 仲裁」；以下皆已由使用者裁決或依憲章自行決定。</p>
+<div class="box"><table>
+<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響 story</th></tr>
+<tr><td>US1 標題、情境 3、5、6；FR-001；SC-002</td><td>條件中巢狀運算之後的讀取是 p-use；<code>f(a)</code> 的 <code>a</code> 也算 p-use；SC-002 含 §14</td><td>條件內讀取一律 p-use，呼叫（含 <code>new</code>）引數一律 c-use（<code>f(a + 1)</code> 的 <code>a</code> 由 p-use 改 c-use）；SC-002 排除 §14</td><td>US1；US6</td></tr>
+<tr><td>FR-015、SC-006、Edge Cases（呼叫環）</td><td>遞迴建構「比照既有遞迴處理」；003 契約遇環丟錯</td><td>呼叫環不報錯：call 邊接回已展開的 entry、exit 多一條 return 回邊；修訂 003 的 <code>checkCycle</code>；環內 model 內容留給 plan</td><td>US2；US3</td></tr>
+<tr><td>FR-016、Edge Cases</td><td>被呼叫端 entry／exit 會 kill 呼叫端的區域變數與參數</td><td>呼叫端看不到的定義繞過被呼叫端，到達 CALL RETURN 之後（含既有 <code>f()</code>）</td><td>US2；US3；既有 golden</td></tr>
+<tr><td>US3 情境 5、FR-017</td><td>constructor／欄位內的 <code>this.m()</code> 未定義</td><td>連到同 class 的 <code>m</code>；欄位初始值本身是 <code>this.m()</code>／<code>new B()</code> 才算 call-site</td><td>US3；US2</td></tr>
+<tr><td>FR-007、US4 情境 3–4、Edge Cases</td><td>class 名稱（含運算式）在 static 內的 use 要有 pair</td><td>只修 class 宣告；順序為 superclass／computed key、定義名稱、static 成員；運算式內部名稱記入 KI 新節</td><td>US4</td></tr>
+<tr><td>US4 情境 1</td><td>箭頭函式成為 scope</td><td>另註明本體 <code>g();</code> 因此被連結，屬預期連帶變化</td><td>US4</td></tr>
+<tr><td>FR-010、US5</td><td>輸出目錄唯一</td><td>先讀完所有頁面才建目錄；中途失敗刪除本次輸出目錄</td><td>US5</td></tr>
+<tr><td>FR-012、US6 情境 4</td><td>判定不依賴原始碼範圍</td><td>有範圍者維持範圍判定；無範圍者以支配關係判定；新增外層 while＋break 回歸情境</td><td>US6</td></tr>
+<tr><td>FR-013、FR-014</td><td>golden 差異逐項記錄；README 更新</td><td>新增涵蓋 §7、§11、§20、§21 的 golden fixture；無差異節次明載「無差異」；KI 新增 <code>o.p = 1</code> 與具名運算式內部名稱兩節；README 補不對稱與遞迴說明</td><td>全部</td></tr>
 </table></div>
 
 <h2>工程師要決定的事</h2>
@@ -185,12 +200,12 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <h3>驗收條件盤點</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>判定</th><th>說明（spec 小節）</th></tr>
-<tr><td>US1（4 條）</td><td class="ok">全部可驗證</td><td>皆有具體程式與預期 pair（US1 Acceptance）</td></tr>
-<tr><td>US2（5 條）</td><td class="ok">全部可驗證</td><td>情境 2、3 的「先欄位後 constructor」可由 pair 的 def 來源驗證</td></tr>
-<tr><td>US3（7 條）</td><td class="ok">可驗證</td><td>情境 5 只規範「<code>n</code> 已被連結」的情況；constructor 內的 <code>this.m()</code> 未提（見判斷點 2）</td></tr>
-<tr><td>US4（6 條）</td><td><span class="ok">5 條可驗證</span>；<span class="no">1 條缺觀察方式</span></td><td>情境 5「外層預設值只求值一次、內層名稱只定義一次」未說明以什麼輸出觀察（US4 Acceptance 5）</td></tr>
+<tr><td>US1（6 條）</td><td class="ok">全部可驗證</td><td>情境 1–2、4、6 有具體程式與預期；情境 3、5 規則明確（US1 Acceptance）</td></tr>
+<tr><td>US2（5 條）</td><td><span class="ok">3 條可驗證</span>；<span class="no">2 條待 plan 補完整預期</span></td><td>情境 2、3 缺分行程式與完整 pair（延後釐清 M2）</td></tr>
+<tr><td>US3（7 條）</td><td><span class="ok">2 條可驗證</span>；<span class="no">5 條待 plan 補完整預期</span></td><td>情境 2–7 缺分行程式與完整 pair（M2）；情境 5 已含 constructor／欄位內 <code>this.m()</code></td></tr>
+<tr><td>US4（6 條）</td><td><span class="ok">2 條可驗證</span>；<span class="no">4 條待 plan 補完整預期</span></td><td>情境 1–4 同上（M2）；情境 5 改以節點數與定義數斷言，分行程式待 plan</td></tr>
 <tr><td>US5（5 條）</td><td><span class="ok">4 條可驗證</span>；<span class="no">1 條判準不明</span></td><td>情境 4「內容完整」未定義比對方式（US5 Acceptance 4；SC-005）</td></tr>
-<tr><td>US6（3 條）</td><td class="ok">全部可驗證</td><td>情境 3 以單元層級建構節點驗證（Assumptions）</td></tr>
+<tr><td>US6（4 條）</td><td><span class="ok">3 條可驗證</span>；<span class="no">1 條待 plan 補完整標籤</span></td><td>情境 1 缺標籤字串（M2）；情境 3 以單元層級建構、情境 4 有完整程式</td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
@@ -204,18 +219,13 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <p>無。憲章 §CP-1（可追溯）已由每條需求標註 KI／USR 來源滿足；§CP-4（核心邏輯測試）對應 SC-001。</p>
 
 <h3>本輪判斷點</h3>
-<div class="note">已決（spec review）：1 → A 立即中止（D5）；2 → A 連結（D6）；3 → A 獨立檔 golden-diff.md（D7）。</div>
-<div class="box"><table>
-<tr><th>#</th><th>問題</th><th>方案（建議標示）</th><th>影響</th><th>出處</th></tr>
-<tr><td>1</td><td>多個頁面中某一頁不存在或分析失敗時，其餘頁面要不要繼續？（spec 未定義）</td><td>A 立即中止，不輸出半套結果（建議）<br>B 其餘頁面繼續，最後 exit 非零</td><td>A 行為單純；B 產生部分輸出，需定義輸出目錄內容與錯誤彙整</td><td>US5 Acceptance 3；FR-009</td></tr>
-<tr><td>2</td><td>class 的 constructor 或欄位初始化式內的 <code>this.m();</code> 要連結嗎？（spec 未定義）</td><td>A 視同 class 方法內，連到 <code>m</code>（建議）<br>B 僅一般方法與 static 方法內才連</td><td>A 連結較完整；B 較保守，golden 差異較少</td><td>US3 Acceptance 5；D2</td></tr>
-<tr><td>3</td><td>golden 差異記錄放哪裡、用什麼格式？（FR-013 只要求「記錄」）</td><td>A 放在 feature 目錄的獨立檔，逐項對應 KI 節次（建議）<br>B 併入 known-issues 各節</td><td>A 便於 PR review 逐項核對；B 少一個檔但差異與問題描述混在一起</td><td>FR-013、FR-014</td></tr>
-</table></div>
+<div class="note">本輪無未決判斷點。已決：D5 立即中止、D6 constructor／欄位內 <code>this.m()</code> 連結、D7 獨立檔 golden-diff.md（spec review）；本輪 Clarifications 各條已由使用者裁決或依憲章自行決定，不再重問。</div>
 
 <h3>次要疑點</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
 <tr><td>未知選項（如 <code>--foo</code>）或 <code>--help</code> 與頁面檔案並用時的行為</td><td>FR-009</td></tr>
-<tr><td>class 運算式的名稱在 static 成員內的 use（KI §11）是否同樣有 pair</td><td>US4 Acceptance 3、4；Edge Cases</td></tr>
+<tr><td>US5 情境 4「內容完整」的比對方式</td><td>US5 Acceptance 4；SC-005</td></tr>
+<tr><td>呼叫環中各 scope 的 inter-procedural model 內容（已明訂留給 plan，以 m↔n 完整預期驗收）</td><td>FR-015</td></tr>
 </table></div>
 </main>

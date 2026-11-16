@@ -3,6 +3,9 @@
   "steps": {
     "specify": {
       "done": true
+    },
+    "clarify": {
+      "done": true
     }
   },
   "brief": {
