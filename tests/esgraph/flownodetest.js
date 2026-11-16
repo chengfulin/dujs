@@ -1,7 +1,6 @@
 /*
  * Test cases for FlowNode class
  * @lastmodifiedBy ChengFuLin
- * @lastmodifiedDate 2015-09-08
  */
 var FlowNode = require('../../lib/esgraph/flownode'),
     Set = require('../../lib/analyses').Set,

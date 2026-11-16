@@ -1,7 +1,6 @@
 /*
  * Test cases for Range module
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-04
  */
 var Range = require('../../lib/dujs/range'),
     should = require('should');

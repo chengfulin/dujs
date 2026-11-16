@@ -1,7 +1,6 @@
 /*
  * Test cases for DomainScope module
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-04
  */
 var should = require('should');
 var DomainScope = require('../../lib/dujs/domainscope');

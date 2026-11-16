@@ -1,7 +1,6 @@
 /*
  * Test cases for ModelFactory
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-14
  */
 var factoryModel = require('../../lib/dujs/modelfactory');
 var should = require('should');

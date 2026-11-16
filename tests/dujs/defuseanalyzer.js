@@ -1,7 +1,6 @@
 /**
  * Test cases for DefUseAnalyzer
  * @lastmodifiedBy ChengFuLin
- * @lastmodifiedDate 2015-08-25
  */
 var should = require('should');
 var defuseAnalyzer = require('../../lib/dujs/defuseanalyzer'),

@@ -1,7 +1,6 @@
 /*
  * Test cases for testing analysis execution
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-27
  */
 var should = require('should');
 var fs = require('fs');

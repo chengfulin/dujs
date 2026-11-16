@@ -1,7 +1,6 @@
 /*
  * Main execution
  * @lastmodifiedBy ChengFuLin
- * @lastmodifiedDate 2015-09-01
  */
 var inputReader = require('../lib/dujs/inputreader'),
     sourceReader = require('../lib/dujs/sourcereader'),

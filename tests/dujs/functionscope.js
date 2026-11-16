@@ -1,7 +1,6 @@
 /*
  * Test cases for FunctionScope module
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-03
  */
 var should = require('should');
 var FunctionScope = require('../../lib/dujs/functionscope'),

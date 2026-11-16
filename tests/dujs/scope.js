@@ -1,7 +1,6 @@
 /*
  * Test cases for Scope module
  * @lastmodifiedBy ChengFuLin(chengulin0806@gmail.com)
- * @lastmodifiedDate 2015-07-29
  */
 var should = require('should');
 var jsParser = require('../../lib/dujs/jsparser');

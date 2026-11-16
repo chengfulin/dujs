@@ -1,7 +1,6 @@
 /*
  * Test cases for Pair module
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-07
  */
 var should = require('should');
 var Pair = require('../../lib/dujs/pair');

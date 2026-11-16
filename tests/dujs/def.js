@@ -1,7 +1,6 @@
 /**
  * Test cases for Def
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-07-27
  */
 var Def = require('../../lib/dujs/def'),
 	flownodeFactory = require('../../lib/esgraph/flownodefactory'),
