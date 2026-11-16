@@ -83,11 +83,6 @@
       "count": 1
     }
   },
-  "lib/dujs/inputreader.js": {
-    "strict": {
-      "count": 1
-    }
-  },
   "lib/dujs/jsparser.js": {
     "strict": {
       "count": 1

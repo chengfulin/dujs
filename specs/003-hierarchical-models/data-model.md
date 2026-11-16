@@ -72,6 +72,8 @@
 
 ## 4. 展開（`lib/dujs/expansion.js`，新，MIT）
 
+> 已由 `specs/004-fix-remaining-issues/contracts/model-api.md` 修訂（004 §2：步驟 5 的遇環丟錯改為回邊）。
+
 `expand(model) → {graph, flatNodeOf}`，純函式（不改原件、不改下層模型、不消耗節點計數器）：
 
 1. `order = nodeOrder(model)`：依 research R4 的串列演算法，遞迴得到原件陣列（含重複）。

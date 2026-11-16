@@ -35,7 +35,7 @@ LGPL 衍生檔（`lib/esgraph/index.js`、`dot.js`、`lib/analyses/index.js`）�
 **Constraints**: 既有三個 golden case 預測零差異，任何差異須對應到某項修正並記入 `golden-diff.md`；不新增 lint 抑制；不改 LGPL 檔；既有測試只在
 golden-diff「單元測試期望」列出的範圍內修改。已知會改的既有測試：`tests/dujs/usedexpressions.js` 約 139、145 行（`findUSESet` characterization，
 `o`、`i` 由 c-use 變 p-use，US1）與約 273、279 行（read `'walk'` → `'p-use'`，US1）；`tests/dujs/es2015.js` 約 407 行（`o?.a?.b ?? t` 的
-`o: L4 -> L5` 變 p-use，US1）；`tests/dujs/paramsandnew.js` 約 148 行（斷言預設值箭頭函式不是 scope，R7 後多出 `f.$ANONYMOUS_FUN_0`，US4）；
+`o: L4 -> L5` 變 p-use，US1）；`tests/dujs/paramsandnew.js` 約 148 行（斷言預設值箭頭函式不是 scope，R7 後多出 `f.$ANONYMOUS_FUN_0`，US4）；`tests/dujs/modelbuilder.js` 約 730 行（只改標題，U3 (a)，斷言不變，US3）；
 `call cycle` 測試改斷言 `model cycle`（US3）；`tests/dujs/classfields.js` 檔頭 001 D7 說明（US2）與 92 行測試標題（US4）；`tests/golden/golden.js`
 約 145 行註解（US5，「exits with 0」）
 

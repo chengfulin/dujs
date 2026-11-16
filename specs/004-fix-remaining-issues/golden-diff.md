@@ -305,4 +305,54 @@ for-in／for-of 右側拆分時，前驅與迴圈 body 都有 AST range 者維�
 
 ## 驗收預期更正
 
-無
+acceptance.md 的 pair 預期無更正（implement 期間 `contracts/acceptance.md` 未修改）。spec 的文字釐清一項（不改任何 pair）：
+
+| 時點 | 位置 | 釐清 | 依據 |
+|------|------|------|------|
+| implement US4 | spec Edge Cases「`var B = class { static s = B; }`、`var B = class Q { static s = Q; }`」 | 「本輪不產生 pair」→「不產生來自 class 定義的 pair」：`var` 提升的 undefined 定義 `B: entry -> …` 仍到達 static 成員，符合 JS 語意；同一 Session 另記外層預設值為單一識別字（`{x} = D`）時求值節點仍讀 `D`、static 成員呼叫保留 class 名稱定義時呼叫點的 GEN 與 KILL 一併保留 | spec Clarifications「Session 2026-11-16（implement US4）」 |
+
+## 定稿核對（T083）
+
+- 每節（§20、§21〔含 FR-018〕、§7〔含 FR-015、FR-016、FR-017〕、§10、§11、§17、§12、§15、§14）的四個 case 皆有列或「無差異」。
+- `tests/golden/manifest.json`：`e091b1d`（Setup）與定稿時比對，變更 10 鍵、新增 11 鍵、刪除 0 鍵，全在 `expected-fixes004` 的 `baseline`；
+  `expected`、`expected-es2015`、`expected-interprocedural` 零變更。每個鍵的新 sha256 都在上列表中（最終值：`inter-page/0.graph.dot`、
+  `page0/intra-pages/0.graph.dot`、`page0/inter-procedurals/2.graph.dot` 見 §15；其餘 `expected-fixes004` 的 dupairs／hierarchy 與 `0.*`、`1.*`、`3.*`、
+  `intra-procedurals/{0,10,11}.*` 見 §20、§7／FR-015、§10）。
+- 「單元測試期望」與 plan Constraints 的已知變更清單對照：`usedexpressions.js` 約 139、145、273、279 行（§20）、`es2015.js` 約 407 行（§20）、
+  `paramsandnew.js` 約 148 行（§10）、`call cycle` → `model cycle`（§7）、`classfields.js` 檔頭（§21）與 static 成員測試標題（§11）、
+  `golden.js` 約 145 行註解（§12）皆有列。plan 清單以外另有一項：`tests/dujs/modelbuilder.js` 730 行的測試**標題**（plan U3 (a)，斷言不變，
+  列於 §7）；`expansion.js`、`hierarchy.js`、`hierarchydot.js` 只新增測試（`hierarchydot.js` 另改檔頭註解與 `require` 宣告），既有斷言不變。
+  `git diff e091b1d HEAD -- tests` 中修改的既有測試檔僅上述各檔。
+
+## SC-001 對照（T084）
+
+spec 每個驗收情境與 Edge Case 對應的自動化測試（皆在 `npm test` 中通過）：
+
+| 情境 | 測試 |
+|------|------|
+| US1-1…US1-6 | `tests/dujs/conditionpuse.js`（US1 #1…#6 各一個 `it`）；switch discriminant：`tests/dujs/usedexpressions.js`「switch (a + f(b) + c)」 |
+| US2-1…US2-7 | `tests/dujs/newcallsite.js`「US2-1」…「US2-7」 |
+| US3-1…US3-7 | `tests/dujs/methodcalls.js`「US3-1」…「US3-7」 |
+| US3-8 | `tests/dujs/callcycles.js`「cyc-handler」「cyc-handler-nocyc」 |
+| US3-9 | `tests/dujs/callcycles.js`「cyc-1」「cyc-2」「ctor-cycle」 |
+| US3-10 | `tests/dujs/callcycles.js`「byp-3」 |
+| US3-11 | `tests/dujs/bypass.js`「byp-1」「ki16b」（另 `ki16`） |
+| US3-12 | `tests/dujs/methodcalls.js`「US3-5」（欄位 `f = this.m();`）、`tests/dujs/newcallsite.js`「should connect new B() of a field initializer (FR-017)」 |
+| US4-1、US4-2、US4-5、US4-6 | `tests/dujs/paramdefaults.js`「US4-1」「US4-1prime」「US4-2」「US4-5」「US4-5prime」「US4-6」 |
+| US4-3、US4-4 | `tests/dujs/classfields.js`「US4-3」「US4-4」 |
+| US5-1…US5-5 | `tests/dujs/cli.js`「US5-1」…「US5-5」（子行程）；§1 #1–#7 的 `cli.run` 單元測試 |
+| US6-1、US6-2 | `tests/dujs/cfggraphconverter.js`（split call site／call sites not split） |
+| US6-3 | `tests/esgraph/branchsplitlooppred.js`（本體前驅無 range、body 無 range 以支配判定、外層 `break` 繞回的前驅） |
+| US6-4 | `tests/esgraph/branchsplitlooppred.js`「us6-4.js」 |
+| Edge：A 沒有 constructor 與欄位 | `tests/dujs/methodcalls.js`「US3-1」、「should resolve new A().m() of a class without constructor and fields to m only」 |
+| Edge：getter／setter／欄位箭頭函式 | `tests/dujs/methodcalls.js`「should not resolve o.m() of a getter, a setter or an arrow function of a field」 |
+| Edge：static 方法中的 `this.m()` | `tests/dujs/methodcalls.js`「should connect this.m() in a static method to the static method only」 |
+| Edge：class 運算式的 `new A();` | `tests/dujs/newcallsite.js`「should connect new A(); of a class expression assigned to a var」 |
+| Edge：呼叫環 | `tests/dujs/callcycles.js`（cyc-1／cyc-2／ctor-cycle、「should analyze every probe with a call cycle without an error」） |
+| Edge：函式內 `new A()`／`A.s()` 的 class 放寬 | `tests/dujs/newcallsite.js`「US2-6」、「…in a function called before the class declaration」、`calleeScopesOf` 的放寬／不放寬各例；`tests/dujs/methodcalls.js`「…in an event handler by the class relaxation」、「should not resolve A.s() in a function of a class expression bound by var」、「should not resolve o.m() after a property assignment o.p = 1」 |
+| Edge：無條件遞迴 | `tests/dujs/callcycles.js`「cyc-uncond」 |
+| Edge：`var B = class {…}`／`class Q` 的 static 成員 | `tests/dujs/classfields.js`「should not pair the variable of a class expression…」「should not pair the inner name of a named class expression…」 |
+| Edge：方法 `n(p)` 的 bypass | `tests/dujs/callcycles.js`「byp-3」 |
+| Edge：輸出目錄已存在 | `tests/dujs/cli.js`「should add _1, _2 in turn when the name exists…」、「US5-4」 |
+
+acceptance.md Edge cases 表的 `fn-rec.js`（函式自我遞迴「不變」）不是 spec 驗收情境，沒有專屬測試；`probes/run.js` 實跑與 `probes/current-output.txt` 逐位元組相同。
