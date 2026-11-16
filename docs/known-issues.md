@@ -354,3 +354,28 @@ defaults twice). So `y = x` reads `x` inside the same node and
 `x: L1 -> L1` (the def of `x` used by the default of `y`) is not found.
 Without the outer default (`function h({x = d, y = x})`) each nested default
 still has its own initialization node, as in US2 scenario 7.
+
+## Found while refactoring (feature `002-small-refactors`)
+
+### 18. The entry node of a function uses the variables of statements in its body
+
+```js
+function f() {
+  switch (x) { case a: b; }
+  a;
+  for (k in o) { b; }
+}
+```
+
+The AST of the entry node of a function is the whole function body, and
+`findUSESet` walks it like any other node. It does not enter the cases of a
+nested `switch` or the body of a nested `for-in`/`for-of`, but it reads the
+other expressions: the entry node of `f` has the c-use `{x}` and the p-use
+`{a, o}` (a nested `case` turns the following identifiers into p-uses until a
+binary, call, unary or conditional expression resets it). These uses are also
+found at the nodes of the statements themselves, so the entry node gets extra
+pairs (for example `(5,entry_b)` in the golden `inter-page/0.dupairs.dot` of the
+ES2015+ fixture). Feature `002-small-refactors` keeps this behavior (the
+golden output must not change); `usedExpressionsOf` decides only the
+expressions read by the node itself, and the handlers for nested
+`switch`/`for-in`/`for-of` stay in the walk of `findUSESet`.

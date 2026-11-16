@@ -134,7 +134,7 @@ with 物件節點、switch case 節點、for-in/for-of loop 節點，直接檢�
 
 **Acceptance Scenarios**:
 
-1. **Given** 由 `x = o.p[i] ? a : b` 拆出、帶有條件前已求值運算式的決策節點，**When** 詢問它要讀的運算式，**Then** 已求值
+1. **Given** 由 `x = f(y) + (o.p[i] ? a : b)` 拆出、帶有條件前已求值運算式的決策節點，**When** 詢問它要讀的運算式，**Then** 已求值
    運算式在前且根層為 c-use，條件在後依走訪規則讀。[SRC REF §④]
 2. **Given** 一個拆分葉節點、一個 with 物件節點、一個 `if (a)` 的條件節點、一個 `a;` 節點，其 astNode 都是單一識別字，
    **When** 詢問要讀的運算式，**Then** 依序為 c-use、c-use、p-use、不讀。[SRC USR D5]
@@ -216,7 +216,9 @@ with 物件節點、switch case 節點、for-in/for-of loop 節點，直接檢�
   `:T`／`:F`）的程式碼只出現在共用 helper 1 個地方（目前 `lib/dujs/cfggraphconverter.js`、`tests/helpers/analyze.js` 與
   `lib/esgraph/branchsplitter.js` 各自組合）。dot 輸出的 `L<行>:C<欄>` 與 `<type> (L…)` 是位置標籤，不計入。
 - **SC-005**：找 USE 集合的函式中不再出現以下判斷，全部移到 `usedExpressionsOf`：條件前已求值運算式的切分、case 節點是否讀
-  discriminant、loop 頭要讀哪些運算式（含右側是否已拆分）、單一識別字根的讀法（決策／拆分葉／with 物件／不讀）。走訪內的
+  discriminant、loop 頭要讀哪些運算式（含右側是否已拆分）、單一識別字根的讀法（決策／拆分葉／with 物件／不讀）。
+  ENTRY 節點走訪函式本體時對**巢狀** switch／for-in／for-of 的處理屬走訪規則，留在找 USE 集合的函式（known-issues §18；
+  2026-11-16 US3 實作中裁決）。走訪內的
   p-use 傳播規則不在此列。
 - **SC-006**：lint 0 錯誤，`eslint-suppressions.json` 的項目數不增加。
 

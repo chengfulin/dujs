@@ -140,6 +140,12 @@ FlowNode 介面。
 `readsDiscriminant`、`SwitchCase`／`ForInStatement`／`ForOfStatement` handler 與 `useLoopHead`、`readsSwitchDiscriminant`
 （兩者邏輯併入新模組）。二元、呼叫 callee、一元、`?:`、class 頭的 p-use 傳播規則原樣保留（Clarifications）。
 
+**實作修正（2026-11-16，US3 實作受阻後使用者裁決方案 A）**：ENTRY 節點的 astNode 是整個函式本體，舊 walker 的
+`SwitchCase`／`ForInStatement`／`ForOfStatement` handler 也作用在本體內**巢狀**的 switch 與迴圈（只讀迴圈頭、不進 case 內容與
+迴圈本體；巢狀 case 設 `isPUse = true`）。上述「移除 handler」不等價（golden 出現差異），故 walker **保留巢狀用的** for-in/for-of
+與 SwitchCase handler（屬走訪內規則），根層的判斷（discriminant、loop 頭、右側是否已拆分）仍只在 `usedExpressionsOf`。
+ENTRY 走訪整個本體屬既有行為，記於 known-issues §18，本 feature 不修。
+
 **逐項等價論證**（characterization，均取自重構前行為）：
 
 | 情況 | 舊行為 | 新行為 | 關鍵 |
