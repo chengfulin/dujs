@@ -1,0 +1,9 @@
+{
+  "feature": "005-summary-analysis",
+  "paused": "2026-11-16：specify 階段 spec review 中暫停，先做 eslint-scope feature；續作時從 specify（套用 Clarifications 的 R2 決策）繼續",
+  "steps": {
+    "specify": {
+      "done": false
+    }
+  }
+}
