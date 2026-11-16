@@ -1,0 +1,10 @@
+digraph CFG {
+node [shape="box"]
+label = "function $DOMAIN.$PAGE_0.addTo.scale"
+n48 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n49 [label="6"]
+n50 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n48 -> n49 []
+n49 -> n50 []
+n49 -> n50 [color="red", label="exception"]
+}

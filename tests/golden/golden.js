@@ -8,7 +8,8 @@
  * History: produced with esprima 1.0 (dujs 1.0.0); regenerated after fixing
  * the always-empty KILL sets of reaching definitions.
  */
-var fs = require('fs'),
+var crypto = require('crypto'),
+	fs = require('fs'),
 	os = require('os'),
 	path = require('path'),
 	spawnSync = require('child_process').spawnSync,
@@ -16,7 +17,11 @@ var fs = require('fs'),
 
 var CLI = path.resolve(__dirname, '../../bin/dujs.js'),
 	FIXTURES = path.join(__dirname, 'fixtures'),
-	EXPECTED = path.join(__dirname, 'expected');
+	EXPECTED = path.join(__dirname, 'expected'),
+	/// sha256 of every .dot file produced before the hierarchical refactor, and
+	/// the .dot files added since (specs/003-hierarchical-models/contracts/golden-verification.md);
+	/// UPDATE_GOLDEN never reads or writes it
+	MANIFEST = path.join(__dirname, 'manifest.json');
 
 /**
  * List the relative paths of all .dot files under a directory, sorted
@@ -37,6 +42,26 @@ function listDotFiles(dir) {
 		});
 	}(dir));
 	return result.sort();
+}
+
+/**
+ * sha256 of a file as a hex string
+ * @param {string} file
+ * @returns {string}
+ */
+function sha256Of(file) {
+	'use strict';
+	return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+/**
+ * Relative path with '/' separators
+ * @param {string} file
+ * @returns {string}
+ */
+function toPosix(file) {
+	'use strict';
+	return file.split(path.sep).join('/');
 }
 
 /**
@@ -95,6 +120,23 @@ function goldenCase(title, pages, expectedDir) {
 				should(actual).eql(expected, 'mismatch in ' + file);
 			});
 		});
+
+		it('keeps every baseline .dot file byte-identical', function () {
+			var baseline = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'))[path.basename(expectedDir)].baseline,
+				different = Object.keys(baseline).filter(function (file) {
+					var actual = path.join(outDir, file);
+					return !fs.existsSync(actual) || sha256Of(actual) !== baseline[file];
+				});
+			different.should.eql([], 'baseline .dot files missing or changed: ' + different.join(', '));
+		});
+
+		it('adds exactly the listed new .dot files', function () {
+			var entry = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'))[path.basename(expectedDir)],
+				added = listDotFiles(outDir).map(toPosix).filter(function (file) {
+					return !Object.prototype.hasOwnProperty.call(entry.baseline, file);
+				}).sort();
+			added.should.eql([].concat(entry.added).sort());
+		});
 	});
 }
 
@@ -103,3 +145,6 @@ goldenCase('Golden outputs (ES5 fixtures)',
 /// characterization of the ES2015+ modeling; semantics are asserted in tests/dujs/es2015.js
 goldenCase('Golden outputs (ES2015+ module fixture)',
 	[['es2015/app.js']], path.join(__dirname, 'expected-es2015'));
+/// inter-procedural models with nested calls, a call in a decision and event handlers
+goldenCase('Golden outputs (inter-procedural fixture)',
+	[['interprocedural/app.js']], path.join(__dirname, 'expected-interprocedural'));
