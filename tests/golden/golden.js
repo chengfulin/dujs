@@ -237,3 +237,6 @@ goldenCase('Golden outputs (ES2015+ module fixture)',
 /// inter-procedural models with nested calls, a call in a decision and event handlers
 goldenCase('Golden outputs (inter-procedural fixture)',
 	[['interprocedural/app.js']], path.join(__dirname, 'expected-interprocedural'));
+/// regression of the fixes of feature 004 (§7, §10, §11, §15, §17, §20, §21, FR-015, FR-016); created before the fixes
+goldenCase('Golden outputs (004 fixes fixture)',
+	[['fixes004/app.js']], path.join(__dirname, 'expected-fixes004'));

@@ -38,14 +38,14 @@ description: "Task list for feature 004-fix-remaining-issues"
 
 **Purpose**: research R12／quickstart §1——以修正前程式（`ff45928` 的 lib）鎖定新 golden fixture 的輸出與雜湊，並備妥探針複本與差異紀錄骨架。
 
-- [ ] T001 確認基準：`git -C <專案根> diff --quiet ff45928 HEAD -- lib bin package.json && echo pre-fix`；`npm test` 933 passing、`npm run lint` 0 錯誤、`eslint-suppressions.json` 119 筆；`node specs/004-fix-remaining-issues/probes/run.js > <暫存目錄>/probes-now.txt` 後與 `specs/004-fix-remaining-issues/probes/current-output.txt` `diff` 無差異（quickstart §0）。不符即停下回報
-- [ ] T002 新增 `tests/golden/fixtures/fixes004/app.js`，內容**逐字**等於 `specs/004-fix-remaining-issues/probes/golden-fixes004.js`（`cmp` 確認）
-- [ ] T003 在 `tests/golden/golden.js` 新增 `goldenCase('Golden outputs (004 fixes fixture)', [['fixes004/app.js']], path.join(__dirname, 'expected-fixes004'))`，前加註解 `/// regression of the fixes of feature 004 (§7, §10, §11, §15, §17, §20, §21, FR-015, FR-016); created before the fixes`（quickstart §1 步驟 2）
-- [ ] T004 `UPDATE_GOLDEN=1 npx mocha tests/golden/golden.js -g "004 fixes"` 產生 `tests/golden/expected-fixes004/`（預期 31 個 .dot）；`git -C <專案根> status --short tests/golden` 只出現 `fixtures/fixes004/`、`expected-fixes004/` 與 `golden.js`
-- [ ] T005 以 quickstart §1 步驟 4 的指令計算 `tests/golden/expected-fixes004/` 全部 .dot 的 sha256，寫入 `tests/golden/manifest.json` 的 `"expected-fixes004": {"baseline": {...}, "added": []}`；其他 case 的內容不動（`git diff` 只有新增的鍵）
-- [ ] T006 [P] 把 `specs/004-fix-remaining-issues/probes/*.js`（**不含** `run.js`；共 50 個程式，含 `golden-fixes004.js` 與 analyze 新增的 `ctor-cycle`、`cyc-handler`、`cyc-handler-nocyc`、`cyc-uncond`、`field-new`、`fn-new-early`、`handler-new`、`mix-f`）逐字複製到 `tests/dujs/cases/probes004/`（沿用 003 的 `tests/dujs/cases/probes/` 慣例）
-- [ ] T007 建立 `specs/004-fix-remaining-issues/golden-diff.md` 骨架（`contracts/golden-verification.md` §4）：檔頭基準行（`<Setup commit>` 待 T008 後填入）、行號說明；依序 §20（US1）、§21（US2，含子節「FR-018」）、§7（US3，含子表「FR-015」「FR-016（Fable A1）」「FR-017」）、§10、§11、§17（US4）、§12（US5）、§15、§14（US6）各一節，每節列出四個 case 待填與「單元測試期望」表頭；另加末節「驗收預期更正」（初始為「無」）。Foundational 的差異記在 §7 的 FR-016 子表
-- [ ] T008 Setup 閘門：`npm test` 全綠（933 ＋ 新 golden case 的 `it`）、`npm run lint` 0 錯誤、`eslint-suppressions.json` 119 筆；回報「可提交為 Setup 基準 commit」（commit 由 orchestrator 執行，完成後把 commit 寫入 `golden-diff.md` 檔頭）
+- [X] T001 確認基準：`git -C <專案根> diff --quiet ff45928 HEAD -- lib bin package.json && echo pre-fix`；`npm test` 933 passing、`npm run lint` 0 錯誤、`eslint-suppressions.json` 119 筆；`node specs/004-fix-remaining-issues/probes/run.js > <暫存目錄>/probes-now.txt` 後與 `specs/004-fix-remaining-issues/probes/current-output.txt` `diff` 無差異（quickstart §0）。不符即停下回報
+- [X] T002 新增 `tests/golden/fixtures/fixes004/app.js`，內容**逐字**等於 `specs/004-fix-remaining-issues/probes/golden-fixes004.js`（`cmp` 確認）
+- [X] T003 在 `tests/golden/golden.js` 新增 `goldenCase('Golden outputs (004 fixes fixture)', [['fixes004/app.js']], path.join(__dirname, 'expected-fixes004'))`，前加註解 `/// regression of the fixes of feature 004 (§7, §10, §11, §15, §17, §20, §21, FR-015, FR-016); created before the fixes`（quickstart §1 步驟 2）
+- [X] T004 `UPDATE_GOLDEN=1 npx mocha tests/golden/golden.js -g "004 fixes"` 產生 `tests/golden/expected-fixes004/`（預期 31 個 .dot）；`git -C <專案根> status --short tests/golden` 只出現 `fixtures/fixes004/`、`expected-fixes004/` 與 `golden.js`
+- [X] T005 以 quickstart §1 步驟 4 的指令計算 `tests/golden/expected-fixes004/` 全部 .dot 的 sha256，寫入 `tests/golden/manifest.json` 的 `"expected-fixes004": {"baseline": {...}, "added": []}`；其他 case 的內容不動（`git diff` 只有新增的鍵）
+- [X] T006 [P] 把 `specs/004-fix-remaining-issues/probes/*.js`（**不含** `run.js`；共 50 個程式，含 `golden-fixes004.js` 與 analyze 新增的 `ctor-cycle`、`cyc-handler`、`cyc-handler-nocyc`、`cyc-uncond`、`field-new`、`fn-new-early`、`handler-new`、`mix-f`）逐字複製到 `tests/dujs/cases/probes004/`（沿用 003 的 `tests/dujs/cases/probes/` 慣例）
+- [X] T007 建立 `specs/004-fix-remaining-issues/golden-diff.md` 骨架（`contracts/golden-verification.md` §4）：檔頭基準行（`<Setup commit>` 待 T008 後填入）、行號說明；依序 §20（US1）、§21（US2，含子節「FR-018」）、§7（US3，含子表「FR-015」「FR-016（Fable A1）」「FR-017」）、§10、§11、§17（US4）、§12（US5）、§15、§14（US6）各一節，每節列出四個 case 待填與「單元測試期望」表頭；另加末節「驗收預期更正」（初始為「無」）。Foundational 的差異記在 §7 的 FR-016 子表
+- [X] T008 Setup 閘門：`npm test` 全綠（933 ＋ 新 golden case 的 `it`）、`npm run lint` 0 錯誤、`eslint-suppressions.json` 119 筆；回報「可提交為 Setup 基準 commit」（commit 由 orchestrator 執行，完成後把 commit 寫入 `golden-diff.md` 檔頭）
 
 **Checkpoint**: 修正前基準已鎖定（`expected-fixes004/`、manifest baseline、探針複本）；之後才可改 `lib/`。
 
