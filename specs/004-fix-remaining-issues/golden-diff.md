@@ -83,10 +83,10 @@
 
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異 |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異 |
+| `expected-fixes004/` | 無差異（fixture 中被連結呼叫的呼叫點，到達定義都是被呼叫端看得到、也不是其區域變數的定義，bypass 集合為空；KI §16 後果段的恢復見探針 `ki16b`、`ki16`，不在 golden fixture 中） |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|

@@ -59,18 +59,18 @@ description: "Task list for feature 004-fix-remaining-issues"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T009 新增 `tests/dujs/bypass.js`（MIT）：acceptance「FR-016」表中 `byp-1.js`、`ki16.js`、`ki16b.js`、`byp-2.js`（對照組，結果不變）的 intra-page 完整 pair（`should.eql`），讀 `tests/dujs/cases/probes004/`；`byp-3.js` 留給 US3（T037）。執行確認 `byp-1`、`ki16`、`ki16b` 失敗、`byp-2` 通過
-- [ ] T010 在 `tests/dujs/bypass.js` 新增單元測試：(a) `defuseAnalyzer._testonly_._bypassFilter(vardefs, calleeScope)` 保留「`calleeScope.getVariable(v.name) !== v`」與「`v` 屬於 `calleeScope.getVariablesIncludingBlockScopes()`」的定義，濾掉被呼叫端看得到的外層變數定義（data-model §5）；(b) `expansion.expand(model).bypasses`：非決策呼叫點的 `callNode` 是呼叫點複本、決策前呼叫是 CALL 複本、串接呼叫是前一個 CALL RETURN 複本，`calleeScope` ＝ `calleeModel.mainlyRelatedScope`，每條呼叫邊一筆；intra-procedural 模型回傳空 Map；(c) `model.setCallBypasses(map)` 只能設定一次（第二次拋錯）、`callBypassOf(非 CALL RETURN)` 回傳 `null`；(d) 有 bypass 的 CALL RETURN 其 `analysisResultOf(node).reachIns` 為合併後的有效輸入
+- [X] T009 新增 `tests/dujs/bypass.js`（MIT）：acceptance「FR-016」表中 `byp-1.js`、`ki16.js`、`ki16b.js`、`byp-2.js`（對照組，結果不變）的 intra-page 完整 pair（`should.eql`），讀 `tests/dujs/cases/probes004/`；`byp-3.js` 留給 US3（T037）。執行確認 `byp-1`、`ki16`、`ki16b` 失敗、`byp-2` 通過
+- [X] T010 在 `tests/dujs/bypass.js` 新增單元測試：(a) `defuseAnalyzer._testonly_._bypassFilter(vardefs, calleeScope)` 保留「`calleeScope.getVariable(v.name) !== v`」與「`v` 屬於 `calleeScope.getVariablesIncludingBlockScopes()`」的定義，濾掉被呼叫端看得到的外層變數定義（data-model §5）；(b) `expansion.expand(model).bypasses`：非決策呼叫點的 `callNode` 是呼叫點複本、決策前呼叫是 CALL 複本、串接呼叫是前一個 CALL RETURN 複本，`calleeScope` ＝ `calleeModel.mainlyRelatedScope`，每條呼叫邊一筆；intra-procedural 模型回傳空 Map；(c) `model.setCallBypasses(map)` 只能設定一次（第二次拋錯）、`callBypassOf(非 CALL RETURN)` 回傳 `null`；(d) 有 bypass 的 CALL RETURN 其 `analysisResultOf(node).reachIns` 為合併後的有效輸入
 
 ### 實作
 
-- [ ] T011 `lib/dujs/expansion.js`：`expand(model)` 改回傳 `{graph, flatNodeOf, bypasses}`，每條呼叫邊（一般、串接；回邊於 US3 一併適用）記一筆 `callReturn 複本 → {callNode, callReturn, calleeScope}`（contracts/model-api §2）
-- [ ] T012 `lib/dujs/model.js`：新增 `setCallBypasses(map)`（只能設定一次）與 `callBypassOf(node)`（contracts/model-api §3）
-- [ ] T013 `lib/dujs/modelbuilder.js`：`setFlatGraphFromHierarchy` 以 `expand` 的 `bypasses` 呼叫 `model.setCallBypasses`
-- [ ] T014 `lib/dujs/defuseanalyzer.js`：`doAnalysis` 對 `callBypassOf(node)` 非 null 的 CALL RETURN，有效輸入＝worklist 輸入 ∪ `extraReachIns` ∪ `bypassFilter(callNode 上次輸出, calleeScope)`；callNode 輸出改變時以轉移函式的 `list` 參數推回該 CALL RETURN；`reachIns` 與 `analysisResultOf` 記有效輸入；新增 `bypassFilter` 並以 `_testonly_._bypassFilter` 暴露（contracts/model-api §4）。不改 `lib/analyses/index.js`
-- [ ] T015 執行 `node specs/004-fix-remaining-issues/probes/run.js specs/004-fix-remaining-issues/probes/{byp-1,byp-2,ki16,ki16b,cyc-3}.js`（cyc-3 此時尚未連結，只確認不拋錯）；T009、T010 全過
-- [ ] T016 Golden（序列化）：依「全程規則」跑 golden；既有三個 case 預期零差異（research R6）；`expected-fixes004/` 若有差異，逐處確認屬 FR-016 後更新 manifest，記入 `golden-diff.md` §7 的「FR-016（Fable A1）」子表（註明 KI §16 後果段）；四個 case 中沒有差異者寫「無差異」
-- [ ] T017 Foundational 閘門（全程規則的閘門指令；golden 檢查 `tests/golden/manifest.json`、`specs/004-fix-remaining-issues/golden-diff.md`）
+- [X] T011 `lib/dujs/expansion.js`：`expand(model)` 改回傳 `{graph, flatNodeOf, bypasses}`，每條呼叫邊（一般、串接；回邊於 US3 一併適用）記一筆 `callReturn 複本 → {callNode, callReturn, calleeScope}`（contracts/model-api §2）
+- [X] T012 `lib/dujs/model.js`：新增 `setCallBypasses(map)`（只能設定一次）與 `callBypassOf(node)`（contracts/model-api §3）
+- [X] T013 `lib/dujs/modelbuilder.js`：`setFlatGraphFromHierarchy` 以 `expand` 的 `bypasses` 呼叫 `model.setCallBypasses`
+- [X] T014 `lib/dujs/defuseanalyzer.js`：`doAnalysis` 對 `callBypassOf(node)` 非 null 的 CALL RETURN，有效輸入＝worklist 輸入 ∪ `extraReachIns` ∪ `bypassFilter(callNode 上次輸出, calleeScope)`；callNode 輸出改變時以轉移函式的 `list` 參數推回該 CALL RETURN；`reachIns` 與 `analysisResultOf` 記有效輸入；新增 `bypassFilter` 並以 `_testonly_._bypassFilter` 暴露（contracts/model-api §4）。不改 `lib/analyses/index.js`
+- [X] T015 執行 `node specs/004-fix-remaining-issues/probes/run.js specs/004-fix-remaining-issues/probes/{byp-1,byp-2,ki16,ki16b,cyc-3}.js`（cyc-3 此時尚未連結，只確認不拋錯）；T009、T010 全過
+- [X] T016 Golden（序列化）：依「全程規則」跑 golden；既有三個 case 預期零差異（research R6）；`expected-fixes004/` 若有差異，逐處確認屬 FR-016 後更新 manifest，記入 `golden-diff.md` §7 的「FR-016（Fable A1）」子表（註明 KI §16 後果段）；四個 case 中沒有差異者寫「無差異」
+- [X] T017 Foundational 閘門（全程規則的閘門指令；golden 檢查 `tests/golden/manifest.json`、`specs/004-fix-remaining-issues/golden-diff.md`）
 
 **Checkpoint**: 繞過規則就緒——既有 `f()` 的區域變數 pair 恢復（`byp-1`、KI §16 後果段），既有 golden 零差異；US1、US2、US4、US5、US6 可開始。
 

@@ -22,6 +22,12 @@
       "parallel_plan": {
         "mode": "sequential",
         "mode_reason": "使用者指定：熱點檔（modelbuilder／expansion／defuseanalyzer）跨幾乎所有 story，golden 更新須序列化；略過並行規劃"
+      },
+      "phases": {
+        "Foundational": {
+          "reviewed": true,
+          "committed": true
+        }
       }
     }
   },
