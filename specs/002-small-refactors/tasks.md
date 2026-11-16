@@ -39,8 +39,8 @@ git diff --exit-code eslint-suppressions.json tests/golden tests/esgraph/tests  
 
 **Purpose**: 記錄基線、讓新測試檔自動納入 `npm test`
 
-- [ ] T001 記錄基線：執行 `npm test`（預期 640 passing）、`npm run lint`（0 錯誤）、`git status tests/golden` 乾淨，並記下 `eslint-suppressions.json` 現況（`git diff --exit-code eslint-suppressions.json` 作為之後比對基準）；不修改檔案
-- [ ] T002 把 `package.json` 的 `test` 腳本中逐檔列出的 `tests/esgraph/flownodetest.js tests/esgraph/flownodefactory.js tests/esgraph/test.js` 改為 `"tests/esgraph/*.js"`（research R7；目錄頂層現恰為這三檔），重跑 `npm test` 確認仍為 640 passing 於 `package.json`
+- [X] T001 記錄基線：執行 `npm test`（預期 640 passing）、`npm run lint`（0 錯誤）、`git status tests/golden` 乾淨，並記下 `eslint-suppressions.json` 現況（`git diff --exit-code eslint-suppressions.json` 作為之後比對基準）；不修改檔案
+- [X] T002 把 `package.json` 的 `test` 腳本中逐檔列出的 `tests/esgraph/flownodetest.js tests/esgraph/flownodefactory.js tests/esgraph/test.js` 改為 `"tests/esgraph/*.js"`（research R7；目錄頂層現恰為這三檔），重跑 `npm test` 確認仍為 640 passing 於 `package.json`
 
 **Checkpoint**: 基線確立；`tests/esgraph/` 新增的測試檔會自動被執行
 
