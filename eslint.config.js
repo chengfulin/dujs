@@ -31,9 +31,12 @@ module.exports = [
 			'tests/esgraph/tests/**',
 			// golden fixtures: browser scripts analyzed as input, not run by Node
 			'tests/golden/fixtures/**',
-			// probe programs (feature 003): browser scripts analyzed as input, not run by Node
+			// probe programs (features 003, 004): browser scripts analyzed as input, not run by Node
 			'specs/**/probes/**',
-			'tests/dujs/cases/probes/**'
+			'tests/dujs/cases/probes/**',
+			'tests/dujs/cases/probes004/**',
+			// research helper scripts (not part of dujs)
+			'docs/research/**'
 		]
 	},
 	{

@@ -27,6 +27,8 @@ model.setAnalysisResults(map) // 只供 defuseAnalyzer.doAnalysis；map: Map(扁
 
 ## 2. `lib/dujs/hierarchy.js`
 
+> 已由 `specs/004-fix-remaining-issues/contracts/model-api.md` 修訂（004 §1：回邊 `back: true`、環狀階層的建立方式）。
+
 ```js
 var hierarchy = require('./hierarchy');
 
@@ -57,6 +59,8 @@ edge.callee.model.graph;                    // 下層模型的圖：與它剛建
 ```
 
 ## 3. `lib/dujs/expansion.js`
+
+> 已由 `specs/004-fix-remaining-issues/contracts/model-api.md` 修訂（004 §2：呼叫環以回邊表示，取代「遇環丟錯」）。
 
 ```js
 var expansion = require('./expansion');

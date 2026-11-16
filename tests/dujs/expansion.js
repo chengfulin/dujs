@@ -1002,6 +1002,34 @@ describe('expansion', function () {
 			(originalDefinitionOfX.definition.fromNode === callSite).should.be.true();
 		});
 
+		// 004 contracts/model-api.md §2: keepGenerateAtCallSite (FR-007)
+		it('should keep the GEN at the call-site with keepGenerateAtCallSite', function () {
+			var page = intraProceduralModelsOf(['function f(v) {}', 'var x;', 'f(x = 1);'].join('\n'));
+			var root = hierarchy.createCallHierarchyModel(page.modelOf('')),
+				callSite = nodeAt(page.modelOf(''), 3, 'f');
+			var edge = hierarchy.addCallEdge(root, {
+				callSite: callSite,
+				calleeModel: page.modelOf('f'),
+				keepGenerateAtCallSite: true
+			});
+			var expanded = expandInto(root);
+			shouldRebuildEveryGEN(expanded);
+			var callNode = expanded.flatNodeOf.get(callSite),
+				callReturn = expanded.flatNodeOf.get(edge.callReturn);
+			callNode.type.should.eql(FlowNode.CALL_NODE_TYPE);
+			(callNode.call === expanded.flatNodeOf.get(page.modelOf('f').graph[0])).should.be.true();
+			var definitionsOfX = callNode.generate.values().filter(function (vardef) {
+				return vardef.variable.name === 'x';
+			});
+			definitionsOfX.should.have.length(1);
+			(definitionsOfX[0].definition.fromNode === callNode).should.be.true();
+			callReturn.generate.size.should.eql(0);
+			callReturn.kill.size.should.eql(0);
+			/// the outgoing edges still move to the CALL RETURN NODE
+			(callNode.normal === null).should.be.true();
+			(callReturn.normal === expanded.flatNodeOf.get(callSite.normal)).should.be.true();
+		});
+
 		it('should rebuild the GEN of every copy with copies (probe a1)', function () {
 			var page = intraProceduralModelsOf(fs.readFileSync(path.join(PROBES, 'a1.js'), 'utf8'));
 			var modelOfF = hierarchy.createCallHierarchyModel(page.modelOf('f'));
@@ -1023,8 +1051,10 @@ describe('expansion', function () {
 		});
 	});
 
-	describe('call cycle', function () {
-		it('should throw for a call cycle built by hand', function () {
+	describe('model cycle', function () {
+		/// a model object in its own subtree is a hierarchy built by hand wrongly
+		/// (a call cycle built by modelBuilder is a back call edge instead)
+		it('should throw for a model cycle built by hand', function () {
 			var page = intraProceduralModelsOf(['function a() { b(); }', 'function b() { a(); }'].join('\n'));
 			var modelOfA = hierarchy.createCallHierarchyModel(page.modelOf('a')),
 				modelOfB = hierarchy.createCallHierarchyModel(page.modelOf('b'));
@@ -1035,10 +1065,111 @@ describe('expansion', function () {
 			var counter = factoryFlowNode.counter;
 			(function () {
 				expansion.expand(modelOfA);
-			}).should.throw(/^call cycle in hierarchy: \$DOMAIN\.\$PAGE_0\.a -> \$DOMAIN\.\$PAGE_0\.b -> \$DOMAIN\.\$PAGE_0\.a$/);
+			}).should.throw(/^model cycle in hierarchy: \$DOMAIN\.\$PAGE_0\.a -> \$DOMAIN\.\$PAGE_0\.b -> \$DOMAIN\.\$PAGE_0\.a$/);
 			(function () {
 				expansion.nodeOrder(modelOfB);
-			}).should.throw(/^call cycle in hierarchy/);
+			}).should.throw(/^model cycle in hierarchy/);
+			factoryFlowNode.counter.should.eql(counter);
+		});
+	});
+
+	describe('back call edges (specs/004-fix-remaining-issues contracts/model-api.md §2)', function () {
+		/// f calls itself before a decision (L2) and not before a decision (L3),
+		/// g calls f, the page calls f
+		var RECURSION = [
+			'function f(n) {',
+			'  if (f(n - 1)) { n = 0; }',
+			'  f(n);',
+			'}',
+			'function g() { f(0); }',
+			'f(1);'
+		].join('\n');
+		var page, modelOfF, backBeforeDecision, back, root, callOfF, expanded;
+
+		function copyOf(node) {
+			return expanded.flatNodeOf.get(node);
+		}
+
+		beforeEach(function () {
+			page = intraProceduralModelsOf(RECURSION);
+			modelOfF = hierarchy.createCallHierarchyModel(page.modelOf('f'));
+			backBeforeDecision = hierarchy.addCallEdge(modelOfF, {callSite: nodeAt(page.modelOf('f'), 2, 'f'), calleeModel: page.modelOf('f'), back: true});
+			back = hierarchy.addCallEdge(modelOfF, {callSite: nodeAt(page.modelOf('f'), 3, 'f'), calleeModel: page.modelOf('f'), back: true});
+			hierarchy.freeze(modelOfF);
+			root = hierarchy.createCallHierarchyModel(page.modelOf(''));
+			callOfF = hierarchy.addCallEdge(root, {callSite: nodeAt(page.modelOf(''), 6, 'f'), calleeModel: modelOfF});
+			hierarchy.freeze(root);
+			expanded = expansion.expand(root);
+		});
+
+		it('should insert only the CALL NODE and the CALL RETURN NODE of a back call edge', function () {
+			backBeforeDecision.beforeDecision.should.be.true();
+			back.beforeDecision.should.be.false();
+			var nodesOfF = page.modelOf('f').graph[2],
+				nodesOfPage = page.modelOf('').graph[2],
+				at2 = nodesOfF.indexOf(backBeforeDecision.callSite),
+				at3 = nodesOfF.indexOf(back.callSite),
+				at6 = nodesOfPage.indexOf(callOfF.callSite);
+			var orderOfF = nodesOfF.slice(0, at2)
+				.concat([backBeforeDecision.callNode, backBeforeDecision.callReturn, backBeforeDecision.callSite])
+				.concat(nodesOfF.slice(at2 + 1, at3 + 1), [back.callReturn])
+				.concat(nodesOfF.slice(at3 + 1));
+			shouldBeSameObjects(expansion.nodeOrder(modelOfF), orderOfF);
+			var expected = nodesOfPage.slice(0, at6 + 1)
+				.concat(orderOfF, [callOfF.callReturn])
+				.concat(nodesOfPage.slice(at6 + 1));
+			shouldBeSameObjects(expansion.nodeOrder(root), expected);
+			shouldBeSameObjects(expanded.graph[2], expected.map(copyOf));
+		});
+
+		it('should connect a back call edge to the copies of the entry and the exit of its target', function () {
+			var entryOfF = copyOf(page.modelOf('f').graph[0]),
+				exitOfF = copyOf(page.modelOf('f').graph[1]);
+			expanded.graph[2].filter(function (node) {
+				return node === entryOfF;
+			}).should.have.length(1);
+			(copyOf(backBeforeDecision.callNode).call === entryOfF).should.be.true();
+			copyOf(back.callSite).type.should.eql(FlowNode.CALL_NODE_TYPE);
+			(copyOf(back.callSite).call === entryOfF).should.be.true();
+			/// replayed in the order of the sequence numbers: the back call edges of f first
+			shouldBeSameObjects(entryOfF.prev, [copyOf(backBeforeDecision.callNode), copyOf(back.callSite), copyOf(callOfF.callSite)]);
+			shouldBeSameObjects(exitOfF.return, [
+				copyOf(backBeforeDecision.callReturn),
+				copyOf(back.callReturn),
+				copyOf(callOfF.callReturn)
+			]);
+			/// the decision node is entered from the CALL RETURN NODE before it
+			shouldBeSameObjects(copyOf(backBeforeDecision.callSite).prev, [copyOf(backBeforeDecision.callReturn)]);
+		});
+
+		it('should record a bypass of every call edge, back call edges as well', function () {
+			expanded.bypasses.size.should.eql(3);
+			[
+				[callOfF, copyOf(callOfF.callSite)],
+				[backBeforeDecision, copyOf(backBeforeDecision.callNode)],
+				[back, copyOf(back.callSite)]
+			].forEach(function (pair) {
+				var bypass = expanded.bypasses.get(copyOf(pair[0].callReturn));
+				(bypass.callNode === pair[1]).should.be.true();
+				(bypass.callReturn === copyOf(pair[0].callReturn)).should.be.true();
+				(bypass.calleeScope === page.scopeOf('f')).should.be.true();
+			});
+		});
+
+		it('should expand a closed model with back call edges only', function () {
+			var ofF = expansion.expand(modelOfF);
+			(ofF.graph[0] === ofF.flatNodeOf.get(page.modelOf('f').graph[0])).should.be.true();
+			ofF.bypasses.size.should.eql(2);
+		});
+
+		it('should throw for a back call edge to a scope out of the model', function () {
+			var modelOfG = hierarchy.createCallHierarchyModel(page.modelOf('g'));
+			hierarchy.addCallEdge(modelOfG, {callSite: nodeAt(page.modelOf('g'), 5, 'f'), calleeModel: page.modelOf('f'), back: true});
+			hierarchy.freeze(modelOfG);
+			var counter = factoryFlowNode.counter;
+			(function () {
+				expansion.expand(modelOfG);
+			}).should.throw(/^open hierarchy: back call edge to \$DOMAIN\.\$PAGE_0\.f outside the model$/);
 			factoryFlowNode.counter.should.eql(counter);
 		});
 	});

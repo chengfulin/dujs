@@ -1,0 +1,126 @@
+/*
+ * Test cases of the labels of call return nodes given by the CFG graph
+ * converter (lib/dujs/cfggraphconverter.js; specs/004-fix-remaining-issues,
+ * FR-011, User Story 6 #1, #2, research R9, contracts/output.md §1, KI §15).
+ * Original dujs code, MIT License (see LICENSE).
+ *
+ * The call return of a split call site carries the branch path of the call
+ * site: "callReturn (<line>:<path>)" with labeled line numbers (the CLI
+ * default) and "callReturn (L<line>:C<col>:<path>)" with labeled line and
+ * column. A call return with an empty path and every other node keep their
+ * labels. Line numbers are those of the converted program (the CLI output
+ * adds one line before the program).
+ */
+require('should');
+var fs = require('fs'),
+	path = require('path'),
+	analyze = require('../helpers/analyze'),
+	modelCtrl = require('../../lib/dujs/modelctrl'),
+	converter = require('../../lib/dujs/cfggraphconverter');
+
+var PROBES = path.join(__dirname, 'cases', 'probes004');
+
+/**
+ * The single inter-procedural model of the page of a program
+ * @param {string} code
+ * @returns {Object}
+ */
+function interProceduralModelOf(code) {
+	'use strict';
+	var result = analyze(code),
+		models = modelCtrl.collectionOfPageModels.get(result.scopeTree).interProceduralModels;
+	models.length.should.eql(1);
+	return models[0];
+}
+
+/**
+ * Convert the graph of a model and list the labels of its nodes
+ * @param {Object} model
+ * @param {string} method name of the converter method
+ * @returns {Array} labels in node order
+ */
+function labelsOf(model, method) {
+	'use strict';
+	var dot = converter[method](model.graph);
+	return model.graph[2].map(function (node) {
+		dot.should.containEql('[label="' + node.label + '"');
+		return node.label;
+	});
+}
+
+describe('Labels of call return nodes (FR-011)', function () {
+	'use strict';
+
+	after(analyze.reset);
+
+	describe('a split call site: us6-1.js, log(c ? a : b);', function () {
+		var code = fs.readFileSync(path.join(PROBES, 'us6-1.js'), 'utf8');
+
+		/// US6 #1, CLI default converter
+		it('should label the call returns with line and branch path', function () {
+			labelsOf(interProceduralModelOf(code), 'toDotWithLabelLine').should.eql([
+				'entry_a', '1', '4', 'call_a', 'entry_b', 'exit_a',
+				'callReturn (4:T)', 'exit_b', 'call_b', 'callReturn (4:F)'
+			]);
+		});
+
+		/// US6 #1, converter with line and column
+		it('should label the call returns with line, column and branch path', function () {
+			labelsOf(interProceduralModelOf(code), 'toDotWithLabelLoc').should.eql([
+				'entry (L1:C0)', 'L1:C0', 'L4:C0', 'call', 'entry (L2:C16)', 'exit (L2:C17)',
+				'callReturn (L4:C0:T)', 'exit (L4:C1)', 'call', 'callReturn (L4:C0:F)'
+			]);
+		});
+
+		/// US6 #1: the pairs do not change
+		it('should keep the def-use pairs', function () {
+			analyze.pairsOfModel(interProceduralModelOf(code)).should.eql([
+				'a: L1 -> L4:T',
+				'b: L1 -> L4:F',
+				'c: L1 -> L4>L4:F',
+				'c: L1 -> L4>L4:T',
+				'log: entry -> L4:F',
+				'log: entry -> L4:T'
+			]);
+		});
+	});
+
+	describe('call sites not split: f(); statements', function () {
+		var code = 'function f() {\n}\nf();\nf();';
+
+		/// US6 #2: same labels as before, deduplicated by _a, _b
+		it('should keep the labels with labeled line numbers', function () {
+			labelsOf(interProceduralModelOf(code), 'toDotWithLabelLine').should.eql([
+				'entry_a', 'call_a', 'entry_b', 'exit_a', 'callReturn_a', 'call_b', 'callReturn_b', 'exit_b'
+			]);
+		});
+
+		/// US6 #2: same labels as before with line and column
+		it('should keep the labels with labeled line and column', function () {
+			labelsOf(interProceduralModelOf(code), 'toDotWithLabelLoc').should.eql([
+				'entry (L1:C0)', 'call', 'entry (L1:C13)', 'exit (L1:C14)', 'callReturn (L3:C0)',
+				'call', 'callReturn (L4:C0)', 'exit (L4:C1)'
+			]);
+		});
+	});
+
+	describe('a split call site and a call site not split', function () {
+		var code = 'var a = 1, b = 2, c = 0;\nfunction log(v) {\n}\nlog(c ? a : b);\nlog(a);';
+
+		/// the call return not split keeps the plain label, unique once the
+		/// split ones carry their paths
+		it('should label only the call returns of the split call site with paths', function () {
+			var labels = labelsOf(interProceduralModelOf(code), 'toDotWithLabelLine');
+			labels.filter(function (label) {
+				return label.indexOf('callReturn') === 0;
+			}).sort().should.eql(['callReturn', 'callReturn (4:F)', 'callReturn (4:T)']);
+		});
+
+		it('should label only the call returns of the split call site with paths, with columns', function () {
+			var labels = labelsOf(interProceduralModelOf(code), 'toDotWithLabelLoc');
+			labels.filter(function (label) {
+				return label.indexOf('callReturn') === 0;
+			}).sort().should.eql(['callReturn (L4:C0:F)', 'callReturn (L4:C0:T)', 'callReturn (L5:C0)']);
+		});
+	});
+});

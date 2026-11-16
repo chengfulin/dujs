@@ -403,9 +403,10 @@ describe('ES2015+ modeling', function () {
 				'console.log(v);'
 			].join('\n'));
 			// FR-008: `??` on L5 is split into the decision `o?.a?.b` (L5) and the leaves
-			// L5:T (`v = o?.a?.b`) and L5:F (`v = t`), so `t` is used and `v` is defined in the leaves
+			// L5:T (`v = o?.a?.b`) and L5:F (`v = t`), so `t` is used and `v` is defined in the leaves;
+			// `o` is read by the condition of the decision, a p-use (specs/004-fix-remaining-issues FR-001)
 			result.intraProcedural().should.containDeep([
-				'name: L1 -> L2', 's: L2 -> L3', 't: L3 -> L5:F', 'o: L4 -> L5',
+				'name: L1 -> L2', 's: L2 -> L3', 't: L3 -> L5:F', 'o: L4 -> L5>L5:F', 'o: L4 -> L5>L5:T',
 				'v: L5:T -> L6', 'v: L5:F -> L6'
 			]);
 		});

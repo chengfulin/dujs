@@ -141,11 +141,10 @@ describe('Arguments of new and parameters with default values', function () {
 			result.intraPage().should.containDeep(['d: L1 -> L3']);
 		});
 
-		// the synthetic body is not enumerable and a default value which is a
-		// function is not analyzed again: the scope tree does not visit
-		// parameters, so it gets no scope and its body is not a use of the
-		// initialization node (unchanged behavior)
-		it('should not analyze a default value which is an arrow function again', function () {
+		// the synthetic body is not enumerable; a default value which is a
+		// function is a child scope of the function (004 FR-006, research R7),
+		// and its body is not a use of the initialization node
+		it('should make a default value which is an arrow function a child scope', function () {
 			var result = analyze([
 				'var d = 1;',
 				'function f(',
@@ -155,8 +154,9 @@ describe('Arguments of new and parameters with default values', function () {
 				'}',
 				'f();'
 			].join('\n'));
-			result.scopeNames().should.eql([PAGE, PAGE + '.f']);
+			result.scopeNames().should.eql([PAGE, PAGE + '.f', PAGE + '.f.$ANONYMOUS_FUN_0']);
 			var f = scopeNamed(result, PAGE + '.f');
+			f.children.map(String).should.eql([PAGE + '.f.$ANONYMOUS_FUN_0']);
 			Object.keys(f.ast).should.not.containEql('dujsBodyWithParamInits');
 			f.ast.dujsBodyWithParamInits.type.should.eql('BlockStatement');
 			pairsOf(result.intraProcedural(PAGE + '.f'), 'g').should.eql(['g: L3 -> L5']);

@@ -6,11 +6,11 @@ reproducing them on `feat/es2015-modeling`. "Pre-existing" means dujs
 
 Issues §1–§6 and §8 are fixed by feature `001-fix-known-issues`
 (`specs/001-fix-known-issues/`); their sections are kept for reference and the
-results describe the behavior before the fix. §7 is not fixed yet.
-§10–§13 were found while implementing that feature; §10–§12 are not fixed
-yet (§13: see below). §14–§17 were found by the code review of PR #3 (or while
-fixing it); §14, §15 and §17 are not fixed yet (§16: see below). §18 was found by feature `002-small-refactors` and is moved to
-stage 2 of the hierarchical model refactoring.
+results describe the behavior before the fix. §10–§13 were found while
+implementing that feature, and §14–§17 by the code review of PR #3 (or while
+fixing it). §18 was found by feature `002-small-refactors` and is moved to
+stage 2 of the hierarchical model refactoring. Every fixed section keeps its
+original description, preceded by a note on the fix.
 
 Feature `003-hierarchical-models` (`specs/003-hierarchical-models/`) fixes
 §9, fixes the part of §13 and §16 where a model changed the nodes shared with
@@ -19,7 +19,17 @@ stage 2), and fixes §19 (sub-models of the inter-procedural model leaked
 definitions of outer code), which is recorded after §18.
 
 §20 and §21 were found by checking the MDN "Advanced JavaScript objects"
-examples and are not fixed yet.
+examples.
+
+Feature `004-fix-remaining-issues` (`specs/004-fix-remaining-issues/`) fixes
+§7, §10, §11, §12, §14, §15, §17, §20 and §21, and the consequence described
+at the end of §16 (the use of an outer variable disappearing when a parameter
+of the callee has the same name). It also changes how a call `f();` is
+resolved (strict rule) and records follow-up items; both are in §22, after
+§21. Not fixed yet: §16 (the call of a decision node is still modeled before
+the decision node) and §18, both left to stage 2 of the hierarchical model
+refactoring, the follow-up items of §22, and §23–§24, found by checking the
+MDN examples after the feature.
 
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
@@ -135,7 +145,20 @@ conditional expression is recorded as a p-use of a node that has no
 true/false branches. The test helper (`tests/helpers/analyze.js`) throws on
 such pairs.
 
-### 7. Class methods are not connected as call targets
+### 7. Class methods are not connected as call targets (fixed by `004-fix-remaining-issues`)
+
+**Fixed** by feature `004-fix-remaining-issues` (FR-004, FR-005, FR-015–FR-018):
+call statements whose method can be decided statically are connected to the
+method: `new A().m();` (first the construction, see §21, then `m`), `A.s();`
+(static method), `this.m();` in a method, constructor or field initializer of
+class `A`, and `o.m();` when every definition of `o` reaching the call is
+`new A(...)` of the same class. Only own methods are looked up (no super
+chain); other forms are not connected (see the README limits). A call that
+forms a cycle (recursion, methods calling each other) is modeled as a loop
+path (a back edge to the entry of the callee already expanded) instead of
+making the analysis fail. The example now gives `x: L4 -> L8`, with the
+inter-procedural model `[$DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0]`.
+The description below is the behavior before the fix.
 
 ```js
 var x = 0;
@@ -214,7 +237,18 @@ state before the fix, and each point is followed by the change:
 
 ## Found while fixing §1–§6 and §8 (feature `001-fix-known-issues`)
 
-### 10. A function as the default value of a parameter is not a scope
+### 10. A function as the default value of a parameter is not a scope (fixed by `004-fix-remaining-issues`)
+
+**Fixed** by feature `004-fix-remaining-issues` (FR-006): a function or arrow
+function in a default value of a parameter (also inside a destructured
+parameter) is a child scope of the function, `$DOMAIN.$PAGE_0.f.$ANONYMOUS_FUN_0`
+here, and is analyzed like other nested functions (it has its own
+intra-procedural model). With the body `g();` the call is connected and
+`d: L1 -> L3` is found (`specs/004-fix-remaining-issues/probes/us4-1b.js`).
+In the program below, `return g();` is still not connected, because it is not
+a call statement (only the arrow function becomes a scope; the pairs are
+unchanged); treating such calls as call-sites is a follow-up item in §22.
+The description below is the behavior before the fix.
 
 ```js
 var d = 1;
@@ -230,7 +264,18 @@ are `f: entry -> L6` and `g: L2 -> L4`. The arrow function `() => d` is not a
 scope, so its body is not analyzed and there is no pair for `d`. The scope
 tree (`lib/dujs/scopetree.js`) does not visit the parameters of a function.
 
-### 11. Uses of the class name in its own static members are missed
+### 11. Uses of the class name in its own static members are missed (fixed by `004-fix-remaining-issues`)
+
+**Fixed** by feature `004-fix-remaining-issues` (FR-007): the name of a class
+declaration is defined before its static members run (order: superclass and
+computed keys, then the class name, then the static members in source order;
+the definition stays at the class node). The example now gives `Q: L1 -> L3`
+(and `Q: L1 -> entry`, the §18 residue of the static block's entry node); a
+static field `static s = Q;` also has its pair. The variable of a class
+expression (`var B = class { static s = B; }`) is still defined after the
+class, so only its hoisted `undefined` definition (`B: entry -> ...`) reaches
+the static members, and the inner name of a named class expression is not a
+variable (see §22). The description below is the behavior before the fix.
 
 ```js
 class Q {
@@ -246,7 +291,20 @@ static field (`static s = Q;`). The class name is defined at the class node,
 which comes after all static members in the intra-page flow, so no definition
 of `Q` reaches the uses in the static members.
 
-### 12. CLI: no help, and errors exit with status 0 (pre-existing)
+### 12. CLI: no help, and errors exit with status 0 (pre-existing; fixed by `004-fix-remaining-issues`)
+
+**Fixed** by feature `004-fix-remaining-issues` (FR-009, FR-010; argument
+parsing moved to `lib/dujs/cli.js`, `lib/dujs/inputreader.js` removed):
+`-h`/`--help` prints the usage and exits with 0; a usage error (no arguments,
+no page, an unknown option, a file before the first `-js`, `-js` without
+files) prints a message starting with `dujs: ` and the usage to stderr and
+exits with 2; a file that cannot be read exits with 1 before any output
+directory is created; an error while analyzing or writing exits with 1 and
+removes the output directory of the run. All files are read before the output
+directory is created, and each run creates a new directory: when
+`out-<date>-<time>` exists (for example, another run in the same second), the
+names `out-<date>-<time>_1`, `_2`, ... are tried, so two runs never share a
+directory. The description below is the behavior before the fix.
 
 `node bin/dujs.js --help` (and `node bin/dujs.js` without arguments) does not
 print a usage text; it prints
@@ -304,7 +362,15 @@ such a pair (`specs/001-fix-known-issues/contracts/analyze-helper-notation.md`).
 
 ## Found by the code review of PR #3 (feature `001-fix-known-issues`, Phase 10)
 
-### 14. A predecessor without a source range is redirected to the split right side of a for-in/for-of loop
+### 14. A predecessor without a source range is redirected to the split right side of a for-in/for-of loop (fixed by `004-fix-remaining-issues`)
+
+**Fixed** by feature `004-fix-remaining-issues` (FR-012): when the
+predecessor (or the loop body) has no source range, the predecessor is taken
+as inside the body only when it cannot be reached from the entry node without
+passing the loop node (dominance); predecessors with ranges keep the range
+test. No program is known to produce such a node, so the fix is verified by
+unit tests on hand-built graphs (`tests/esgraph/branchsplitlooppred.js`). The
+description below is the behavior before the fix.
 
 When the right side of a for-in/for-of loop is split (`for (var x of (saved ?? []))`),
 only the edges entering the loop node from outside the loop are redirected to
@@ -317,7 +383,15 @@ right side is evaluated again on that path. Found by reading the code (review
 #7); no program of the current CFG builder is known to produce such a node,
 so it is an edge case and not reproduced.
 
-### 15. Split call sites have the same CALL RETURN label in the dot output
+### 15. Split call sites have the same CALL RETURN label in the dot output (fixed by `004-fix-remaining-issues`)
+
+**Fixed** by feature `004-fix-remaining-issues` (FR-011): the label of the
+CALL RETURN node of a split call site has the branch path of its call site:
+`callReturn (L2:C0:T)` and `callReturn (L2:C0:F)` with `labelWithLoc`, and
+`callReturn (<line>:T)` and `callReturn (<line>:F)` in the CLI outputs (line
+numbers one more than in the source). CALL RETURN nodes of call sites that are
+not split keep their labels. The description below is the behavior before the
+fix.
 
 ```js
 function log(v) {}
@@ -344,7 +418,9 @@ inserted CALL node as the decision node) is removed. The order is kept: the
 call is still modeled before the decision node, so the uses and definitions
 of the condition (including the arguments) are still modeled after the callee
 runs, with the pairs described below. That part is left to stage 2 of the
-hierarchical model refactoring.
+hierarchical model refactoring. The consequence at the end of this section
+(the use of a shadowed outer variable disappearing) is fixed by feature
+`004-fix-remaining-issues` (FR-016), see there.
 
 ```js
 var x = 0;
@@ -390,7 +466,22 @@ var c = a;
 The intra-page model has no `a: L2 -> L3`; with a parameter named `p` instead
 of `a` the pair is found.
 
-### 17. A nested default inside a destructured parameter with its own default
+**This consequence is fixed** by feature `004-fix-remaining-issues` (FR-016):
+the definitions of variables the callee cannot see (local variables and
+parameters of the caller, block `let`/`const`) bypass the callee from the
+CALL node to the CALL RETURN node and are not killed by its entry or exit
+node. The program above now has `a: L2 -> L3` and `a: L2 -> L6`, and
+`check(a); var c = a;` has the pair of `a` to `var c = a;`. The order of the
+call and the decision node is unchanged (stage 2).
+
+### 17. A nested default inside a destructured parameter with its own default (fixed by `004-fix-remaining-issues`)
+
+**Fixed** by feature `004-fix-remaining-issues` (FR-008): the outer default
+(`{}`) is evaluated once by its own node, then each nested default has its own
+initialization node in source order, and each name is defined once (`h` has
+5 nodes: entry, `{}`, `x = d`, `y = x`, exit). The pair of `x` from the node
+defining `x` to the node defining `y` is found (both nodes are labeled `L1` in
+this one-line form). The description below is the behavior before the fix.
 
 ```js
 function h({x = d, y = x} = {}) {
@@ -509,7 +600,20 @@ were analyzed and compared with def-use pairs derived by hand. The other
 differences found are the documented limits (assigning to `a.b` defines `a`,
 §7, only call statements `f();` are connected, §18).
 
-### 20. A use after a nested expression in a condition is a c-use (pre-existing)
+### 20. A use after a nested expression in a condition is a c-use (pre-existing; fixed by `004-fix-remaining-issues`)
+
+**Fixed** by feature `004-fix-remaining-issues` (FR-001): every variable read
+by the condition of a decision node (including the discriminant of a
+`switch`) is a p-use whatever the shape of the expression, except the reads in
+the arguments of a call or `new` (and the expressions of a tagged template),
+which are c-uses. The example now gives `c: L1 -> L2>L3:T` and
+`c: L1 -> L2>exit:F`, like `a` and `b`. As a consequence, the argument `a` of
+`if (f(a))` is now a c-use (it was a p-use). The head of a for-in/for-of loop
+and the walk of an entry node over a function body (§18) keep the previous
+rules. Checking the MDN examples after the fix also showed that, before the
+fix, a condition that is a member expression (`if (o.e)`) gave the c-use
+`o: L1 -> L2`; it is a p-use now as well. The description below is the
+behavior before the fix.
 
 ```js
 var a = 1, b = 2, c = 3;
@@ -532,7 +636,17 @@ a nested one are taken as c-uses. In the bouncing balls example the condition
 affected there only because class methods are not connected as call targets
 (§7).
 
-### 21. A `new` statement is not a call-site (pre-existing)
+### 21. A `new` statement is not a call-site (pre-existing; fixed by `004-fix-remaining-issues`)
+
+**Fixed** by feature `004-fix-remaining-issues` (FR-002, FR-003, FR-018): a
+statement `new F(...);` is a call-site connected to the function `F`; when the
+callee is a class, `new A(...);` is connected to the instance field
+initializers of `A` in source order and then to its constructor (the super
+class is not followed). The example now gives `x: L3 -> L6`, with the
+inter-procedural model `[$DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.P]` as for `P(1);`.
+Calls inside other expressions (`y = new F();`) are still not connected. The
+callee is resolved by the strict rule of §22 (0). The description below is the
+behavior before the fix.
 
 ```js
 var x = 0;
@@ -550,3 +664,155 @@ call is connected and the pair is `x: L3 -> L6`. Only a node whose AST is a
 `lib/dujs/modelbuilder.js`); a `NewExpression` is not. The README says that
 only call statements (`f();`) are connected, without saying whether `new`
 statements are included.
+
+## Found by feature `004-fix-remaining-issues`
+
+### 22. Strict resolution of `f()` and follow-up items (found by `004-fix-remaining-issues`)
+
+(0) **Behavior change: `f();` uses the strict rule** (FR-018). A callee
+variable (of `f()`, `new F()`, `new A()`, `A.s()`, and the `A` of the
+`new A()` definitions of `o` in `o.m()`) is resolved only when it has at
+least one definition reaching the call and all of them refer to the same
+function or class. Before the feature, `f();` was connected to the first
+reaching definition that is a function. When the variable has no reaching
+definition and the callee is a class, the call is also connected when the
+name has only one definition on the whole page (class relaxation; not for
+functions). With mixed definitions the call is no longer connected:
+
+```js
+var x = 0, c = 1;
+var f = function () {
+  x = 1;
+};
+if (c) {
+  f = function () {
+    x = 2;
+  };
+}
+f();
+console.log(x);
+```
+
+`specs/004-fix-remaining-issues/probes/mix-f.js`: before the change, `f();`
+was connected to the first function and the pair was `x: L3 -> L11`; now
+`f();` is not connected (no inter-procedural model) and the pair is
+`x: L1 -> L11`.
+
+Follow-up items (not fixed):
+
+(1) **An assignment to a property `o.p = 1` is taken as a definition of `o`.**
+It should be a definition of `o.p` and a use of `o` (a separate feature). One
+consequence is that `o.m()` after such an assignment is not connected, because
+the reaching definition of `o` is no longer `new A()`:
+
+```js
+var x = 0;
+class A {
+  m() {
+    x = 1;
+  }
+}
+var o = new A();
+o.p = 1;
+o.m();
+console.log(x);
+```
+
+The intra-page pairs are `A: L2 -> L7`, `console: entry -> L10`,
+`o: L8 -> L9` and `x: L1 -> L10`; without `o.p = 1;` the call is connected and
+the pair is `x: L4 -> L9`.
+
+(2) **The inner name of a named class or function expression is not a
+variable.** In `var B = class Q { static s = Q; };` there is no pair for `Q`;
+the same holds for the name of a named function expression used in its own
+body.
+
+(3) **Calls inside other expressions should also be call-sites.** Only call
+statements (`f();`, `new F();`, the method calls of §7, and the value of an
+instance field that is itself `this.m()` or `new B()`) are connected;
+`return f()`, `x = f()` and similar calls are not (decision U1 of the plan of
+feature `004-fix-remaining-issues`). For example, in the program of §10 the
+arrow function in the default value is now a scope, but `return g();` is not
+connected, so there is still no pair for `d`.
+
+(4) **`localStorage.removeItem` is not a definition.** Found while studying
+the MDN examples: only `localStorage.setItem` defines a stored item
+(`localStorageSetterNames` in `lib/dujs/globalscopectrl.js` is `['setItem']`),
+so removing an item does not kill the stored definition in the inter-page
+model.
+
+(5) **Pairs in the dead code after an unconditional recursion.** With a back
+edge for recursion (§7), the nodes after an unconditional recursive call
+cannot be reached from the entry node:
+
+```js
+var x = 0;
+class A {
+  m() {
+    this.m();
+    x = 1;
+  }
+}
+new A().m();
+console.log(x);
+```
+
+The intra-page pairs are `A: L2 -> L8` and `x: L5 -> L9`. The pairs
+`console: entry -> L9` and `x: L1 -> L9` disappear, since L5, L9 and the nodes
+after them are not reachable from the entry node; but the worklist also
+processes the unreachable nodes, so the definition `x = 1` (L5) inside the
+unreachable cycle flows out to L9 and gives `x: L5 -> L9`
+(`specs/004-fix-remaining-issues/research.md` P8,
+`specs/004-fix-remaining-issues/probes/cyc-uncond.js`).
+
+## Found by checking the MDN examples (after feature `004-fix-remaining-issues`)
+
+The examples of the MDN modules "Advanced JavaScript objects" and "Dynamic
+scripting with JavaScript" (33 programs, about 1,070 lines;
+mdn/content@74f6e26e, mdn/learning-area@21973263) were analyzed with the
+feature and with `develop`, and compared with def-use pairs derived by hand.
+Every difference from `develop` is a fix of this feature and there is no
+regression; the other differences from the hand-derived pairs are the
+documented limits, except the two issues below.
+
+### 23. `o.m()` in a function is not connected when `o` is defined outside the function
+
+```js
+var x = 0;
+class A {
+  m() {
+    x = 1;
+  }
+}
+const o = new A();
+function g() {
+  o.m();
+}
+g();
+console.log(x);
+```
+
+`o.m();` is not connected: the intra-page pairs are `A: L2 -> L7`,
+`console: entry -> L12`, `g: entry -> L11` and `x: L1 -> L12`, instead of
+`x: L4 -> L12`. Like `f()`, the call
+is resolved with the reaching definitions of the intra-procedural model of the
+function (`classOfInstance` in `lib/dujs/callresolver.js`), where `o` has no
+definition; the class relaxation of FR-018 covers only `new A()` and `A.s()`.
+In the MDN "Object building practice" assessment, `evilBall.draw()`,
+`evilBall.checkBounds()` and `evilBall.collisionDetect()` inside `loop()` are
+not connected for this reason. A fix could relax the rule like FR-018 (connect
+when `o` has only one definition on the page and it is `new A(...)`).
+
+### 24. Only a fixed list of global objects is defined (pre-existing)
+
+```js
+console.log(Math.PI);
+```
+
+The only pair is `console: entry -> L1`; there is no pair for `Math`. A page
+scope defines only the built-in objects listed in `lib/dujs/pagescope.js`
+(`window`, `document`, `String`, `Number`, `Boolean`, `Array`, `Map`,
+`WeakMap`, `Set`, `Date`, `console`), and the domain scope defines
+`localStorage`. Other globals, such as `Math`, `Object`, `JSON`, `Promise`,
+`alert` and `requestAnimationFrame`, are not defined, so their uses have no
+pairs.
