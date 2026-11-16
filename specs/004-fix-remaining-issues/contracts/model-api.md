@@ -63,12 +63,15 @@ model.callBypassOf(node)     // => {callNode, callReturn, calleeScope} 或 null�
 
 ```js
 var callResolver = require('./callresolver');
-callResolver.calleeScopesOf(node, scopeTree)   // => Array<Scope>：依執行順序的被呼叫 scope（research R2 表）；不含 static 成員
+callResolver.calleeScopesOf(node, scopeTree)   // => Array<Scope>：依執行順序的被呼叫 scope（research R2 表，含 `f()`）；不含 static 成員
 callResolver.callExpressionOf(node)            // => CallExpression|NewExpression|null：節點代表的呼叫運算式（含 FR-017 的欄位初始化式）
 callResolver.classIndexOf(scopeTree)           // => 每頁快取的 class 索引（供測試）
 ```
 
-- 只讀 `node.reachIns`（intra-procedural 原件）與 AST，不修改任何物件；找不到一律回傳 `[]`，不拋錯（含 `super()`、`callee` 非 Identifier）。
+- 只讀 `node.reachIns`（intra-procedural 原件）、AST 與頁面各 intra-procedural 模型節點的 GEN（class 放寬時統計全頁定義），不修改任何物件；找不到一律回傳
+  `[]`，不拋錯（含 `super()`、`callee` 非 Identifier）。
+- 解析規則（FR-018）：callee 變數在 reachIns 中的定義至少一筆且全部指向同一個函式或 class 才連（`f()` 亦同，取代原 `findFunctionDefinitionFromReachInSet`
+  的「任一筆是函式」）；reachIns 中沒有該變數的定義時，只有「全頁唯一一筆定義且是 class」才連，函式不放寬。
 
 ## 7. `lib/dujs/modelbuilder.js`（修訂 003 §5）
 
@@ -76,8 +79,10 @@ callResolver.classIndexOf(scopeTree)           // => 每頁快取的 class 索�
   `_testonly_` 名稱不變，舊的兩參數呼叫等同 `stack = []`、`built = new Map()`。
 - 登記條件：有 hierarchy 且封閉，且該 scope 尚未登記（原為 `relatedScopes.length > 1`）。
 - `buildInterProceduralModels`：已登記或「建過且沒有呼叫邊」的 scope 略過；只建成開放模型的 scope 仍以自己為根再建。
-- 被呼叫端：`findStaticMemberScopesOfClassesAtNode(node)`（不變）＋`callResolver.calleeScopesOf(node)`；astNode 為 class 宣告時，static 成員的呼叫邊
-  `keepGenerateAtCallSite: true`。
+- 被呼叫端：`findStaticMemberScopesOfClassesAtNode(node)`（不變）＋`callResolver.calleeScopesOf(node)`（含 `f()`；`findFunctionDefinitionFromReachInSet`
+  的邏輯搬入 callresolver 並改為嚴格規則，原函式移除或改為委派）；astNode 為 class 宣告時，static 成員的呼叫邊 `keepGenerateAtCallSite: true`。
+- 事件 handler 查找（`reachInsForHandlerLookup`，plan U3＝(a)、FR-015）：優先取 `mainlyRelatedScope` 為頁面 scope 的 inter-procedural 模型中對該節點有分析
+  結果者；沒有才退回「最後一個有結果的 inter-procedural 模型」，再退回原件的 `reachIns`。`interProceduralScopes()` 的模型登記順序不變。
 - `setFlatGraphFromHierarchy` 另以 `bypasses` 呼叫 `model.setCallBypasses`。
 - `collectParameterDefaults`／`getFunctionBodyStatement`：research R8（外層預設值求值節點＋巢狀預設值節點）。
 

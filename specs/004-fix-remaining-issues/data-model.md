@@ -8,7 +8,7 @@
 |-----------|------|
 | 呼叫運算式 | `callResolver.callExpressionOf(node)`：astNode 為 `CallExpression`／`NewExpression`；或實例欄位合成 `return` 的引數為 `this.m()`／`new B()`（FR-017） |
 | 被呼叫端 | static 成員 scope（class 定義在此節點，既有）＋`calleeScopesOf(node)`（research R2 表），依執行順序；空陣列＝不是 call-site |
-| 不變條件 | 只依 intra-procedural 原件的 `reachIns` 與 AST；同一節點的多個被呼叫端串接（前一個 CALL RETURN 是下一個的呼叫點） |
+| 不變條件 | 只依 intra-procedural 原件的 `reachIns` 與 AST（FR-018 的 class 放寬另讀全頁 intra-procedural 模型節點的 GEN）；同一節點的多個被呼叫端串接（前一個 CALL RETURN 是下一個的呼叫點） |
 
 ## 2. Class 索引（每頁一份，`callresolver` 內 WeakMap(scopeTree → index) 快取）
 

@@ -18,13 +18,16 @@
 
 | # | 發現 | 證據 | 處置 |
 |---|------|------|------|
-| P1 | KI §10 程式的本體是 `return g();`，不是呼叫敘述；依既有規則（只有 astNode 為呼叫的節點是 call-site）不會連到箭頭函式，因此 US4-1「`d` 在其中的 use 有 pair」與「本體的 `g();` 被連結」在原程式上**不可能成立** | `probes/us4-1.js`、`e2` 對照（`return g();` 不連、`g();` 會連） | **需使用者裁決**（見 plan「待裁決」U1）；驗收對照暫以 `probes/us4-1b.js`（本體改為 `g();`）寫預期，原程式只斷言 scope 與「不連結」 |
-| P2 | FR-017 的 `f = new B();`：欄位初始化式的 scope 是合成函式，intra-procedural 的 reach-in 看不到外層的 `B`，依 H3「所在 scope 看得到定義才連」永遠不會連結；只有 `f = this.m();` 有效 | 規則推導（同 `probes/fn-new.js`：函式內 `new A()` 不連） | **需使用者裁決**（U2）；建議接受、README 註明 |
+| P1 | KI §10 程式的本體是 `return g();`，不是呼叫敘述；依既有規則（只有 astNode 為呼叫的節點是 call-site）不會連到箭頭函式，因此 US4-1「`d` 在其中的 use 有 pair」與「本體的 `g();` 被連結」在原程式上**不可能成立** | `probes/us4-1.js`、`e2` 對照（`return g();` 不連、`g();` 會連） | 使用者裁決 U1＝A（plan「使用者裁決紀錄」）：驗收以 `probes/us4-1b.js`（本體 `g();`）寫預期，原程式只斷言 scope 與「不連結」 |
+| P2 | FR-017 的 `f = new B();`：欄位初始化式的 scope 是合成函式，intra-procedural 的 reach-in 看不到外層的 `B`，依 H3「所在 scope 看得到定義才連」永遠不會連結；只有 `f = this.m();` 有效 | 規則推導（同 `probes/fn-new.js`：函式內 `new A()` 不連） | U2＝A 之後**由 analyze 裁決 1 取代**：callee 為 class 時放寬（R2），`f = new B();` 會連（`probes/field-new.js` 的 `x: L4 -> L11`） |
 | P3 | KI §15 所說「兩個 CALL RETURN 標籤相同（`callReturn (L2:C0)`）」只發生在 `toDotWithLabelLoc`；CLI 預設用 `toDotWithLabelLine`，標籤為 `callReturn_a`／`callReturn_b`（已可區分但沒有分支路徑） | `probes/us6-1.js` 以 CLI 實跑 | FR-011 兩種轉換器都加分支路徑（R9）；不需裁決 |
 | P4 | KI §16「後果段」（參數名遮蔽外層變數時，外層變數的 use 消失）由 FR-016 一併修正：`check(a); var c = a;` 修正後恢復 `a: L1 -> L6` | `probes/ki16.js`、`probes/ki16b.js` | 屬 FR-016 範圍內；FR-014 的 known-issues 更新加註 §16 後果段已修（plan 自行決定，見 R6） |
-| P5 | 函式的自我遞迴（`function m(){ m(); }`）不會被連結（`m` 的定義不在 `m` 的 intra-procedural reach-in 內），因此實際會形成呼叫環的只有依 class 結構判定的 `this.m()`（與 Fable A3 一致） | `probes/fn-rec.js` | 呼叫環驗收只用 `this.m()`（cyc-1／2／3） |
+| P5 | 函式的自我遞迴（`function m(){ m(); }`）不會被連結（`m` 的定義不在 `m` 的 intra-procedural reach-in 內，函式不適用 class 放寬），因此實際會形成呼叫環的是依 class 結構判定的 `this.m()`，以及 analyze 裁決 1 之後 class 成員內的 `new A()`／`A.s()`（取代 Fable A3 的「constructor 內 `new A()` 不成環」） | `probes/fn-rec.js`、`probes/ctor-cycle.js` | 呼叫環驗收用 `this.m()`（cyc-1／2／3、cyc-uncond）與 constructor 內 `new A()`（ctor-cycle） |
 | P6 | 呼叫敘述有 exception 邊；連結後該邊由 CALL RETURN 出發（既有 replay 行為），遞迴時 exit 的 reach-in 會含「從 CALL RETURN 經 exception 邊」的定義（cyc-2 的 `x: L12 -> L16`）。**一般賦值敘述也有 exception 邊直達所在方法的 exit**：方法被連結後，進入方法時的外層定義可經「賦值敘述 → exception → exit → return → 呼叫端 CALL RETURN」流出（cyc-1 `L5 c = 0` → exit(m) → L11 的 CALL RETURN → L12 帶 `x@L1`，得 `x: L1 -> L12`；cyc-2 得 `x: L1 -> L16`；us3-7 `L8 y = x` 帶 constructor 的 `x@L5`，得 `x: L5 -> L13`） | `probes/fn-rec.js` 的 `x: L1 -> L10` 即此機制；仲裁原型實跑（after-calls）確認 cyc-1／cyc-2／us3-7 三條 | 預期值已納入（acceptance FR-015、US3-7）；屬既有 exception 建模，非新缺陷 |
 | P7 | 現行 `-js -js` 相鄰時，`readInput` 會把第一個 `-js` 之後的**全部**參數（含第二個 `-js`）當成同一頁 | `lib/dujs/inputreader.js` | US5 改寫解析後消失（R10） |
+| P8 | 無條件遞迴（`m() { this.m(); x = 1; }`、`new A().m(); console.log(x);`）：修正後 intra-page 只剩 `A: L2 -> L8`、`x: L5 -> L9`，`console: entry -> L9` 與 `x: L1 -> L9` 消失。成因：`this.m()` 的回邊只有 call 邊進 entry(m)，CR(L4) 只能由 exit(m) 的 return 到達，而 exit(m) 只能由 L5 與 CR(L4) 的 exception 邊到達——CR(L4)→L5→exit(m)→CR(L8)→L9→LOOP→exit 全部從 entry 不可達（死碼）。entry 出發的定義（`console`、`x@L1`）進不了這個環；CR(L4)／CR(L8) 的 bypass 只送被呼叫端看不到的定義（全域都看得到，為空）。但 reaching definitions 的 worklist 也處理不可達節點，L5 的 GEN `x@L5` 沿不可達的邊流到 L9，因而有 `x: L5 -> L9` | 原型實跑＋扁平圖可達性走訪（`probes/cyc-uncond.js`；不可達節點：CR(L4)、L5、exit(m)、CR(L8)、L9、LOOP、exit、LOOP RETURN） | 屬 README 已記的「無條件遞迴之後，被呼叫端看得到的外層變數 pair 消失（死碼）」；另補記「不可達環內的定義仍會流出（`x: L5 -> L9`）」。驗收鎖定（acceptance FR-015） |
+| P9 | 混合定義的 `f()`：`var f = function(){x=1}; if (c) { f = function(){x=2} } f();` 修正前連到第一個函式（`x: L3 -> L11`）；嚴格規則下不連（`x: L1 -> L11`） | `probes/mix-f.js`；Fable 原型 `FSTRICT` | analyze 裁決 2（FR-018）；known-issues 新節、README |
+| P10 | 環上方法內註冊的事件 handler：自我／互相遞迴時以環上 scope 為根的模型登記在頁面模型之後，`reachInsForHandlerLookup` 取到非頁面為根的模型，handler 接不上 intra-page（有環版 21 節點） | `probes/cyc-handler.js`、`probes/cyc-handler-nocyc.js`；原型加 U3＝(a) 後有環版 24 節點、無環版 23 節點，兩者都接上 `h` | plan U3＝(a)；FR-015 |
 
 ## R1 決策條件的 p-use 規則（FR-001、US1）
 
@@ -61,7 +64,7 @@
 
 | 形式 | 條件 | 被呼叫端（依序） |
 |------|------|-----------------|
-| `f(...)` | 既有 `findFunctionDefinitionFromReachInSet`（不改） | `f` |
+| `f(...)` | `f` 解析為函式（嚴格規則；`findFunctionDefinitionFromReachInSet` 的邏輯搬入 `callresolver`，由「任一筆是函式」改為「至少一筆且全部同一個」，FR-018） | `f` |
 | `new F(...)` | `F` 解析為函式 | `F` |
 | `new A(...)` | `A` 解析為 class | A 的實例欄位（原始碼順序）、A 的 constructor（有才連）；不追 `extends` |
 | `new A(...).m(...)` | 同上，且 `m` 是 A 自己的實例方法（`kind: 'method'`、非 computed、非 private） | 上列＋`m`；`new F().m()`（函式）只連 `F` |
@@ -71,10 +74,19 @@
 
   其餘一律不連（README）：private、optional call、computed／字串方法名、getter／setter、欄位中的箭頭函式、`new ns.A()`、`new (f())()`、
   super 鏈上的方法、箭頭函式與一般 `function` 內的 `this.m()`、`o` 來源混合或不明、中間有屬性賦值（`o.p = 1` 會定義 `o`，定義不再是 `new`）。
-- **與 H3 的一致性**：函式（含 constructor、方法）內的 `new A()`／`A.s()` 因 reachIns 看不到外層定義而不連；`this.m()` 依 class 結構判定，
-  不需 reachIns。由此推得 P2（欄位中的 `new B()` 永遠不連）。
+- **class 放寬（analyze 裁決 1）**：「解析變數 V」在 reachIns 中**沒有** V 的任何定義時（V 宣告在外層函式／頁面，常見於函式、方法、constructor、
+  欄位初始化式、事件 handler 內），若 V 在全頁所有 intra-procedural 模型中只有**一筆**定義且該定義以 range 對到 class 索引（class 宣告，或
+  `const`／`let` 綁定的 class 運算式），解析為該 class；`var A = class {}` 另有一筆 undefined 預設定義（兩筆）而不連；解析結果為函式時不放寬
+  （`f()`、`new F()` 在函式內維持 H3）。reachIns 有 V 的定義時一律走嚴格規則（不放寬）。
+- **與 H3 的關係**：H3 對函式維持；對 class 被放寬。後果：P2 不再成立（欄位 `new B()` 會連）；constructor 內 `new A()` 成為呼叫環（P5）；放寬
+  **不看執行順序**——`function g() { new A(); }` / `g();` / `class A { constructor() { x = 1; } }` 也會連（`probes/fn-new-early.js`，`x: L8 -> L11`；
+  實際執行時 `g()` 會因 TDZ 拋錯）；函式內的 `new A()` 會連而 `f()` 不連（不對稱）。三者寫入 README。MDN bouncing balls 不受益：
+  `const ball = new Ball(...)` 是宣告（非 `new` 敘述），for-of 綁定的 `ball` 定義不是 `new`，`ball.draw()` 不連。
+- Fable 原型（`RELAX=i`、`FSTRICT`）：只改 callresolver 約 20 行；既有三個 golden 零差異、既有測試無新增失敗；探針中只有 `fn-new.js` 改變
+  （`x: L1 -> L11` → `x: L4 -> L11`）。
 - **Rationale**：判定只依靜態結構與既有 reach-in，不引入型別推論；「至少一筆且全部相同」避免 `o` 定義為空集合時誤連（空集合會讓「全部都是
-  `new A`」為真）。新模組讓 `modelbuilder` 只負責建階層。
+  `new A`」為真），也讓 `f()` 與其他形式同一規則（混合定義不連，P9）。全頁唯一的 class 定義不會被改寫（`const`／`let`／class 宣告），放寬不會
+  連錯對象；函式可被重新賦值或遮蔽，不放寬。新模組讓 `modelbuilder` 只負責建階層。
 - **Alternatives**：把 `var A = class {}` 的定義改為 FUNCTION 型別——改 GEN 與既有 dupairs，拒絕；沿 `extends` 查方法——違反 D3／Assumptions。
 
 ## R3 `new` 的 GEN 與呼叫端（FR-003 的執行順序）

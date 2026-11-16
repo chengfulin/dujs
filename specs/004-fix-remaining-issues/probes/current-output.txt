@@ -12,6 +12,10 @@ intra-page (nodes 12): f: entry -> L7 | f: entry -> entry | g: entry -> L10 | p:
 scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
 intra(page): A: L2 -> L12
 intra-page (nodes 7): A: L2 -> L12
+=== ctor-cycle.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+intra(page): A: L2 -> L11 | console: entry -> L12 | x: L1 -> L12
+intra-page (nodes 8): A: L2 -> L11 | console: entry -> L12 | x: L1 -> L12
 === cyc-1.js
 scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
 intra(page): A: L2 -> L11 | console: entry -> L12 | x: L1 -> L12
@@ -24,6 +28,18 @@ intra-page (nodes 8): A: L2 -> L15 | console: entry -> L16 | x: L1 -> L16
 scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
 intra(page): A: L2 -> L9
 intra-page (nodes 7): A: L2 -> L9
+=== cyc-handler-nocyc.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.h, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+intra(page): A: L5 -> L19
+intra-page (nodes 7): A: L5 -> L19
+=== cyc-handler.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.h, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+intra(page): A: L5 -> L19
+intra-page (nodes 7): A: L5 -> L19
+=== cyc-uncond.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+intra(page): A: L2 -> L8 | console: entry -> L9 | x: L1 -> L9
+intra-page (nodes 8): A: L2 -> L8 | console: entry -> L9 | x: L1 -> L9
 === edge-classexpr.js
 scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
 intra(page): A: L2 -> L7 | x: L1 -> L8
@@ -32,6 +48,15 @@ intra-page (nodes 8): A: L2 -> L7 | x: L1 -> L8
 scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
 intra(page): A: L2 -> L14 | console: entry -> L15 | x: L1 -> L15 | y: L1 -> L15
 intra-page (nodes 8): A: L2 -> L14 | console: entry -> L15 | x: L1 -> L15 | y: L1 -> L15
+=== field-new.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+intra(page): A: L7 -> L10 | console: entry -> L11 | x: L1 -> L11
+intra-page (nodes 9): A: L7 -> L10 | console: entry -> L11 | x: L1 -> L11
+=== fn-new-early.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g, nodes 10): console: entry -> L11 | g: entry -> L5 | x: L1 -> L11
+intra(page): console: entry -> L11 | g: entry -> L5 | x: L1 -> L11
+intra-page (nodes 12): console: entry -> L11 | g: entry -> L5 | x: L1 -> L11
 === fn-new.js
 scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.g
 inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g, nodes 10): A: L2 -> L8 | A: L2 -> entry | console: entry -> L11 | g: entry -> L10 | x: L1 -> L11
@@ -47,6 +72,10 @@ scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.P, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $D
 inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1, $DOMAIN.$PAGE_0.log, $DOMAIN.$PAGE_0.h, nodes 35): Counter: L10 -> L35 | Counter: L10 -> L36 | Counter: L10 -> L38 | P: entry -> L8 | a: L1 -> L2>L3:T | a: L1 -> L2>L8:F | a: L1 -> L41:T | a: L1 -> L42 | a: L1 -> entry | a: L3 -> L41:T | a: L3 -> L42 | a: L3 -> entry | b: L1 -> L2>L3:T | b: L1 -> L2>L8:F | b: L1 -> L41:F | c: L1 -> L2 | c: L1 -> L41>L41:F | c: L1 -> L41>L41:T | console: entry -> L51 | counter: L36 -> L37 | g: L46 -> L48 | h: entry -> L50 | log: entry -> L41:F | log: entry -> L41:T | p: entry -> L42 | x: L1 -> L51 | x: L1 -> L9 | y: L13 -> L51
 intra(page): Counter: L10 -> L35 | Counter: L10 -> L36 | Counter: L10 -> L38 | P: entry -> L8 | a: L1 -> L2>L3:T | a: L1 -> L2>L8:F | a: L1 -> L41:T | a: L3 -> L41:T | b: L1 -> L2>L3:T | b: L1 -> L2>L8:F | b: L1 -> L41:F | c: L1 -> L2 | c: L1 -> L41>L41:F | c: L1 -> L41>L41:T | console: entry -> L51 | counter: L36 -> L37 | h: entry -> L50 | log: entry -> L41:F | log: entry -> L41:T | x: L1 -> L51 | x: L1 -> L9 | y: L9 -> L51
 intra-page (nodes 37): Counter: L10 -> L35 | Counter: L10 -> L36 | Counter: L10 -> L38 | P: entry -> L8 | a: L1 -> L2>L3:T | a: L1 -> L2>L8:F | a: L1 -> L41:T | a: L1 -> L42 | a: L1 -> entry | a: L3 -> L41:T | a: L3 -> L42 | a: L3 -> entry | b: L1 -> L2>L3:T | b: L1 -> L2>L8:F | b: L1 -> L41:F | c: L1 -> L2 | c: L1 -> L41>L41:F | c: L1 -> L41>L41:T | console: entry -> L51 | counter: L36 -> L37 | g: L46 -> L48 | h: entry -> L50 | log: entry -> L41:F | log: entry -> L41:T | p: entry -> L42 | x: L1 -> L51 | x: L1 -> L9 | y: L13 -> L51
+=== handler-new.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1, $DOMAIN.$PAGE_0.onClick
+intra(page): console: entry -> L16 | onClick: entry -> L15 | window: entry -> L15 | x: L1 -> L16
+intra-page (nodes 13): A: L2 -> L11 | A: L2 -> L12 | A: L2 -> entry | console: entry -> L16 | onClick: entry -> L15 | window: entry -> L15 | x: L1 -> L13 | x: L1 -> L16 | x: L1 -> entry
 === ki16.js
 scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.check
 inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.check, nodes 12): a: entry -> L2 | b: L4 -> L5:F>L6:T | b: L4 -> L5:F>L8:F | check: entry -> L5>L5:F | check: entry -> L5>L6:T
@@ -57,6 +86,11 @@ scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.check
 inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.check, nodes 9): a: L1 -> L5 | a: entry -> L3 | check: entry -> L5
 intra(page): a: L1 -> L5 | a: L1 -> L6 | check: entry -> L5
 intra-page (nodes 11): a: L1 -> L5 | a: entry -> L3 | check: entry -> L5
+=== mix-f.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, nodes 12): c: L1 -> L5>L10:F | c: L1 -> L5>L6:T | console: entry -> L11 | f: L2 -> L10 | f: L6 -> L10 | x: L3 -> L11
+intra(page): c: L1 -> L5>L10:F | c: L1 -> L5>L6:T | console: entry -> L11 | f: L2 -> L10 | f: L6 -> L10 | x: L1 -> L11
+intra-page (nodes 14): c: L1 -> L5>L10:F | c: L1 -> L5>L6:T | console: entry -> L11 | f: L2 -> L10 | f: L6 -> L10 | x: L3 -> L11
 === us1-1.js
 scopes: $DOMAIN.$PAGE_0
 intra(page): a: L1 -> L2>L3:T | a: L1 -> L2>exit:F | b: L1 -> L2>L3:T | b: L1 -> L2>exit:F | c: L1 -> L2

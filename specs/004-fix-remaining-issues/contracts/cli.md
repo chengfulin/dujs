@@ -72,9 +72,10 @@ Example:
 |---|------|------|
 | US5-1 | `dujs --help`、`dujs -h`、`dujs -js a.js --help`、`dujs -x --help`（未知選項在 help 之前） | exit 0；stdout 含 `Usage: dujs -js`；stderr 空；cwd 中沒有 `out-*` |
 | US5-2 | `dujs`、`dujs a.js`、`dujs -js`、`dujs -js -js a.js`、`dujs -x -js a.js` | exit 2；stderr 第一行以 `dujs: ` 開頭且含 usage；stdout 空；沒有 `out-*` |
-| US5-3 | `dujs -js ok.js -js missing.js`；`dujs -js bad.js`（語法錯誤或使分析拋錯的輸入） | exit 1；stderr 含檔名或 `analysis failed`；沒有 `out-*`（missing：未建；bad：建後刪除） |
+| US5-3 | `dujs -js ok.js -js missing.js`；`dujs -js bad.js`（`bad.js` 內容為語法錯誤 `var a = ;`） | exit 1；missing：stderr 含 `cannot read missing.js`、未建 `out-*`；bad：stderr 含 `dujs: analysis failed:`、執行後 cwd 沒有 `out-*`（建後刪除） |
 | US5-4／SC-005 | 同一 cwd 以 `spawn` 同時啟動兩次 `dujs -js ok.js`，重複 10 次 | 每次兩者 exit 0；`out-*` 目錄數＝2×次數（每次各新增 2 個不同目錄）；每個目錄的檔案清單相同且 `report.html` 引用自己的目錄名稱 |
 | US5-5 | `dujs -js ok.js` | exit 0；stderr 空；輸出 .dot 與修正前相同（golden 三個 case 照跑即涵蓋） |
 
-`bad.js` 的選擇：以單元測試確認某個輸入會讓分析拋錯（例如 jsparser 無法解析的語法；若解析錯誤在讀檔階段就被攔下，則以 stub 讓
-`defuseAnalysisExecutor.initialize` 拋錯，測試 `cli.run` 而非子行程）。
+`bad.js`（SC-004「分析錯誤」）：語法錯誤檔 `var a = ;`。讀檔階段只讀文字，解析在建目錄之後的分析階段才拋錯（修正前的 CLI 實跑：建了
+`out-*`、印 `*** ERROR:  Unexpected token ;  ***`、exit 0），因此走 §1 #7：建後刪除、exit 1。驗收以子行程執行 `bin/dujs.js`，**不得以 stub 代替**；
+§1 #7 另以 stub 讓 `defuseAnalysisExecutor.initialize` 拋錯的單元測試（`cli.run`）為補充，不取代子行程驗收。

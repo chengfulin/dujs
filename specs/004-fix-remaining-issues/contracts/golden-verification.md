@@ -55,12 +55,30 @@ manifest），否則視為回歸修正程式。
 
 ## §21（US2，FR-002、FR-003）
 ...
+
+### FR-018（呼叫規則統一與 class 放寬，analyze 裁決 1、2）
+
+`expected/`、`expected-es2015/`、`expected-interprocedural/`：無差異（呼叫規則統一：既有 golden 無差異）。
+...
+
+## 驗收預期更正
+
+| 檔案／情境 | 原預期 | 實跑結果 | 判讀（推導錯誤的原因） | spec.md 是否同步（Clarifications 條目） |
+|------------|--------|----------|------------------------|----------------------------------------|
+| `contracts/acceptance.md` <表> <探針> | `<原 pair 清單>` | `<實跑 pair 清單>` | <推導遺漏，如 research P6 的 exception 邊> | <否／是：Session …（implement）的條目> |
+
+（沒有更正時本節寫「無」。）
 ```
 
-- 節次依序：§20、§21、§7（含 FR-015、FR-016、FR-017）、§10、§11、§17、§12、§15、§14；每節開頭逐一列出四個 case，沒有差異者寫「無差異」。
-  FR-016 對既有 `f()` 的影響記在 §7 節下的子表「FR-016（Fable A1）」，並註明 KI §16 後果段。
+- 節次依序：§20、§21（含子節 FR-018）、§7（含 FR-015、FR-016、FR-017）、§10、§11、§17、§12、§15、§14，最後是「驗收預期更正」；每節開頭逐一列出
+  四個 case，沒有差異者寫「無差異」。FR-016 對既有 `f()` 的影響記在 §7 節下的子表「FR-016（Fable A1）」，並註明 KI §16 後果段。FR-018 子節須
+  明載「呼叫規則統一：既有 golden 無差異」（Fable 原型 `FSTRICT`、`RELAX=i` 實測），`expected-fixes004/` 若有差異逐列記錄。
+- 「驗收預期更正」：每列一個更正（範例列只示範格式）；更正涉及 spec.md 明列的 pair 時，須先改 spec.md 並記入其 Clarifications，本表最後一欄寫出
+  該條目。
 - 「內容」以節點標記描述（不寫 n-id）；只有 n-id 順移者寫「編號連帶」。
 - 「單元測試期望」已知必改的既有測試（見 plan Constraints）：§20 節列 `usedexpressions.js` 約 139、145、273、279 行與 `es2015.js`
-  約 407 行（範例表）；§10 節列 `tests/dujs/paramsandnew.js` 約 148 行（預設值箭頭函式改為 scope `f.$ANONYMOUS_FUN_0`，FR-006）；§7 節列
-  `call cycle` 測試改斷言 `model cycle`（FR-015）。其餘既有測試的修改都須先查證並補列。
+  約 407 行（範例表）；§21 節列 `tests/dujs/classfields.js` 檔頭 001 D7 說明（FR-003）；§10 節列 `tests/dujs/paramsandnew.js` 約 148 行（預設值箭頭
+  函式改為 scope `f.$ANONYMOUS_FUN_0`，FR-006）；§11 節列 `tests/dujs/classfields.js` 92 行測試標題與註解（FR-007）；§7 節列 `call cycle` 測試改斷言
+  `model cycle`（FR-015）；§12 節列 `tests/golden/golden.js` 約 145 行註解（「exits with 0」→ 失敗 exit 非零，FR-009）。其餘既有測試的修改都須先
+  查證並補列。
 - §12（CLI）預期只有「無差異」與目錄名稱規則說明；§14 只有單元測試列。
