@@ -61,7 +61,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>三項小型重構</h1>
-<div class="meta">feature：002-small-refactors · spec · 第 1 輪 · 2026-11-16 · 目標分支 develop</div>
+<div class="meta">feature：002-small-refactors · clarify · 第 1 輪 · 2026-11-16 · 目標分支 develop</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準</div>
 
 <h2>看懂它</h2>
@@ -168,6 +168,28 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
   </ul>
 </section>
 
+<h2>本輪變更（clarify · Session 2026-11-16，5 條）</h2>
+<div class="box"><table>
+<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響</th></tr>
+<tr><td>Clarifications 1；US3 敘述；FR-007；SC-005；Key Entities</td><td>「要讀哪些運算式」與「怎麼讀」的界線不清（p-use 是走訪時才依子運算式判定）</td><td><code>usedExpressionsOf</code> 只決定「要讀哪些運算式＋根層讀法」；走訪內 p-use 規則（二元、呼叫 callee、一元、<code>?:</code>、class 頭）留在找 USE 集合的函式。新增六類節點 characterization 表</td><td>US3</td></tr>
+<tr><td>US3 驗收情境 1–5；Clarifications 5</td><td>情境只寫「條件 p-use、已求值 c-use」等籠統讀法</td><td>情境改用具體樣本（<code>x = o.p[i] ? a : b</code>、<code>switch (x) { case y … }</code>）；「決策節點」＝任何有 true／false 邊的節點；case 的 test 一律不讀（現行行為保留）</td><td>US3</td></tr>
+<tr><td>Clarifications 2；FR-004；FR-006；Key Entities；US2 情境 3；Assumptions 4</td><td>呼叫節點與 call return 節點「沿用分支路徑」，存放處未定</td><td>新增只供標籤用的 <code>labelPath</code>（預設空字串）；標籤 helper：有 <code>split</code> 取 <code>split.path</code>，否則取 <code>labelPath</code>。FR-004 列出須改的檔案清單</td><td>US2</td></tr>
+<tr><td>Clarifications 3；FR-004、FR-007</td><td><code>modelbuilder.js</code> 的 <code>expressionsEvaluatedAtNode</code> 是否重用新函式未定</td><td>範圍外：只隨 FR-004 改讀 <code>split</code>，邏輯不動（語意與 USE 不同，留給分層模型 feature）</td><td>US2、US3</td></tr>
+<tr><td>Clarifications 4；FR-006；SC-004</td><td>「標籤字串只在 1 處」未定計算範圍（原寫目前 3 處）</td><td>範圍＝<code>lib/</code> 與 <code>tests/helpers/</code>；含 <code>:&lt;路徑&gt;</code> 後綴、<code>L&lt;行&gt;:&lt;路徑&gt;</code>、pair 的 <code>:T</code>／<code>:F</code>；測試檔預期字面值不算</td><td>US2</td></tr>
+<tr><td>FR-003；FR-011；SC-002；Edge Cases 末項</td><td>無明確測試覆蓋準則、模組授權清單、性質測試參數</td><td><code>searchByType</code> 各 case 至少一測；AST helper 歸屬由 plan 定；新模組列入 THIRD_PARTY_NOTICES 的 MIT 清單；<code>FC_SEED</code> 預設 20261116、<code>FC_NUM_RUNS=1000</code></td><td>US1</td></tr>
+</table></div>
+
+<h3>US3 節點種類（依序判斷，預期值取自重構前行為）</h3>
+<div class="box"><table>
+<tr><th>節點種類</th><th>要讀的運算式</th><th>根層讀法</th></tr>
+<tr><td>有已求值運算式的決策節點</td><td>各已求值運算式（在 astNode 前）</td><td>全部 c-use</td></tr>
+<tr><td>switch case，有 test 且 discriminant 未拆分</td><td>switch 的 discriminant</td><td>p-use</td></tr>
+<tr><td>switch case，default 或 discriminant 已拆分</td><td>無（test 一律不讀）</td><td>—</td></tr>
+<tr><td>for-in/for-of loop</td><td>左側成員物件、左側解構預設值與計算鍵；右側僅未拆分時</td><td>依走訪規則</td></tr>
+<tr><td>astNode 為單一識別字</td><td>該識別字</td><td>有 true/false 邊 p-use；拆分葉或 with 物件 c-use；其他不讀</td></tr>
+<tr><td>其他</td><td>astNode</td><td>依走訪規則</td></tr>
+</table></div>
+
 <h2>工程師要決定的事</h2>
 
 <h3>驗收條件盤點</h3>
@@ -179,21 +201,26 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>4 呼叫端不需修改</td><td class="ok">可驗證</td></tr>
 <tr><td rowspan="5">US2</td><td>1 未拆分節點的拆分資訊為 null</td><td class="ok">可驗證</td></tr>
 <tr><td>2 決策節點與葉節點的 split 內容（路徑、原敘述、已求值運算式）</td><td class="ok">可驗證</td></tr>
-<tr><td>3 呼叫節點與 call return 節點的標籤與重構前相同</td><td class="ok">可驗證</td></tr>
-<tr><td>4 標籤字串只有一處定義</td><td class="ok">可驗證（SC-004 以程式碼搜尋）</td></tr>
+<tr><td>3 呼叫節點與 call return 節點：split 為 null、路徑在 <code>labelPath</code>、輸出與重構前相同</td><td class="ok">可驗證</td></tr>
+<tr><td>4 標籤字串只有一處定義</td><td class="ok">可驗證（SC-004 範圍已定：lib 與 tests/helpers）</td></tr>
 <tr><td>5 with 物件節點、loop／case 原節點旗標行為不變</td><td class="ok">可驗證</td></tr>
-<tr><td rowspan="3">US3</td><td>1 決策節點：條件 p-use、已求值運算式 c-use</td><td class="ok">可驗證</td></tr>
-<tr><td>2 拆分葉節點、with 物件節點：單一識別字 c-use；3 switch case：discriminant p-use；4 c/p-use 集合與重構前相同</td><td class="ok">可驗證</td></tr>
-<tr><td>for-in/for-of loop 節點、一般節點（FR-008 要求測試）</td><td class="ok">已補：US3 情境 4、5</td></tr>
+<tr><td rowspan="6">US3</td><td>1 決策節點：已求值運算式在前、c-use，條件在後依走訪規則</td><td class="ok">可驗證</td></tr>
+<tr><td>2 單一識別字：拆分葉、with 物件 c-use；<code>if (a)</code> p-use；<code>a;</code> 不讀</td><td class="ok">可驗證</td></tr>
+<tr><td>3 switch：<code>case y</code> 讀 x（p-use）、不讀 y；default 不讀；discriminant 已拆分時皆不讀</td><td class="ok">可驗證</td></tr>
+<tr><td>4 for-in/for-of：左側物件／預設值／計算鍵；右側僅未拆分時</td><td class="ok">可驗證</td></tr>
+<tr><td>5 一般節點：得到 astNode</td><td class="ok">可驗證</td></tr>
+<tr><td>6 每個節點的 c/p-use 集合與重構前相同</td><td class="ok">可驗證</td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
 <p>無。規範針對服務後端／前端；本重構為 CLI／函式庫內部，不涉及。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無（本輪未跑 analyze）。憲章 §CP-4 測試要求由 FR-003、FR-008 的新單元測試承接。</p>
+<p>無（尚未跑 analyze；本輪 clarify 未引入衝突）。憲章 §CP-4 測試要求由 FR-003、FR-008 的新單元測試承接。</p>
 
-<h3>本輪判斷點（已決：兩題皆採 A，見 spec D5、US3 情境 4–5；次要疑點已補進 FR-003、FR-010、SC-003、SC-006）</h3>
+<h3>本輪判斷點：無新判斷點</h3>
+<p>本輪 5 條 Clarifications 已把前輪疑點收斂，剩餘疑點皆不改變交付物（見次要疑點）。以下為前輪已決事項，不再詢問。</p>
+<h3>已決事項（spec 閘門：兩題皆採 A，見 spec D5、US3 情境；本輪 clarify 已進一步細化 US3 與 <code>labelPath</code>）</h3>
 <div class="box"><table>
 <tr><th>#</th><th>問題</th><th>方案（建議標示）</th><th>影響</th><th>出處</th></tr>
 <tr><td>1</td><td>拆分呼叫點產生的呼叫節點與 call return 節點，要不要帶 <code>split</code>？spec 交給 plan，但這兩種節點「不是拆分節點」，帶了就破壞「split 為 null 即未拆分」</td><td>A 不帶 split，標籤 helper 改吃行號與路徑兩個參數（建議）<br>B 帶 split 並加旗標區分</td><td>A 語意乾淨、helper 簽名較寬；B 要改 FR-004 與 Key Entities 的定義</td><td>Assumptions 第 4 項；Edge Cases 第 3 項；FR-004、FR-006</td></tr>
@@ -203,8 +230,8 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <h3>次要疑點</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>FR-003 的「D12 已求值／未求值判定」引用 001 spec 的決策，本 spec 內無定義；REF 為外部連結，審閱者無法直接核對</td><td>FR-003；規格來源</td></tr>
-<tr><td>SC-003「每個模組少於 350 行」是否可行，要待 plan 量過各函式行數才知道（原檔 687 行）</td><td>SC-003</td></tr>
-<tr><td>「lint 抑制檔項目數」未指明是哪個檔案，驗證時需 plan 補明</td><td>FR-010；SC-006</td></tr>
+<tr><td>FR-003 的「D12 已求值／未求值判定」引用 001 spec 的決策，本 spec 內僅以例子說明；REF 為外部連結，審閱者無法直接核對</td><td>FR-003；規格來源</td></tr>
+<tr><td>SC-003「每個模組少於 350 行」是否可行，要待 plan 量過各函式行數才知道（原檔 687 行）；spec 已允許 plan 記錄理由</td><td>SC-003</td></tr>
+<tr><td>for-in/for-of 列「依走訪規則（無 true/false 雙邊時為 c-use）」的根層讀法措辭較鬆，測試時以重構前行為為準</td><td>US3 節點種類表第 4 列</td></tr>
 </table></div>
 </main>
