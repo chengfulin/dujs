@@ -9,9 +9,33 @@ var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	modelBuilder = require('../../lib/dujs/modelbuilder'),
 	cfgBuilder = require('../../lib/dujs/cfgbuilder'),
 	factoryModel = require('../../lib/dujs/modelfactory'),
+	Model = require('../../lib/dujs/model'),
 	factoryScope = require('../../lib/dujs/scopefactory'),
     variableAnalyzer = require('../../lib/dujs/variableanalyzer'),
-    defuseAnalyzer = require('../../lib/dujs/defuseanalyzer');
+    defuseAnalyzer = require('../../lib/dujs/defuseanalyzer'),
+	hierarchy = require('../../lib/dujs/hierarchy'),
+	expansion = require('../../lib/dujs/expansion');
+var fs = require('fs'),
+	path = require('path'),
+	analyze = require('../helpers/analyze'),
+	executor = require('../../lib/dujs/defuseanalysisexecutor'),
+	FlowNode = require('../../lib/esgraph/flownode');
+
+var PROBES = path.join(__dirname, 'cases', 'probes');
+
+/**
+ * Freeze the hierarchy of a model built by hand and set its graph and
+ * flatNodeOf by expand (as lib/dujs/modelbuilder.js does)
+ * @param {Model} model
+ * @returns {Model}
+ */
+function expandInto(model) {
+	"use strict";
+	var expanded = expansion.expand(hierarchy.freeze(model));
+	model.graph = expanded.graph;
+	model.setFlatNodeOf(expanded.flatNodeOf);
+	return model;
+}
 
 describe('ModelBuilder', function () {
 	"use strict";
@@ -39,15 +63,18 @@ describe('ModelBuilder', function () {
 					calleeModel = factoryModel.create();
 				callerModel.graph = callerGraph;
 				calleeModel.graph = calleeGraph;
-				var connectedModel = modelBuilder._testonly_._connectCallerCalleeScopeRelatedModelsAtCallSite(callerModel, calleeModel, callerGraph[2][2]);
+				/// built by hand with the hierarchy and expand (the connecting function is replaced by them)
+				var connectedModel = hierarchy.createCallHierarchyModel(callerModel);
+				hierarchy.addCallEdge(connectedModel, {callSite: callerGraph[2][2], calleeModel: calleeModel});
+				expandInto(connectedModel);
 				should.exist(connectedModel);
 				connectedModel.graph[2].length.should.eql(11); /// callerGraph(CALL NODE inside) + calleeGraph + CALL RETURN NODE
 				connectedModel.graph[2][2]._testonly_._type.should.eql('call');
-				connectedModel.graph[2][3].should.eql(calleeGraph[0]);
-				connectedModel.graph[2][7].should.eql(calleeGraph[1]);
+				connectedModel.graph[2][3].original.should.eql(calleeGraph[0]);
+				connectedModel.graph[2][7].original.should.eql(calleeGraph[1]);
 				connectedModel.graph[2][8]._testonly_._type.should.eql('callReturn');
 				should.not.exist(connectedModel.graph[2][2].normal);
-				connectedModel.graph[2][2].call.should.eql(calleeGraph[0]);
+				connectedModel.graph[2][2].call.original.should.eql(calleeGraph[0]);
 			});
 		});
 
@@ -59,7 +86,10 @@ describe('ModelBuilder', function () {
 				));
 				var model = factoryModel.create();
 				model.graph = graph;
-				var connectedGraph = modelBuilder._testonly_._connectLoopNodeToPageGraph(model);
+				/// built by hand with the hierarchy and expand; the graph of the page with
+				/// the LOOP NODE is the flat graph up to the exit node (the LOOP RETURN NODE follows)
+				var flatGraph = expandInto(hierarchy.createIntraPageModel(model, [])).graph,
+					connectedGraph = [flatGraph[0], flatGraph[1], flatGraph[2].slice(0, flatGraph[2].indexOf(flatGraph[1]) + 1)];
 				connectedGraph[2].length.should.eql(4);
 				connectedGraph[1].prev.length.should.eql(1);
 				connectedGraph[1].prev[0]._testonly_._type.should.eql('loop');
@@ -108,22 +138,24 @@ describe('ModelBuilder', function () {
 			});
 
 			it('should connect page model and event handler models well', function () {
-				var resultModel = modelBuilder._testonly_._connectPageAndEventHandlers(pageModel, [eventHandlerModel1, eventHandlerModel2]);
+				/// built by hand with the hierarchy and expand
+				var resultModel = expandInto(hierarchy.createIntraPageModel(pageModel, [eventHandlerModel1, eventHandlerModel2]));
 				var resultGraph = resultModel.graph;
 				resultGraph[2].length.should.eql(11);
 				var pageLoopNode = resultGraph[2][2];
                 pageLoopNode.type.should.eql('loop');
 				var pageLoopReturnNode = resultGraph[2][7];
                 pageLoopReturnNode.type.should.eql('loopReturn');
-				pageLoopNode.onEvent[0].should.eql(eventHandlerGraph1[0]);
-				pageLoopNode.onEvent[1].should.eql(eventHandlerGraph2[0]);
-				eventHandlerGraph1[1].normal.toString().should.eql(pageLoopReturnNode.toString());
-				eventHandlerGraph2[1].normal.toString().should.eql(pageLoopReturnNode.toString());
+				pageLoopNode.onEvent[0].original.should.eql(eventHandlerGraph1[0]);
+				pageLoopNode.onEvent[1].original.should.eql(eventHandlerGraph2[0]);
+				resultModel.flatNodeOf(eventHandlerGraph1[1]).normal.toString().should.eql(pageLoopReturnNode.toString());
+				resultModel.flatNodeOf(eventHandlerGraph2[1]).normal.toString().should.eql(pageLoopReturnNode.toString());
 				pageLoopReturnNode.return[0].should.eql(pageLoopNode);
 			});
 
             it('should connect LOOP NODE and LOOP RETURN NODE as no event handlers', function () {
-                var resultModel = modelBuilder._testonly_._connectPageAndEventHandlers(pageModel, []);
+                /// built by hand with the hierarchy and expand
+                var resultModel = expandInto(hierarchy.createIntraPageModel(pageModel, []));
                 var resultGraph = resultModel.graph;
                 resultGraph[2].length.should.eql(5);
                 var pageLoopNode = resultGraph[2][2];
@@ -390,6 +422,15 @@ describe('ModelBuilder', function () {
                         }
                     });
                 });
+
+                it('should set the level of intra-procedural models', function () {
+                    var models = modelCtrl._testonly_._collectionOfPageModels.get(scopeCtrl.pageScopeTrees[0])
+                        ._testonly_._intraProceduralModels;
+                    models.length.should.eql(4);
+                    models.forEach(function (model) {
+                        model.level.should.eql(Model.INTRA_PROCEDURAL);
+                    });
+                });
             });
 
             describe('buildInterProceduralModels', function () {
@@ -428,6 +469,15 @@ describe('ModelBuilder', function () {
                     callNodes[1].call.scope.toString().should.eql('$DOMAIN.$PAGE_0.fun');
                     callReturnNodes[0].prev[0].scope.toString().should.eql('$DOMAIN.$PAGE_0.foo');
                     callReturnNodes[1].prev[0].scope.toString().should.eql('$DOMAIN.$PAGE_0.fun');
+                });
+
+                it('should set the level of inter-procedural models', function () {
+                    var pageModels = modelCtrl.getPageModels(scopeCtrl.pageScopeTrees[0]);
+                    pageModels._testonly_._interProceduralModels.length.should.eql(1);
+                    pageModels._testonly_._interProceduralModels[0].level.should.eql(Model.INTER_PROCEDURAL);
+                    pageModels._testonly_._intraProceduralModels.forEach(function (model) {
+                        model.level.should.eql(Model.INTRA_PROCEDURAL);
+                    });
                 });
             });
         });
@@ -476,6 +526,12 @@ describe('ModelBuilder', function () {
                 loopNode.onEvent[0].scope.toString().should.eql('$DOMAIN.$PAGE_0.foo');
                 loopNode.onEvent[1].scope.toString().should.eql('$DOMAIN.$PAGE_0.fun');
             });
+
+            it('should set the level of the intra-page model', function () {
+                var pageModels = modelCtrl.getPageModels(scopeCtrl.pageScopeTrees[0]);
+                pageModels._testonly_._intraPageModels.length.should.eql(1);
+                pageModels._testonly_._intraPageModels[0].level.should.eql(Model.INTRA_PAGE);
+            });
         });
 
         describe('buildInterPageModel', function () {
@@ -519,10 +575,217 @@ describe('ModelBuilder', function () {
                 var graph = interPageModel.graph;
                 graph[0].type.should.eql('localStorage');
                 graph[1].type.should.eql('localStorage');
-                graph[0].loadStorage[0].should.eql(page1IntraPageModel.graph[0]);
-                graph[0].loadStorage[1].should.eql(page2IntraPageModel.graph[0]);
-                page1IntraPageModel.graph[2][2].saveStorage.should.eql(graph[0]);
+                graph[0].loadStorage[0].original.should.eql(page1IntraPageModel.graph[0].original);
+                graph[0].loadStorage[1].original.should.eql(page2IntraPageModel.graph[0].original);
+                (interPageModel.flatNodeOf(page1IntraPageModel.graph[2][2].original).saveStorage === graph[0]).should.eql(true);
+            });
+
+            it('should set the level of each model', function () {
+                modelCtrl._testonly_._interPageModel.level.should.eql(Model.INTER_PAGE);
+                modelCtrl.getIntraPageModelByMainlyRelatedScopeFromAPageModels(page1ScopeTree, pageScope1)
+                    .level.should.eql(Model.INTRA_PAGE);
+                modelCtrl.getIntraPageModelByMainlyRelatedScopeFromAPageModels(page2ScopeTree, pageScope2)
+                    .level.should.eql(Model.INTRA_PAGE);
+                modelCtrl.getIntraProceduralModelByMainlyRelatedScopeFromAPageModels(page1ScopeTree, pageScope1)
+                    .level.should.eql(Model.INTRA_PROCEDURAL);
             });
         });
+	});
+});
+
+/*
+ * Upper models built as hierarchies by the builder (specs/003-hierarchical-models,
+ * tasks T027 and T033). The expected values are the output of the program
+ * before the refactoring (e68bb2d) for the same programs.
+ */
+/**
+ * Analyze a probe program of tests/dujs/cases/probes
+ * @param {string} name
+ * @returns {Object} result of the analyze helper
+ */
+function analyzeProbe(name) {
+	"use strict";
+	return analyze(fs.readFileSync(path.join(PROBES, name + '.js'), 'utf8'));
+}
+
+/**
+ * The first node of a model at a line whose analyzed expressions include a
+ * call of addEventListener
+ * @param {Model} model
+ * @param {number} line
+ * @returns {FlowNode}
+ */
+function registeringNodeAt(model, line) {
+	"use strict";
+	var found = model.graph[2].filter(function (node) {
+		return node.line === line && node.analyzedExpressions.some(function (expression) {
+			return !!expression && expression.type === 'CallExpression' &&
+				expression.callee.type === 'MemberExpression' && expression.callee.property.name === 'addEventListener';
+		});
+	})[0];
+	FlowNode.isFlowNode(found).should.be.true();
+	return found;
+}
+
+/**
+ * Assert two lists hold the same objects in the same order
+ * @param {Array} actual
+ * @param {Array} expected
+ */
+function shouldBeSameObjects(actual, expected) {
+	"use strict";
+	actual.length.should.eql(expected.length);
+	actual.forEach(function (each, index) {
+		(each === expected[index]).should.be.true('object at ' + index + ' differs');
+	});
+}
+
+describe('ModelBuilder upper models as hierarchies', function () {
+	"use strict";
+	after(analyze.reset);
+
+	describe('inter-procedural models', function () {
+		/// a calls b (which calls c) and k, all nested; the page calls a and e
+		var NESTED = [
+			'var x = 0;',
+			'function a() {',
+			'  function b() {',
+			'    function c() { x = 1; }',
+			'    c();',
+			'  }',
+			'  function k() { x = 4; }',
+			'  b();',
+			'  k();',
+			'}',
+			'function e() { x = 2; }',
+			'a();',
+			'e();'
+		].join('\n');
+
+		it('should keep the related scopes of a nested call chain as before the refactoring', function () {
+			var result = analyze(NESTED);
+			result.interProceduralScopes().should.eql([
+				['$DOMAIN.$PAGE_0.a.b', '$DOMAIN.$PAGE_0.a.b.c'],
+				['$DOMAIN.$PAGE_0.a', '$DOMAIN.$PAGE_0.a.b', '$DOMAIN.$PAGE_0.a.b.c', '$DOMAIN.$PAGE_0.a.k'],
+				['$DOMAIN.$PAGE_0', '$DOMAIN.$PAGE_0.a', '$DOMAIN.$PAGE_0.a.b', '$DOMAIN.$PAGE_0.a.b.c',
+					'$DOMAIN.$PAGE_0.a.k', '$DOMAIN.$PAGE_0.e']
+			]);
+			var models = modelCtrl.collectionOfPageModels.get(result.scopeTree).interProceduralModels;
+			models.map(function (model) {
+				return String(model.mainlyRelatedScope);
+			}).should.eql(['$DOMAIN.$PAGE_0.a.b', '$DOMAIN.$PAGE_0.a', '$DOMAIN.$PAGE_0']);
+			models.forEach(function (model) {
+				model.level.should.eql(Model.INTER_PROCEDURAL);
+				Object.isFrozen(model.hierarchy).should.be.true();
+				(model.hierarchy.main.scope === model.mainlyRelatedScope).should.be.true();
+			});
+			/// the callee of a is the inter-procedural model of a.b; the callees of the page, the models of a and e
+			(models[1].hierarchy.edges[0].calleeModel === models[0]).should.be.true();
+			(models[2].hierarchy.edges[0].calleeModel === models[1]).should.be.true();
+			result.intraPage().should.eql(['a: entry -> L12', 'b: entry -> L8', 'c: entry -> L5', 'e: entry -> L13', 'k: entry -> L9']);
+		});
+	});
+
+	describe('handlers found with the reach-in definitions of research R8', function () {
+		function intraPageModelOf(result) {
+			return modelCtrl.collectionOfPageModels.get(result.scopeTree).intraPageModels[0];
+		}
+
+		/** scope names of the handlers of the intra-page model, in the order of its event edges */
+		function handlersOf(result) {
+			return intraPageModelOf(result).hierarchy.edges.filter(function (edge) {
+				return edge.kind === 'event';
+			}).map(function (edge) {
+				return String(edge.handlerModel.mainlyRelatedScope);
+			});
+		}
+
+		/** scope names of the targets of the onEvent edges of the LOOP NODE of the intra-page flat graph */
+		function onEventOf(result) {
+			var model = intraPageModelOf(result);
+			return model.flatNodeOf(model.hierarchy.loop).onEvent.map(function (node) {
+				return String(node.scope);
+			});
+		}
+
+		// a2: h is called by the page and registered; h registers reg by an identifier, and
+		// the topmost inter-procedural model of that node (the page) is not the searched model of h
+		it('should find the handlers and pairs of probe a2 as before the refactoring', function () {
+			var result = analyzeProbe('a2');
+			var expected = ['$DOMAIN.$PAGE_0.h.reg', '$DOMAIN.$PAGE_0.h', '$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4', '$DOMAIN.$PAGE_0.h.reg'];
+			handlersOf(result).should.eql(expected);
+			onEventOf(result).should.eql(expected);
+			result.intraPage().should.eql([
+				'h: entry -> L5', 'h: entry -> L6', 'h: entry -> L7', 'h: entry -> L8', 'h: entry -> entry',
+				'init: entry -> L3', 'init: entry -> entry',
+				'n: L3 -> L10', 'n: L3 -> L9', 'n: L4 -> L10', 'n: L4 -> L9', 'n: L8 -> L10', 'n: L8 -> L9',
+				'reg: entry -> L4', 'reg: entry -> entry',
+				'window: entry -> L4', 'window: entry -> L6', 'window: entry -> L7', 'window: entry -> L8', 'window: entry -> entry'
+			]);
+		});
+
+		it('should read the reach-in definitions of the inter-procedural model analyzed last', function () {
+			var result = analyzeProbe('a2'),
+				pageModels = modelCtrl.collectionOfPageModels.get(result.scopeTree),
+				lookup = modelBuilder._testonly_._reachInsForHandlerLookup;
+			var modelOfH = pageModels.intraProceduralModels.filter(function (model) {
+				return String(model.mainlyRelatedScope) === '$DOMAIN.$PAGE_0.h';
+			})[0];
+			var original = registeringNodeAt(modelOfH, 4);
+			var containing = pageModels.interProceduralModels.filter(function (model) {
+				return model.analysisResultOf(original) !== null;
+			});
+			containing.map(function (model) {
+				return String(model.mainlyRelatedScope);
+			}).should.eql(['$DOMAIN.$PAGE_0.h', '$DOMAIN.$PAGE_0']);
+			var last = containing[1].analysisResultOf(original).reachIns.values(),
+				first = containing[0].analysisResultOf(original).reachIns.values();
+			/// the two models give different reach-in definitions: the choice matters
+			last.length.should.not.eql(first.length);
+			shouldBeSameObjects(lookup(original).values(), last);
+			/// a node of the graph of an upper model is mapped to its original
+			shouldBeSameObjects(lookup(containing[0].flatNodeOf(original)).values(), last);
+		});
+
+		it('should fall back to the intra-procedural reach-in definitions when no model is analyzed', function () {
+			analyze.reset();
+			executor.initialize([fs.readFileSync(path.join(PROBES, 'a2.js'), 'utf8')]);
+			executor.buildIntraProceduralModelsOfEachPageModels();
+			modelBuilder.buildInterProceduralModels();
+			var scopeTree = scopeCtrl.pageScopeTrees[0],
+				pageModels = modelCtrl.collectionOfPageModels.get(scopeTree),
+				lookup = modelBuilder._testonly_._reachInsForHandlerLookup;
+			var modelOfH = pageModels.intraProceduralModels.filter(function (model) {
+				return String(model.mainlyRelatedScope) === '$DOMAIN.$PAGE_0.h';
+			})[0];
+			var original = registeringNodeAt(modelOfH, 4);
+			pageModels.interProceduralModels.length.should.be.above(1);
+			pageModels.interProceduralModels.forEach(function (model) {
+				(model.analysisResultOf(original) === null).should.be.true();
+				(model.flatNodeOf(original) !== null).should.be.true();
+			});
+			original.reachIns.size.should.be.above(0);
+			shouldBeSameObjects(lookup(original).values(), original.reachIns.values());
+			analyze.reset();
+		});
+
+		// a4: onA is registered twice by the page (one search keeps it once, as before the refactoring)
+		it('should keep the handler list of probe a4 as before the refactoring', function () {
+			var result = analyzeProbe('a4');
+			handlersOf(result).should.eql(['$DOMAIN.$PAGE_0.onA', '$DOMAIN.$PAGE_0.onB']);
+			onEventOf(result).should.eql(['$DOMAIN.$PAGE_0.onA', '$DOMAIN.$PAGE_0.onB']);
+		});
+
+		// r8: g is found from the page and again from h (duplicates kept)
+		it('should keep the onEvent targets g, h, g of probe r8 in order with duplicates', function () {
+			var result = analyzeProbe('r8');
+			handlersOf(result).should.eql(['$DOMAIN.$PAGE_0.g', '$DOMAIN.$PAGE_0.h', '$DOMAIN.$PAGE_0.g']);
+			onEventOf(result).should.eql(['$DOMAIN.$PAGE_0.g', '$DOMAIN.$PAGE_0.h', '$DOMAIN.$PAGE_0.g']);
+			result.intraPage().should.eql([
+				'g: entry -> L3', 'g: entry -> entry', 'h: entry -> L4', 'h: entry -> L5',
+				'n: L1 -> L6', 'n: L2 -> L6', 'n: L3 -> L6',
+				'reg: entry -> L3', 'window: entry -> L3', 'window: entry -> L5', 'window: entry -> entry'
+			]);
+		});
 	});
 });

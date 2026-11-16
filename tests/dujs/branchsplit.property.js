@@ -383,17 +383,15 @@ describe('Properties of splitting conditional and short-circuit expressions', fu
 			[].concat(models.intraProceduralModels, models.interProceduralModels, models.intraPageModels)
 				.forEach(function (model) {
 					analyze.pairsOfModel(model);
-					/// a target is in the graph of the model, or is the LOOP NODE: the edges to the exit
-					/// node of a page are redirected to the LOOP NODE of the intra-page graph, and flow
-					/// nodes are shared by the models (known limitation)
+					/// a target is in the graph of the model: each model has its own flow nodes
 					function isTargetOf(target) {
-						return !!target && (model.graph[2].indexOf(target) !== -1 || target.type === FlowNode.LOOP_NODE_TYPE);
+						return !!target && model.graph[2].indexOf(target) !== -1;
 					}
 					model.graph[2].forEach(function (node) {
 						if (isDecision(node)) {
 							(!!node.true && !!node.false).should.eql(true, 'both targets of a decision');
-							isTargetOf(node.true).should.eql(true, 'true target in the graph or the LOOP NODE');
-							isTargetOf(node.false).should.eql(true, 'false target in the graph or the LOOP NODE');
+							isTargetOf(node.true).should.eql(true, 'true target in the graph');
+							isTargetOf(node.false).should.eql(true, 'false target in the graph');
 						}
 					});
 				});

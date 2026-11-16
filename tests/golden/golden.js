@@ -8,7 +8,8 @@
  * History: produced with esprima 1.0 (dujs 1.0.0); regenerated after fixing
  * the always-empty KILL sets of reaching definitions.
  */
-var fs = require('fs'),
+var crypto = require('crypto'),
+	fs = require('fs'),
 	os = require('os'),
 	path = require('path'),
 	spawnSync = require('child_process').spawnSync,
@@ -16,7 +17,11 @@ var fs = require('fs'),
 
 var CLI = path.resolve(__dirname, '../../bin/dujs.js'),
 	FIXTURES = path.join(__dirname, 'fixtures'),
-	EXPECTED = path.join(__dirname, 'expected');
+	EXPECTED = path.join(__dirname, 'expected'),
+	/// sha256 of every .dot file produced before the hierarchical refactor, and
+	/// the .dot files added since (specs/003-hierarchical-models/contracts/golden-verification.md);
+	/// UPDATE_GOLDEN never reads or writes it
+	MANIFEST = path.join(__dirname, 'manifest.json');
 
 /**
  * List the relative paths of all .dot files under a directory, sorted
@@ -37,6 +42,80 @@ function listDotFiles(dir) {
 		});
 	}(dir));
 	return result.sort();
+}
+
+/**
+ * sha256 of a file as a hex string
+ * @param {string} file
+ * @returns {string}
+ */
+function sha256Of(file) {
+	'use strict';
+	return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+/**
+ * Relative path with '/' separators
+ * @param {string} file
+ * @returns {string}
+ */
+function toPosix(file) {
+	'use strict';
+	return file.split(path.sep).join('/');
+}
+
+/**
+ * Image paths referred by a report, in the order of the report: for each
+ * page the intra-procedural, inter-procedural and intra-page models (graph
+ * then dupairs of each model), then the inter-page model; the hierarchy graph
+ * of an upper model (contract #5) before its graph when withHierarchy
+ * @param {Array} dotFiles relative paths of the .dot files of an output directory
+ * @param {string} prefix prefix of each path (../<output directory>/)
+ * @param {boolean} withHierarchy
+ * @returns {Array}
+ */
+function reportImagePaths(dotFiles, prefix, withHierarchy) {
+	'use strict';
+	var files = dotFiles.map(toPosix);
+	function modelsIn(dir) {
+		return files.filter(function (file) {
+			return path.posix.dirname(file) === dir && /\.graph\.dot$/.test(file);
+		}).map(function (file) {
+			return parseInt(path.posix.basename(file), 10);
+		}).sort(function (first, second) {
+			return first - second;
+		}).map(function (index) {
+			return dir + '/' + index;
+		});
+	}
+	function imagesOf(model, upper) {
+		var images = [];
+		if (upper && withHierarchy) {
+			images.push(prefix + model + '.hierarchy.png');
+		}
+		return images.concat([prefix + model + '.graph.png', prefix + model + '.dupairs.png']);
+	}
+	var pages = files.map(function (file) {
+		return /^page(\d+)\//.exec(file);
+	}).filter(Boolean).map(function (match) {
+		return parseInt(match[1], 10);
+	}).filter(function (page, index, all) {
+		return all.indexOf(page) === index;
+	}).sort(function (first, second) {
+		return first - second;
+	});
+	var result = [];
+	pages.forEach(function (page) {
+		[['intra-procedurals', false], ['inter-procedurals', true], ['intra-pages', true]].forEach(function (level) {
+			modelsIn('page' + page + '/' + level[0]).forEach(function (model) {
+				[].push.apply(result, imagesOf(model, level[1]));
+			});
+		});
+		modelsIn('inter-page').forEach(function (model) {
+			[].push.apply(result, imagesOf(model, true));
+		});
+	});
+	return result;
 }
 
 /**
@@ -95,6 +174,58 @@ function goldenCase(title, pages, expectedDir) {
 				should(actual).eql(expected, 'mismatch in ' + file);
 			});
 		});
+
+		it('keeps every baseline .dot file byte-identical', function () {
+			var baseline = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'))[path.basename(expectedDir)].baseline,
+				different = Object.keys(baseline).filter(function (file) {
+					var actual = path.join(outDir, file);
+					return !fs.existsSync(actual) || sha256Of(actual) !== baseline[file];
+				});
+			different.should.eql([], 'baseline .dot files missing or changed: ' + different.join(', '));
+		});
+
+		// contract #5 (contracts/hierarchy-output.md §4): checks the HTML only, not the png files (no Graphviz needed)
+		it('references the hierarchy graphs before the flat graphs in the report', function () {
+			var html = fs.readFileSync(path.join(outDir, 'report.html'), 'utf8'),
+				prefix = '../' + path.basename(outDir) + '/',
+				dotFiles = listDotFiles(outDir),
+				hierarchyDiv = /<div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="[^"]*\.hierarchy\.png" class="center-block"><\/div>/g;
+			function sourcesOf(content) {
+				var sources = [], pattern = /<img src="([^"]*)"/g, match;
+				while ((match = pattern.exec(content)) !== null) {
+					sources.push(match[1]);
+				}
+				return sources;
+			}
+			function positionOf(image) {
+				return html.indexOf('<img src="' + image + '"');
+			}
+			var hierarchies = dotFiles.map(toPosix).filter(function (file) {
+				return /\.hierarchy\.dot$/.test(file);
+			});
+			hierarchies.length.should.be.above(0);
+			hierarchies.forEach(function (file) {
+				var model = prefix + file.replace(/\.hierarchy\.dot$/, ''),
+					hierarchy = positionOf(model + '.hierarchy.png'),
+					graph = positionOf(model + '.graph.png'),
+					dupairs = positionOf(model + '.dupairs.png');
+				hierarchy.should.be.aboveOrEqual(0, 'no hierarchy graph of ' + file);
+				hierarchy.should.be.below(graph, 'hierarchy graph after the graph of ' + file);
+				graph.should.be.below(dupairs, 'graph after the dupairs of ' + file);
+			});
+			sourcesOf(html).should.eql(reportImagePaths(dotFiles, prefix, true));
+			var withoutHierarchy = html.replace(hierarchyDiv, '');
+			withoutHierarchy.should.not.containEql('.hierarchy.png');
+			sourcesOf(withoutHierarchy).should.eql(reportImagePaths(dotFiles, prefix, false));
+		});
+
+		it('adds exactly the listed new .dot files', function () {
+			var entry = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'))[path.basename(expectedDir)],
+				added = listDotFiles(outDir).map(toPosix).filter(function (file) {
+					return !Object.prototype.hasOwnProperty.call(entry.baseline, file);
+				}).sort();
+			added.should.eql([].concat(entry.added).sort());
+		});
 	});
 }
 
@@ -103,3 +234,6 @@ goldenCase('Golden outputs (ES5 fixtures)',
 /// characterization of the ES2015+ modeling; semantics are asserted in tests/dujs/es2015.js
 goldenCase('Golden outputs (ES2015+ module fixture)',
 	[['es2015/app.js']], path.join(__dirname, 'expected-es2015'));
+/// inter-procedural models with nested calls, a call in a decision and event handlers
+goldenCase('Golden outputs (inter-procedural fixture)',
+	[['interprocedural/app.js']], path.join(__dirname, 'expected-interprocedural'));

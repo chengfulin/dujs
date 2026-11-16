@@ -29,6 +29,12 @@
  * side labels its first decision and the loop node both "L<line>". No
  * sequence number is added and no error is thrown, so the analyzed programs
  * of the tests keep one node source per line.
+ *
+ * Invariance of built models (specs/003-hierarchical-models research R14,
+ * SC-003): after each modeling stage is analyzed, the models built by the
+ * stage are snapshotted; after all four stages, every snapshot is taken again
+ * and compared, and an Error naming the model and the node is thrown on any
+ * difference.
  */
 var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	modelCtrl = require('../../lib/dujs/modelctrl'),
@@ -69,23 +75,11 @@ function useLabels(use, variableName) {
 	if (!!branchLabel.pathOf(target)) {
 		return [prefix];
 	}
-	/// FlowNodes are shared by the models: the intra-page model reconnects a
-	/// branch to the exit node to its LOOP node, while the pair of the
-	/// intra-procedural model still targets the exit node (known limitation)
-	/// likewise, a call inserted before a decision node by the inter-procedural model is entered
-	/// instead of the decision node (lib/dujs/modelbuilder.js, dujsDecisionCalledBefore)
-	function branch(node) {
-		if (!!node && !!node.dujsDecisionCalledBefore) {
-			return node.dujsDecisionCalledBefore;
-		}
-		return (!!node && node.type === FlowNode.LOOP_NODE_TYPE && target.type === FlowNode.EXIT_NODE_TYPE) ?
-			target : node;
-	}
 	var labels = [];
-	if (target === decision.true || target === branch(decision.true)) {
+	if (target === decision.true) {
 		labels.push(prefix + branchLabel.branchMark(branchLabel.TRUE_BRANCH));
 	}
-	if (target === decision.false || target === branch(decision.false)) {
+	if (target === decision.false) {
 		labels.push(prefix + branchLabel.branchMark(branchLabel.FALSE_BRANCH));
 	}
 	if (labels.length === 0) {
@@ -112,6 +106,172 @@ function pairsOfModel(model) {
 }
 
 /**
+ * Fields of the analysis result of a node kept in a snapshot
+ * @type {Array}
+ */
+var RESULT_FIELDS = ['reachIns', 'reachOuts', 'generate', 'kill', 'cuse', 'puse'];
+
+/**
+ * Stages of the executor, each with the models it builds
+ * @type {Array}
+ */
+var STAGES = [
+	{
+		build: 'buildIntraProceduralModelsOfEachPageModels',
+		models: function (pageModels) {
+			'use strict';
+			return pageModels.intraProceduralModels;
+		}
+	},
+	{
+		build: 'buildInterProceduralModelsOfEachPageModels',
+		models: function (pageModels) {
+			'use strict';
+			return pageModels.interProceduralModels;
+		}
+	},
+	{
+		build: 'buildIntraPageModelsOfEachPageModels',
+		models: function (pageModels) {
+			'use strict';
+			return pageModels.intraPageModels;
+		}
+	},
+	{
+		build: 'buildInterPageModelsOfEachPageModels',
+		models: function () {
+			'use strict';
+			return [modelCtrl.interPageModel];
+		}
+	}
+];
+
+/**
+ * Snapshot of a model: the nodes of the flat graph and, for each node, its
+ * cfgId, type, the targets of each connection type, prev and next (a target
+ * in the graph as its position, otherwise the object itself) and the members
+ * of the six sets of analysisResultOf (objects compared by identity)
+ * @param {Model} model
+ * @returns {Object} {model, entry, exit, nodes, records}
+ */
+function snapshotOf(model) {
+	'use strict';
+	var graph = model.graph,
+		positions = new Map();
+	graph[2].forEach(function (node, index) {
+		positions.set(node, index);
+	});
+	function refOf(node) {
+		return positions.has(node) ? positions.get(node) : node;
+	}
+	function refsOf(nodes) {
+		return [].concat(nodes || []).map(refOf);
+	}
+	return {
+		model: model,
+		entry: refOf(graph[0]),
+		exit: refOf(graph[1]),
+		nodes: graph[2].slice(),
+		records: graph[2].map(function (node) {
+			var record = {cfgId: node.cfgId, type: node.type, prev: refsOf(node.prev), next: refsOf(node.next)},
+				result = model.analysisResultOf(node);
+			FlowNode.CONNECTION_TYPES.forEach(function (type) {
+				record[type] = refsOf(node[type]);
+			});
+			RESULT_FIELDS.forEach(function (field) {
+				record[field] = (!result || !result[field]) ? null : result[field].values();
+			});
+			return record;
+		})
+	};
+}
+
+/**
+ * Name of a model in an Error
+ * @param {Model} model
+ * @returns {string}
+ */
+function modelName(model) {
+	'use strict';
+	return model.level + ' model of ' + String(model.mainlyRelatedScope);
+}
+
+/**
+ * Whether two arrays have the same elements (by identity) in the same order
+ * @param {Array|null} first
+ * @param {Array|null} second
+ * @returns {boolean}
+ */
+function sameItems(first, second) {
+	'use strict';
+	if (first === null || second === null) {
+		return first === second;
+	}
+	return first.length === second.length && first.every(function (item, index) {
+		return item === second[index];
+	});
+}
+
+/**
+ * Compare a snapshot with a new snapshot of the same model
+ * @param {Object} before
+ * @param {Object} after
+ * @throws {Error} naming the model and the node when they differ
+ */
+function compareSnapshots(before, after) {
+	'use strict';
+	var name = modelName(before.model);
+	if (before.entry !== after.entry || before.exit !== after.exit) {
+		throw new Error('The entry or exit node of the ' + name + ' changed');
+	}
+	if (!sameItems(before.nodes, after.nodes)) {
+		throw new Error('The nodes of the ' + name + ' changed (' + before.nodes.length + ' -> ' +
+			after.nodes.length + ' nodes)');
+	}
+	before.records.forEach(function (record, index) {
+		var other = after.records[index];
+		Object.keys(record).forEach(function (field) {
+			var same = Array.isArray(record[field]) || record[field] === null ?
+				sameItems(record[field], other[field]) : record[field] === other[field];
+			if (!same) {
+				throw new Error('The ' + field + ' of node ' + before.nodes[index].cfgId + ' (' +
+					nodeLabel(before.nodes[index]) + ') of the ' + name + ' changed');
+			}
+		});
+	});
+}
+
+/**
+ * Run the four modeling stages of the executor on the pages, snapshotting the
+ * models built by each stage after it is analyzed, then check that no
+ * snapshot changed after the four stages (research R14)
+ * @param {Array} pages source code of each page
+ * @returns {Array} snapshots of the models of each stage (an Array per stage)
+ * @throws {Error} naming the model and the node when a snapshot changed
+ */
+function buildModels(pages) {
+	'use strict';
+	executor.initialize(pages);
+	var snapshots = STAGES.map(function (stage) {
+		executor[stage.build]();
+		var models = [];
+		scopeCtrl.pageScopeTrees.forEach(function (scopeTree) {
+			[].push.apply(models, stage.models(modelCtrl.collectionOfPageModels.get(scopeTree)));
+		});
+		/// the inter-page model is shared by the pages: snapshot it once
+		return models.filter(function (model, index) {
+			return models.indexOf(model) === index;
+		}).map(snapshotOf);
+	});
+	snapshots.forEach(function (snapshotsOfStage) {
+		snapshotsOfStage.forEach(function (snapshot) {
+			compareSnapshots(snapshot, snapshotOf(snapshot.model));
+		});
+	});
+	return snapshots;
+}
+
+/**
  * Clear the global analysis state (scopes, models and node counter) kept by
  * the singleton controllers; call it after tests to isolate other suites
  */
@@ -132,11 +292,7 @@ function analyze(codeOfPages) {
 	var pages = [].concat(codeOfPages);
 	reset();
 
-	executor.initialize(pages);
-	executor.buildIntraProceduralModelsOfEachPageModels();
-	executor.buildInterProceduralModelsOfEachPageModels();
-	executor.buildIntraPageModelsOfEachPageModels();
-	executor.buildInterPageModelsOfEachPageModels();
+	buildModels(pages);
 
 	var scopeTree = scopeCtrl.pageScopeTrees[0],
 		pageModels = modelCtrl.collectionOfPageModels.get(scopeTree);
@@ -192,3 +348,6 @@ module.exports = analyze;
 module.exports.reset = reset;
 module.exports.pairsOfModel = pairsOfModel;
 module.exports.nodeLabel = nodeLabel;
+module.exports.buildModels = buildModels;
+module.exports.snapshotOf = snapshotOf;
+module.exports.compareSnapshots = compareSnapshots;

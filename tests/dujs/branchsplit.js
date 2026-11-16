@@ -474,7 +474,7 @@ describe('Splitting conditional and short-circuit expressions', function () {
 			return pathOf(node);
 		}).sort().should.eql(['F', 'T']);
 		calls.forEach(function (node) {
-			(node.call === logEntry).should.eql(true, 'L2:' + pathOf(node) + ' calls the entry of log');
+			(node.call === models[0].flatNodeOf(logEntry)).should.eql(true, 'L2:' + pathOf(node) + ' calls the entry of log');
 		});
 		/// FlowNode attribute, not the label: labelWithLoc of CALL_RETURN does not show the path
 		nodes.filter(function (node) {
@@ -752,7 +752,12 @@ describe('Splitting conditional and short-circuit expressions', function () {
 			found.nodes.map(function (node) {
 				return pathOf(node);
 			}).should.eql(['', 'T', 'T', 'T', 'TT', 'TF', 'F']);
-			(found.nodes[1].dujsDecisionCalledBefore === found.nodes[3]).should.eql(true);
+			/// the call edge whose CALL NODE is found.nodes[1] is made before the decision node found.nodes[3]
+			var callEdge = found.model.hierarchy.edges.filter(function (edge) {
+				return edge.kind === 'call' && !!edge.callNode && found.model.flatNodeOf(edge.callNode) === found.nodes[1];
+			})[0];
+			(!!callEdge && callEdge.beforeDecision === true &&
+				found.model.flatNodeOf(callEdge.callSite) === found.nodes[3]).should.eql(true);
 			/// the inserted call node and the call return are not split and take the label path of the decision node
 			(found.nodes[3].split !== null).should.eql(true);
 			found.nodes[3].labelPath.should.eql(found.nodes[3].split.path);

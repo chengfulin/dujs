@@ -17,7 +17,7 @@ var baseRules = {
 	'strict': ['error', 'function'],
 	'no-undef': 'error',
 	'no-bitwise': 'error',
-	'no-unused-vars': 'error'
+	'no-unused-vars': ['error', { caughtErrorsIgnorePattern: '^ignored' }]
 };
 
 module.exports = [
@@ -30,7 +30,10 @@ module.exports = [
 			// esgraph fixtures: intentionally undefined identifiers as CFG input
 			'tests/esgraph/tests/**',
 			// golden fixtures: browser scripts analyzed as input, not run by Node
-			'tests/golden/fixtures/**'
+			'tests/golden/fixtures/**',
+			// probe programs (feature 003): browser scripts analyzed as input, not run by Node
+			'specs/**/probes/**',
+			'tests/dujs/cases/probes/**'
 		]
 	},
 	{
