@@ -62,12 +62,16 @@
   intra-procedural 模型）的結果，完全重現現況「最近一次分析」的語意（仲裁 2026-11-16 修訂；原答案「讀正在搜尋的模型」在處理器同時是
   被呼叫函式、且其內以識別字註冊外部處理器時會改變輸出）。解析被呼叫的函式一律讀 intra-procedural 的結果（與現況相同）。若 golden 或既有
   測試仍出現差異，停下請使用者裁決。
-- Q（仲裁 N1）: 現況 inter-procedural 子模型分析時會沿共用節點的邊漏到外層（子模型的根函式被外層呼叫兩次以上或在迴圈內呼叫時，子模型出現外層
+- Q（仲裁 N1）: 現況 inter-procedural 子模型分析時會沿共用節點的邊漏到外層（子模型呼叫鏈上任一函式（根函式或其任一祖先）被呼叫兩次以上或在迴圈內呼叫時，子模型出現外層
   定義的 pair），要不要重現？→ A: 視為缺陷、不重現：子模型只分析自己展開的圖；`docs/known-issues.md` 新增一節記錄此現象並標為本 feature 已修正；
   新增的 fixture 不得含此型態；既有測試若因此出現差異，停下請使用者裁決。
 - Q: 展開時的呼叫環防護如何驗證？→ A: 以手工建立的環狀階層寫單元測試，驗證展開會終止；需要可手動建立階層的入口。
 - Q: 每個模型的每節點分析結果是否為公開介面？→ A: 是，模型提供唯讀的每節點結果查詢（reach-in、reach-out、GEN、KILL、c-use、p-use），
   測試與 stage 2 共用；介面形狀由 plan 決定。
+- Q（plan 仲裁，2026-11-16）: 外漏型態的定義是否擴大？（plan 仲裁實測：根函式只被呼叫一次、但其祖先被呼叫兩次時同樣外漏）→ A: 擴大為
+  「子模型呼叫鏈上任一函式（根函式或其任一祖先）被呼叫兩次以上或在迴圈內呼叫」，視為 N1 同一缺陷、不重現；spec、plan、known-issues 用同一定義。
+- Q（plan 仲裁，2026-11-16）: FR-011(d) 的 `catch (e)` 未使用變數觸發 `no-unused-vars`、又不得新增抑制，如何處理？→ A: `eslint.config.js` 的
+  `no-unused-vars` 加 `caughtErrorsIgnorePattern: '^ignored'`，綁定命名 `ignoredModuleError`；PR 與 known-issues §9 各記一筆。
 - 依 SC-002 決定：FR-006 的測試例外只允許改寫取值方式（因 API 改變），預期 pair 與斷言的預期值一字不動。
 - 依現況決定（仲裁 H5）：現況可解析的呼叫是「節點本身就是呼叫運算式（陳述式 `f();` 或整個條件式 `if (f())`），callee 為識別字，且其函式定義
   在呼叫端自己的 intra-procedural 分析中可達」（含 `var f = function(){}; f();`）；`var a = f();` 不可解析。
@@ -190,7 +194,7 @@
 - 下層分析時預先設定的資料（內建物件、區域變數預設值、函式宣告的定義等，在 intra-procedural 初始分析時設定）MUST 在展開的扁平圖中
   同樣生效，否則上層結果會改變；複本預設 GEN 中定義（Def）的來源節點 MUST 指向複本而非原節點，否則 dupairs.dot 會印出下層的舊標籤。
 - 扁平圖中重複出現的節點 MUST 是同一個複本物件出現多次（dot 輸出以物件身分取邊端點與加標籤後綴），不是兩個不同的複本。
-- 仲裁 N1 的外漏型態：子模型的根函式被外層呼叫兩次以上或在迴圈內呼叫時，重構後子模型不再含外層定義的 pair（行為修正，見 Clarifications）。
+- 仲裁 N1 的外漏型態：子模型呼叫鏈上任一函式（根函式或其任一祖先）被呼叫兩次以上或在迴圈內呼叫時，重構後子模型不再含外層定義的 pair（行為修正，見 Clarifications）。
 - 沒有事件處理器、沒有呼叫、沒有 storage 存取的頁面：沒有 inter-procedural 模型，也就沒有該層階層圖；intra-page 階層圖仍輸出
   （主程式與 LOOP），inter-page 階層圖仍輸出（頁面與 domain 節點）。
 - known-issues §14、§15、§17、§18 的現有行為原樣保留，本 feature 不修正。[SRC KI §18；USR D4]
@@ -225,7 +229,7 @@
 - **FR-009**：HTML 報告 MUST 在 inter-procedural、intra-page、inter-page 各段、扁平圖之前引用對應的階層圖；既有內容彼此的相對順序不變。
   [SRC USR D5；Clarifications 2026-11-16]
 - **FR-010**：golden MUST 加入新的階層圖 .dot 檔（ES5 與 ES2015+ fixture），並經人工核對節點與邊的對應；新增的 golden 檔以獨立清單
-  記錄，與「既有檔逐位元組不變」分開驗證。golden MUST 新增（不得擴充既有 fixture）會產生 inter-procedural 輸出的 fixture，以現況可解析的呼叫寫法撰寫、不含仲裁 N1 的外漏型態（子模型根函式被外層呼叫兩次以上或在迴圈內呼叫）與 H4 的差異型態：其扁平輸出先以重構前的程式
+  記錄，與「既有檔逐位元組不變」分開驗證。golden MUST 新增（不得擴充既有 fixture）會產生 inter-procedural 輸出的 fixture，以現況可解析的呼叫寫法撰寫、不含仲裁 N1 的外漏型態（子模型呼叫鏈上任一函式（根函式或其任一祖先）被呼叫兩次以上或在迴圈內呼叫）與 H4 的差異型態：其扁平輸出先以重構前的程式
   產生並入 golden（重構後逐位元組不變），其階層圖一併入 golden。[SRC USR D5、D7]
 - **FR-011**：known-issues §9 的四點 MUST 處理：(a) `lib/esgraph/index.js` 檔頭與 `THIRD_PARTY_NOTICES.md` 各補兩筆修改紀錄；
   (b) `defuseanalyzer.js` 的 JSDoc 移回緊接其函式，新 helper 補 JSDoc；(c) 移除 `findKILLSet`；(d) `jsparser.js` 改用有綁定的 catch。

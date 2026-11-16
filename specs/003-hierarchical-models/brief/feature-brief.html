@@ -61,8 +61,9 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>階層式模型結構（重構 stage 1）</h1>
-<div class="meta">feature：003-hierarchical-models · clarify · 第 1 輪（含 Fable 仲裁） · 2026-11-16 · PR 目標分支 develop</div>
+<div class="meta">feature：003-hierarchical-models · plan · 第 1 輪（承 clarify 與 Fable 仲裁） · 2026-11-16 · PR 目標分支 develop</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準</div>
+<div class="note">plan 已經 Fable 仲裁：以原型實跑驗證既有 golden 逐位元組相同；仲裁指出的 3 處文字缺口已修入 plan。</div>
 
 <h2>看懂它</h2>
 
@@ -174,18 +175,51 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
   </ul>
 </section>
 
-<h2>本輪變更（clarify · 第 1 輪）</h2>
+<section class="panel">
+  <span class="num">架構</span>
+  <h3>階層是唯一真相，扁平圖只是展開出來的複本</h3>
+  <div class="box"><div class="mermaid">
+flowchart LR
+  MB["modelbuilder.js<br/>建階層、記操作"] --> HI["hierarchy.js<br/>單位＋全域序號操作"]
+  HI --> EX["expansion.js<br/>expand 純函式"]
+  EX -->|複製原件| FN["flownode.js<br/>copyNodes"]
+  EX -->|依序重播| FL["扁平圖（複本）<br/>編號、順序同現況"]
+  FL --> DA["defuseanalyzer.js<br/>doAnalysis"]
+  DA -->|每模型各存一份| MO["model.js<br/>analysisResultOf"]
+  HI --> HD["hierarchydot.js<br/>階層圖 dot"]
+  HD --> OW["outputwriter.js<br/>reportgenerator.js"]
+  FL --> OW
+  OW --> GO["golden＋manifest<br/>baseline 雜湊把關"]
+  </div></div>
+  <p class="cap"><b>下層原件從此不被碰</b>，上層只記錄操作，展開時才在複本上重播。<small>來源：plan.md 摘要、關鍵設計 1–6、Structure Decision</small></p>
+  <ul>
+    <li>複本沿用 <code>cfgId</code>、不消耗計數器；結構節點（CALL／LOOP／domain）建階層時只建一次。<small>（研究 R2、R3；關鍵設計 1–2）</small></li>
+    <li>操作依全域序號 <code>seq</code> 重播，鄰接順序才與現況一致。<small>（研究 R1、R5）</small></li>
+    <li>新增 3 個 MIT 模組；<code>bin/dujs.js</code> 與 LGPL 衍生檔的程式不動（<code>index.js</code> 只補檔頭紀錄）。<small>（Technical Context；變更影響範圍）</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（plan · 第 1 輪）</h2>
+
+<h3>技術選型（使用者已確認）</h3>
 <div class="box"><table>
-<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響</th></tr>
-<tr><td>Clarifications（新增）／FR-005、Edge Cases 節點編號</td><td>展開後編號須與下層相同，做法未說</td><td>展開時複製下層節點，複本沿用編號、不消耗計數器；結構節點只建一次；陣列順序（含 <code>concat</code> 重複）原樣重現；分析在複本上進行</td><td>US1</td></tr>
-<tr><td>FR-004、Key Entities 呼叫邊（新增）</td><td>呼叫為邊，未列邊要帶什麼</td><td>呼叫邊帶呼叫點、呼叫順序、是否插在決策節點前、被呼叫模型</td><td>US1、US2</td></tr>
-<tr><td>FR-005 reach-in 來源</td><td>未說建模時讀哪個模型</td><td>找事件處理器讀包含該節點的最頂端 inter-procedural 模型（仲裁修訂，完全重現現況）；解析被呼叫函式讀 intra-procedural</td><td>US1</td></tr>
-<tr><td>FR-001、US1 情境 6、7（新增）</td><td>只涵蓋邊與節點集合</td><td>增列節點種類、scope、GEN／KILL、初始資料；補非決策呼叫點與 storage 邊情境；可從程式取得參照的下層模型與呼叫邊資訊</td><td>US1</td></tr>
-<tr><td>D9、US2 情境 3、FR-008</td><td>domain／storage 對應跨頁節點</td><td>現況為單一 localStorage 節點，階層圖中 domain 為一個節點；同一對單位同一種邊只畫一條</td><td>US2</td></tr>
-<tr><td>US2 描述、情境 1、4（原 5）；FR-009</td><td>US2 含取得階層結構；HTML 以「顯示」驗證</td><td>階層結構歸 US1（原情境 4 移入 US1-7）；US2 只管輸出；HTML 以內容引用階層圖（在扁平圖之前）驗證</td><td>US1、US2</td></tr>
-<tr><td>D7、FR-010 新 fixture</td><td>新增或擴充 fixture</td><td>只能新增一個 ES5 fixture；呼叫須用現況可解析寫法，且不含 N1／H4 的差異型態</td><td>US1、US2</td></tr>
-<tr><td>Edge Cases 遞迴、無呼叫頁面</td><td>階層圖以呼叫邊成環；無呼叫頁面仍有階層圖</td><td>現況不產生呼叫環，仍須防護但無 fixture；無呼叫頁面沒有 inter-procedural 階層圖</td><td>US1、US2</td></tr>
-<tr><td>延後釐清（plan 必答，新增）</td><td>無</td><td>golden 比對方式、HTML 驗證方式、<code>scope.lastReachIns</code> 與 <code>dujsDecisionCalledBefore</code> 測試的處置，留給 plan</td><td>US1、US2</td></tr>
+<tr><th>項目</th><th>選擇</th><th>出處</th></tr>
+<tr><td>語言／執行環境</td><td>JavaScript（CommonJS，<code>lib/</code> 維持 ES5 風格）、Node.js ≥ 24</td><td>Technical Context</td></tr>
+<tr><td>相依套件</td><td>espree、walkes；<b>無新增依賴</b>（golden 雜湊用 Node 內建 <code>crypto</code>）</td><td>Primary Dependencies</td></tr>
+<tr><td>測試與品質</td><td>mocha＋should＋fast-check、golden 回歸、eslint、c8；基線 786 passing、lint 0 錯誤、119 筆既有抑制</td><td>Testing</td></tr>
+<tr><td>授權</td><td>新模組皆 MIT；LGPL 衍生檔只改檔頭紀錄</td><td>Primary Dependencies；R16</td></tr>
+</table></div>
+
+<h3>偏離 tech-standards 的清單</h3>
+<p>無。<code>tech-standards.md</code> 針對服務後端／前端，對本 CLI／函式庫屬「不適用」而非偏離，不需憲章 §CP-6 例外。<small>（plan Technical Context；研究 R17）</small></p>
+
+<h3>plan 對 spec「延後釐清」的回答</h3>
+<div class="box"><table>
+<tr><th>項目</th><th>plan 的答案</th></tr>
+<tr><td>golden 如何驗「既有檔不變」與「新增檔清單」</td><td>新增 <code>manifest.json</code>：<code>baseline</code>＝重構前 .dot 的 sha256、<code>added</code>＝新增清單；<code>UPDATE_GOLDEN</code> 不碰它，所以放行不了既有檔差異（R10）</td></tr>
+<tr><td>HTML 不依賴 Graphviz 的驗證</td><td>讀 <code>report.html</code> 文字，斷言階層圖路徑在同模型扁平圖之前、其餘順序不變（R12）</td></tr>
+<tr><td><code>scope.lastReachIns</code></td><td>移除（無讀取者，且為跨模型全域狀態）（R7）</td></tr>
+<tr><td><code>dujsDecisionCalledBefore</code> 斷言</td><td>改以階層查詢 <code>edge.beforeDecision</code>，預期值不變（R13）</td></tr>
 </table></div>
 
 <h2>工程師要決定的事</h2>
@@ -195,26 +229,26 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><th>Story</th><th>條件（Acceptance Scenarios）</th><th>標記</th><th>備註</th></tr>
 <tr><td>US1-1</td><td>L2 的 false 分支仍指向頁面 exit，pair 不變</td><td class="ok">可驗證</td><td></td></tr>
 <tr><td>US1-2</td><td>§16 範例：決策節點前驅不變、inter-procedural 順序與 pair 不變</td><td class="ok">可驗證</td><td></td></tr>
-<tr><td>US1-3</td><td>每模型每節點的分析結果與建好當下相同</td><td class="ok">可驗證</td><td>基準為「只建到該層」時的結果；比對方式屬 plan</td></tr>
+<tr><td>US1-3</td><td>每模型每節點的分析結果與建好當下相同</td><td class="ok">可驗證</td><td>helper 在四層建完後重取快照比對（R14）</td></tr>
 <tr><td>US1-4</td><td>移除兩個測試繞路後既有測試全過</td><td class="ok">可驗證</td><td>只許改取值方式，預期值一字不動</td></tr>
-<tr><td>US1-5</td><td>既有 .dot（含 dupairs.dot 標籤如 <code>entry_a</code>）逐位元組相同（基準 bf07818）</td><td class="ok">可驗證</td><td>比對機制屬 plan</td></tr>
+<tr><td>US1-5</td><td>既有 .dot（含 dupairs.dot 標籤如 <code>entry_a</code>）逐位元組相同（基準 bf07818）</td><td class="ok">可驗證</td><td>manifest 的 baseline 雜湊逐檔比對（R10）</td></tr>
 <tr><td>US1-6</td><td><code>f();</code> 呼叫點的種類、GEN／KILL、出邊不變；頁面節點無多出 storage 邊</td><td class="ok">可驗證</td><td></td></tr>
-<tr><td>US1-7</td><td>從程式取得上層節點參照的下層模型與呼叫邊資訊</td><td class="ok">可驗證</td><td>公開唯讀介面，形狀屬 plan</td></tr>
-<tr><td>US2-1</td><td>inter-procedural 階層圖：主程式→f→g，無敘述節點，一對單位一條邊</td><td class="ok">可驗證</td><td>需新增 fixture（D7）</td></tr>
+<tr><td>US1-7</td><td>從程式取得上層節點參照的下層模型與呼叫邊資訊</td><td class="ok">可驗證</td><td><code>model.analysisResultOf(node)</code>、<code>flatNodeOf</code>、<code>hierarchy</code>（contracts/model-api.md）</td></tr>
+<tr><td>US2-1</td><td>inter-procedural 階層圖：主程式→f→g，無敘述節點，一對單位一條邊</td><td class="ok">可驗證</td><td>新 fixture 與重構前 golden 於 Setup 先建（R11）</td></tr>
 <tr><td>US2-2</td><td>intra-page 階層圖：主程式、LOOP、兩個處理器</td><td class="ok">可驗證</td><td></td></tr>
 <tr><td>US2-3</td><td>inter-page 階層圖：頁面節點加單一 domain 節點，多個儲存點一條邊</td><td class="ok">可驗證</td><td>本輪由不可驗證轉為可驗證</td></tr>
-<tr><td>US2-4</td><td>HTML 三段在扁平圖之前引用階層圖，既有順序不變</td><td class="ok">可驗證</td><td>以 HTML 內容驗證，不依賴 Graphviz</td></tr>
-<tr><td>US2（FR-010）</td><td>新階層圖 golden「經人工核對」</td><td class="no">不可驗證／缺</td><td>無重構前輸出可比；核對準則 spec 未列</td></tr>
-<tr><td>Edge：遞迴防護</td><td>展開不得無窮展開</td><td class="ok">可驗證</td><td>手工建環狀階層的單元測試</td></tr>
-<tr><td>US3-1～4</td><td>修改紀錄、JSDoc 位置、移除 <code>findKILLSet</code>、有綁定的 catch</td><td class="ok">可驗證</td><td>JSDoc 位置需審閱</td></tr>
+<tr><td>US2-4</td><td>HTML 三段在扁平圖之前引用階層圖，既有順序不變</td><td class="ok">可驗證</td><td>讀 <code>report.html</code> 文字驗證（R12）</td></tr>
+<tr><td>US2（FR-010）</td><td>新階層圖 golden「經人工核對」</td><td class="ok">可驗證</td><td>plan 已補核對準則（contracts/hierarchy-output.md §3），並以測試自動對應；上輪缺口已補</td></tr>
+<tr><td>Edge：遞迴防護</td><td>展開不得無窮展開</td><td class="ok">可驗證</td><td>手工建環狀階層，<code>expand</code> 須拋出 call cycle 錯誤（R15）</td></tr>
+<tr><td>US3-1～4</td><td>修改紀錄、JSDoc 位置、移除 <code>findKILLSet</code>、有綁定的 catch</td><td class="ok">可驗證</td><td>JSDoc 位置需審閱；catch 綁定命名 <code>ignoredModuleError</code>＋lint 規則忽略 <code>^ignored</code></td></tr>
 <tr><td>US3-5</td><td>known-issues 的 §9、§13、§16、§18 註記</td><td class="ok">可驗證</td><td></td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
-<p>無。本 feature 是 Node.js 分析工具內部重構，不新增框架或服務；規範未涵蓋此類程式庫的結構，沿用現況。plan 起再檢查偏離。</p>
+<p>無。規範對本 CLI／函式庫「不適用」，plan 無偏離項目，沿用現況選型。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無（尚未跑 analyze）。對應憲章 §CP-4（核心邏輯需有測試）：FR-006、FR-010、SC-003 已要求測試與 golden 把關。</p>
+<p>無（尚未跑 analyze）。憲章檢查 §CP-1～§CP-6、§GV 在 Phase 0 前後皆 PASS；§CP-4 由新模組單元測試、SC-003 不變性檢查與 golden 三個 case 把關。</p>
 
 <h3>已決事項（spec review 與 clarify，2026-11-16）</h3>
 <div class="box"><table>
@@ -226,12 +260,13 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>5</td><td>階層模型保留的資訊；建模讀哪個 reach-in（clarify）</td><td>呼叫邊帶四項資訊；reach-in 規則已由仲裁修訂（見下表 H4）</td><td>FR-004；FR-005</td></tr>
 <tr><td>6</td><td>階層圖的邊與報告版面（clarify）</td><td>一對單位一種邊一條；domain 一個節點；階層圖在扁平圖之前</td><td>FR-008、FR-009</td></tr>
 <tr><td>7</td><td>fixture 與現況限制（clarify）</td><td>只能新增 fixture；呼叫須為現況可解析寫法；現況不產生呼叫環</td><td>D7；FR-010</td></tr>
+<tr><td>8</td><td>技術選型（plan）</td><td>沿用現況、不新增依賴；tech-standards 不適用、無偏離</td><td>plan Technical Context</td></tr>
 </table></div>
 
 <h3>仲裁與本輪判斷點的決定（Fable 仲裁＋clarify 閘門，2026-11-16）</h3>
 <div class="box"><table>
 <tr><th>#</th><th>問題</th><th>決定</th><th>寫入 spec</th></tr>
-<tr><td>N1</td><td>子模型分析沿共用節點的邊漏到外層（根函式被外層呼叫兩次以上或在迴圈內呼叫）</td><td>視為缺陷、不重現；known-issues 新增一節標為已修正；新 fixture 不含此型態</td><td>Clarifications；FR-005、FR-010、FR-012；Edge Cases</td></tr>
+<tr><td>N1</td><td>子模型分析沿共用節點的邊漏到外層（定義於 plan 仲裁擴大，見下表）</td><td>視為缺陷、不重現；known-issues 新增一節標為已修正；新 fixture 不含此型態</td><td>Clarifications；FR-005、FR-010、FR-012；Edge Cases</td></tr>
 <tr><td>H4</td><td>找事件處理器讀哪個模型的 reach-in</td><td>改為「包含該節點的最頂端 inter-procedural 模型」，完全重現現況</td><td>Clarifications；FR-005</td></tr>
 <tr><td>1</td><td>呼叫環防護如何驗證</td><td>手工建立環狀階層的單元測試</td><td>Clarifications；Edge Cases</td></tr>
 <tr><td>2</td><td>每模型節點分析結果是否公開</td><td>公開唯讀查詢介面，形狀由 plan 決定</td><td>Clarifications；FR-003</td></tr>
@@ -247,9 +282,22 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <li>可解析呼叫的精確條件：節點本身是呼叫運算式（含 <code>if (f())</code>），callee 為識別字、定義在呼叫端 intra 分析可達。</li>
 </ul>
 
-<h3>次要疑點（留給 plan）</h3>
+<h3>plan 仲裁與本輪決定（Fable 仲裁＋plan 閘門，2026-11-16）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>決定／修正</th><th>寫入</th></tr>
+<tr><td>1</td><td>外漏型態的定義（plan 原舉「兩個互不呼叫的頂層模型共用被呼叫函式」在現況造不出來）</td><td>擴大為「子模型呼叫鏈上任一函式（根函式或其祖先）被呼叫兩次以上或在迴圈內」，視為 N1 同一缺陷、不重現；既有測試與 golden 不依賴外漏（仲裁實測 786 全過）</td><td>spec Clarifications、FR-010；research R6、R11</td></tr>
+<tr><td>2</td><td><code>catch (e)</code> 觸發 <code>no-unused-vars</code></td><td><code>eslint.config.js</code> 加 <code>caughtErrorsIgnorePattern: '^ignored'</code>，綁定命名 <code>ignoredModuleError</code>；PR 與 known-issues §9 各記一筆</td><td>spec Clarifications；research R16</td></tr>
+<tr><td>修正</td><td>GEN 重建範圍（plan 原寫只有 entry）</td><td>所有非 null 的 generate 都要在重播前以複本重建；加 <code>f(x = 1);</code> 測試案例</td><td>research R2、R7；plan 關鍵設計 4、風險 3</td></tr>
+<tr><td>修正</td><td>測試改寫清單缺漏</td><td>補 <code>branchsplit.js</code>、<code>reviewfixes.js</code> 的節點身分斷言（改比對 <code>flatNodeOf(原件)</code>）；實作加 grep 檢查空轉</td><td>research R13；plan 步驟 2.7</td></tr>
+<tr><td>補充</td><td>R8 與 spec「最頂端模型」</td><td>在現況呼叫解析下等價（模型間只有巢狀或互斥）；以 bf07818 交叉比對改為必做；探針程式存於 <code>probes/</code></td><td>research R8、R11；quickstart §1</td></tr>
+</table></div>
+
+<h3>次要疑點</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>新階層圖 golden 的「人工核對」準則（核對什麼）</td><td>FR-010</td></tr>
+<tr><td>新 fixture 不含鏈接呼叫（ES2015 class static）與重複處理器，只靠既有測試、展開單元測試與 helper 不變性檢查補位</td><td>plan 已知風險 6；FR-010</td></tr>
+<tr><td>若某上層扁平圖節點在該模型分析中未被走訪，<code>findDUPairs</code> 會拋錯；plan 預期不發生，發生則停下裁決</td><td>plan 已知風險 4</td></tr>
 </table></div>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
