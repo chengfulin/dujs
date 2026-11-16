@@ -61,7 +61,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>階層式模型結構（重構 stage 1）</h1>
-<div class="meta">feature：003-hierarchical-models · spec · 第 1 輪 · 2026-11-16 · PR 目標分支 develop</div>
+<div class="meta">feature：003-hierarchical-models · clarify · 第 1 輪（含 Fable 仲裁） · 2026-11-16 · PR 目標分支 develop</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準</div>
 
 <h2>看懂它</h2>
@@ -115,7 +115,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <path d="M262 150 L330 190" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
     <rect x="340" y="20" width="260" height="100" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
     <text x="470" y="55" text-anchor="middle" font-size="18" font-weight="900" fill="var(--ink)">完整圖（敘述層級）</text>
-    <text x="470" y="80" text-anchor="middle" font-size="14" fill="var(--sub)">由各層重新展開</text>
+    <text x="470" y="80" text-anchor="middle" font-size="14" fill="var(--sub)">複製各層、編號照舊</text>
     <text x="470" y="102" text-anchor="middle" font-size="14" fill="var(--sub)">分析在這張圖上做</text>
     <rect x="340" y="140" width="260" height="100" rx="12" fill="var(--green-soft)" stroke="var(--green)" stroke-width="3"/>
     <text x="470" y="175" text-anchor="middle" font-size="18" font-weight="900" fill="var(--green)">概觀圖（新增）</text>
@@ -152,7 +152,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
       <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">單一函式內</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">建敘述層級圖</text>
       <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">往上建三層</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">只參照下層</text><text x="264" y="132" font-size="14" font-weight="400" fill="var(--sub)">不改下層的圖</text>
-      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">重新展開</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">成完整圖</text><text x="434" y="132" font-size="14" font-weight="400" fill="var(--sub)">編號與以前同</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">複製展開</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">成完整圖</text><text x="434" y="132" font-size="14" font-weight="400" fill="var(--sub)">複本沿用原編號</text>
       <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">分析</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">在完整圖上做</text><text x="604" y="132" font-size="14" font-weight="400" fill="var(--sub)">每層各存結果</text>
       <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">輸出</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">既有圖檔不變</text><text x="774" y="132" font-size="14" font-weight="400" fill="var(--sub)">另多概觀圖</text>
     </g>
@@ -161,7 +161,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <rect x="300" y="210" width="220" height="90" rx="10" fill="var(--coral-soft)"/>
     <text x="410" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">遞迴或互相呼叫</text>
     <text x="410" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">展開不得無窮展開</text>
-    <text x="410" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">概觀圖以呼叫邊成環</text>
+    <text x="410" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">以手工環狀階層測試驗證</text>
     <rect x="560" y="210" width="280" height="90" rx="10" fill="var(--coral-soft)"/>
     <text x="700" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">既有圖檔有差異</text>
     <text x="700" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">一律視為行為改變</text>
@@ -169,10 +169,24 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
   </svg></div>
   <p class="cap"><b>只改結構，結果不變</b>：分析仍在展開後的完整圖上進行。<small>來源：範圍決策 D2、D3；Edge Cases；FR-005、FR-006</small></p>
   <ul>
-    <li>完整圖的節點編號：敘述節點沿用下層編號，上層新增節點依重構前的建立順序編號。<small>（Edge Cases，節點編號）</small></li>
-    <li>同一函式被多處呼叫仍共用一份節點（context-insensitive），逐呼叫點展開留給 stage 2。<small>（Edge Cases，同一個函式被多處呼叫）</small></li>
+    <li>展開時複製下層節點，複本沿用原編號、不消耗節點計數器；上層新增的呼叫／返回／LOOP 節點各只建一次、順序與現況同。<small>（Clarifications；Edge Cases，節點編號；FR-005）</small></li>
+    <li>呼叫邊帶四項資訊：呼叫點節點、呼叫順序、是否插在決策節點之前、被呼叫的模型。<small>（Clarifications；FR-004）</small></li>
   </ul>
 </section>
+
+<h2>本輪變更（clarify · 第 1 輪）</h2>
+<div class="box"><table>
+<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響</th></tr>
+<tr><td>Clarifications（新增）／FR-005、Edge Cases 節點編號</td><td>展開後編號須與下層相同，做法未說</td><td>展開時複製下層節點，複本沿用編號、不消耗計數器；結構節點只建一次；陣列順序（含 <code>concat</code> 重複）原樣重現；分析在複本上進行</td><td>US1</td></tr>
+<tr><td>FR-004、Key Entities 呼叫邊（新增）</td><td>呼叫為邊，未列邊要帶什麼</td><td>呼叫邊帶呼叫點、呼叫順序、是否插在決策節點前、被呼叫模型</td><td>US1、US2</td></tr>
+<tr><td>FR-005 reach-in 來源</td><td>未說建模時讀哪個模型</td><td>找事件處理器讀包含該節點的最頂端 inter-procedural 模型（仲裁修訂，完全重現現況）；解析被呼叫函式讀 intra-procedural</td><td>US1</td></tr>
+<tr><td>FR-001、US1 情境 6、7（新增）</td><td>只涵蓋邊與節點集合</td><td>增列節點種類、scope、GEN／KILL、初始資料；補非決策呼叫點與 storage 邊情境；可從程式取得參照的下層模型與呼叫邊資訊</td><td>US1</td></tr>
+<tr><td>D9、US2 情境 3、FR-008</td><td>domain／storage 對應跨頁節點</td><td>現況為單一 localStorage 節點，階層圖中 domain 為一個節點；同一對單位同一種邊只畫一條</td><td>US2</td></tr>
+<tr><td>US2 描述、情境 1、4（原 5）；FR-009</td><td>US2 含取得階層結構；HTML 以「顯示」驗證</td><td>階層結構歸 US1（原情境 4 移入 US1-7）；US2 只管輸出；HTML 以內容引用階層圖（在扁平圖之前）驗證</td><td>US1、US2</td></tr>
+<tr><td>D7、FR-010 新 fixture</td><td>新增或擴充 fixture</td><td>只能新增一個 ES5 fixture；呼叫須用現況可解析寫法，且不含 N1／H4 的差異型態</td><td>US1、US2</td></tr>
+<tr><td>Edge Cases 遞迴、無呼叫頁面</td><td>階層圖以呼叫邊成環；無呼叫頁面仍有階層圖</td><td>現況不產生呼叫環，仍須防護但無 fixture；無呼叫頁面沒有 inter-procedural 階層圖</td><td>US1、US2</td></tr>
+<tr><td>延後釐清（plan 必答，新增）</td><td>無</td><td>golden 比對方式、HTML 驗證方式、<code>scope.lastReachIns</code> 與 <code>dujsDecisionCalledBefore</code> 測試的處置，留給 plan</td><td>US1、US2</td></tr>
+</table></div>
 
 <h2>工程師要決定的事</h2>
 
@@ -181,15 +195,17 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><th>Story</th><th>條件（Acceptance Scenarios）</th><th>標記</th><th>備註</th></tr>
 <tr><td>US1-1</td><td>L2 的 false 分支仍指向頁面 exit，pair 不變</td><td class="ok">可驗證</td><td></td></tr>
 <tr><td>US1-2</td><td>§16 範例：決策節點前驅不變、inter-procedural 順序與 pair 不變</td><td class="ok">可驗證</td><td></td></tr>
-<tr><td>US1-3</td><td>每模型每節點的分析結果與建好當下相同</td><td class="ok">可驗證</td><td>比對方式 spec 未規定，屬 plan</td></tr>
-<tr><td>US1-4</td><td>移除兩個測試繞路後既有測試全過</td><td class="ok">可驗證</td><td></td></tr>
-<tr><td>US1-5</td><td>既有 .dot 逐位元組相同（基準 bf07818）</td><td class="ok">可驗證</td><td></td></tr>
-<tr><td>US2-1</td><td>inter-procedural 階層圖：主程式→f→g，無敘述節點</td><td class="ok">可驗證</td><td>見判斷點 1、2</td></tr>
-<tr><td>US2-2</td><td>intra-page 階層圖：主程式、LOOP、兩個處理器</td><td class="ok">可驗證</td><td>見判斷點 2</td></tr>
-<tr><td>US2-3</td><td>inter-page 階層圖：頁面節點加 domain／storage 節點</td><td class="no">不可驗證／缺</td><td>domain／storage 節點粒度未定義，見判斷點 3</td></tr>
-<tr><td>US2-4</td><td>從程式取得上層節點參照的下層模型</td><td class="ok">可驗證</td><td>介面名稱屬 plan</td></tr>
-<tr><td>US2-5</td><td>HTML 報告三段都顯示階層圖</td><td class="ok">可驗證</td><td>僅能人工開啟確認</td></tr>
-<tr><td>US2（FR-010）</td><td>新階層圖 golden「經人工核對」</td><td class="no">不可驗證／缺</td><td>無重構前輸出可比，只能人工核對</td></tr>
+<tr><td>US1-3</td><td>每模型每節點的分析結果與建好當下相同</td><td class="ok">可驗證</td><td>基準為「只建到該層」時的結果；比對方式屬 plan</td></tr>
+<tr><td>US1-4</td><td>移除兩個測試繞路後既有測試全過</td><td class="ok">可驗證</td><td>只許改取值方式，預期值一字不動</td></tr>
+<tr><td>US1-5</td><td>既有 .dot（含 dupairs.dot 標籤如 <code>entry_a</code>）逐位元組相同（基準 bf07818）</td><td class="ok">可驗證</td><td>比對機制屬 plan</td></tr>
+<tr><td>US1-6</td><td><code>f();</code> 呼叫點的種類、GEN／KILL、出邊不變；頁面節點無多出 storage 邊</td><td class="ok">可驗證</td><td></td></tr>
+<tr><td>US1-7</td><td>從程式取得上層節點參照的下層模型與呼叫邊資訊</td><td class="ok">可驗證</td><td>公開唯讀介面，形狀屬 plan</td></tr>
+<tr><td>US2-1</td><td>inter-procedural 階層圖：主程式→f→g，無敘述節點，一對單位一條邊</td><td class="ok">可驗證</td><td>需新增 fixture（D7）</td></tr>
+<tr><td>US2-2</td><td>intra-page 階層圖：主程式、LOOP、兩個處理器</td><td class="ok">可驗證</td><td></td></tr>
+<tr><td>US2-3</td><td>inter-page 階層圖：頁面節點加單一 domain 節點，多個儲存點一條邊</td><td class="ok">可驗證</td><td>本輪由不可驗證轉為可驗證</td></tr>
+<tr><td>US2-4</td><td>HTML 三段在扁平圖之前引用階層圖，既有順序不變</td><td class="ok">可驗證</td><td>以 HTML 內容驗證，不依賴 Graphviz</td></tr>
+<tr><td>US2（FR-010）</td><td>新階層圖 golden「經人工核對」</td><td class="no">不可驗證／缺</td><td>無重構前輸出可比；核對準則 spec 未列</td></tr>
+<tr><td>Edge：遞迴防護</td><td>展開不得無窮展開</td><td class="ok">可驗證</td><td>手工建環狀階層的單元測試</td></tr>
 <tr><td>US3-1～4</td><td>修改紀錄、JSDoc 位置、移除 <code>findKILLSet</code>、有綁定的 catch</td><td class="ok">可驗證</td><td>JSDoc 位置需審閱</td></tr>
 <tr><td>US3-5</td><td>known-issues 的 §9、§13、§16、§18 註記</td><td class="ok">可驗證</td><td></td></tr>
 </table></div>
@@ -200,18 +216,40 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <h3>CRITICAL／HIGH 衝突與影響</h3>
 <p>無（尚未跑 analyze）。對應憲章 §CP-4（核心邏輯需有測試）：FR-006、FR-010、SC-003 已要求測試與 golden 把關。</p>
 
-<h3>已決事項（spec review，2026-11-16）</h3>
+<h3>已決事項（spec review 與 clarify，2026-11-16）</h3>
 <div class="box"><table>
 <tr><th>#</th><th>問題</th><th>決定</th><th>寫入 spec</th></tr>
-<tr><td>1</td><td>inter-procedural 階層圖的 golden 怎麼來</td><td>新增或擴充會產生 inter-procedural 輸出的 fixture；扁平輸出先以重構前程式產生入 golden，階層圖一併入 golden</td><td>D7；FR-010</td></tr>
+<tr><td>1</td><td>inter-procedural 階層圖的 golden 怎麼來</td><td>新增會產生 inter-procedural 輸出的 fixture；扁平輸出先以重構前程式產生入 golden，階層圖一併入 golden</td><td>D7；FR-010</td></tr>
 <tr><td>2</td><td>階層圖要不要畫呼叫返回、LOOP 返回節點</td><td>不畫，以返回邊表示</td><td>D8；FR-008；Key Entities</td></tr>
 <tr><td>3</td><td>inter-page 階層圖的 domain／storage 節點粒度</td><td>與扁平圖的跨頁節點一一對應</td><td>D9；US2-3；FR-008</td></tr>
+<tr><td>4</td><td>扁平圖節點與下層節點的關係（clarify）</td><td>複製下層節點、沿用編號、不消耗計數器</td><td>FR-005；Edge Cases</td></tr>
+<tr><td>5</td><td>階層模型保留的資訊；建模讀哪個 reach-in（clarify）</td><td>呼叫邊帶四項資訊；reach-in 規則已由仲裁修訂（見下表 H4）</td><td>FR-004；FR-005</td></tr>
+<tr><td>6</td><td>階層圖的邊與報告版面（clarify）</td><td>一對單位一種邊一條；domain 一個節點；階層圖在扁平圖之前</td><td>FR-008、FR-009</td></tr>
+<tr><td>7</td><td>fixture 與現況限制（clarify）</td><td>只能新增 fixture；呼叫須為現況可解析寫法；現況不產生呼叫環</td><td>D7；FR-010</td></tr>
 </table></div>
 
-<h3>次要疑點</h3>
+<h3>仲裁與本輪判斷點的決定（Fable 仲裁＋clarify 閘門，2026-11-16）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>決定</th><th>寫入 spec</th></tr>
+<tr><td>N1</td><td>子模型分析沿共用節點的邊漏到外層（根函式被外層呼叫兩次以上或在迴圈內呼叫）</td><td>視為缺陷、不重現；known-issues 新增一節標為已修正；新 fixture 不含此型態</td><td>Clarifications；FR-005、FR-010、FR-012；Edge Cases</td></tr>
+<tr><td>H4</td><td>找事件處理器讀哪個模型的 reach-in</td><td>改為「包含該節點的最頂端 inter-procedural 模型」，完全重現現況</td><td>Clarifications；FR-005</td></tr>
+<tr><td>1</td><td>呼叫環防護如何驗證</td><td>手工建立環狀階層的單元測試</td><td>Clarifications；Edge Cases</td></tr>
+<tr><td>2</td><td>每模型節點分析結果是否公開</td><td>公開唯讀查詢介面，形狀由 plan 決定</td><td>Clarifications；FR-003</td></tr>
+<tr><td>3</td><td>FR-006 測試例外界線</td><td>只許改取值方式，預期值一字不動（依 SC-002）</td><td>Clarifications；FR-006</td></tr>
+<tr><td>次要</td><td>domain 用語、fixture 份數</td><td>FR-004 改為 domain 單一節點；新增一個 ES5 fixture</td><td>FR-004；Clarifications</td></tr>
+</table></div>
+
+<h3>其他補充（仲裁的小缺口，已直接寫入）</h3>
+<ul>
+<li>複本預設 GEN 中定義的來源節點改指複本（否則 dupairs.dot 印舊標籤）。</li>
+<li>扁平圖中的重複節點必須是同一個複本物件出現多次。</li>
+<li>FR-005 的「結構」含前驅／後繼的鄰接順序；intra-page 階層保留處理器清單的順序與重複，輸出時才去重。</li>
+<li>可解析呼叫的精確條件：節點本身是呼叫運算式（含 <code>if (f())</code>），callee 為識別字、定義在呼叫端 intra 分析可達。</li>
+</ul>
+
+<h3>次要疑點（留給 plan）</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>「因 API 改變而需改寫存取方式」的測試例外，容許改到什麼程度未界定</td><td>FR-006</td></tr>
-<tr><td>每模型自己的節點分析結果，是公開介面還是內部細節未定義</td><td>FR-003；Key Entities</td></tr>
+<tr><td>新階層圖 golden 的「人工核對」準則（核對什麼）</td><td>FR-010</td></tr>
 </table></div>
 </main>
