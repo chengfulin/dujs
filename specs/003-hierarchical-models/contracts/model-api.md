@@ -80,7 +80,8 @@ node.original                 // 唯讀；原件為 null
 
 - 公開方法名稱與呼叫次序不變：`buildIntraProceduralModels`、`buildInterProceduralModels`、`buildIntraPageModel`、`buildInterPageModel`。
 - 不改動任何已建好模型的圖（含 intra-procedural 原件）。
-- 找事件處理器的 reach-in：research R8 的 `reachInsForHandlerLookup`；解析被呼叫函式：intra-procedural 原件的 `reachIns`。
+- 找事件處理器的 reach-in：research R8 的 `reachInsForHandlerLookup`；`getRegisteredEventHandlerCallback(graphNode, scopeTree, callExpression, reachIns)`
+  新增可選參數 `reachIns`（省略時沿用 `graphNode.reachIns`），`findEventHandlerModelsFromAModel` 以 `_reachInsForHandlerLookup` 取得後傳入；解析被呼叫函式：intra-procedural 原件的 `reachIns`。
 - `_testonly_` 改為暴露新的私有函式（`_findEventHandlerModelsFromAModel`、`_getRegisteredEventHandlerCallback`、
   `_getInterProceduralModelStartFromTheScope`、`_getNodesWhereDefiningLocalStorageObject`、`_setScopeOfGraphNodes`、`_reachInsForHandlerLookup`）；
   `_connectCallerCalleeScopeRelatedModelsAtCallSite`、`_connectLoopNodeToPageGraph`、`_connectPageAndEventHandlers`、

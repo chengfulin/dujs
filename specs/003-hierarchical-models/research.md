@@ -203,7 +203,8 @@
      expected 目錄（mocha 的 `--grep` 讓其他 case 的 `before` 不執行）；`git status` 只應出現新目錄；
   3. 以腳本計算三個 expected 目錄（含新目錄）所有 .dot 的 sha256，寫入 `manifest.json` 的 `baseline`，`added` 皆為 `[]`；
   4. 加入 R10 的第 1、2 項測試，`npm test` 全綠；提交（此 commit 是之後每個 story 的比對基準）。
-  5. **必做**交叉驗證：`git worktree add <scratch>/base bf07818` 後在該處執行 CLI，比對新 expected 目錄逐位元組相同（manifest 可手改，
+  5. **必做**交叉驗證：`git worktree add <暫存目錄>/base bf07818`（`<暫存目錄>` 為任意專案外暫存目錄，例如 `$TMPDIR/dujs-base`），
+     `ln -s <root>/node_modules <暫存目錄>/base/node_modules`（或在該處 `npm ci`）後執行 CLI，比對新 expected 目錄逐位元組相同（manifest 可手改，
      靠此步驟與之後的 `git diff --exit-code` 把關；見 quickstart §1 步驟 7）。
 - **Alternatives considered**：擴充既有 fixture——會改變既有 golden（clarifier H5 已否決）；兩頁的 fixture——inter-procedural 建模與頁數無關，
   單頁足夠，inter-page 層已由既有 ES5 兩頁 fixture 覆蓋。
@@ -214,7 +215,7 @@
   - 檔名：`<模型索引>.hierarchy.dot`，與該模型的 `graph.dot` 同目錄（`page<i>/inter-procedurals/`、`page<i>/intra-pages/`、`inter-page/`）。
   - 節點 id 為 `h0, h1, ...`（不用 `cfgId`，階層節點不消耗計數器）；標籤：函式／主程式／處理器為 scope 全名（`String(scope)`，如
     `$DOMAIN.$PAGE_0.addTo`）、LOOP 為 `loop`、頁面為 `page<i>`、domain 為 `$DOMAIN`；LOOP 與 domain 沿用扁平圖的形狀與顏色。
-  - 邊：`call`（藍）、`return`（藍、虛線）、`onEvent`（綠）、`loadStorage`／`saveStorage`（點線）、主程式→LOOP（無標籤）；同一對單位同一種邊
+  - 邊：`call`（藍）、`return`（藍、虛線）、`onEvent`（綠）、`loadStorage`／`saveStorage`（點線）、主程式→LOOP（`label="loop"`，FR-008「進入 LOOP」）；同一對單位同一種邊
     只輸出一次（第一次出現的位置）。不含 CALL、CALL RETURN、LOOP RETURN 節點（D8）。
   - HTML：`outputWriter` 新增 `interProceduralHierarchyImageFilePaths`、`intraPageHierarchyImageFilePaths`、`interPageHierarchyImageFilePaths`；
     `reportGenerator` 在三段的每個模型區塊中，於扁平圖 `<img>` 之前插入一個 `<div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="../<階層圖 png>" class="center-block"></div>`。

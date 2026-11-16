@@ -72,6 +72,9 @@
   「子模型呼叫鏈上任一函式（根函式或其任一祖先）被呼叫兩次以上或在迴圈內呼叫」，視為 N1 同一缺陷、不重現；spec、plan、known-issues 用同一定義。
 - Q（plan 仲裁，2026-11-16）: FR-011(d) 的 `catch (e)` 未使用變數觸發 `no-unused-vars`、又不得新增抑制，如何處理？→ A: `eslint.config.js` 的
   `no-unused-vars` 加 `caughtErrorsIgnorePattern: '^ignored'`，綁定命名 `ignoredModuleError`；PR 與 known-issues §9 各記一筆。
+- Q（analyze 閘門，2026-11-16）: R8（找事件處理器讀最頂端模型）是否補測試？→ A: 補；`probes/r8.js`（頁面層 `g`、`h` 內以識別字註冊 `g`、`h` 被呼叫也被
+  註冊為處理器，現況 LOOP 的 onEvent 目標為 `[g, h, g]`）納入重構前基準並斷言順序與重複。
+- Q（analyze 閘門，2026-11-16）: intra-page 階層圖的主程式→LOOP 邊標什麼？→ A: 標 `loop`（FR-008 的邊種類補「進入 LOOP」）。
 - 依 SC-002 決定：FR-006 的測試例外只允許改寫取值方式（因 API 改變），預期 pair 與斷言的預期值一字不動。
 - 依現況決定（仲裁 H5）：現況可解析的呼叫是「節點本身就是呼叫運算式（陳述式 `f();` 或整個條件式 `if (f())`），callee 為識別字，且其函式定義
   在呼叫端自己的 intra-procedural 分析中可達」（含 `var f = function(){}; f();`）；`var a = f();` 不可解析。
@@ -170,7 +173,7 @@
 1. **Given** `lib/esgraph/index.js` 的檔頭與 `THIRD_PARTY_NOTICES.md`，**When** 檢查修改紀錄，**Then** `expressionThrows` 的 null 防護與
    `createNodes` 把 `ClassDeclaration` 當葉節點兩項各有一筆紀錄。[SRC KI §9]
 2. **Given** `lib/dujs/defuseanalyzer.js`，**When** 檢查每段 JSDoc，**Then** 每段都緊接在它說明的函式之前，新增的 helper
-   （`isFunctionExpression`、`getDefinedVariables`、`computeKILLSet`、`useLoopHead`／`useNestedLoopHead`、`useClassHead`）各有自己的 JSDoc。[SRC KI §9]
+   （`isFunctionExpression`、`getDefinedVariables`、`computeKILLSet`、`useNestedLoopHead`、`useClassHead`）各有自己的 JSDoc。[SRC KI §9]
 3. **Given** 分析程式，**When** 搜尋 `findKILLSet`，**Then** 已移除，KILL 只由 `computeKILLSet` 計算，沒有測試依賴舊函式。[SRC KI §9]
 4. **Given** `lib/dujs/jsparser.js`，**When** 檢查 catch 子句，**Then** 有綁定變數（`catch (e)`），與 `lib/` 其餘程式的風格一致。[SRC KI §9]
 5. **Given** known-issues 文件，**When** 本 feature 完成，**Then** §9 標為已修正，§13、§16 註明「共用節點被改動」的部分已修正、§16 的
@@ -224,7 +227,7 @@
   繞路，以及模型建構中只為此存在的標記（`dujsDecisionCalledBefore`）；相關契約文件同步更新。[SRC KI §13、§16]
 - **FR-008**：每個 inter-procedural、intra-page 模型與 inter-page 模型 MUST 另外輸出一個階層圖 .dot 檔，放在該模型既有輸出所在的目錄；
   檔名格式由 plan 決定並記錄。階層節點的標籤 MUST 能辨識單位（函式／scope 名稱、LOOP、頁面編號、domain），邊 MUST 標示種類
-  （呼叫、事件、返回、載入／儲存 storage）。階層圖 MUST NOT 含呼叫返回與 LOOP 返回節點，返回關係以返回邊表示；inter-page 階層圖的
+  （呼叫、事件、返回、進入 LOOP（主程式→LOOP，標籤 `loop`）、載入／儲存 storage）。階層圖 MUST NOT 含呼叫返回與 LOOP 返回節點，返回關係以返回邊表示；inter-page 階層圖的
   domain 部分 MUST 與扁平圖的跨頁節點一一對應（現況為單一節點）；同一對單位、同一種邊只畫一條。[SRC USR D5、D8、D9；Clarifications 2026-11-16]
 - **FR-009**：HTML 報告 MUST 在 inter-procedural、intra-page、inter-page 各段、扁平圖之前引用對應的階層圖；既有內容彼此的相對順序不變。
   [SRC USR D5；Clarifications 2026-11-16]
@@ -237,7 +240,7 @@
 - **FR-012**：`docs/known-issues.md` MUST 更新：§9 標為已修正；§13、§16 註明共用節點被改動的部分已修正、測試輔助工具的繞路已移除，
   §16 的呼叫順序語意保留待 stage 2；§18 註明移到 stage 2；新增一節記錄仲裁 N1 的外漏現象（重現程式與條件）並標為本 feature 已修正。[SRC KI §9、§13、§16、§18；USR D4]
 - **FR-013**：lint MUST 通過，且不得在 `eslint-suppressions.json` 新增抑制項目。[G-1]
-- **FR-014**：若修改到 LGPL 派生檔（如 `lib/esgraph/index.js`、`lib/esgraph/flownode.js` 中源自 esgraph 的部分），MUST 在檔頭與
+- **FR-014**：若修改到 LGPL 派生檔（如 `lib/esgraph/index.js`、`lib/esgraph/dot.js`），MUST 在檔頭與
   `THIRD_PARTY_NOTICES.md` 補修改紀錄；新模組一律採 MIT 授權檔頭。[G-1]
 
 ### Key Entities

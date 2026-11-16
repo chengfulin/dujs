@@ -42,10 +42,12 @@ h<a> -> h<b> [<邊樣式>]
 
 ### 2.2 節點與邊的次序
 
+邊種類（FR-008）：呼叫（`call`）、返回（`return`）、進入 LOOP（主程式→LOOP，`loop`）、事件（`onEvent`）、`loadStorage`、`saveStorage`。
+
 - **inter-procedural**：`h0` 為根；之後以深度優先走訪呼叫邊（模型自己的邊依 `seq`，遇到被呼叫者是 inter-procedural 模型時遞迴進入它的
   邊）：每走一條邊輸出 `caller -> callee [color="blue", label="call"]`，遞迴處理被呼叫者後輸出
   `callee -> caller [color="blue", style="dashed", label="return"]`；節點 id 依第一次出現指派。
-- **intra-page**：`h0` 主程式、`h1` LOOP、`h2...` 處理器（依清單第一次出現）；邊：`h0 -> h1 []`；每個處理器
+- **intra-page**：`h0` 主程式、`h1` LOOP、`h2...` 處理器（依清單第一次出現）；邊：`h0 -> h1 [label="loop"]`（進入 LOOP）；每個處理器
   `h1 -> hk [color="green", label="onEvent"]` 與 `hk -> h1 [color="blue", style="dashed", label="return"]`。處理器內呼叫的函式不出現。
 - **inter-page**：`h0` domain、`h1...` 各頁（頁序）；每頁 `h0 -> hp [style="dotted", label="loadStorage"]`，有儲存點時再
   `hp -> h0 [style="dotted", label="saveStorage"]`。
@@ -68,7 +70,7 @@ h<a> -> h<b> [<邊樣式>]
 | 層級 | 節點對應 | 邊對應 |
 |------|---------|--------|
 | inter-procedural | 扁平圖中每個 `entry` 節點所屬 scope ↔ 一個階層節點，無多無少；不出現 call／callReturn | 扁平圖每條 `label = "call"` 邊（呼叫點或插入的 CALL → 被呼叫者 entry）↔ 一條 call 邊（呼叫點的 scope → entry 的 scope）；每條 `label="return"` 邊（被呼叫者 exit → CALL RETURN）↔ 一條 return 邊；同一對只一條 |
-| intra-page | 主程式、`loop`、扁平圖 LOOP 的每個 `onEvent` 目標（處理器 entry）的 scope；扁平圖中屬於處理器之 inter-procedural 子模型的 scope 不出現 | LOOP 的每條 onEvent 邊 ↔ loop → 處理器；處理器 exit → loopReturn 的邊 ↔ 處理器 → loop（return）；主程式 → loop 一條 |
+| intra-page | 主程式、`loop`、扁平圖 LOOP 的每個 `onEvent` 目標（處理器 entry）的 scope；扁平圖中屬於處理器之 inter-procedural 子模型的 scope 不出現 | LOOP 的每條 onEvent 邊 ↔ loop → 處理器；處理器 exit → loopReturn 的邊 ↔ 處理器 → loop（return）；主程式 → loop 一條（`label="loop"`） |
 | inter-page | `localStorage` 節點 ↔ `$DOMAIN`；每頁一個 `page<i>` | domain 的每條 loadStorage 點線邊 ↔ 一條 loadStorage；指向 domain 的 saveStorage 點線邊依來源節點所屬頁面歸併，每頁最多一條 |
 
 `tests/dujs/hierarchy.js` 對三個 golden fixture 以程式做同樣的對應檢查（自動化的核對），人工核對另記在 PR 描述。

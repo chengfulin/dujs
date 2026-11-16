@@ -20,7 +20,7 @@
 |-----------|------|------|
 | `level` | `'intra-procedural' \| 'inter-procedural' \| 'intra-page' \| 'inter-page'` | 新增；建模時設定（常數 `Model.INTRA_PROCEDURAL` 等）。 |
 | `graph` | `[entry, exit, nodes]` | 不變的介面；intra-procedural 為自己的圖（原件），上層為 `expand(model)` 的扁平圖（複本）。 |
-| `relatedScopes`／`mainlyRelatedScope`／`dupairs` | 同現況 | 不變。 |
+| `relatedScopes`／`mainlyRelatedScope`／`dupairs` | 同現況 | 不變。inter-procedural 模型須重現現況 `connectCallerCalleeScopeRelatedModelsAtCallSite` 的順序：`mainlyRelatedScope` 為呼叫端 mainly；`relatedScopes` 為「呼叫端 mainly → 呼叫端 related → 被呼叫端 related」（`buildInterProceduralModels` 的 `searchedScopes`、`addInterProceduralModelToAPage` 的 `relatedScopes.length > 1`、helper 的 `interProceduralScopes()` 依賴此順序；以單元測試斷言）。 |
 | `hierarchy` | `Hierarchy \| null` | 新增；intra-procedural 為 `null`。 |
 | `flatNodeOf(original)` | `FlowNode \| null` | 新增；原件在本模型扁平圖中的節點（intra-procedural 為恆等；不在圖中回傳 `null`）；傳入扁平圖節點本身亦回傳自己。 |
 | `analysisResultOf(node)` | `NodeResult \| null` | 新增；唯讀查詢（§6）。 |

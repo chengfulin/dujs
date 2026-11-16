@@ -61,9 +61,9 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>階層式模型結構（重構 stage 1）</h1>
-<div class="meta">feature：003-hierarchical-models · plan · 第 1 輪（承 clarify 與 Fable 仲裁） · 2026-11-16 · PR 目標分支 develop</div>
+<div class="meta">feature：003-hierarchical-models · analyze · 第 1 輪（承 plan 與 Fable 仲裁） · 2026-11-16 · PR 目標分支 develop</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準</div>
-<div class="note">plan 已經 Fable 仲裁：以原型實跑驗證既有 golden 逐位元組相同；仲裁指出的 3 處文字缺口已修入 plan。</div>
+<div class="note">plan 已經 Fable 仲裁：以原型實跑驗證既有 golden 逐位元組相同。analyze 兩份發現表的修正方案<b>尚未套用</b>，待下方 3 個判斷點回覆後一併處理。</div>
 
 <h2>看懂它</h2>
 
@@ -199,7 +199,24 @@ flowchart LR
   </ul>
 </section>
 
-<h2>本輪變更（plan · 第 1 輪）</h2>
+<h2>本輪變更（analyze · 第 1 輪）</h2>
+<p>speckit-analyze：0 CRITICAL／0 HIGH／3 MEDIUM／5 LOW，需求覆蓋 100%。clarifier full：0 CRITICAL／<b>1 HIGH</b>／8 MEDIUM／3 INFO，跨文件無矛盾、每個 FR 與情境都有任務。以下為 HIGH 與 MEDIUM 的發現與處置（已全部套用）。</p>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>說明</th><th>建議處置</th></tr>
+<tr><td>H1</td><td class="no">HIGH</td><td>research R8；T008、T033</td><td>現有探針分不出 R8 正確讀法與「只讀正在搜尋的模型」，R8 無測試守住。實跑確認：頁面層 g、h 內以識別字註冊 g、h 被呼叫也被註冊，現況 LOOP 的 onEvent 目標為 [g,h,g]</td><td>判斷點 1：存為 <code>probes/r8.js</code>，納入 T008 基準與 T033 斷言</td></tr>
+<tr><td>U1／M2</td><td>MEDIUM</td><td>T005；quickstart §1.7</td><td>bf07818 的 worktree 沒有 node_modules，必做的交叉比對跑不動</td><td>worktree 內 symlink 專案根 node_modules（或 npm ci）；<code>&lt;scratchpad&gt;</code> 改為「任意暫存目錄」</td></tr>
+<tr><td>M3／I1</td><td>MEDIUM</td><td>全程規則的步驟閘門</td><td>不帶 commit 的 <code>git diff --exit-code</code> 比的是 index，<code>git add</code> 就繞過；T052 改 added 後 US2 起還會誤報</td><td>判斷點 3</td></tr>
+<tr><td>M5</td><td>MEDIUM</td><td>US2；T048、T049、T052</td><td>US2 沒有逐步綠閘門：T048 寫出新 .dot 後 golden 紅到 T052</td><td>判斷點 3</td></tr>
+<tr><td>M1</td><td>MEDIUM</td><td>T031</td><td>沒說 <code>getRegisteredEventHandlerCallback</code> 如何拿到 reach-in（內部讀 <code>graphNode.reachIns</code>，複本為 null 會拋錯）</td><td>直接套用：加可選 <code>reachIns</code> 參數，省略時沿用 <code>node.reachIns</code>，既有測試不動</td></tr>
+<tr><td>M4</td><td>MEDIUM</td><td>T019、T027</td><td>沒有任務寫明新 Model 的 <code>relatedScopes</code>／<code>mainlyRelatedScope</code> 順序重現，多處依賴</td><td>直接套用：明列「呼叫端 mainly → 呼叫端 related → 被呼叫端 related」並加單元測試</td></tr>
+<tr><td>M6a</td><td>MEDIUM</td><td>contracts/hierarchy-output §2.2；FR-008</td><td>主程式→LOOP 邊無標籤（<code>h0 -> h1 []</code>），FR-008 要求邊標示種類</td><td>判斷點 2</td></tr>
+<tr><td>I2</td><td>MEDIUM</td><td>quickstart §3 情境 4</td><td>grep 永遠非空，檢查形同虛設</td><td>直接套用：改成 T045 的拆分寫法</td></tr>
+<tr><td>M6c</td><td>MEDIUM</td><td>T067</td><td>PR 必含清單缺「連結 spec」（§CP-5）與 README 第 26 行 golden 說明更新</td><td>直接套用：補入 T067</td></tr>
+</table></div>
+<p><b>LOW／INFO 彙總</b>：T002 行數 26→29（I3）；T005 刪除「T062 會再建 worktree」括號（I4）；T065 的 diff 範圍加 <code>lib/esgraph/index.js</code>（濾檔頭）、<code>dot.js</code>、<code>lib/analyses/</code>（C1）；新測試不讀 <code>specs/.../probes/*.js</code>，改複製到 <code>tests/</code> 底下 fixtures（clarifier I1，避免 specs 搬移後壞掉）；clarifier I2、I3 無須處置。
+另有 2 項<b>會改 spec.md</b>：T1 US3 情境 2 的 <code>useLoopHead</code> 已不存在（002 已移除），應為 <code>useNestedLoopHead</code>；T2 FR-014 把 <code>flownode.js</code> 列為 esgraph 衍生，與 THIRD_PARTY_NOTICES 列為 MIT 不符，從 FR-014 移除。known-issues §9 的同一筆筆誤由 T059 修。</p>
+
+<h2>前輪已定（plan · 第 1 輪）</h2>
 
 <h3>技術選型（使用者已確認）</h3>
 <div class="box"><table>
@@ -231,11 +248,13 @@ flowchart LR
 <tr><td>US1-2</td><td>§16 範例：決策節點前驅不變、inter-procedural 順序與 pair 不變</td><td class="ok">可驗證</td><td></td></tr>
 <tr><td>US1-3</td><td>每模型每節點的分析結果與建好當下相同</td><td class="ok">可驗證</td><td>helper 在四層建完後重取快照比對（R14）</td></tr>
 <tr><td>US1-4</td><td>移除兩個測試繞路後既有測試全過</td><td class="ok">可驗證</td><td>只許改取值方式，預期值一字不動</td></tr>
-<tr><td>US1-5</td><td>既有 .dot（含 dupairs.dot 標籤如 <code>entry_a</code>）逐位元組相同（基準 bf07818）</td><td class="ok">可驗證</td><td>manifest 的 baseline 雜湊逐檔比對（R10）</td></tr>
+<tr><td>US1-5</td><td>既有 .dot（含 dupairs.dot 標籤如 <code>entry_a</code>）逐位元組相同（基準 bf07818）</td><td class="ok">可驗證</td><td>manifest 的 baseline 雜湊逐檔比對（R10）；步驟閘門的基準待判斷點 3</td></tr>
 <tr><td>US1-6</td><td><code>f();</code> 呼叫點的種類、GEN／KILL、出邊不變；頁面節點無多出 storage 邊</td><td class="ok">可驗證</td><td></td></tr>
 <tr><td>US1-7</td><td>從程式取得上層節點參照的下層模型與呼叫邊資訊</td><td class="ok">可驗證</td><td><code>model.analysisResultOf(node)</code>、<code>flatNodeOf</code>、<code>hierarchy</code>（contracts/model-api.md）</td></tr>
 <tr><td>US2-1</td><td>inter-procedural 階層圖：主程式→f→g，無敘述節點，一對單位一條邊</td><td class="ok">可驗證</td><td>新 fixture 與重構前 golden 於 Setup 先建（R11）</td></tr>
 <tr><td>US2-2</td><td>intra-page 階層圖：主程式、LOOP、兩個處理器</td><td class="ok">可驗證</td><td></td></tr>
+<tr><td>US2（FR-008）</td><td>階層圖每條邊標示種類</td><td class="no">缺</td><td>主程式→LOOP 邊無標籤，與 FR-008 衝突；待判斷點 2</td></tr>
+<tr><td>FR-005（R8）</td><td>事件處理器依「包含該節點的最頂端 inter-procedural 模型」的 reach-in 找出，順序與重複同現況</td><td class="no">缺（擬補）</td><td>現有探針分不出對錯，無測試守住；待判斷點 1</td></tr>
 <tr><td>US2-3</td><td>inter-page 階層圖：頁面節點加單一 domain 節點，多個儲存點一條邊</td><td class="ok">可驗證</td><td>本輪由不可驗證轉為可驗證</td></tr>
 <tr><td>US2-4</td><td>HTML 三段在扁平圖之前引用階層圖，既有順序不變</td><td class="ok">可驗證</td><td>讀 <code>report.html</code> 文字驗證（R12）</td></tr>
 <tr><td>US2（FR-010）</td><td>新階層圖 golden「經人工核對」</td><td class="ok">可驗證</td><td>plan 已補核對準則（contracts/hierarchy-output.md §3），並以測試自動對應；上輪缺口已補</td></tr>
@@ -248,7 +267,16 @@ flowchart LR
 <p>無。規範對本 CLI／函式庫「不適用」，plan 無偏離項目，沿用現況選型。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無（尚未跑 analyze）。憲章檢查 §CP-1～§CP-6、§GV 在 Phase 0 前後皆 PASS；§CP-4 由新模組單元測試、SC-003 不變性檢查與 golden 三個 case 把關。</p>
+<p>CRITICAL 無；HIGH 1 項（H1）。憲章檢查 §CP-1～§CP-6、§GV 在 plan 階段皆 PASS，§CP-4 由新模組單元測試、SC-003 不變性檢查與 golden 三個 case 把關。H1 對應憲章 §CP-4（核心邏輯需有測試）：它影響 FR-005 的事件處理器順序（intra-page 輸出），目前沒有測試守住。</p>
+
+<h3>本輪判斷點（analyze · 第 1 輪）— 已決：三項皆採 A，修正已套用</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>方案</th><th>影響</th><th>對應小節</th></tr>
+<tr><td>1</td><td>H1：R8（找事件處理器讀哪個模型的 reach-in）無測試守住，要不要補？</td><td><b>A（建議）</b>：<code>probes/r8.js</code> 納入 T008 重構前基準，T033 斷言 LOOP 的 onEvent 順序與重複（現況 [g,h,g]），並複製到 <code>tests/</code> fixtures 供測試讀取<br>B：不補，只靠 research R8 的等價論證</td><td>A：重構時讀錯模型會立刻紅燈，多 1 個 fixture 與 2 處任務文字；B：錯誤只能靠 golden 碰運氣抓</td><td>FR-005；research R8；T008、T033</td></tr>
+<tr><td>2</td><td>M6a：intra-page 階層圖的主程式→LOOP 邊要不要標種類？</td><td><b>A（建議）</b>：標 <code>label="loop"</code>（FR-008 的種類列舉目前沒有此項，需順手補一個「進入 LOOP」；intra-page 新 golden 內容隨之含此標籤）<br>B：放寬 FR-008，允許此邊無標籤</td><td>A：每條邊都有種類、HTML 讀者一眼看懂，改 contracts 與 FR-008 文字；B：保留現行 contracts 輸出，但 FR-008 出現例外</td><td>FR-008；contracts/hierarchy-output §2.2</td></tr>
+<tr><td>3</td><td>M3／M5：步驟閘門的比對基準與 US2 的 commit 單位怎麼定？</td><td><b>A（建議）</b>：US1 全程用 <code>git diff --exit-code &lt;Setup commit&gt; -- &lt;路徑&gt;</code>；US2 起排除 expected 與 manifest，改檢查「只多 .hierarchy.dot、baseline 不變」；T052 移到 T048／T049 之後，US2 的輸出與 golden 更新同一 commit<br>B：維持現行閘門與順序，接受 T048～T052 之間 golden 為紅</td><td>A：每個 commit 都綠、閘門不被 <code>git add</code> 繞過，任務順序與 commit 切法要改；B：改動最少，但中間 commit 不能逐步驗證</td><td>US1／US2 全程規則；tasks T048、T049、T052；quickstart</td></tr>
+</table></div>
+<p class="meta">使用者決定（2026-11-16）：1 補 r8 測試；2 主程式→LOOP 邊標 <code>loop</code>；3 閘門以 Setup commit 為基準、US2 輸出與 golden 同一 commit。其餘（U1、M1、M4、I2、M6c 與 LOW／INFO）已直接套用；本輪不再請 Fable 仲裁。</p>
 
 <h3>已決事項（spec review 與 clarify，2026-11-16）</h3>
 <div class="box"><table>

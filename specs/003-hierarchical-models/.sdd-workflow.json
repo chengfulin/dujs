@@ -12,6 +12,11 @@
     },
     "tasks": {
       "done": true
+    },
+    "analyze": {
+      "done": true,
+      "findings": 20,
+      "remediated": 18
     }
   },
   "brief": {
