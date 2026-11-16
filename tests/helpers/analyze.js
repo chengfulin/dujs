@@ -68,15 +68,20 @@ function useLabels(use, variableName) {
 	/// FlowNodes are shared by the models: the intra-page model reconnects a
 	/// branch to the exit node to its LOOP node, while the pair of the
 	/// intra-procedural model still targets the exit node (known limitation)
+	/// likewise, a call inserted before a decision node by the inter-procedural model is entered
+	/// instead of the decision node (lib/dujs/modelbuilder.js, dujsDecisionCalledBefore)
 	function branch(node) {
+		if (!!node && !!node.dujsDecisionCalledBefore) {
+			return node.dujsDecisionCalledBefore;
+		}
 		return (!!node && node.type === FlowNode.LOOP_NODE_TYPE && target.type === FlowNode.EXIT_NODE_TYPE) ?
 			target : node;
 	}
 	var labels = [];
-	if (target === branch(decision.true)) {
+	if (target === decision.true || target === branch(decision.true)) {
 		labels.push(prefix + ':T');
 	}
-	if (target === branch(decision.false)) {
+	if (target === decision.false || target === branch(decision.false)) {
 		labels.push(prefix + ':F');
 	}
 	if (labels.length === 0) {

@@ -222,14 +222,14 @@ FR-010／D12 不變量以 fast-check 性質測試（`tests/dujs/branchsplit.prop
 
 **Purpose**：修正 PR #3 code review 確認的 US3／US5 實作缺陷（roll forward，以新增任務表達）。每項先寫重現測試（紅）再修（綠）；測試放 `tests/dujs/reviewfixes.js`，`it` 標題以 `R<n>` 開頭。
 
-- [ ] T056 [US3] R1：`lib/dujs/modelbuilder.js` `findStaticMemberScopesOfClassesAtNode` 只找「屬於該節點自身運算式」的 class，不走進函式本體（ENTRY 節點 astNode 為 body）、迴圈本體、SwitchCase consequent、catch body。重現：`function g(){ class D { static a = 1; } } g();` 的 inter-procedural 模型中 g 的 ENTRY 不得變成 CALL 節點、static 初始化只連一次。建議改為從 class 節點直接查（同時改善每個 scope model 重走 AST 的效能，review #10）
-- [ ] T057 [US3] R2：判斷節點（SwitchCase、loop 節點、拆分後的決策節點）成為靜態成員呼叫點時，不得讓決策節點失去 true/false 目標。重現：`var v = 1;\nswitch (v) {\n  case 1:\n    class D { static a = v; }\n}` 的 `intraPage()` 不得拋 `lacks its true target`，且 `v` 的 p-use 目標正確
-- [ ] T058 [US5] R3：拆分後的決策節點 astNode 為 CallExpression（如 `if (check(a) || b)`、`f() && x`、`f() ? a : b`）時，呼叫點連結不得移走決策節點的 true/false 邊。先寫測試確認現況（inter-procedural／intra-page 模型中決策節點的 `.true`／`.false` 與 p-use），確認有缺陷再修；呼叫點規則 R12（只有呼叫敘述是呼叫點）若因此需調整，回報不要自行改規格
-- [ ] T059 [US5] R4：拆分規則只保留一份。`lib/esgraph/branchsplitter.js` 拆分 switch discriminant 時在 case 節點設旗標（比照 `loopRightSplit`），`lib/dujs/defuseanalyzer.js` `readsSwitchDiscriminant` 改讀旗標，刪除 `hasSplitOperator` 與重複的 `LOGICAL_ASSIGNMENTS`；並讓 UpdateExpression 運算元內的條件（`a[i || 0]++`）依 D12 拆分。重現：`var a = [1], i = 0;\nswitch (a[i || 0]++) {\n  case 1:\n    break;\n}` 目前 pairs 為 `[]`，修後 `a`、`i` 的 use 不得遺失
-- [ ] T060 [US5] R5：`lib/esgraph/branchsplitter.js` 物件 literal 的 Property 與 SpreadElement（含呼叫參數的 `...x`）中，在條件之前求值的部分留在決策節點（D12「判斷前已求值的部分留在判斷前節點」）。重現：`var x = 1, y = 0;\nvar o = {a: x, b: (x = 2) || y};` 須有 `x: L1 -> L2`（陣列寫法 `[x, (x = 2) || y]` 已正確，可作對照）；`f(...x, (x = 2) || y)` 同理
-- [ ] T061 [US2] R6：`lib/dujs/modelbuilder.js` `collectParameterDefaults` 不得對巢狀於解構模式內的 AssignmentPattern 再產生一次無條件初始化。重現：`function f([a = g()] = [], b = a) {}` 中 `g()` 只出現一次、`a` 只有解構那一個 def
-- [ ] T062 [P] 記錄未修項到 `docs/known-issues.md`：§14 for-in/for-of 右側拆分時，無 range 的前驅節點會被導回右側決策（review #7，邊界情況）；§15 拆分後多個 call-return 節點在 dot 輸出標籤相同（review #8，`lib/dujs/cfggraphconverter.js` `labelWithLoc`）
-- [ ] T063 驗證：`npm test`、`npm run lint`、`FC_NUM_RUNS=1000` 性質測試全綠；golden 若有差異逐處記入 `golden-diff.md` 新節「Phase 10」並對應 R<n>
+- [X] T056 [US3] R1：`lib/dujs/modelbuilder.js` `findStaticMemberScopesOfClassesAtNode` 只找「屬於該節點自身運算式」的 class，不走進函式本體（ENTRY 節點 astNode 為 body）、迴圈本體、SwitchCase consequent、catch body。重現：`function g(){ class D { static a = 1; } } g();` 的 inter-procedural 模型中 g 的 ENTRY 不得變成 CALL 節點、static 初始化只連一次。建議改為從 class 節點直接查（同時改善每個 scope model 重走 AST 的效能，review #10）
+- [X] T057 [US3] R2：判斷節點（SwitchCase、loop 節點、拆分後的決策節點）成為靜態成員呼叫點時，不得讓決策節點失去 true/false 目標。重現：`var v = 1;\nswitch (v) {\n  case 1:\n    class D { static a = v; }\n}` 的 `intraPage()` 不得拋 `lacks its true target`，且 `v` 的 p-use 目標正確
+- [X] T058 [US5] R3：拆分後的決策節點 astNode 為 CallExpression（如 `if (check(a) || b)`、`f() && x`、`f() ? a : b`）時，呼叫點連結不得移走決策節點的 true/false 邊。先寫測試確認現況（inter-procedural／intra-page 模型中決策節點的 `.true`／`.false` 與 p-use），確認有缺陷再修；呼叫點規則 R12（只有呼叫敘述是呼叫點）若因此需調整，回報不要自行改規格
+- [X] T059 [US5] R4：拆分規則只保留一份。`lib/esgraph/branchsplitter.js` 拆分 switch discriminant 時在 case 節點設旗標（比照 `loopRightSplit`），`lib/dujs/defuseanalyzer.js` `readsSwitchDiscriminant` 改讀旗標，刪除 `hasSplitOperator` 與重複的 `LOGICAL_ASSIGNMENTS`；並讓 UpdateExpression 運算元內的條件（`a[i || 0]++`）依 D12 拆分。重現：`var a = [1], i = 0;\nswitch (a[i || 0]++) {\n  case 1:\n    break;\n}` 目前 pairs 為 `[]`，修後 `a`、`i` 的 use 不得遺失
+- [X] T060 [US5] R5：`lib/esgraph/branchsplitter.js` 物件 literal 的 Property 與 SpreadElement（含呼叫參數的 `...x`）中，在條件之前求值的部分留在決策節點（D12「判斷前已求值的部分留在判斷前節點」）。重現：`var x = 1, y = 0;\nvar o = {a: x, b: (x = 2) || y};` 須有 `x: L1 -> L2`（陣列寫法 `[x, (x = 2) || y]` 已正確，可作對照）；`f(...x, (x = 2) || y)` 同理
+- [X] T061 [US2] R6：`lib/dujs/modelbuilder.js` `collectParameterDefaults` 不得對巢狀於解構模式內的 AssignmentPattern 再產生一次無條件初始化。重現：`function f([a = g()] = [], b = a) {}` 中 `g()` 只出現一次、`a` 只有解構那一個 def
+- [X] T062 [P] 記錄未修項到 `docs/known-issues.md`：§14 for-in/for-of 右側拆分時，無 range 的前驅節點會被導回右側決策（review #7，邊界情況）；§15 拆分後多個 call-return 節點在 dot 輸出標籤相同（review #8，`lib/dujs/cfggraphconverter.js` `labelWithLoc`）
+- [X] T063 驗證：`npm test`、`npm run lint`、`FC_NUM_RUNS=1000` 性質測試全綠；golden 若有差異逐處記入 `golden-diff.md` 新節「Phase 10」並對應 R<n>
 
 ---
 

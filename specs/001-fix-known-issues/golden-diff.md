@@ -93,3 +93,18 @@ FR-010（T040a）或 FR-014；ES5 golden 只有 D17 的 loop exception 邊（gra
 | 單元測試 | `tests/dujs/es2015.js`（Foundational） | p-use 目標記法加 `:T`／`:F`（4 個 `it`：`x: L2 -> L3>L4` → `L3>L4:T` 等），行為不變 | FR-014 |
 | 單元測試 | `tests/dujs/es2015.js`（US2） | `last: entry -> L2` → `last: L1 -> L2` | FR-005 |
 | 單元測試 | `tests/dujs/es2015.js`（US5） | `??`（L5）拆分後 `t`／`v` 的標記；`n ??= 1` 拆分後 `n` 的 p-use 與 def | FR-008、FR-009 |
+
+## Phase 10（T056–T063）：PR #3 code review 修正
+
+compare 模式 `npm test` 全綠：`tests/golden/expected/`（ES5）與 `tests/golden/expected-es2015/` 的 `.dot`
+檔案集合與內容零差異，未重產 golden。各修正與 golden 的關係（「原因」欄為推斷，零差異本身由 compare 模式確認）：
+
+| R | 修正 | golden 差異 | 原因 |
+|---|------|-------------|------|
+| R1 | 靜態成員呼叫點只看節點本身求值的運算式（不走進 ENTRY 本體、迴圈本體、case 本體、catch 本體） | 無 | fixture 的 class 皆為獨立敘述，原本就在自己的節點連結 |
+| R2、R3 | 有 true／false 目標的節點（判斷節點）成為呼叫點（含靜態成員）時，在它之前插入 CALL／CALL RETURN 節點，判斷節點的邊與 GEN／KILL 不動；非判斷節點的呼叫點維持原做法，但改為先收齊所有出邊再搬（修正同一目標多條邊只搬一條的問題） | 無 | fixture 沒有條件為呼叫或 class 的決策節點 |
+| R4 | switch 判斷式拆分改由 `FlowNode.discriminantSplit` 記錄；UpdateExpression 運算元內的條件依 D12 拆分 | 無 | fixture 的 switch 判斷式沒有條件或短路運算 |
+| R5 | 物件 literal 的 Property 與 SpreadElement 中在條件前求值的部分留在決策節點 | 無 | fixture 沒有「條件前有屬性值或 spread」的拆分 |
+| R6 | 帶預設值的解構參數，其巢狀預設值不另建初始化節點 | 無 | fixture 沒有巢狀於帶預設值模式內的預設值 |
+
+單元測試期望未修改既有 `it`；新增 `tests/dujs/reviewfixes.js`（13 個 `it`）；`tests/helpers/analyze.js` 把插入在判斷節點前的 CALL 節點視為該判斷節點（比照 LOOP 節點的既有處理）。

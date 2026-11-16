@@ -45,4 +45,4 @@ line        = 1*DIGIT                                 ; 被分析程式碼的行
 
 FlowNode 由各層模型共用：intra-page 模型把接到 exit 的分支改接到 LOOP 節點後，intra-procedural 模型的 p-use
 目標仍是 exit。helper 判定 `:T`／`:F` 時，決策分支為 LOOP 節點且 pair 目標為 exit 者視為同一分支（2026-11-16，
-US5 實作中補）。
+US5 實作中補）。同理，判斷節點成為呼叫點時，inter-procedural 模型在它之前插入 CALL／CALL RETURN 節點（known-issues §16），前驅的邊改指向插入的 CALL 節點；helper 把帶 `dujsDecisionCalledBefore`（指回判斷節點的不可列舉屬性）的 CALL 節點視為該判斷節點（2026-11-16，Phase 10 R2／R3）。
