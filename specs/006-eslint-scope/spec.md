@@ -109,6 +109,26 @@
 - 依 Fable 建議直接修正：差異單位加入 `dupairs.dot` 的變數列增減、`graph.dot`／`hierarchy.dot` 只允許在有連結變化的頁面改變（A3）；識別字解析類判準改以原始碼
   的 eslint-scope 結果判定（A4）；catch 類判準收窄（A5a、A5c）；白名單加固定清單與 `localStorage` 的名稱對應，FR-013 涵蓋 handler 識別字與 004 FR-016 的
   可見性判定（A6）；FR-001 明定以參照的解析為準、宣告節點為 `Definition.node`（A7）；殘留舊措辭與 module 一句（A8）；MDN 基準快照（A9）；US1 補列（A10）。
+
+### Session 2026-11-17（plan review：plan 作者 U1–U4 與 Fable 仲裁）
+
+- Q: 名稱為 `$`、非 ASCII 等合法識別字的變數？ → A: dujs 變數名放寬為 ES IdentifierName（否則 FR-006 會讓只讀 `$` 的程式拋錯）；scope 保留名稱
+  （`$ANONYMOUS_FUN_n` 等）可能相撞的情形加測試或記入 KI。（U1）
+- Q: 被呼叫端的同名區域變數是否遮蔽外層（004 FR-016 的可見性）需要比名稱，怎麼處理？ → A: 以 eslint-scope 的 scope 比對名稱，視為 FR-013 的實作，列入
+  FR-012 (1) 白名單。（U2）
+- Q: class 內層名稱、catch 參數、具名運算式名稱沒有自己的 dujs scope，被呼叫端看不看得到它們？ → A: 以「定義所在的 dujs scope 是被呼叫端的祖先或本身」判定
+  可見，保住 `develop` 既有的 pair（例如 class 方法經由另一個函式呼叫時的 `A: L1 -> L3`，probes/vis3.js 守門）。（Fable F1）
+- Q: catch 節點目前也定義區塊內的賦值（def 端為 catch 行），D4 修正後這類 pair 消失，怎麼歸類？ → A: catch 類加判準：移除的 pair 其 def 行為 CatchClause
+  所在行且變數不是該 catch 參數。（U3）
+- Q: 頁面只有 catch 參數 `e`、沒有其他宣告時，`develop` 把它當隱含全域（`e: entry -> …`），修正後消失，怎麼歸類？ → A: catch 類加判準：名稱為 catch 參數名
+  且該頁沒有同名的其他宣告時，該名稱移除的 pair 與變數列歸 catch 類。（Fable F2）
+- Q: 未宣告名稱被 `++`、for-in 左側、解構、`G.p = v` 寫入時產生非 entry 的定義，怎麼歸類？ → A: 全域類放寬為「該頁未解析名稱的任何新增 pair 或變數列」；
+  `G.p = v` 依 D1 仍是 `G` 的定義，種類仍為 `global`（eslint-scope 視為讀取）。（U4、Fable F4）
+- Q: 函式 entry 節點（KI §18）以身分查詢後會讀到 block 內的 `let`／`const`，怎麼處理？ → A: 維持 `develop`：entry 節點只認從函式 scope 可見的變數；KI §18
+  整體留給 005。（Fable F5）
+- Q: 以 `$` 開頭的函式名（`function $(s){}`）在 develop 與本 feature 都拋 `Invalid value for a FunctionScope`，要一併處理嗎？ → A: 不在本次範圍（FR-009
+  scope 命名不變），記入 KI。（plan review）
+- Q: entry 節點只認函式 scope 可見的變數，使「被 block 內 `let` 遮蔽的讀取」在 entry 的 pair 消失，接受嗎？ → A: 接受，歸解析類並走人工簽核。（plan review）
 ## 表示法
 
 沿用 `specs/001-fix-known-issues/spec.md`「表示法」：def-use pair 寫成 `<變數>: <def> -> <use>`，`<def>` 為 `entry` 或節點標記；p-use 為
@@ -275,14 +295,15 @@ catch 參數（含解構）在 catch 子句定義，只在 catch 區塊內可見
 - **FR-011**: `docs/known-issues.md` MUST：§22 (2) 與 §24 標為已修正；新增一節記錄 catch 參數與 catch 節點讀取的問題（修正前行為、重現程式）並標為已修正；
   新增一節記錄參數預設值的錯誤解析並標為已修正；本輪發現的其他問題新增章節。README 中與 scope、全域物件、Annex B 相關的限制說明隨之更新。[SRC USR D1]
 - **FR-012**: MUST 有自動檢查：(1) 靜態測試確認 lib 中沒有以名稱在 scope 中查找變數的路徑（含呼叫解析），白名單只有：D3 的「頁面＋名稱」合併與
-  `undefined`／`NaN`／`Infinity`／`arguments` 的名稱排除、D6 的回退查找、固定清單與 `localStorage` 的名稱對應；被禁止的 API 與模式由 plan 明列。
+  `undefined`／`NaN`／`Infinity`／`arguments` 的名稱排除、D6 的回退查找、固定清單與 `localStorage` 的名稱對應、遮蔽判定（以 eslint-scope 的 scope 比對名稱，Clarifications U2）；被禁止的 API 與模式由 plan 明列。
   (2) 一支腳本以下列單位計算 golden 與 MDN 範例集的差異：每個 pair 的增減、`dupairs.dot` 每個變數列的增減、每個模型數量的變化；`graph.dot`、`hierarchy.dot`
   只允許在有呼叫連結變化的頁面改變。基準側只以「名稱＋行」比對。每筆差異須符合下列某類的判準，否則檢查失敗：
   - 識別字解析類：以原始碼的 eslint-scope 結果判定，該名稱在該頁有兩個以上 Variable，或宣告於 function-expression-name／class scope，或 pair 一端是含
     參數預設值的節點。
-  - 全域類：新增的 `<未宣告名稱>: entry -> …` 或其變數列，且該名稱在該頁未解析。
+  - 全域類：該頁未解析名稱的任何新增 pair 或變數列（含 `++`、for-in、解構、`G.p = v` 造成的非 entry 定義）。
   - catch 類：移除的 pair 其 use 端為 CatchClause 所在行且變數不是該 catch 參數；或變數名為 catch 參數名且兩端都在該 catch 子句的行範圍內；或新增的
-    catch 參數變數列。
+    catch 參數變數列；或移除的 pair 其 def 行為 CatchClause 所在行且變數不是該 catch 參數；或名稱為 catch 參數名且該頁沒有同名的其他宣告時，
+    該名稱移除的 pair 與變數列。
   - 呼叫連結類（D5、FR-013）：腳本確認該頁有呼叫點的 callee 解析結果改變（未解析參照與 block 內函式同名，或 FR-013 列舉的情形）；其衍生的 pair 增減
     逐筆人工簽核並釘住筆數，筆數不符即失敗。
   `golden-diff.md` 由腳本輸出產生並附人工說明。MDN 範例集的 `develop` 基準在動 lib 之前產生快照，存於 `specs/006-eslint-scope/`；golden 以現有 `expected*`

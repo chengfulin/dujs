@@ -1,0 +1,47 @@
+# Contract：PageBinding（`lib/dujs/scopebinding.js`）與宣告查詢介面（FR-001、FR-002、FR-013、US4-9）
+
+**Feature**: `006-eslint-scope` | 模組授權：MIT（原創）| 唯一 `require('eslint-scope')` 的 lib 檔
+
+## 1. 建立
+
+| 函式 | 說明 |
+|------|------|
+| `analyze(ast) → PageBinding` | 以 research R1 的選項呼叫 eslint-scope；建立 `referenceOf`、`declaredBy`。必須在 `buildScopeTree` 前呼叫 |
+| `binding.attach(scopeTree)` | 建立 `ownerOf`／`eslintScopeOf`（research R4）；`scopeTree.binding = binding`；dujs scope 經 `scope.binding`（向上找到頁面 scope）取得 |
+| `binding.registerRemainingVariables()` | research R5 的補登記，並驗證 data-model §1 的一對一規則 |
+
+## 2. 查詢（lib 內取得變數的**唯一**途徑）
+
+| 函式 | 回傳 | 使用者 |
+|------|------|--------|
+| `useVarsOf(identifier)` | `Var[]`：只查 Reference，**不回退** `declaredBy`（data-model §5，F5） | defuseanalyzer `findUSESet`、hierarchy（localStorage 讀取） |
+| `useVarOf(identifier)` | `Var|null`：`useVarsOf` 的唯一元素 | callresolver（callee `f()`、`new X()`、`o.m()` 的 `o`）、modelbuilder（handler 識別字） |
+| `defVarsOf(identifier)` | `Var[]`：Reference 優先，否則 `declaredBy`；class 宣告 id → 外層＋內層 | defuseanalyzer `findGENSet`／`getDefinedVariables`（含 `o` of `o.p = v`）、variableanalyzer |
+| `variableVar(variable)` | `Var|null`（eslint-scope Variable → Var） | variableanalyzer |
+| `isVisible(var, dujsScope)` | boolean（research R6 (a)∪(b)∪(c)，快取；(a) 的遮蔽判定為白名單 W4 `isShadowed`；(c) 用 `definingScopeOf`） | `getNonReachableVarDefs`、`bypassFilter` |
+| `isOnFunctionChain(var, dujsFunctionScope)` | boolean：Var 的宣告 eslint scope 是函式 eslint scope 本身或其祖先，或 Var 無宣告（全域／builtin）（research R6a，Q3） | `findUSESet` 處理函式 entry 節點時過濾 |
+| `classBindingGroupOf(var)` | `Var[]`（class 宣告的外層＋內層；其他為 `[var]`） | callresolver `definitionsOnThePage`（FR-018 合併計數） |
+| `globalVars()` | 依原始碼順序的 `global` 類 Var | defuseanalyzer 在頁面 entry 產生 `global` 定義 |
+| `localStorageVar()` | domain scope 的 `localStorage` Var | hierarchy `definingLocalStorageNodes` |
+
+## 3. 宣告查詢（給 005；US4-9 單元測試的對象）
+
+| 函式 | 回傳 |
+|------|------|
+| `var.binding.variable` | eslint-scope Variable 或 null（全域、fixed list） |
+| `var.binding.kind` | data-model §2 的 VarKind |
+| `var.binding.declarations` | `[{kind, node}]`，`node` 為 `Definition.node`（可取得名稱識別字 `Definition.name` 與宣告的 `kind`） |
+| `binding.declarationsOf(var)` | 同上（便利函式） |
+
+另有單元測試（`tests/dujs/scopebinding.js`）：`useVarsOf` 對宣告識別字（`var x` 的 `x`、函式名）回傳 `[]`、`defVarsOf` 回傳其 Var（F5）；可見性 (c)
+（vis3 的內層 `A` 對 `g` 可見）；`isOnFunctionChain`（block `let`、catch 參數為 false）；optimistic 偏離案例（research R2）；保留名稱 `$ANONYMOUS_FUN_0`（research R12）；
+`binding.kind` 多宣告取法（`function f(a) { function a() {} }` → `function`、`function f(a) { var a; }` → `parameter`，data-model §2）。
+
+US4-9 的斷言（`tests/dujs/scopebinding.js`）：一個含 var、let、const、函式宣告、class、參數、catch 參數、import（module）、具名函式運算式、未宣告讀取、
+未宣告賦值的程式——每個有宣告的 Var 對應唯一 Variable；`var x; var x;` 兩個宣告；class 宣告兩個 Var（外 `class`、內 `class`）；catch-edge L10 `e` 的
+def 屬 catch 參數 Var、宣告節點在外層 `e` 的 `declarations`；未宣告有賦值 → `implicitGlobal`、只讀 → `global`，`declarations` 為空；`arguments` 無 Var。
+
+## 4. 錯誤
+
+- 一對一驗證失敗、`ownerOf` 缺 scope：拋 `Error('scopebinding: ...')`（程式錯誤，不應發生；有單元測試觸發路徑以合成輸入驗證）。
+- eslint-scope 自身拋錯（理論上 espree 能解析即可分析）：原樣拋出，CLI 依 004 FR-009 以 exit 1 結束。

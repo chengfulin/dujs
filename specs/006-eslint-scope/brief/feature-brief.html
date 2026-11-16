@@ -39,6 +39,7 @@ h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
 .cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
 text{font-family:var(--sans)}
 .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+.mermaid{min-width:560px;text-align:center}
 ul{margin:6px 0;padding-left:20px}
 li small{color:var(--sub)}
 table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
@@ -62,8 +63,8 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>改用 eslint-scope 判定變數的宣告與參照</h1>
-<div class="meta">feature 006-eslint-scope · clarify · 第 1 輪 · 2026-11-16</div>
-<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。範圍決策 D1–D7 與本輪 clarify（含 Fable 仲裁）使用者已決的 7 題，本頁不再重問。</div>
+<div class="meta">feature 006-eslint-scope · plan · 第 1 輪 · 2026-11-17</div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。範圍決策 D1–D7、clarify 與 plan review（Fable 仲裁）使用者已決的各題，本頁不再重問。</div>
 
 <h2>看懂它</h2>
 
@@ -165,49 +166,80 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
   <li>具名函式運算式的自我遞迴呼叫不連結，留給 005（D7；004 FR-018）。</li></ul>
 </section>
 
-<h2>本輪變更（clarify：使用者 7 題＋Fable 仲裁）</h2>
+<h3>架構圖：新增一個模組，其餘只換查詢方式</h3>
+<div class="box"><div class="mermaid">
+flowchart TD
+  P["jsparser.js 解析整頁 AST"] --> SB
+  ES(["eslint-scope ^9.1.2 新 runtime 依賴"]) --> SB
+  SB["scopebinding.js 新 每頁分析一次 建身分表"]
+  SB -->|"宣告與 Var"| VA["variableanalyzer 登記變數"]
+  SB -->|"識別字對 Var"| DU["defuseanalyzer GEN USE KILL"]
+  SB -->|"呼叫對象與可見性"| CR["callresolver 呼叫連結"]
+  SB -->|"handler 與 localStorage"| MB["modelbuilder 與 hierarchy"]
+  SC["scopectrl 與 scopetree 建 dujs scope 樹 命名不變"] --> VA
+  VA --> DU
+  DU --> OUT["CFG 與 worklist 不變 輸出 pair 格式不變"]
+  CR --> OUT
+</div></div>
+<ul>
+<li>所有「以名稱查變數」的路徑改為經 <code>scopebinding.js</code> 的身分查詢；<code>lib/esgraph/**</code>、<code>lib/analyses/**</code>、輸出格式明確不動。<small>來源：plan「變更影響範圍」、contracts/scope-binding-api.md §2</small></li>
+<li>catch／class 內層名稱／具名運算式名稱不新增 dujs scope，Var 登記在外層最近的 dujs scope。<small>來源：plan「1. 對應」；FR-009</small></li>
+<li>外部依賴只有 eslint-scope（選項 <code>optimistic: true</code>）；espree 沿用。<small>來源：plan Technical Context；research R2</small></li>
+</ul>
+
+<h2>本輪變更（plan：技術選型與偏離）</h2>
 <div class="box"><table>
-<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響 story</th></tr>
-<tr><td>D2、FR-010</td><td>允許 4 類 golden 差異</td><td>新增第 5 類「解析修正導致的呼叫連結增減」</td><td>US4 情境 1、2、7、10</td></tr>
-<tr><td>FR-013（新）、Assumptions</td><td>呼叫解析（<code>f()</code>、<code>new X()</code>、handler）與 004 FR-016 可見性仍以名稱查找，spec 未涵蓋</td><td>全改依 eslint-scope 宣告判定；004 規則內容不變；class 內外兩個綁定合併計數</td><td>US4 情境 10、11；US2 情境 3</td></tr>
-<tr><td>FR-012、SC-002</td><td>差異是否「屬允許類別」無判準；白名單只列 D3／D6</td><td>差異單位＝pair／<code>dupairs.dot</code> 列／模型數量；每類有機械判準；基準為動 lib 前的 <code>develop</code> 快照；白名單加固定清單與 <code>localStorage</code> 名稱對應</td><td>US4 情境 1、6、7</td></tr>
-<tr><td>D3、FR-006</td><td>全域的定義種類未定；<code>undefined</code> 等排除範圍不清</td><td>新增 <code>global</code> 種類；<code>undefined</code>／<code>NaN</code>／<code>Infinity</code> 只在未解析時以名稱排除</td><td>US3 情境 7、8</td></tr>
-<tr><td>FR-001、Key Entities</td><td>「可查詢宣告」介面模糊</td><td>以 Variable 為單位查全部宣告節點與種類；以參照解析為準；僅賦值＝隱含全域、僅讀取＝全域；<code>arguments</code> 不建變數</td><td>US4 情境 9；S005</td></tr>
-<tr><td>US1 情境 4–6</td><td>4 支 catch 探測</td><td>catchloop 補 <code>e: L11 -> L11</code>；新增 catchinner、catch-edge（無參數 catch、catch 內 <code>var e</code>）</td><td>US1</td></tr>
-<tr><td>FR-009、US4 情境 2</td><td>模型數量不變（僅 D5 例外）</td><td>例外再加 FR-013 的呼叫連結變化，逐項記錄</td><td>US4 情境 2、3</td></tr>
-<tr><td>Edge Cases</td><td>module、class 綁定僅敘述</td><td>module 守門（US4 情境 8）；class 內外合併計數，放寬留給 005（link-n5 守門）</td><td>US2 情境 3；US4 情境 8</td></tr>
-<tr><td>SC-003</td><td>1.5 倍門檻量測方式未定</td><td>同一台機器各跑 3 次取中位數</td><td>SC-003</td></tr>
+<tr><th>項目</th><th>選擇</th><th>狀態</th><th>說明（plan 小節）</th></tr>
+<tr><td>語言與執行環境</td><td>Node.js ≥ 24、CommonJS；<code>lib/</code> 維持 ES5 風格</td><td>沿用</td><td>Technical Context</td></tr>
+<tr><td>解析與測試工具</td><td>espree ^11.2.0、mocha、c8、ESLint 10</td><td>沿用</td><td>Technical Context；基線 1102 passing、抑制 118 筆</td></tr>
+<tr><td>eslint-scope</td><td>^9.1.2，由 devDependencies 轉為 runtime 依賴，lock 鎖版</td><td>新增</td><td>憲章 §TR-3；樹中已有 9.1.2；回答前輪「版本策略」疑點</td></tr>
+<tr><td>SC-003 量測</td><td>feature 目錄內獨立腳本 <code>tools/perf.js</code> 人工執行，結果記入 <code>perf.md</code>，不進 <code>npm test</code></td><td>使用者已決</td><td>回答前輪「是否自動化」疑點；計時易抖動</td></tr>
+<tr><td>模組範圍</td><td>新增 1 個 lib 模組、修改約 14 個 lib 檔、新增 6 個測試檔</td><td>新增</td><td>變更影響範圍</td></tr>
+<tr><td>偏離 tech-standards</td><td class="ok">無</td><td>—</td><td>規範以服務部署為主；無 §CP-6 例外</td></tr>
 </table></div>
+<p class="meta">plan 階段已決（使用者 7 題）：U1 變數名放寬為 ES IdentifierName、U2 遮蔽以 eslint-scope 比對、U3 catch 不再定義區塊內賦值、U4 全域類放寬、Q1 可見性加 (c)、Q2 僅有 catch 參數的頁面、Q3 entry 只認函式 scope 可見者（見 plan「已裁決事項」）。</p>
+<p class="meta">告知（非判斷點）：Foundational 階段的 link-bypass 守門只驗 <code>e: L6 -&gt; L8</code>，其餘差異留到 US1。</p>
 
 <h2>工程師要決定的事</h2>
 
 <h3>驗收條件盤點</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>驗收條件</th><th>判定</th><th>說明（spec 小節）</th></tr>
-<tr><td>US1</td><td>情境 1–6（catch-a／b／c、catchloop、catchinner、catch-edge）</td><td class="ok">可驗證</td><td>pair 有／沒有均逐條列出；新增兩支探測已補情境（Acceptance Scenarios）</td></tr>
-<tr><td>US2</td><td>情境 1–5（named-expr、自我遞迴、classdecl、pdef、shadow-*）</td><td class="ok">可驗證</td><td>情境 5 需先凍結 develop 輸出作基準（FR-012）</td></tr>
-<tr><td>US3</td><td>情境 1–8（全域 pair、跨頁、arguments／this、typeof、globalThis、本地 undefined）</td><td class="ok">可驗證</td><td>情境 2 依賴 golden fixture 的涵蓋</td></tr>
-<tr><td>US4</td><td>情境 2–5、8（scope 數量、annexb、with／evalouter、op、mod）</td><td class="ok">可驗證</td><td>以 develop 輸出比對；module 已有情境與探測</td></tr>
-<tr><td>US4</td><td>情境 1、7（差異皆屬 D2 類別）</td><td class="ok">可驗證</td><td>FR-012 (2) 腳本判定；呼叫連結類衍生 pair 需人工簽核並釘住筆數（筆數 plan 才知）</td></tr>
-<tr><td>US4</td><td>情境 6（無名稱查找路徑）</td><td class="ok">可驗證</td><td>FR-012 (1) 靜態測試；被禁止的 API 清單由 plan 明列</td></tr>
-<tr><td>US4</td><td>情境 9（宣告介面）、10（link-*）、11（link-bypass）</td><td class="ok">可驗證</td><td>情境 9 有單元測試可觀察；10、11 有明確 pair／連結</td></tr>
-<tr><td>SC</td><td>SC-003 時間不超過 develop 的 1.5 倍</td><td class="ok">可驗證</td><td>量測已定；是否納入自動化測試或僅人工量測 spec 未定義（次要疑點）</td></tr>
+<tr><td>US1</td><td>情境 1–6（catch-a／b／c、catchloop、catchinner、catch-edge）</td><td class="ok">可驗證</td><td>pair 有／沒有均逐條列出（Acceptance Scenarios）；plan 以 <code>catchclause.js</code> 對應</td></tr>
+<tr><td>US2</td><td>情境 1–5（named-expr、自我遞迴、classdecl、pdef、shadow-*）</td><td class="ok">可驗證</td><td>情境 5 以凍結的 develop 輸出為基準（FR-012）</td></tr>
+<tr><td>US3</td><td>情境 1–8（全域 pair、跨頁、arguments／this、typeof、globalThis、本地 undefined）</td><td class="ok">可驗證</td><td>plan 以 <code>globals.js</code>（plan-u1、plan-u4）對應</td></tr>
+<tr><td>US4</td><td>情境 2–5、8（scope 數量、annexb、with／evalouter、op、mod）</td><td class="ok">可驗證</td><td>Foundational 以 <code>scopeguards.js</code> 守門</td></tr>
+<tr><td>US4</td><td>情境 1、7（差異皆屬 D2 類別）</td><td class="ok">可驗證</td><td>FR-012 (2) 腳本判定；解析類移除與呼叫連結需人工簽核並釘住筆數</td></tr>
+<tr><td>US4</td><td>情境 6（無名稱查找路徑）</td><td class="ok">可驗證</td><td>靜態測試；禁止清單 S1–S6、白名單 W1–W4 已由 plan 明列（contracts/static-check.md）</td></tr>
+<tr><td>US4</td><td>情境 9（宣告介面）、10（link-*）、11（link-bypass）</td><td class="ok">可驗證</td><td>情境 11 於 Foundational 只驗 <code>e: L6 -&gt; L8</code>，其餘到 US1</td></tr>
+<tr><td>SC</td><td>SC-003 時間不超過 develop 的 1.5 倍</td><td class="ok">可驗證（人工）</td><td>3 次取中位數，以獨立腳本量測；不在自動測試中（Success Criteria）</td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
-<p>無缺漏（規範以服務部署為主，不涵蓋 library 依賴）。eslint-scope 由 devDependencies 轉為 runtime 依賴，版本策略 spec 未定義（見次要疑點）。plan 階段才有偏離項。</p>
+<p>無缺漏、無偏離（規範以服務部署為主，不涵蓋 library 依賴）。新增的 runtime 依賴屬已確認的技術選型。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無。前輪留意的憲章 §CP-4 與審查式驗收之張力，已由 FR-012 的自動檢查化解。</p>
+<p>無。憲章 §CP-1／§CP-4／§CP-6 逐條檢查皆 PASS（plan Constitution Check）。</p>
 
-<h3>本輪判斷點：0 個</h3>
-<p>本輪 7 題答案皆已寫入 spec，且讓上列驗收條件都能寫成自動檢查，沒有「文件判不了、答案會改變交付物」的新問題。前輪三題（自動檢查、module 情境、宣告介面）維持已決。</p>
+<h3>本輪判斷點：2 個（已決：皆採 A，plan review 通過，2026-11-17）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>方案（建議標 *）</th><th>影響</th><th>出處</th></tr>
+<tr><td>1</td><td><code>function $(s){}</code> 等以 <code>$</code> 開頭的函式名在 develop 與本 feature 都會拋 <code>Invalid value for a FunctionScope</code>（只放寬了變數名，函式 scope 名稱規則未動）；要不要一併處理？</td>
+<td>A* 記入 KI、不在本次範圍（FR-009 scope 命名不變；plan 現寫法）<br>B 一併放寬 FunctionScope 名稱（需改 spec）</td>
+<td>A：行為與 develop 相同，MDN 範例集無此寫法；B：改動 scope 命名，牴觸 FR-009 需先改 spec</td>
+<td>spec FR-009、Clarifications（U1）；plan「已知風險」</td></tr>
+<tr><td>2</td><td>Q3（entry 節點只認函式 scope 可見的變數）會讓「被 block 內 <code>let</code> 遮蔽的讀取」在 entry 的 pair 消失；這類差異如何處理？</td>
+<td>A* 接受，歸解析類、走人工簽核（plan 現寫法）<br>B 其他（需使用者指定做法）</td>
+<td>A：維持 develop 的 entry 行為，KI §18 留給 005，差異需逐筆簽核；B：可能改動 entry 規則與 D2 類別</td>
+<td>spec Clarifications（Q3）；plan R6a、diff-check「解析類移除簽核」</td></tr>
+</table></div>
 
 <h3>次要疑點</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>SC-003 的 1.5 倍時間門檻是否納入自動化測試（計時易抖動）或僅人工量測，spec 未定義</td><td>SC-001；SC-003</td></tr>
-<tr><td>class field／static block 的 scope 與 <code>$ANONYMOUS_FUN_n</code> 對應仍僅有敘述，無情境或探測</td><td>Edge Cases</td></tr>
-<tr><td>eslint-scope 版本策略與分析時拋錯的處理，spec 未定義</td><td>Assumptions</td></tr>
+<tr><td>eslint-scope 自身拋錯時原樣拋出、CLI 以 exit 1 結束，spec 未明確定義此行為（plan 依 004 FR-009 處理）</td><td>Assumptions；contracts/scope-binding-api.md</td></tr>
+<tr><td>class field／static block 的 scope 對應已在 plan 設計，但 spec 仍無對應驗收情境</td><td>Edge Cases</td></tr>
 </table></div>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
