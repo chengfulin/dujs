@@ -60,6 +60,10 @@ only because the forked CFG builder uses them.
   - ES module declarations: `import`, `export * from` and `export { ... }` are
     statement nodes; an exported declaration (`export const`, `export function`,
     `export default class`, ...) is analyzed as the declaration itself.
+  - `expressionThrows` returns `false` for a null expression instead of
+    reading its properties.
+  - A `ClassDeclaration` is a leaf in `createNodes`: no FlowNodes are created
+    for the nodes inside a class body.
 - 2026-11-16, by ChengFuLin
   - `LabeledStatement`: has no node of its own and is entered at its body;
     labeled `break l` jumps to the successor of the labeled statement and

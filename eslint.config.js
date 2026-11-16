@@ -17,7 +17,7 @@ var baseRules = {
 	'strict': ['error', 'function'],
 	'no-undef': 'error',
 	'no-bitwise': 'error',
-	'no-unused-vars': 'error'
+	'no-unused-vars': ['error', { caughtErrorsIgnorePattern: '^ignored' }]
 };
 
 module.exports = [

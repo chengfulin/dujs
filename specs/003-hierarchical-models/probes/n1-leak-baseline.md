@@ -74,3 +74,21 @@ p();
 | 2 | `$PAGE_0`, `p`, `p.r`, `p.r.c` | `a: L1 -> L4`、`a: L1 -> entry`、`a: L8 -> L4`、`a: L8 -> entry`、`c: entry -> L5`、`p: entry -> L11`、`r: entry -> L7`、`r: entry -> L9` | 無 |
 
 scope 欄省略前綴 `$DOMAIN.$PAGE_0.`（`$PAGE_0` 即 `$DOMAIN.$PAGE_0`）。
+
+## 修正後對照（T062）
+
+以 003 分支（US1、US2 完成後）對同樣三個探針取 pair，記法與模型順序同上。intra-page 與 inter-page 模型的 pair 仍與最頂端
+inter-procedural 模型相同，且與修正前相同。
+
+| 探針 | # | 修正後 pairs | 與修正前差異 |
+|------|---|-------------|-------------|
+| n1 | 0 | `h: entry -> L4` | 少 `a: L7 -> L3`、`a: L7 -> entry`（外漏消失） |
+| n1 | 1 | `a: L1 -> L3`、`a: L1 -> entry`、`a: L7 -> L3`、`a: L7 -> entry`、`f: entry -> L6`、`f: entry -> L8`、`h: entry -> L4` | 無 |
+| n1b | 0 | `c: entry -> L5` | 少 `a: L10 -> L4`、`a: L10 -> entry`（外漏消失） |
+| n1b | 1 | `c: entry -> L5`、`r: entry -> L7` | 少 `a: L10 -> L4`、`a: L10 -> entry`（外漏消失） |
+| n1b | 2 | `a: L1 -> L4`、`a: L1 -> entry`、`a: L10 -> L4`、`a: L10 -> entry`、`c: entry -> L5`、`p: entry -> L11`、`p: entry -> L9`、`r: entry -> L7` | 無 |
+| n1c | 0 | `c: entry -> L5` | 少 `a: L8 -> L4`、`a: L8 -> entry`（外漏消失） |
+| n1c | 1 | `a: L8 -> L4`、`a: L8 -> entry`、`c: entry -> L5`、`r: entry -> L7`、`r: entry -> L9` | 無 |
+| n1c | 2 | `a: L1 -> L4`、`a: L1 -> entry`、`a: L8 -> L4`、`a: L8 -> entry`、`c: entry -> L5`、`p: entry -> L11`、`r: entry -> L7`、`r: entry -> L9` | 無 |
+
+結論：修正前標為「外漏」的 pair 全部消失，其餘 pair 全部保留，沒有新增的 pair。

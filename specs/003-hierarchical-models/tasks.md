@@ -149,15 +149,15 @@ description: "Task list for feature 003-hierarchical-models"
 
 **Independent Test**: quickstart §5 的三個 grep 符合預期；全部測試、golden、lint 通過；known-issues 人工檢查通過。
 
-- [ ] T055 [P] [US3] (a) `lib/esgraph/index.js` 檔頭「Modified by」新增兩行（`2026-11-16: expressionThrows returns false for a null expression`、`2026-11-16: a ClassDeclaration is a leaf in createNodes`，措辭對照程式），`THIRD_PARTY_NOTICES.md` §1 Modifications 新增對應兩點；不改程式（FR-011a、FR-014）
-- [ ] T056 [P] [US3] (d) `lib/dujs/jsparser.js` 的 catch 改為有綁定 `catch (ignoredModuleError)`；`eslint.config.js` 的 `no-unused-vars` 加 `caughtErrorsIgnorePattern: '^ignored'`（規則設定，非抑制項）；`npm run lint` 0 錯誤且 `eslint-suppressions.json` 不變（FR-011d、FR-013）
-- [ ] T057 [US3] (b) `lib/dujs/defuseanalyzer.js`：把插入在 JSDoc 與其函式之間的 helper 移開，使每段 JSDoc 緊接其函式；`isFunctionExpression`、`getDefinedVariables`、`computeKILLSet`、`useClassHead`、`useNestedLoopHead` 各補 JSDoc；清掉 `analyzeBuiltInObjects`、`findVariableAndItsDefinitionsFromASet` 等前方的錯位 JSDoc（依賴 T016；FR-011b）
-- [ ] T058 [US3] (c) `lib/dujs/defuseanalyzer.js` 刪除 `DefUseAnalyzer.prototype.findKILLSet`（約 340 行起）；`grep -rn "findKILLSet" lib tests` 無結果（FR-011c）
-- [ ] T059 [US3] `docs/known-issues.md`：§9 標為已修正（逐點寫明 (a)–(d)，並記錄 `caughtErrorsIgnorePattern: '^ignored'` 規則設定與理由）；§13 註明「intra-procedural 分支被改接到 LOOP」已修正、helper 的 LOOP 繞路已移除；§16 註明共用節點被改動與 `dujsDecisionCalledBefore` 繞路已移除、呼叫順序語意保留待 stage 2；§18 註明移到 stage 2（D4）（FR-012；依賴 US1 完成）
-- [ ] T060 [US3] `docs/known-issues.md` 新增一節（接在 §18 之後，標題含「已於 003 修正」）：以統一定義描述 N1 外漏——「子模型呼叫鏈上任一函式（根函式或其任一祖先）被呼叫兩次以上或在迴圈內呼叫時，子模型分析沿共用節點的邊漏到外層，出現外層定義的 pair」；機制（被呼叫函式 exit 多出指向其他 CALL RETURN 的 `return` 邊，research R6）；附重現程式（`probes/n1b.js`：page 呼叫 `p` 兩次、`p` 呼叫 `r`、`r` 呼叫 `c`，與 `probes/n1.js` 的直接型）與修正前／後 `r→c` 子模型的 pair 差異（修正前取自 `probes/n1-leak-baseline.md`，修正後取自 T062）
-- [ ] T061 [US3] 更新 `docs/known-issues.md` 開頭的索引／分組（若有列出各節），使新節與 §9、§18 的狀態一致
-- [ ] T062 [US3] 重現證據：以目前分支對 probes n1、n1b、n1c 取 inter-procedural 子模型的 pair（不含外漏），與 `probes/n1-leak-baseline.md`（T008，重構前）對照列出差異，供 T060 使用（此任務可在 US1 步驟 2.4 完成後任何時間執行）
-- [ ] T063 [US3] US3 閘門：quickstart §5 三個 grep；人工檢查 `defuseanalyzer.js` 每段 JSDoc 與 known-issues §9／§13／§16／§18／新節；`npm run doc` 成功；步驟閘門
+- [X] T055 [P] [US3] (a) `lib/esgraph/index.js` 檔頭「Modified by」新增兩行（`2026-11-16: expressionThrows returns false for a null expression`、`2026-11-16: a ClassDeclaration is a leaf in createNodes`，措辭對照程式），`THIRD_PARTY_NOTICES.md` §1 Modifications 新增對應兩點；不改程式（FR-011a、FR-014）
+- [X] T056 [P] [US3] (d) `lib/dujs/jsparser.js` 的 catch 改為有綁定 `catch (ignoredModuleError)`；`eslint.config.js` 的 `no-unused-vars` 加 `caughtErrorsIgnorePattern: '^ignored'`（規則設定，非抑制項）；`npm run lint` 0 錯誤且 `eslint-suppressions.json` 不變（FR-011d、FR-013）
+- [X] T057 [US3] (b) `lib/dujs/defuseanalyzer.js`：把插入在 JSDoc 與其函式之間的 helper 移開，使每段 JSDoc 緊接其函式；`isFunctionExpression`、`getDefinedVariables`、`computeKILLSet`、`useClassHead`、`useNestedLoopHead` 各補 JSDoc；清掉 `analyzeBuiltInObjects`、`findVariableAndItsDefinitionsFromASet` 等前方的錯位 JSDoc（依賴 T016；FR-011b）
+- [X] T058 [US3] (c) `lib/dujs/defuseanalyzer.js` 刪除 `DefUseAnalyzer.prototype.findKILLSet`（約 340 行起）；`grep -rn "findKILLSet" lib tests` 無結果（FR-011c）
+- [X] T059 [US3] `docs/known-issues.md`：§9 標為已修正（逐點寫明 (a)–(d)，並記錄 `caughtErrorsIgnorePattern: '^ignored'` 規則設定與理由）；§13 註明「intra-procedural 分支被改接到 LOOP」已修正、helper 的 LOOP 繞路已移除；§16 註明共用節點被改動與 `dujsDecisionCalledBefore` 繞路已移除、呼叫順序語意保留待 stage 2；§18 註明移到 stage 2（D4）（FR-012；依賴 US1 完成）
+- [X] T060 [US3] `docs/known-issues.md` 新增一節（接在 §18 之後，標題含「已於 003 修正」）：以統一定義描述 N1 外漏——「子模型呼叫鏈上任一函式（根函式或其任一祖先）被呼叫兩次以上或在迴圈內呼叫時，子模型分析沿共用節點的邊漏到外層，出現外層定義的 pair」；機制（被呼叫函式 exit 多出指向其他 CALL RETURN 的 `return` 邊，research R6）；附重現程式（`probes/n1b.js`：page 呼叫 `p` 兩次、`p` 呼叫 `r`、`r` 呼叫 `c`，與 `probes/n1.js` 的直接型）與修正前／後 `r→c` 子模型的 pair 差異（修正前取自 `probes/n1-leak-baseline.md`，修正後取自 T062）
+- [X] T061 [US3] 更新 `docs/known-issues.md` 開頭的索引／分組（若有列出各節），使新節與 §9、§18 的狀態一致
+- [X] T062 [US3] 重現證據：以目前分支對 probes n1、n1b、n1c 取 inter-procedural 子模型的 pair（不含外漏），與 `probes/n1-leak-baseline.md`（T008，重構前）對照列出差異，供 T060 使用（此任務可在 US1 步驟 2.4 完成後任何時間執行）
+- [X] T063 [US3] US3 閘門：quickstart §5 三個 grep；人工檢查 `defuseanalyzer.js` 每段 JSDoc 與 known-issues §9／§13／§16／§18／新節；`npm run doc` 成功；步驟閘門
 
 **Checkpoint**: US3 完成——SC-005 達成。
 

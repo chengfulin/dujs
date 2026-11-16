@@ -6,10 +6,17 @@ reproducing them on `feat/es2015-modeling`. "Pre-existing" means dujs
 
 Issues §1–§6 and §8 are fixed by feature `001-fix-known-issues`
 (`specs/001-fix-known-issues/`); their sections are kept for reference and the
-results describe the behavior before the fix. §7 and §9 are not fixed yet.
-§10–§13 were found while implementing that feature and are not fixed yet.
-§14–§17 were found by the code review of PR #3 (or while fixing it) and are
-not fixed yet.
+results describe the behavior before the fix. §7 is not fixed yet.
+§10–§13 were found while implementing that feature; §10–§12 are not fixed
+yet (§13: see below). §14–§17 were found by the code review of PR #3 (or while
+fixing it); §14, §15 and §17 are not fixed yet (§16: see below). §18 was found by feature `002-small-refactors` and is moved to
+stage 2 of the hierarchical model refactoring.
+
+Feature `003-hierarchical-models` (`specs/003-hierarchical-models/`) fixes
+§9, fixes the part of §13 and §16 where a model changed the nodes shared with
+another model (the order of a call and its decision node in §16 is kept until
+stage 2), and fixes §19 (sub-models of the inter-procedural model leaked
+definitions of outer code), which is recorded after §18.
 
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
@@ -164,19 +171,43 @@ name returns only one of them. A function declared in a block that has
 `let`/`const` is named after the block scope instead
 (`$DOMAIN.$PAGE_0.$BLOCK_0.f`).
 
-### 9. Code style and records
+### 9. Code style and records (fixed by `003-hierarchical-models`)
+
+Fixed by feature `003-hierarchical-models` (US3); the list below describes the
+state before the fix, and each point is followed by the change:
 
 - The `lib/esgraph/index.js` header and `THIRD_PARTY_NOTICES.md` do not list
   two small changes individually: the null guard in `expressionThrows` and
   treating `ClassDeclaration` as a leaf in `createNodes`. Both are part of the
   recorded class and arrow-function changes.
+  **Fixed**: the header of `lib/esgraph/index.js` has the two lines
+  `expressionThrows returns false for a null expression` and
+  `a ClassDeclaration is a leaf in createNodes`, and the Modifications of
+  `THIRD_PARTY_NOTICES.md` §1 have the two matching points. The code is
+  unchanged.
 - In `lib/dujs/defuseanalyzer.js`, the new helpers (`isFunctionExpression`,
-  `getDefinedVariables`, `computeKILLSet`, `useLoopHead`, `useClassHead`) were
-  inserted between existing JSDoc blocks and the functions they document.
+  `getDefinedVariables`, `computeKILLSet`, `useNestedLoopHead`,
+  `useClassHead`) were inserted between existing JSDoc blocks and the
+  functions they document. (This list named `useLoopHead`; that helper was
+  replaced by `lib/dujs/usedexpressions.js` in `002-small-refactors`, and the
+  remaining helper is `useNestedLoopHead`.)
+  **Fixed**: every JSDoc block is right before its function: the misplaced
+  blocks of `analyzeBuiltInObjects` and
+  `findVariableAndItsDefinitionsFromASet` were moved to those functions, and
+  each of the five helpers has its own JSDoc.
 - `computeKILLSet` replaces `findKILLSet` in the analysis; `findKILLSet` is
   kept only for its existing tests.
+  **Fixed**: `DefUseAnalyzer.prototype.findKILLSet` is removed (it had no
+  callers and no tests); the KILL set is computed only by `computeKILLSet`.
 - `lib/dujs/jsparser.js` uses an optional catch binding (`catch {`, ES2019),
   unlike the ES5 style of the rest of `lib/`.
+  **Fixed**: the catch has a binding, `catch (ignoredModuleError)`.
+  Lint rule change: `no-unused-vars` reports an unused catch binding by
+  default (`caughtErrors: "all"`), and no new suppression may be added to
+  `eslint-suppressions.json`, so `eslint.config.js` sets
+  `'no-unused-vars': ['error', { caughtErrorsIgnorePattern: '^ignored' }]`.
+  This is a rule setting, not a suppression: only catch bindings named
+  `ignored...` are exempt, which marks an intentionally unused error.
 
 ## Found while fixing §1–§6 and §8 (feature `001-fix-known-issues`)
 
@@ -242,7 +273,14 @@ reproduced). Possible causes, not confirmed:
 - The run had no page at all (no file after `-js`, or an argument list
   without `-js`), which gives exactly this error as described above.
 
-### 13. Branches of the intra-procedural model point to the LOOP node of the intra-page model
+### 13. Branches of the intra-procedural model point to the LOOP node of the intra-page model (fixed by `003-hierarchical-models`)
+
+**Fixed** by feature `003-hierarchical-models` (US1): the intra-page model and
+the other upper models build their graphs from their own copies of the nodes
+and no longer change the nodes of the intra-procedural models, so the false
+branch of `L2` in the intra-procedural model points to its exit node. The
+workaround in the test helper (treating a LOOP node branch as the exit node)
+is removed. The description below is the behavior before the fix.
 
 ```js
 var a = 1;
@@ -292,7 +330,18 @@ branch path in `FlowNode.labelPath` (a split node has `labelPath === split.path`
 a CALL RETURN node takes the `labelPath` of its call site); only the label is
 ambiguous (review #8).
 
-### 16. The call of a decision node is inserted before it
+### 16. The call of a decision node is inserted before it (partly fixed by `003-hierarchical-models`)
+
+**Partly fixed** by feature `003-hierarchical-models` (US1): the
+inter-procedural model inserts the CALL and CALL RETURN nodes in its own copy
+of the graph, so the edges of the shared nodes seen through the
+intra-procedural model are no longer redirected to the inserted CALL node, and
+the workaround in the test helper (`dujsDecisionCalledBefore`, treating the
+inserted CALL node as the decision node) is removed. The order is kept: the
+call is still modeled before the decision node, so the uses and definitions
+of the condition (including the arguments) are still modeled after the callee
+runs, with the pairs described below. That part is left to stage 2 of the
+hierarchical model refactoring.
 
 ```js
 var x = 0;
@@ -359,6 +408,10 @@ still has its own initialization node, as in US2 scenario 7.
 
 ### 18. The entry node of a function uses the variables of statements in its body
 
+**Moved to stage 2** of the hierarchical model refactoring (decision D4 of
+feature `003-hierarchical-models`): the fix changes the golden output, which
+feature `003-hierarchical-models` must keep unchanged.
+
 ```js
 function f() {
   switch (x) { case a: b; }
@@ -379,3 +432,67 @@ ES2015+ fixture). Feature `002-small-refactors` keeps this behavior (the
 golden output must not change); `usedExpressionsOf` decides only the
 expressions read by the node itself, and the handlers for nested
 `switch`/`for-in`/`for-of` stay in the walk of `findUSESet`.
+
+## Found while building the hierarchical models (feature `003-hierarchical-models`)
+
+### 19. Sub-models of the inter-procedural model leak definitions of outer code (fixed by `003-hierarchical-models`)
+
+```js
+var a = 1;
+function p() {
+  function r() {
+    function c() { return a; }
+    c();
+  }
+  r();
+}
+p();
+a = 2;
+p();
+```
+
+Condition: a function on the call chain of a sub-model (its root function or
+any ancestor of it) is called two or more times, or is called in a loop. Then
+the analysis of the sub-model leaks along the edges of shared nodes to outer
+code, and the sub-model gets pairs with definitions made outside it.
+
+Mechanism: before feature `003-hierarchical-models`, the models of a page
+shared their `FlowNode` objects, and an outer model added edges to the nodes of
+a sub-model: the exit node of a called function got an extra `return` edge to
+the CALL RETURN node of every other call site
+(`specs/003-hierarchical-models/research.md` R6). The worklist of the sub-model
+followed such an edge out of the sub-model and came back through another call.
+
+In the example, the page calls `p` twice, `p` calls `r` once and `r` calls `c`.
+The root function `r` of the sub-model `r -> c` is called only once, but its
+ancestor `p` is called twice, so before the fix the sub-model `r -> c` had the
+pairs `a: L10 -> L4` and `a: L10 -> entry`, although `a = 2` (L10) is in the
+main program. The direct form (`specs/003-hierarchical-models/probes/n1.js`):
+
+```js
+var a = 1;
+function f() {
+  function h() { return a; }
+  h();
+}
+f();
+a = 2;
+f();
+```
+
+Here the sub-model `f -> h` had `a: L7 -> L3` and `a: L7 -> entry`.
+
+| Program | Sub-model | Pairs before the fix | Pairs after the fix |
+|---|---|---|---|
+| `probes/n1b.js` (above) | `r -> c` | `a: L10 -> L4`, `a: L10 -> entry`, `c: entry -> L5` | `c: entry -> L5` |
+| `probes/n1b.js` | `p -> r -> c` | `a: L10 -> L4`, `a: L10 -> entry`, `c: entry -> L5`, `r: entry -> L7` | `c: entry -> L5`, `r: entry -> L7` |
+| `probes/n1.js` | `f -> h` | `a: L7 -> L3`, `a: L7 -> entry`, `h: entry -> L4` | `h: entry -> L4` |
+
+**Fixed** by feature `003-hierarchical-models` (US1): each model has its own
+graph that holds only the nodes and edges of its own subtree, so the analysis
+of a sub-model cannot leave it. Only the leaked pairs disappear; the pairs of
+the top inter-procedural model, the intra-page model and the inter-page model
+are unchanged. The full comparison of the probes `n1`, `n1b` and `n1c` is in
+`specs/003-hierarchical-models/probes/n1-leak-baseline.md`; the programs are in
+`specs/003-hierarchical-models/probes/` (copies used by the tests are in
+`tests/dujs/cases/probes/`).
