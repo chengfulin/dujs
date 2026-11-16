@@ -13,8 +13,9 @@
    graph 部分的 `branchsplitter.js`；依賴方向單向 `branchsplitter → astrewriter → decisionfinder`，前兩者不
    require `flownode`。函式本體原樣搬移、`create` 的呼叫順序不變，故節點編號不變（[research.md](./research.md) R1–R3）。
 2. **US2**：`FlowNode` 以單一凍結物件 `split`（`null | {path, origin, preEvaluated}`）取代 `branchPath`／
-   `splitOrigin`／`preEvaluated`，新增只供標籤用的 `labelPath`；分支標籤格式集中於新模組
-   `lib/esgraph/branchlabel.js`（`pathOf`、`pathSuffix`、`lineLabel`、`extendPath`、`branchMark`），所有讀寫處改用
+   `splitOrigin`／`preEvaluated`，新增作為所有節點標籤路徑唯一來源的 `labelPath`（拆分節點建立時一併設為
+   `split.path`，不變量 `split !== null ⇒ labelPath === split.path`）；分支標籤格式集中於新模組
+   `lib/esgraph/branchlabel.js`（`pathOf` 即回 `labelPath`、`pathSuffix`、`lineLabel`、`extendPath`、`branchMark`），所有讀寫處改用
    它們（R4–R5）。
 3. **US3**：新模組 `lib/dujs/usedexpressions.js` 的 `usedExpressionsOf(cfgNode)` 回傳
    `[{expression, read: 'c-use'|'p-use'|'walk'}]`，把條件前已求值、case discriminant、loop 頭與「單一識別字根」的
@@ -77,8 +78,8 @@ golden 回歸 `tests/golden/golden.js`（ES5 `expected/`、ES2015+ `expected-es2
 | US1 | `lib/esgraph/branchsplitter.js` | 只留 graph 部分；re-export `PLACEHOLDER_TYPE` | FR-001、FR-002 |
 | US1 | `tests/esgraph/decisionfinder.js`、`tests/esgraph/astrewriter.js`（新） | 直接以 AST 為輸入的單元測試 | FR-003 |
 | US1 | `package.json` | `test` 腳本的三個 esgraph 檔改為 `tests/esgraph/*.js`（現有檔案集合相同，加上新檔） | FR-003 |
-| US1 | `THIRD_PARTY_NOTICES.md` | MIT 清單加入新模組（US2 再加 `branchlabel.js`） | FR-011 |
-| US2 | `lib/esgraph/flownode.js` | 移除三欄位，新增 `split`、`labelPath`；`analyzedExpressions` 改讀 `split`；jsdoc | FR-004、FR-005 |
+| US1 | `THIRD_PARTY_NOTICES.md` | §1 列出 original dujs code (MIT) 檔案的那一句加入 `decisionfinder.js`、`astrewriter.js`（US2 再加 `branchlabel.js`；`lib/dujs/usedexpressions.js` 不列，該句未列任何 `lib/dujs` 檔） | FR-011 |
+| US2 | `lib/esgraph/flownode.js` | 移除三欄位，新增 `split`、`labelPath`；`analyzedExpressions` 改讀 `split`；jsdoc（含不變量 `split !== null ⇒ labelPath === split.path`） | FR-004、FR-005 |
 | US2 | `lib/esgraph/branchlabel.js`（新，MIT）＋`tests/esgraph/branchlabel.js`（新） | 標籤 helper 與其測試 | FR-006 |
 | US2 | `lib/esgraph/branchsplitter.js`、`lib/dujs/cfgbuilder.js`、`lib/dujs/cfggraphconverter.js`、`lib/dujs/modelbuilder.js`、`lib/dujs/defuseanalyzer.js`、`tests/helpers/analyze.js` | 改用 `split`／`labelPath`／helper（清單見 [data-model.md](./data-model.md) §3） | FR-004、FR-006 |
 | US2 | `tests/esgraph/flownodetest.js`、`tests/dujs/{branchsplit,branchsplit.property,reviewfixes,analyzehelper}.js` | 只改欄位存取方式，預期值不變 | FR-009 |
@@ -150,7 +151,8 @@ tests/
 1. `npm test`：全部通過、數量 ≥ 640＋新增；golden 段 0 差異；`git status tests/golden` 乾淨。
 2. `npm run lint`：0 錯誤；`eslint-suppressions.json` 項目數仍為 119（`git diff --exit-code eslint-suppressions.json`）。
 3. `FC_NUM_RUNS=1000 npx mocha tests/dujs/branchsplit.property.js`：全部通過（固定 seed 20261116）。
-4. story 專屬檢查：US1 行數與 require 檢查（SC-003、FR-001）；US2 標籤字串 grep（SC-004）；US3 `findUSESet` grep（SC-005）。
+4. story 專屬檢查：US1 行數與 require 檢查（SC-003、FR-001）；US2 標籤字串 grep（SC-004）；US3 `findUSESet` 範圍內 grep（SC-005）；
+   Polish 再整體重跑一次 SC-004／SC-005 檢查。
 
 ## Complexity Tracking
 

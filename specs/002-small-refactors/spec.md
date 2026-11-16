@@ -34,19 +34,23 @@
   因此不收進只屬於拆分節點的 `split` 物件，維持獨立欄位（與 REF §⑤ 圖示不同，見 Assumptions）。
 - **D4**：`loopRightSplit`、`discriminantSplit` 標在被保留的原節點（loop 節點、case 節點）上、不是拆分產生的
   節點，維持獨立欄位（同 REF §⑤）。
-- **D5**（2026-11-16，spec review）：拆分呼叫點產生的呼叫節點與 call return 節點不帶 `split`（它們不是拆分節點），只另存標籤用的
-  分支路徑；分支標籤 helper 以行號與路徑為輸入，不依賴 `split`。US3 驗收情境補上 loop 節點與一般節點的預期讀法，預期值取自
-  重構前的行為。
+- **D5**（2026-11-16，spec review；同日 analyze 閘門修訂）：節點的標籤路徑一律只從 `labelPath` 取，分支標籤 helper 以行號與
+  路徑為輸入，不依賴 `split`。拆分產生的節點建立時同時設 `split` 與 `labelPath = split.path`（不變量
+  `split !== null ⇒ labelPath === split.path`）。由拆分呼叫點而來的呼叫節點分兩種：callSite 不是決策節點時，callSite 本身被改型為
+  呼叫節點並沿用，保留原本的 `split` 與 `labelPath`；callSite 是決策節點時新建的呼叫節點不帶 `split`（它不是拆分節點），
+  `labelPath` 寫入 callSite 的 `labelPath`。call return 節點一律新建：不帶 `split`，`labelPath` 寫入 callSite 的 `labelPath`。
+  US3 驗收情境補上 loop 節點與一般節點的預期讀法，預期值取自重構前的行為。
 
 ## Clarifications
 
 ### Session 2026-11-16
 
 - Q: `usedExpressionsOf` 要做到什麼程度？（現況 p-use 是走訪時依子運算式型別與節點是否有 true/false 邊判定，不是每個運算式一個固定讀法）→ A: 只決定「要讀哪些運算式」與「根層讀法」（條件前已求值、case discriminant、loop 頭、單一識別字根）；走訪內的 p-use 傳播規則（二元、呼叫 callee、一元、`?:`、class 頭）留在找 USE 集合的函式。
-- Q: 拆分呼叫點產生的呼叫節點與 call return 節點不帶 `split`（D5），標籤用的分支路徑存在哪？→ A: 新增只供標籤用的專用欄位 `labelPath`（預設空字串）；拆分節點的路徑在 `split.path`，標籤 helper 依「有 `split` 取 `split.path`，否則取 `labelPath`」決定路徑。
+- Q: 拆分呼叫點產生的呼叫節點與 call return 節點不帶 `split`（D5），標籤用的分支路徑存在哪？→ A: 新增專用欄位 `labelPath`（預設空字串）存標籤用的分支路徑（標籤路徑的取法由 analyze 閘門修訂，見本 session 最後一條）。
 - Q: `modelbuilder.js` 的 `expressionsEvaluatedAtNode`（找 class 靜態成員用，語意與 USE 不同，例如 case 的 test 在此算、在 USE 不讀）要不要改為重用 `usedExpressionsOf`？→ A: 範圍外；只隨 FR-004 改讀 `split`，邏輯不動，留給分層模型 feature。
 - Q: SC-004「分支標籤字串只在 1 處定義」的計算範圍？→ A: `lib/` 與 `tests/helpers/`；含 `:<路徑>` 後綴、`L<行>:<路徑>` 標籤與 pair 記法的 `>…:T`／`:F`；測試檔裡的預期字面值不算。
 - 依現況決定（clarifier H3）：「決策節點」指任何有 true 或 false 邊的節點（含 if／while 的原始條件與拆分產生的決策節點），與找 USE 集合的函式現行判斷相同；case 節點的 test 不被讀，屬現行行為，重構保留。
+- Q（analyze 閘門，2026-11-16）：節點的標籤路徑從哪裡取？（原規則「有 `split` 取 `split.path`，否則取 `labelPath`」讓標籤路徑有兩個來源）→ A: 一律只從 `labelPath` 取（`pathOf(node)` 即回 `node.labelPath`）。branchsplitter 建立拆分節點時同時設 `split` 與 `labelPath = split.path`，不變量 `split !== null ⇒ labelPath === split.path`；callSite 不是決策節點時被改型為呼叫節點，保留原本的 `split` 與 `labelPath`；callSite 是決策節點時新建的呼叫節點與一律新建的 call return 節點 `split` 為 null、`labelPath` 寫入 callSite 的 `labelPath`（現況 `lib/dujs/modelbuilder.js:283-315`）。
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -88,15 +92,17 @@
 不影響正確性，但下一個 feature（分層模型）會大量讀這些欄位。[SRC REF §⑤]
 
 **Independent Test**: 只完成本 story 時，全部既有測試與 golden 通過；新的單元測試驗證未拆分節點的 `split` 為空、
-拆分節點的 `split` 帶有路徑／原敘述／已求值運算式，以及標籤 helper 對各種節點的輸出。
+拆分節點的 `split` 帶有路徑／原敘述／已求值運算式且 `labelPath === split.path`，以及標籤 helper 對各種節點的輸出。
 
 **Acceptance Scenarios**:
 
 1. **Given** 一個沒有被拆分的節點，**When** 讀取它的拆分資訊，**Then** 得到「無」（null）。[SRC REF §⑤]
 2. **Given** 由 `x = c ? a : b` 拆出的決策節點與兩個葉節點，**When** 讀取它們的拆分資訊，**Then** 決策節點與葉節點都帶有
-   原敘述與分支路徑（決策節點路徑為空字串、葉節點為 `T`／`F`），決策節點帶有條件前已求值的運算式。[SRC REF §⑤]
-3. **Given** 拆分呼叫點產生的呼叫節點與 call return 節點，**When** 讀取它們的拆分資訊並產生 dot 輸出、測試標籤與 pair 記法，
-   **Then** 拆分資訊為 null、標籤路徑在 `labelPath`，輸出與重構前相同。[SRC KI §15；USR D1、D5]
+   原敘述與分支路徑（決策節點路徑為空字串、葉節點為 `T`／`F`），`labelPath` 等於該路徑，決策節點帶有條件前已求值的運算式。[SRC REF §⑤]
+3. **Given** 由拆分呼叫點而來的呼叫節點與 call return 節點，**When** 讀取它們的拆分資訊與 `labelPath` 並產生 dot 輸出、測試標籤與
+   pair 記法，**Then** (a) callSite 不是決策節點、本身被改型為呼叫節點者保留原本的 `split` 與 `labelPath`（`labelPath === split.path`）；
+   (b) callSite 是決策節點時新建的呼叫節點 `split` 為 null、`labelPath` 等於 callSite 的 `labelPath`；call return 節點 `split` 為 null、
+   `labelPath` 等於 callSite 的 `labelPath`；輸出與重構前相同。[SRC KI §15；USR D1、D5]
 4. **Given** 分支標籤的格式，**When** 搜尋程式碼中組合分支標籤字串的地方，**Then** 只有一處定義，其他地方都呼叫它。
    [SRC REF §⑤]
 5. **Given** with 敘述的物件節點與 for-in/for-of、switch 被拆分的原節點，**When** 重構完成，**Then** 這些節點的對應旗標
@@ -146,7 +152,7 @@ with 物件節點、switch case 節點、for-in/for-of loop 節點，直接檢�
 - 節點建立順序改變會讓 dot 檔的節點編號順移：拆模組時建立節點的順序必須保持，golden 差異一律視為行為改變，
   不得以更新 golden 放行。[SRC REF §7]
 - 拆分節點再被拆分（巢狀條件）時，`split` 的路徑與原敘述沿用外層的值，與重構前的 `branchPath`／`splitOrigin` 相同。
-- 由拆分呼叫點產生的呼叫節點與 call return 節點不是拆分節點，但其分支標籤必須維持重構前的輸出。[SRC KI §15]
+- 由拆分呼叫點新建的呼叫節點與 call return 節點不是拆分節點，但其分支標籤必須維持重構前的輸出。[SRC KI §15]
 - known-issues §13–§17 記錄的現有錯誤行為在重構後必須原樣保留（含其 golden 與測試），本 feature 不修正它們。[SRC KI §13–§17]
 - 性質測試：固定 seed（`FC_SEED` 預設 20261116）下全部通過，並以 `FC_NUM_RUNS=1000` 再跑一次也全部通過。[SRC REF §7]
 
@@ -164,15 +170,17 @@ with 物件節點、switch case 節點、for-in/for-of loop 節點，直接檢�
   `shallowCopy`、`staticChoice`、`branchesOf` 等）的歸屬由 plan 決定並記錄；AST rewriter 可依賴 decision finder 的輸出形狀，
   兩者都不得依賴流程節點。[SRC REF §②；USR D2]
 - **FR-004**：流程節點 MUST 以單一 `split` 欄位表示拆分資訊：未拆分節點為 null；拆分產生的節點為一個物件，含分支路徑、
-  原敘述、條件前已求值的運算式。另 MUST 新增只供標籤用的 `labelPath` 欄位（預設空字串），由拆分呼叫點產生的呼叫節點與
-  call return 節點寫入呼叫點的分支路徑（D5）。原本的 `branchPath`、`splitOrigin`、`preEvaluated` 三個欄位 MUST 移除，所有讀寫處
+  原敘述、條件前已求值的運算式。另 MUST 新增 `labelPath` 欄位（預設空字串），作為所有節點標籤路徑的唯一來源：拆分產生的節點由
+  `branchsplitter.js` 建立時同時設 `split` 與 `labelPath = split.path`（不變量 `split !== null ⇒ labelPath === split.path`）；callSite
+  不是決策節點而被改型為呼叫節點者保留原有 `split` 與 `labelPath`；callSite 是決策節點時新建的呼叫節點與 call return 節點
+  `split` 為 null、`labelPath` 寫入 callSite 的 `labelPath`（D5）。原本的 `branchPath`、`splitOrigin`、`preEvaluated` 三個欄位 MUST 移除，所有讀寫處
   改用 `split`／`labelPath`／標籤 helper，至少包含：`lib/esgraph/flownode.js` 的 `analyzedExpressions`、`lib/esgraph/branchsplitter.js`、
   `lib/dujs/defuseanalyzer.js`、`lib/dujs/modelbuilder.js`（呼叫節點寫入與 `expressionsEvaluatedAtNode`）、`lib/dujs/cfgbuilder.js`、
   `lib/dujs/cfggraphconverter.js`、`tests/helpers/analyze.js` 與相關測試。[SRC REF §⑤；Clarifications 2026-11-16]
 - **FR-005**：`isWithObject`、`loopRightSplit`、`discriminantSplit` MUST 維持為獨立欄位，行為不變。[SRC USR D3、D4]
 - **FR-006**：分支標籤的字串格式（節點的標籤路徑、`:<路徑>` 後綴、`L<行>:<路徑>` 標籤、路徑延伸一個分支、pair 記法的
   `:T`／`:F`）MUST 由流程節點模組旁的共用 helper 提供；`lib/` 與 `tests/helpers/` 中 MUST 呼叫它，不得自行組字串。節點的標籤路徑：
-  有 `split` 取 `split.path`，否則取 `labelPath`；路徑為空字串（未拆分節點、拆分語句的第一個決策節點）時後綴為空，與重構前
+  一律取 `labelPath`；路徑為空字串（未拆分節點、拆分語句的第一個決策節點）時後綴為空，與重構前
   相同。[SRC REF §⑤；Clarifications 2026-11-16]
 - **FR-007**：MUST 從找 USE 集合的函式抽出一個獨立函式（`usedExpressionsOf`），依 US3 的節點種類表回傳「要讀的運算式與
   根層讀法」；找 USE 集合的函式只負責走訪這些運算式、套用走訪內的 p-use 傳播規則並轉成被讀的變數。`modelbuilder.js` 的
@@ -180,15 +188,19 @@ with 物件節點、switch case 節點、for-in/for-of loop 節點，直接檢�
 - **FR-008**：`usedExpressionsOf` MUST 有直接的單元測試，涵蓋決策節點、拆分葉節點、with 物件節點、switch case 節點、
   for-in/for-of loop 節點與一般節點。[SRC REF §④]
 - **FR-009**：重構後 golden 輸出（ES5 與 ES2015+ fixture，含 dot 檔節點編號）MUST 與重構前逐位元組相同；全部既有測試 MUST
-  通過且不得修改其預期結果（測試因欄位改名而需改寫存取方式者除外，預期值不變）。[SRC REF §7；USR D1]
+  通過且不得修改其預期結果（測試因欄位改名而需改寫存取方式者除外，預期值不變；欄位被取代者（如
+  `tests/esgraph/flownodetest.js` 對舊欄位預設值的斷言）改測新欄位）。[SRC REF §7；USR D1]
 - **FR-010**：lint MUST 通過，且不得在 `eslint-suppressions.json` 新增抑制項目。
-- **FR-011**：若修改到 LGPL 派生檔（如 `lib/esgraph/index.js`），MUST 在檔頭與 `THIRD_PARTY_NOTICES.md` 補修改紀錄；新拆出的
-  模組採 MIT 授權檔頭，並列入 `THIRD_PARTY_NOTICES.md` 的 original dujs code (MIT) 清單。[SRC REF §7]
+- **FR-011**：若修改到 LGPL 派生檔（如 `lib/esgraph/index.js`），MUST 在檔頭與 `THIRD_PARTY_NOTICES.md` 補修改紀錄；新模組一律
+  採 MIT 授權檔頭；`lib/esgraph/` 的新模組（`decisionfinder.js`、`astrewriter.js`、`branchlabel.js`）MUST 補進
+  `THIRD_PARTY_NOTICES.md` §1 列出 original dujs code (MIT) 檔案的那一句；`lib/dujs/usedexpressions.js` 不列入（該句只列
+  `lib/esgraph`／`tests/esgraph` 檔，未列任何 `lib/dujs` 檔）。[SRC REF §7]
 
 ### Key Entities
 
-- **標籤路徑（labelPath）**：只供標籤用的分支路徑，預設空字串；由拆分呼叫點產生的呼叫節點與 call return 節點寫入（D5）。
-- **拆分資訊（split）**：只屬於拆分產生的流程節點（呼叫節點與 call return 節點不帶，D5）；含分支路徑（`T`／`F` 序列，決策節點為空字串）、原敘述（被拆分的整個
+- **標籤路徑（labelPath）**：所有節點標籤路徑的唯一來源，預設空字串；拆分節點等於 `split.path`（建立時寫入），由拆分呼叫點新建的
+  呼叫節點與 call return 節點寫入 callSite 的 `labelPath`（D5）。
+- **拆分資訊（split）**：只屬於拆分產生的流程節點（新建的呼叫節點與 call return 節點不帶；callSite 被改型為呼叫節點時保留，D5）；含分支路徑（`T`／`F` 序列，決策節點為空字串）、原敘述（被拆分的整個
   敘述的 AST）、條件前已求值的運算式（僅決策節點非空）。
 - **分支標籤**：由行號與分支路徑組成的節點文字標籤，用於 dot 輸出、測試的 pair 記法與 README 公開的輸出格式。
 - **要讀的運算式（used expression）**：一個運算式加上根層讀法，由節點種類決定（US3 節點種類表）。
@@ -198,10 +210,11 @@ with 物件節點、switch case 節點、for-in/for-of loop 節點，直接檢�
 ### Measurable Outcomes
 
 - **SC-001**：golden 比對 0 個差異（全部 fixture 的所有輸出檔與重構前逐位元組相同）。
-- **SC-002**：全部既有測試通過（重構前 627 個以上），新增的單元測試全部通過；性質測試在固定 seed 與 `FC_NUM_RUNS=1000` 下皆通過。
+- **SC-002**：全部既有測試通過（重構前 ≥ 640，plan 量測基線），新增的單元測試全部通過；性質測試在固定 seed 與 `FC_NUM_RUNS=1000` 下皆通過。
 - **SC-003**：原拆分檔案拆成三個模組後，每個模組少於 350 行（plan 量測後若不可行，須在 plan 記錄理由與實際上限），且 decision finder 與 AST rewriter 不引用流程節點模組。
-- **SC-004**：`lib/` 與 `tests/helpers/` 中組合分支標籤字串（`:<路徑>` 後綴、`L<行>:<路徑>`、pair 的 `:T`／`:F`）的程式碼只出現在
-  共用 helper 1 個地方（目前 `lib/dujs/cfggraphconverter.js` 與 `tests/helpers/analyze.js` 各自組合）。
+- **SC-004**：`lib/` 與 `tests/helpers/` 中組合分支標籤字串（`:<路徑>` 後綴、`L<行>:<路徑>`、路徑延伸 `<路徑> + 'T'／'F'`、pair 的
+  `:T`／`:F`）的程式碼只出現在共用 helper 1 個地方（目前 `lib/dujs/cfggraphconverter.js`、`tests/helpers/analyze.js` 與
+  `lib/esgraph/branchsplitter.js` 各自組合）。dot 輸出的 `L<行>:C<欄>` 與 `<type> (L…)` 是位置標籤，不計入。
 - **SC-005**：找 USE 集合的函式中不再出現以下判斷，全部移到 `usedExpressionsOf`：條件前已求值運算式的切分、case 節點是否讀
   discriminant、loop 頭要讀哪些運算式（含右側是否已拆分）、單一識別字根的讀法（決策／拆分葉／with 物件／不讀）。走訪內的
   p-use 傳播規則不在此列。
@@ -214,7 +227,10 @@ with 物件節點、switch case 節點、for-in/for-of loop 節點，直接檢�
   不公開這些欄位。
 - `isWithObject` 不收進 `split`（D3）：REF §⑤ 的圖示把它列入，但未拆分的 with 物件節點也會設定此旗標，收進只屬於拆分節點的
   物件會讓「`split` 為 null 即未拆分」的語意不成立。
-- 由拆分呼叫點產生的呼叫節點與 call return 節點不帶 `split`，只以 `labelPath` 沿用呼叫點的分支路徑作為標籤用途（D5）；輸出 MUST 不變。
+- 由拆分呼叫點新建的呼叫節點與 call return 節點不帶 `split`，只以 `labelPath` 沿用 callSite 的標籤路徑（D5）；callSite 不是決策節點而
+  被改型為呼叫節點者保留原有 `split` 與 `labelPath`；輸出 MUST 不變。
+- 拆分節點的路徑同時存在 `split.path` 與 `labelPath`：標籤一律讀 `labelPath`，兩者一致由不變量 `split !== null ⇒ labelPath === split.path`
+  與其測試保證（analyze 閘門決定，Clarifications 2026-11-16）。
 - `npm run doc` 產生的 API 文件隨欄位調整更新，不另行維護相容說明。
 - 新模組檔名沿用 REF §② 的建議：`lib/esgraph/decisionfinder.js`、`lib/esgraph/astrewriter.js`，graph 部分保留在
   `lib/esgraph/branchsplitter.js`。

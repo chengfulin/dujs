@@ -63,7 +63,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>三項小型重構</h1>
-<div class="meta">feature：002-small-refactors · plan · 第 1 輪 · 2026-11-16 · 目標分支 develop</div>
+<div class="meta">feature：002-small-refactors · analyze · 第 2 輪 · 2026-11-16 · 目標分支 develop</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準</div>
 
 <h2>看懂它</h2>
@@ -132,12 +132,12 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">比對</text>
     <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--green-soft)" stroke="var(--green)" stroke-width="3"/>
     <text x="280" y="62" font-size="18" font-weight="900" fill="var(--green)">兩邊完全一樣</text>
-    <g font-size="17" fill="var(--ink)"><text x="280" y="102">輸出檔：0 個差異</text><text x="280" y="134">既有 627+ 個測試全過</text><text x="280" y="166">新增的小測試全過</text></g>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">輸出檔：0 個差異</text><text x="280" y="134">既有 640+ 個測試全過</text><text x="280" y="166">新增的小測試全過</text></g>
     <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">連節點編號都不能動</text>
     <use href="#check" x="670" y="55" width="110" height="110" color="var(--green)"/>
     <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">分析結果不變</text>
   </svg></div>
-  <p class="cap">成功＝<b>0 個差異</b>且測試與 lint 全過。<small>來源：Success Criteria SC-001、002、006</small></p>
+  <p class="cap">成功＝<b>0 個差異</b>且測試與 lint 全過。<small>來源：Success Criteria SC-001、002（≥ 640）、006</small></p>
 </section>
 
 <section class="panel">
@@ -201,12 +201,26 @@ flowchart LR
   <p class="lg">綠＝新增模組　黃＝修改　灰＝不變；實線＝require，虛線＝讀取欄位。</p>
   <ul>
     <li>依賴單向 <code>branchsplitter → astrewriter → decisionfinder</code>，後兩者不 require <code>flownode</code>。<small>（FR-001；research R1）</small></li>
-    <li>標籤字串只在 <code>branchlabel.js</code> 組，讀取端與測試 helper 都呼叫它。<small>（FR-006、SC-004；R5）</small></li>
-    <li><code>findUSESet</code> 只走訪 <code>usedExpressionsOf</code> 給的清單；<code>index.js</code> 不動故無 LGPL 紀錄。<small>（FR-007、FR-011；R2、R6）</small></li>
+    <li>標籤路徑一律讀 <code>labelPath</code>（拆分節點建立時設 <code>labelPath = split.path</code>）；字串只在 <code>branchlabel.js</code> 組，含 <code>branchsplitter</code> 的路徑延伸。<small>（D5、FR-004、FR-006、SC-004；R5）</small></li>
+    <li><code>findUSESet</code> 只走訪 <code>usedExpressionsOf</code> 給的清單；<code>index.js</code> 不動故無 LGPL 紀錄；esgraph 三個新模組補進 <code>THIRD_PARTY_NOTICES</code> §1，<code>usedexpressions.js</code> 不列。<small>（FR-007、FR-011；R2、R6）</small></li>
   </ul>
 </section>
 
-<h2>本輪變更（plan · 第 1 輪）</h2>
+<h2>本輪變更（analyze · 第 2 輪處置結果）</h2>
+
+<p>前輪發現 <b>1 HIGH（H1）</b>與 MEDIUM／LOW 已依使用者答案全數套用到 spec／plan／research／data-model／contracts／quickstart／tasks；附件未提供新增發現。</p>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>處置結果</th></tr>
+<tr><td>H1</td><td class="no">HIGH</td><td>D5；US2 情境 2／3；FR-004、006、009；Key Entities</td><td>標籤路徑一律只取 <code>labelPath</code>；拆分節點建立時 <code>labelPath = split.path</code>（不變量 <code>split !== null ⇒ labelPath === split.path</code>）。callSite 非決策節點時改型為呼叫節點並保留 split 與 labelPath；新建呼叫節點與 call return 節點 split 為 null、labelPath 取 callSite 的。T016 分 a1／a2，新增 T029 不變量性質測試</td></tr>
+<tr><td>M-1</td><td>MEDIUM</td><td>FR-011；plan；T013</td><td>esgraph 三個新模組補進 <code>THIRD_PARTY_NOTICES</code> §1 那一句（<code>branchlabel.js</code> 於 US2 加）；<code>usedexpressions.js</code> 不列；舊 T036 刪除</td></tr>
+<tr><td>M-2／T1</td><td>MEDIUM／LOW</td><td>SC-002</td><td>改「≥ 640」；上半部 627 同步改 640</td></tr>
+<tr><td>M-3、C1</td><td>MEDIUM</td><td>SC-004；T032</td><td>排除 <code>L行:C欄</code> 與 <code>type (L…)</code> 位置標籤；grep 加 <code>\+ *'[TF]'</code>，納入 <code>branchsplitter.js</code> 的路徑延伸</td></tr>
+<tr><td>I1</td><td>MEDIUM</td><td>plan 驗證；tasks</td><td>SC-004 檢查移到 US2 末（T032）、SC-005 移到 US3 末（T039）；Polish T041 重跑</td></tr>
+<tr><td>I-1</td><td>INFO</td><td>FR-009 例外句</td><td>補「欄位被取代者（如 flownodetest 的舊欄位預設值斷言）改測新欄位」</td></tr>
+<tr><td colspan="4">LOW 已套用：C2（SC-005 grep 擴充並限定 findUSESet 範圍）、F1（T011 與 T012 對調、T012 去 [P]、T015 加 grep <code>_testonly_</code>）、F2（T042 釘 9254c18）、D1（原 T039 併入 T043）、T2（T026 補行號）</td></tr>
+</table></div>
+
+<h2>前輪已定（plan，沿用並依本輪更新）</h2>
 
 <h3>技術選型與偏離</h3>
 <div class="box"><table>
@@ -224,7 +238,7 @@ flowchart LR
 <tr><td>2</td><td>新增 <code>lib/esgraph/branchlabel.js</code>（pathOf、pathSuffix、lineLabel、extendPath、branchMark）</td><td>spec 要求「流程節點模組旁」的 helper；做成 FlowNode 方法會讓 1057 行的檔案更大</td><td>R5；FR-006</td></tr>
 <tr><td>3</td><td><code>package.json</code>：<code>test</code> 改納入 <code>tests/esgraph/*.js</code>，<code>doc</code> 加 <code>branchlabel.js</code></td><td>目前該目錄頂層恰為三個既有檔，集合不變再加新檔；否則新測試不會被執行</td><td>R7；FR-003</td></tr>
 <tr><td>4</td><td>helper 歸屬：<code>PLACEHOLDER_TYPE</code>、<code>isInert</code>、<code>preEvaluatedOf</code> 歸 decisionfinder；<code>shallowCopy</code>、<code>branchesOf</code>、<code>staticChoice</code> 歸 astrewriter</td><td>各依「誰需要它」；預估 ≈265／195／280 行，皆 &lt; 350（SC-003 可行）</td><td>R1；FR-003</td></tr>
-<tr><td>5</td><td><code>split</code> 為凍結物件 <code>{path, origin, preEvaluated}</code>；<code>labelPath</code> 只由 <code>modelbuilder</code> 寫入</td><td>「<code>split</code> 為 null 即非拆分節點」語意單一；誤寫在 strict mode 直接丟錯</td><td>R4；FR-004</td></tr>
+<tr><td>5</td><td><code>split</code> 為凍結物件 <code>{path, origin, preEvaluated}</code>；<code>labelPath</code> 為標籤路徑唯一來源，拆分節點建立時設為 <code>split.path</code>（不變量 <code>split !== null ⇒ labelPath === split.path</code>）</td><td>標籤取法只有一個來源；改型為呼叫節點者例外保留 split（D5）；不變量由性質測試 T029 守住</td><td>R4；FR-004</td></tr>
 </table></div>
 
 <h3>US3 重點：單一識別字的讀法改由 usedExpressionsOf 決定</h3>
@@ -250,9 +264,9 @@ flowchart LR
 <tr><td>3 全測試與 golden 與重構前相同</td><td class="ok">可驗證</td></tr>
 <tr><td>4 呼叫端不需修改</td><td class="ok">可驗證</td></tr>
 <tr><td rowspan="5">US2</td><td>1 未拆分節點的拆分資訊為 null</td><td class="ok">可驗證</td></tr>
-<tr><td>2 決策節點與葉節點的 split 內容（路徑、原敘述、已求值運算式）</td><td class="ok">可驗證</td></tr>
-<tr><td>3 呼叫節點與 call return 節點：split 為 null、路徑在 <code>labelPath</code>、輸出與重構前相同</td><td class="ok">可驗證</td></tr>
-<tr><td>4 標籤字串只有一處定義</td><td class="ok">可驗證（SC-004 範圍已定：lib 與 tests/helpers）</td></tr>
+<tr><td>2 決策節點與葉節點的 split 內容（路徑、原敘述、已求值運算式），且 <code>labelPath</code> 等於路徑</td><td class="ok">可驗證</td></tr>
+<tr><td>3 呼叫節點與 call return 節點（輸出與重構前相同）：(a) callSite 非決策節點而被改型者保留 split 與 <code>labelPath</code>（兩者一致）；(b) 新建的呼叫節點與 call return 節點 split 為 null、<code>labelPath</code> 取 callSite 的</td><td class="ok">可驗證（H1 已修；T016 a1／a2 各一例）</td></tr>
+<tr><td>4 標籤字串只有一處定義</td><td class="ok">可驗證（SC-004 範圍：lib 與 tests/helpers，含路徑延伸，排除 <code>L行:C欄</code> 位置標籤）</td></tr>
 <tr><td>5 with 物件節點、loop／case 原節點旗標行為不變</td><td class="ok">可驗證</td></tr>
 <tr><td rowspan="6">US3</td><td>1 決策節點：已求值運算式在前、c-use，條件在後依走訪規則</td><td class="ok">可驗證</td></tr>
 <tr><td>2 單一識別字：拆分葉、with 物件 c-use；<code>if (a)</code> p-use；<code>a;</code> 不讀</td><td class="ok">可驗證</td></tr>
@@ -266,15 +280,21 @@ flowchart LR
 <p>無缺漏、無偏離。規範針對服務後端／前端；本重構為 CLI／函式庫內部，屬「不適用」。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無（尚未跑 analyze）。Constitution Check 兩次皆 PASS；§CP-4 測試要求由 FR-003、FR-008 的新單元測試承接，Complexity Tracking 免填。</p>
+<p>無未解項。前輪 H1（呼叫節點 split 與現況不符）已依使用者決定修正於 spec D5／US2 情境 3／FR-004，影響的 story 為 US2，已回到「可驗證」。</p>
 
-<h3>本輪判斷點：無</h3>
-<p>上表五項都是 spec 明文交給 plan 決定（FR-003 helper 歸屬、FR-006 helper 位置），不改外部介面、輸出與驗收條件，且改檔案位置成本低，不值得佔用提問額度。US3 的讀法搬移有 R6 逐項對照，並由 golden 與 FR-008 單元測試把關。以下為前輪已決事項，不再詢問。</p>
-<h3>已決事項（spec 閘門兩題皆採 A；clarify 通過無新判斷點，plan 沿用 <code>labelPath</code> 與 US3 情境）</h3>
+<h3>本輪判斷點（0 個新問題，僅末題確認）</h3>
 <div class="box"><table>
 <tr><th>#</th><th>問題</th><th>方案（建議標示）</th><th>影響</th><th>出處</th></tr>
-<tr><td>1</td><td>拆分呼叫點產生的呼叫節點與 call return 節點，要不要帶 <code>split</code>？spec 交給 plan，但這兩種節點「不是拆分節點」，帶了就破壞「split 為 null 即未拆分」</td><td>A 不帶 split，標籤 helper 改吃行號與路徑兩個參數（建議）<br>B 帶 split 並加旗標區分</td><td>A 語意乾淨、helper 簽名較寬；B 要改 FR-004 與 Key Entities 的定義</td><td>Assumptions 第 4 項；Edge Cases 第 3 項；FR-004、FR-006</td></tr>
-<tr><td>2</td><td>FR-008 要求測 for-in/for-of loop 節點與一般節點，但 US3 驗收情境沒寫預期讀法，如何補？</td><td>A 補兩條驗收情境，預期值取自現行行為（建議）<br>B 僅以 FR-008 為準，預期值留到 plan／tasks</td><td>A 驗收完整、可直接當測試；B 少改 spec，但預期值無依據</td><td>User Story 3 Acceptance Scenarios；FR-008</td></tr>
+<tr><td>末題</td><td>修正方案：上列已套用的處置結果是否同意？</td><td>同意套用（建議）／調整</td><td>只動 spec 字句、tasks 順序與 grep 指令；不擴大交付範圍</td><td>見「本輪變更」表</td></tr>
+</table></div>
+<h3>已決事項（不再詢問）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>決定</th><th>出處</th></tr>
+<tr><td>A1</td><td>（analyze 第 1 輪）呼叫節點要不要帶 <code>split</code>，標籤路徑怎麼取</td><td>使用者自由文字：標籤路徑一律只取 <code>labelPath</code>，有 split 者 <code>split.path</code> 與 <code>labelPath</code> 一致；已套用</td><td>Clarifications analyze 閘門；D5</td></tr>
+<tr><td>A2</td><td>（analyze 第 1 輪）新模組的授權紀錄放哪</td><td>方案 A：esgraph 三個新模組補進 §1 那一句；<code>usedexpressions.js</code> 不列</td><td>FR-011</td></tr>
+<tr><td>A3</td><td>（analyze 第 1 輪）其餘 MEDIUM／LOW</td><td>全部套用</td><td>本輪變更表</td></tr>
+<tr><td>S1</td><td>（spec 閘門）呼叫節點與 call return 節點的 split 處理</td><td>採 A（不帶 split、標籤 helper 吃路徑參數），後經 A1 細化：改型者保留</td><td>Assumptions；FR-004、FR-006</td></tr>
+<tr><td>S2</td><td>（spec 閘門）FR-008 的 for-in/for-of 與一般節點讀法</td><td>補兩條驗收情境，預期值取自現行行為</td><td>US3 情境 4、5；FR-008</td></tr>
 </table></div>
 
 <h3>次要疑點</h3>

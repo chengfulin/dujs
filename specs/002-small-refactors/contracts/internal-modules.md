@@ -62,11 +62,15 @@ default（識別字、可選鏈 → null）；另含 `isInert` 各分支。
 | 匯出 | 簽章 | 結果 |
 |------|------|------|
 | `TRUE_BRANCH`／`FALSE_BRANCH` | — | `'T'`／`'F'` |
-| `pathOf` | `(node) → string` | `node.split ? node.split.path : node.labelPath` |
+| `pathOf` | `(node) → string` | `node.labelPath`（所有節點標籤路徑的唯一來源；不讀 `split`） |
 | `pathSuffix` | `(path: string) → string` | `''` 或 `':' + path` |
 | `lineLabel` | `(line: number, path: string) → string` | `'L' + line + pathSuffix(path)` |
 | `extendPath` | `(path: string, branch: 'T'|'F') → string` | `path + branch` |
 | `branchMark` | `(branch: 'T'|'F') → string` | `':' + branch` |
+
+模組只讀節點的 `labelPath`，不依賴 FlowNode 模組與 `split`。寫入端的約定（data-model §1）：`branchsplitter.js` 的 `create` 同時設
+`split` 與 `labelPath = split.path`（不變量 `split !== null ⇒ labelPath === split.path`）；`modelbuilder.js` 新建的呼叫節點
+（callSite 為決策節點時）與 call return 節點設 `labelPath = callSite.labelPath`、`split` 為 null；callSite 改型為呼叫節點時保留原值。
 
 ## `lib/dujs/usedexpressions.js`（FR-007）
 

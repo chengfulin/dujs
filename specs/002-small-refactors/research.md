@@ -47,7 +47,9 @@ astrewriter 只依賴 decision 的輸出形狀與 `isPlaceholder`（FR-003 允�
 
 **Decision**：`branchsplitter.js` 匯出維持 `{split, PLACEHOLDER_TYPE}`（後者改為 re-export decisionfinder 的常數）；
 `lib/esgraph/index.js` 不修改。新模組採與現行 `branchsplitter.js` 相同的 MIT 檔頭（「Original dujs code, MIT License…
-contains no code derived from esgraph」），並加入 `THIRD_PARTY_NOTICES.md` §1 的 original dujs code 清單。
+contains no code derived from esgraph」），並補進 `THIRD_PARTY_NOTICES.md` §1 列出 original dujs code (MIT) 檔案的那一句
+（`lib/esgraph/flownode.js`、`flownodefactory.js`、`branchsplitter.js` 所在句；US2 的 `branchlabel.js` 同樣補進）。US3 的
+`lib/dujs/usedexpressions.js` 採同一 MIT 檔頭但不列入（該句未列任何 `lib/dujs` 檔，FR-011）。
 
 **Rationale**：index.js 的 require 與呼叫都不變，FR-011 的 LGPL 修改紀錄不觸發；保留 `PLACEHOLDER_TYPE` 匯出使模組
 介面完全不變。
@@ -74,34 +76,42 @@ contains no code derived from esgraph」），並加入 `THIRD_PARTY_NOTICES.md`
   `undefined`（→ null）或「`path` 為字串、`origin` 為非 null 物件、`preEvaluated` 為陣列或省略（→ `[]`）」的物件，
   存入 `Object.freeze` 的淺複本（`preEvaluated` 另複製並凍結）；其他輸入忽略（與既有 setter 一致）。getter 回傳
   同一個凍結物件。
-- `labelPath`：字串，預設 `''`；setter 只接受字串（同舊 `branchPath`）。只由 `modelbuilder.js` 為呼叫節點與
-  call return 節點寫入 `branchLabel.pathOf(callSite)`（D5）。
+- `labelPath`：字串，預設 `''`；setter 只接受字串（同舊 `branchPath`）。是所有節點標籤路徑的唯一來源（analyze 閘門決定，
+  spec Clarifications 2026-11-16）。寫入者：
+  - `branchsplitter.js` 的 `create`：拆分節點一次設定 `split` 與 `labelPath = split.path`；不變量
+    `split !== null ⇒ labelPath === split.path`。
+  - `modelbuilder.js`（現行 :280-315）：call return 節點一律新建，`split` 為 null、`labelPath = callSite.labelPath`；callSite 是
+    決策節點（`isCallBeforeDecision`）時新建的呼叫節點同樣 `split` 為 null、`labelPath = callSite.labelPath`；callSite 不是決策節點
+    時 callSite 本身被改型為呼叫節點並沿用，保留原本的 `split` 與 `labelPath`（不寫入）。
 - `analyzedExpressions`：`(split ? split.preEvaluated : []).concat([astNode])`，仍回傳新陣列。
 - `toJSON` 不變（不含這些欄位）；jsdoc 新增 `@typedef SplitInfo`。
 
-**Rationale**：「`split === null` ⇔ 非拆分節點」語意單一（D3 保留 `isWithObject` 在外）；凍結取代舊 getter 的
+**Rationale**：「`split === null` ⇔ 非拆分產生的節點」語意單一（D3 保留 `isWithObject` 在外；被改型為呼叫節點的 callSite
+原本即是拆分節點，保留 `split`）；標籤路徑只有 `labelPath` 一個讀取來源，標籤 helper 不需判斷 `split`；凍結取代舊 getter 的
 防禦性複製，誤寫會在 strict mode 直接丟錯；拆分節點一次建好、之後不再修改（`expand` 在建立時即知 `preEvaluated`）。
 
 **Alternatives considered**：
 - 保留舊名為相容別名：spec Assumptions 明定不保留。
 - `split` 每次 getter 回傳新複本：多餘配置，且凍結已防止外部修改。
-- 把 `labelPath` 併入 `split`（呼叫節點帶 `split`）：D5 明定呼叫節點不是拆分節點，不採用。
+- 把 `labelPath` 併入 `split`（呼叫節點帶 `split`）：D5 明定新建的呼叫節點不是拆分節點，不採用。
+- `pathOf(node) = split ? split.path : labelPath`（原 Clarifications 規則，拆分節點的 `labelPath` 留空）：標籤路徑有兩個來源，
+  helper 須知道 `split`；analyze 閘門改為一律讀 `labelPath`，以不變量與測試保證拆分節點兩處一致。
 
 ## R5. 分支標籤 helper（US2、FR-006、SC-004）
 
-**Decision**：新模組 `lib/esgraph/branchlabel.js`（MIT，不依賴 FlowNode 模組，只讀節點的 `split`／`labelPath`／`line`），
+**Decision**：新模組 `lib/esgraph/branchlabel.js`（MIT，不依賴 FlowNode 模組，只讀節點的 `labelPath`），
 提供：
 
 | 函式 | 結果 | 取代 |
 |------|------|------|
-| `pathOf(node)` | `node.split ? node.split.path : node.labelPath` | 所有 `node.branchPath` 讀取 |
+| `pathOf(node)` | `node.labelPath` | 所有 `node.branchPath` 讀取 |
 | `pathSuffix(path)` | `path ? ':' + path : ''` | `cfggraphconverter.branchPathSuffix` |
 | `lineLabel(line, path)` | `'L' + line + pathSuffix(path)` | `tests/helpers/analyze.js` `nodeLabel` 的拼接 |
 | `extendPath(path, branch)` | `path + branch` | `expand` 的 `path + 'T'`／`path + 'F'` |
 | `branchMark(branch)` | `':' + branch`（與 `pathSuffix` 共用同一個分隔符常數） | `useLabels` 的 `prefix + ':T'`／`':F'` |
 | `TRUE_BRANCH`／`FALSE_BRANCH` | `'T'`／`'F'` | 字面值 |
 
-`lineLabel` 以行號與路徑為輸入（D5），helper 不依賴 `split` 的存在。`cfggraphconverter` 的 `L<line>:C<col>` 與
+`lineLabel` 以行號與路徑為輸入（D5），helper 不讀 `split`（標籤路徑一律取 `labelPath`）。`cfggraphconverter` 的 `L<line>:C<col>` 與
 `callReturn (L…)` 是位置標籤，不屬分支標籤，只把後綴改為 `pathSuffix(pathOf(node))`。
 
 **Rationale**：spec 指定「放 flownode.js 旁」；獨立模組讓 `tests/helpers/` 與 `lib/dujs` 都可 require 而不擴大
