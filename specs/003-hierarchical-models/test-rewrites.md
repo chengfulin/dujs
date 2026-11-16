@@ -40,3 +40,17 @@ scope 身分，不受上層為複本影響，不改。
 
 | 檔案 | 核對項目 | 結果 | 備註 |
 |------|----------|------|------|
+| `expected/page0/intra-pages/0.hierarchy.dot` | 節點：主程式 `$PAGE_0`、`loop`、扁平圖 LOOP（n32）的 3 條 onEvent 目標 entry（n34、n39、n44）↔ `onLoad`、`onAdd`、`onModeChange`；邊：`h0 -> h1 loop`、3 組 onEvent／return | 一致 | 處理器 exit（n37、n43、n46）→ loopReturn n38 ↔ 3 條 return |
+| `expected/page1/intra-pages/0.hierarchy.dot` | 節點：`$PAGE_1`、`loop`、LOOP（n202）2 條 onEvent 目標（n204、n209）↔ `onLoad`、`onClear`；邊：loop＋2 組 onEvent／return | 一致 | |
+| `expected/inter-page/0.hierarchy.dot` | 節點：localStorage n223 ↔ `$DOMAIN`；`page0`、`page1`；邊：2 條 loadStorage 點線（n224 屬 page0、n246 屬 page1）↔ 2 條 loadStorage | 一致 | 扁平圖無指向 domain 的 saveStorage（fixture 用 `setItem` 呼叫，非指派），階層圖亦無 saveStorage |
+| `expected-es2015/page0/intra-pages/0.hierarchy.dot` | 節點：`$PAGE_0`、`loop`、LOOP（n37）2 條 onEvent 目標（n39、n48）↔ `init`、`$ANONYMOUS_FUN_4`；邊：loop＋2 組 onEvent／return | 一致 | |
+| `expected-es2015/inter-page/0.hierarchy.dot` | 節點：`$DOMAIN`、`page0`；邊：1 條 loadStorage（n122 -> n123） | 一致 | 無 saveStorage |
+| `expected-interprocedural/page0/inter-procedurals/0.hierarchy.dot` | 節點：entry n39、n42 ↔ `addTo`、`addTo.scale`；邊：call n41 -> n42、return n44 -> n45 ↔ 各一 | 一致 | |
+| `expected-interprocedural/page0/inter-procedurals/1.hierarchy.dot` | 節點：entry n22、n26、n29、n37 ↔ `$PAGE_0`、`addTo`、`addTo.scale`、`isReady`（4）；邊：call n25->n26、n28->n29、n36->n37，return n31->n32、n34->n35、n39->n40 ↔ 3 call、3 return（深度優先次序） | 一致 | 無 CALL／CALL RETURN 節點 |
+| `expected-interprocedural/page0/inter-procedurals/2.hierarchy.dot` | 節點：entry n62、n64 ↔ `onClick`、`onClick.log`；邊：call n63 -> n64、return n66 -> n67 | 一致 | |
+| `expected-interprocedural/page0/intra-pages/0.hierarchy.dot` | 節點：`$PAGE_0`、`loop`、LOOP（n46）2 條 onEvent 目標 entry n48、n56 ↔ `onClick`、`onLoad`；扁平圖中 `addTo`、`scale`、`isReady`（主程式子模型）與 `log`（n50，onClick 子模型）不出現 | 一致 | 處理器 exit → loopReturn n55 ↔ 2 條 return |
+| `expected-interprocedural/inter-page/0.hierarchy.dot` | 節點：`$DOMAIN`、`page0`；邊：loadStorage n84 -> n85、saveStorage n108 -> n84（n108 屬 page0）↔ 各一 | 一致 | |
+
+核對方式：在暫存目錄對三個 golden fixture 跑 CLI，產生的 10 個 `.hierarchy.dot` 與 golden 逐位元組相同；再逐檔對照同目錄同索引的
+`graph.dot`。同一對照另以程式在 `tests/dujs/hierarchy.js`「hierarchy graphs match the flat graphs」自動檢查（三個 fixture 全部上層模型）。
+未發現錯誤，未重做 T050。

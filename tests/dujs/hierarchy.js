@@ -12,6 +12,7 @@ var analyze = require('../helpers/analyze'),
 	modelCtrl = require('../../lib/dujs/modelctrl'),
 	expansion = require('../../lib/dujs/expansion'),
 	hierarchy = require('../../lib/dujs/hierarchy'),
+	hierarchyDot = require('../../lib/dujs/hierarchydot'),
 	Model = require('../../lib/dujs/model'),
 	FlowNode = require('../../lib/esgraph/flownode'),
 	factoryFlowNode = require('../../lib/esgraph/flownodefactory'),
@@ -647,5 +648,183 @@ describe('N1 not reproduced (specs/003-hierarchical-models/probes/n1-leak-baseli
 		models[0].pairs.should.eql(['c: entry -> L5']);
 		/// a = 3 is in p: the model of p -> r -> c keeps the pairs
 		models[1].pairs.should.eql(['a: L8 -> L4', 'a: L8 -> entry', 'c: entry -> L5', 'r: entry -> L7', 'r: entry -> L9']);
+	});
+});
+
+/**
+ * Nodes (id -> label) and edges ("<from label> -> <to label> <kind>") of a
+ * hierarchy graph in the DOT representation
+ * @param {string} dot
+ * @returns {Object} {labels: Array, edges: Array} sorted
+ */
+function parseHierarchyDot(dot) {
+	'use strict';
+	var labelOf = {}, edges = [];
+	dot.split('\n').forEach(function (line) {
+		var node = /^(h\d+) \[label="([^"]*)"/.exec(line),
+			edge = /^(h\d+) -> (h\d+) \[.*label="([^"]*)"\]$/.exec(line);
+		if (!!node) {
+			labelOf[node[1]] = node[2];
+		} else if (!!edge) {
+			edges.push(labelOf[edge[1]] + ' -> ' + labelOf[edge[2]] + ' ' + edge[3]);
+		}
+	});
+	return {
+		labels: Object.keys(labelOf).map(function (id) {
+			return labelOf[id];
+		}).sort(),
+		edges: edges.sort()
+	};
+}
+
+/**
+ * Sorted unique items
+ * @param {Array} items
+ * @returns {Array}
+ */
+function uniqueSorted(items) {
+	'use strict';
+	return items.filter(function (item, index) {
+		return items.indexOf(item) === index;
+	}).sort();
+}
+
+/**
+ * Nodes of the flat graph of a model and the targets of a connection of a node
+ * @param {FlowNode} node
+ * @param {string} type connection type
+ * @returns {Array}
+ */
+function targetsOf(node, type) {
+	'use strict';
+	return [].concat(node[type] || []);
+}
+
+/**
+ * Expected hierarchy (labels and edges) of an inter-procedural model from its flat graph
+ * (contracts/hierarchy-output.md §3)
+ * @param {Model} model
+ * @returns {Object}
+ */
+function interProceduralFromFlatGraph(model) {
+	'use strict';
+	var nodes = model.graph[2], labels = [], edges = [];
+	nodes.forEach(function (node) {
+		if (node.type === FlowNode.ENTRY_NODE_TYPE) {
+			labels.push(String(node.scope));
+		}
+		targetsOf(node, FlowNode.CALL_CONNECTION_TYPE).forEach(function (callee) {
+			edges.push(String(node.scope) + ' -> ' + String(callee.scope) + ' call');
+		});
+		if (node.type === FlowNode.EXIT_NODE_TYPE) {
+			targetsOf(node, FlowNode.RETURN_CONNECTION_TYPE).forEach(function (callReturn) {
+				callReturn.type.should.eql(FlowNode.CALL_RETURN_NODE_TYPE);
+				edges.push(String(node.scope) + ' -> ' + String(callReturn.scope) + ' return');
+			});
+		}
+	});
+	return {labels: uniqueSorted(labels), edges: uniqueSorted(edges)};
+}
+
+/**
+ * Expected hierarchy of an intra-page model from its flat graph (§3)
+ * @param {Model} model
+ * @returns {Object}
+ */
+function intraPageFromFlatGraph(model) {
+	'use strict';
+	var nodes = model.graph[2],
+		mainName = String(model.hierarchy.main.scope),
+		loop = nodes.filter(function (node) {
+			return node.type === FlowNode.LOOP_NODE_TYPE;
+		}),
+		labels = [mainName, 'loop'],
+		edges = [];
+	loop.should.have.length(1);
+	loop = loop[0];
+	loop.prev.filter(function (node) {
+		return node.type !== FlowNode.LOOP_RETURN_NODE_TYPE && String(node.scope) === mainName;
+	}).length.should.be.above(0);
+	edges.push(mainName + ' -> loop loop');
+	targetsOf(loop, FlowNode.ON_EVENT_CONNECTION_TYPE).forEach(function (target) {
+		if (target.type === FlowNode.ENTRY_NODE_TYPE) {
+			labels.push(String(target.scope));
+			edges.push('loop -> ' + String(target.scope) + ' onEvent');
+		}
+	});
+	nodes.forEach(function (node) {
+		if (node.type === FlowNode.LOOP_RETURN_NODE_TYPE) {
+			node.prev.forEach(function (previous) {
+				if (previous.type === FlowNode.EXIT_NODE_TYPE) {
+					edges.push(String(previous.scope) + ' -> loop return');
+				}
+			});
+		}
+	});
+	return {labels: uniqueSorted(labels), edges: uniqueSorted(edges)};
+}
+
+/**
+ * Expected hierarchy of the inter-page model from its flat graph (§3)
+ * @param {Model} model
+ * @returns {Object}
+ */
+function interPageFromFlatGraph(model) {
+	'use strict';
+	var domain = model.graph[0],
+		labels = ['$DOMAIN'],
+		edges = [];
+	domain.type.should.eql(FlowNode.LOCAL_STORAGE_NODE_TYPE);
+	function pageOf(node) {
+		var found = -1;
+		scopeCtrl.pageScopeTrees.forEach(function (scopeTree, index) {
+			if (scopeTree.scopes.indexOf(node.scope) !== -1) {
+				found = index;
+			}
+		});
+		found.should.not.eql(-1);
+		return 'page' + found;
+	}
+	scopeCtrl.pageScopeTrees.forEach(function (scopeTree, index) {
+		labels.push('page' + index);
+	});
+	targetsOf(domain, FlowNode.LOAD_STROAGE_CONNECTION_TYPE).forEach(function (target) {
+		edges.push('$DOMAIN -> ' + pageOf(target) + ' loadStorage');
+	});
+	model.graph[2].forEach(function (node) {
+		if (node.saveStorage === domain) {
+			edges.push(pageOf(node) + ' -> $DOMAIN saveStorage');
+		}
+	});
+	return {labels: uniqueSorted(labels), edges: uniqueSorted(edges)};
+}
+
+/// contracts/hierarchy-output.md §3: the automated counterpart of the manual check of the hierarchy graphs
+describe('hierarchy graphs match the flat graphs (contracts/hierarchy-output.md §3)', function () {
+	'use strict';
+	after(analyze.reset);
+
+	Object.keys(GOLDEN_FIXTURES).forEach(function (name) {
+		it('should match every upper model of the ' + name + ' golden fixture', function () {
+			analyze.reset();
+			analyze.buildModels(goldenPages(name));
+			var checked = 0;
+			function check(model, expected) {
+				parseHierarchyDot(hierarchyDot.convertHierarchyToDot(model))
+					.should.eql(expected, 'hierarchy of ' + String(model.mainlyRelatedScope));
+				checked += 1;
+			}
+			scopeCtrl.pageScopeTrees.forEach(function (scopeTree) {
+				var pageModels = modelCtrl.collectionOfPageModels.get(scopeTree);
+				pageModels.interProceduralModels.forEach(function (model) {
+					check(model, interProceduralFromFlatGraph(model));
+				});
+				pageModels.intraPageModels.forEach(function (model) {
+					check(model, intraPageFromFlatGraph(model));
+				});
+			});
+			check(modelCtrl.interPageModel, interPageFromFlatGraph(modelCtrl.interPageModel));
+			checked.should.be.above(1);
+		});
 	});
 });

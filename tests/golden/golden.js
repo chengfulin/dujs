@@ -65,6 +65,60 @@ function toPosix(file) {
 }
 
 /**
+ * Image paths referred by a report, in the order of the report: for each
+ * page the intra-procedural, inter-procedural and intra-page models (graph
+ * then dupairs of each model), then the inter-page model; the hierarchy graph
+ * of an upper model (contract #5) before its graph when withHierarchy
+ * @param {Array} dotFiles relative paths of the .dot files of an output directory
+ * @param {string} prefix prefix of each path (../<output directory>/)
+ * @param {boolean} withHierarchy
+ * @returns {Array}
+ */
+function reportImagePaths(dotFiles, prefix, withHierarchy) {
+	'use strict';
+	var files = dotFiles.map(toPosix);
+	function modelsIn(dir) {
+		return files.filter(function (file) {
+			return path.posix.dirname(file) === dir && /\.graph\.dot$/.test(file);
+		}).map(function (file) {
+			return parseInt(path.posix.basename(file), 10);
+		}).sort(function (first, second) {
+			return first - second;
+		}).map(function (index) {
+			return dir + '/' + index;
+		});
+	}
+	function imagesOf(model, upper) {
+		var images = [];
+		if (upper && withHierarchy) {
+			images.push(prefix + model + '.hierarchy.png');
+		}
+		return images.concat([prefix + model + '.graph.png', prefix + model + '.dupairs.png']);
+	}
+	var pages = files.map(function (file) {
+		return /^page(\d+)\//.exec(file);
+	}).filter(Boolean).map(function (match) {
+		return parseInt(match[1], 10);
+	}).filter(function (page, index, all) {
+		return all.indexOf(page) === index;
+	}).sort(function (first, second) {
+		return first - second;
+	});
+	var result = [];
+	pages.forEach(function (page) {
+		[['intra-procedurals', false], ['inter-procedurals', true], ['intra-pages', true]].forEach(function (level) {
+			modelsIn('page' + page + '/' + level[0]).forEach(function (model) {
+				[].push.apply(result, imagesOf(model, level[1]));
+			});
+		});
+		modelsIn('inter-page').forEach(function (model) {
+			[].push.apply(result, imagesOf(model, true));
+		});
+	});
+	return result;
+}
+
+/**
  * Define a golden test case: run the CLI on the pages (each an array of
  * fixture files) and compare the .dot outputs with the expected directory
  * @param {string} title
@@ -128,6 +182,41 @@ function goldenCase(title, pages, expectedDir) {
 					return !fs.existsSync(actual) || sha256Of(actual) !== baseline[file];
 				});
 			different.should.eql([], 'baseline .dot files missing or changed: ' + different.join(', '));
+		});
+
+		// contract #5 (contracts/hierarchy-output.md §4): checks the HTML only, not the png files (no Graphviz needed)
+		it('references the hierarchy graphs before the flat graphs in the report', function () {
+			var html = fs.readFileSync(path.join(outDir, 'report.html'), 'utf8'),
+				prefix = '../' + path.basename(outDir) + '/',
+				dotFiles = listDotFiles(outDir),
+				hierarchyDiv = /<div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="[^"]*\.hierarchy\.png" class="center-block"><\/div>/g;
+			function sourcesOf(content) {
+				var sources = [], pattern = /<img src="([^"]*)"/g, match;
+				while ((match = pattern.exec(content)) !== null) {
+					sources.push(match[1]);
+				}
+				return sources;
+			}
+			function positionOf(image) {
+				return html.indexOf('<img src="' + image + '"');
+			}
+			var hierarchies = dotFiles.map(toPosix).filter(function (file) {
+				return /\.hierarchy\.dot$/.test(file);
+			});
+			hierarchies.length.should.be.above(0);
+			hierarchies.forEach(function (file) {
+				var model = prefix + file.replace(/\.hierarchy\.dot$/, ''),
+					hierarchy = positionOf(model + '.hierarchy.png'),
+					graph = positionOf(model + '.graph.png'),
+					dupairs = positionOf(model + '.dupairs.png');
+				hierarchy.should.be.aboveOrEqual(0, 'no hierarchy graph of ' + file);
+				hierarchy.should.be.below(graph, 'hierarchy graph after the graph of ' + file);
+				graph.should.be.below(dupairs, 'graph after the dupairs of ' + file);
+			});
+			sourcesOf(html).should.eql(reportImagePaths(dotFiles, prefix, true));
+			var withoutHierarchy = html.replace(hierarchyDiv, '');
+			withoutHierarchy.should.not.containEql('.hierarchy.png');
+			sourcesOf(withoutHierarchy).should.eql(reportImagePaths(dotFiles, prefix, false));
 		});
 
 		it('adds exactly the listed new .dot files', function () {

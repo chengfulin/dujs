@@ -22,11 +22,21 @@ npm run coverage   # run unit tests with coverage report
 npm run doc        # generate API docs into doc/
 ```
 
-`tests/golden/` runs the CLI on two ES5 sample pages and an ES2015+ module and
-compares all generated `.dot` files (four models) with `tests/golden/expected/`
-and `tests/golden/expected-es2015/`. After an intended
-change to the analysis, regenerate them with `UPDATE_GOLDEN=1 npm test` and
-review the diff.
+`tests/golden/` runs the CLI on two ES5 sample pages, an ES2015+ module and an
+inter-procedural sample (nested calls, a call in a decision and event
+handlers) and compares all generated `.dot` files (four models) with
+`tests/golden/expected/`, `tests/golden/expected-es2015/` and
+`tests/golden/expected-interprocedural/`. Besides the flat graphs
+(`<k>.graph.dot`) and def-use pairs (`<k>.dupairs.dot`), each inter-procedural,
+intra-page and inter-page model has a hierarchy graph (`<k>.hierarchy.dot`:
+functions, main program, LOOP, event handlers, pages and the domain, with call,
+return, loop, onEvent, loadStorage and saveStorage edges), referred to in the
+HTML report before the flat graph. `tests/golden/manifest.json` records the
+sha256 of every `.dot` file produced before the hierarchical refactor
+(`baseline`, which must stay byte-identical) and the `.dot` files added since
+(`added`). After an intended change to the analysis, regenerate the expected
+outputs with `UPDATE_GOLDEN=1 npm test` and review the diff; the manifest is
+never updated automatically.
 
 Existing lint violations are recorded in `eslint-suppressions.json`
 (ESLint bulk suppressions), so only new violations fail `npm run lint`. After

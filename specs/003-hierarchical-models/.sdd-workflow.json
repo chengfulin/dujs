@@ -55,6 +55,11 @@
           "validated": true,
           "reviewed": true,
           "committed": true
+        },
+        "US2": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
         }
       },
       "deferred_should_fix": [
