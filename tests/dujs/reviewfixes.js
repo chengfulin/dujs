@@ -7,6 +7,7 @@
  */
 require('should');
 var analyze = require('../helpers/analyze'),
+	pathOf = require('../../lib/esgraph/branchlabel').pathOf,
 	modelCtrl = require('../../lib/dujs/modelctrl'),
 	FlowNode = require('../../lib/esgraph/flownode');
 
@@ -163,7 +164,7 @@ describe('Defects found by the code review of PR #3', function () {
 		].join('\n'));
 		modelsOf(result).forEach(function (model) {
 			decisionsAtLine(model, 5).forEach(function (node) {
-				(!!node.true && !!node.false).should.eql(true, 'decision L5:' + node.branchPath + ' has both targets');
+				(!!node.true && !!node.false).should.eql(true, 'decision L5:' + pathOf(node) + ' has both targets');
 			});
 		});
 		var expected = ['b: L1 -> L5:F>L6:T', 'check: entry -> L5>L5:F', 'check: entry -> L5>L6:T'];

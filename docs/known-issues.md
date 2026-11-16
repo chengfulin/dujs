@@ -288,7 +288,9 @@ CALL RETURN node. In the dot output the label of a CALL RETURN node is
 `callReturn (L<line>:C<col>)` (`labelWithLoc` in
 `lib/dujs/cfggraphconverter.js`), without the branch path, so both nodes are
 labeled `callReturn (L2:C0)`. The nodes themselves are distinct and keep the
-branch path (`FlowNode.branchPath`); only the label is ambiguous (review #8).
+branch path in `FlowNode.labelPath` (a split node has `labelPath === split.path`;
+a CALL RETURN node takes the `labelPath` of its call site); only the label is
+ambiguous (review #8).
 
 ### 16. The call of a decision node is inserted before it
 

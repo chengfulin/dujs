@@ -31,9 +31,9 @@ arpad.borsos@googlemail.com).
 
 `lib/esgraph/flownode.js`, `lib/esgraph/flownodefactory.js`,
 `lib/esgraph/branchsplitter.js`, `lib/esgraph/decisionfinder.js`,
-`lib/esgraph/astrewriter.js` and the other files under `tests/esgraph/` are
-original dujs code (MIT); they live in this directory only because the forked
-CFG builder uses them.
+`lib/esgraph/astrewriter.js`, `lib/esgraph/branchlabel.js` and the other files
+under `tests/esgraph/` are original dujs code (MIT); they live in this directory
+only because the forked CFG builder uses them.
 
 ### Modifications
 

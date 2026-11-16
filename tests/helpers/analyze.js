@@ -7,7 +7,10 @@
  * - A node label is "entry", "exit", "L<line>" or "L<line>:<path>", where
  *   <line> is the 1-based line of the analyzed code (a node split from a
  *   statement takes the line of that statement) and <path> is the non-empty
- *   T/F branch path of a node split into a branch (FlowNode.branchPath).
+ *   T/F label path of the node (FlowNode.labelPath, read through
+ *   lib/esgraph/branchlabel.js pathOf): the split path of a node split into a
+ *   branch, or the label path of the call site for a call node inserted
+ *   before a decision node and a call return node.
  * - <def> is a node label; a c-use is the label of the using node.
  * - A p-use is "<decision>><target>": when the target has a branch path its
  *   last T/F already tells the branch and nothing is appended; otherwise
@@ -32,7 +35,8 @@ var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	cfgBuilder = require('../../lib/dujs/cfgbuilder'),
 	executor = require('../../lib/dujs/defuseanalysisexecutor'),
 	Pair = require('../../lib/dujs/pair'),
-	FlowNode = require('../../lib/esgraph/flownode');
+	FlowNode = require('../../lib/esgraph/flownode'),
+	branchLabel = require('../../lib/esgraph/branchlabel');
 
 function nodeLabel(node) {
 	'use strict';
@@ -42,7 +46,7 @@ function nodeLabel(node) {
 	if (node.type === FlowNode.EXIT_NODE_TYPE) {
 		return 'exit';
 	}
-	return 'L' + node.line + (!!node.branchPath ? ':' + node.branchPath : '');
+	return branchLabel.lineLabel(node.line, branchLabel.pathOf(node));
 }
 
 /**
@@ -62,7 +66,7 @@ function useLabels(use, variableName) {
 			' lacks its ' + (!decision.true ? 'true' : (!decision.false ? 'false' : 'branch')) + ' target');
 	}
 	var prefix = nodeLabel(decision) + '>' + nodeLabel(target);
-	if (!!target.branchPath) {
+	if (!!branchLabel.pathOf(target)) {
 		return [prefix];
 	}
 	/// FlowNodes are shared by the models: the intra-page model reconnects a
@@ -79,10 +83,10 @@ function useLabels(use, variableName) {
 	}
 	var labels = [];
 	if (target === decision.true || target === branch(decision.true)) {
-		labels.push(prefix + ':T');
+		labels.push(prefix + branchLabel.branchMark(branchLabel.TRUE_BRANCH));
 	}
 	if (target === decision.false || target === branch(decision.false)) {
-		labels.push(prefix + ':F');
+		labels.push(prefix + branchLabel.branchMark(branchLabel.FALSE_BRANCH));
 	}
 	if (labels.length === 0) {
 		throw new Error('Target ' + nodeLabel(target) + ' of the p-use of variable ' + variableName +

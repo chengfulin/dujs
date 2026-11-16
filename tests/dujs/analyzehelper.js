@@ -20,15 +20,15 @@ var analyze = require('../helpers/analyze'),
 /**
  * Create a node of a hand-built graph
  * @param {number} line
- * @param {string} [branchPath]
+ * @param {string} [labelPath]
  * @returns {FlowNode}
  */
-function nodeAt(line, branchPath) {
+function nodeAt(line, labelPath) {
 	'use strict';
 	var node = new FlowNode();
 	node.line = line;
-	if (!!branchPath) {
-		node.branchPath = branchPath;
+	if (!!labelPath) {
+		node.labelPath = labelPath;
 	}
 	return node;
 }
