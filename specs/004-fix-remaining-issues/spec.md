@@ -103,6 +103,13 @@
   fixture；golden-diff 對沒有差異的節次明載「無差異」。
 - 自行決定：`var o = new A(); o.m();` 連 `m` 但不連 constructor 的不對稱列入 README（Fable A9）；US4-1 修正後
   `g = () => d` 成為函式定義，本體的 `g();` 依既有規則被連結，屬預期連帶變化，寫入情境。
+### Session 2026-11-16（plan review）
+
+- Q: US4-1 的 KI §10 程式本體是 `return g();`，不是呼叫敘述，「d 有 pair」不可能成立，怎麼處理？ → A: 驗收改用本體
+  `g();` 的程式，原程式只斷言箭頭函式是 scope；另把「`return f()` 也當 call-site」記錄為後續項目（known-issues）。（plan U1）
+- Q: FR-017 的 `f = new B();` 依 H3 永遠不連，怎麼處理？ → A: 保留文字並註明實際不連，README 註明，測試斷言不連。（plan U2）
+- Q: 環上方法內註冊的事件 handler 接不上頁面流程，怎麼修？ → A: handler 查找優先採以頁面為根的 inter-procedural 模型。（plan U3）
+
 ## 表示法
 
 沿用 `specs/001-fix-known-issues/spec.md`「表示法」：def-use pair 寫成 `<變數>: <def> -> <use>`，`<def>` 為
@@ -195,9 +202,10 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** KI §10 的程式（`function f(g = () =>` / `d) {`），**When** 分析，**Then** 箭頭函式是 `f` 的子 scope，
-   其本體被分析，`d` 在其中的 use 有 pair（同一般巢狀函式）。本體的 `g();` 依既有規則連到該箭頭函式（預期的
-   連帶變化）。[SRC KI §10]
+1. **Given** KI §10 的程式（`function f(g = () =>` / `d) {` / `return g();`），**When** 分析，**Then** 箭頭函式是 `f` 的子
+   scope；本體的 `return g();` 依既有規則不是呼叫敘述，不連結（plan U1）。[SRC KI §10；USR plan U1]
+1b. **Given** 同上但本體為 `g();`（`probes/us4-1b.js`），**When** 分析，**Then** `g();` 連到該箭頭函式，`d` 有 pair
+   `d: L1 -> L3`（預期的連帶變化）。[SRC KI §10；USR plan U1]
 2. **Given** 參數解構中的預設值是函式（`function f({g = function () { return d; }}) {}`），**When** 分析，
    **Then** 該函式同樣是 scope。[SRC KI §10]
 3. **Given** KI §11 的 `class Q { static { console.log(Q); } }`，**When** 分析，**Then** 有 `Q` 的 pair：class 名稱
@@ -294,7 +302,7 @@ dot 輸出中拆分呼叫點的 CALL RETURN 節點可以區分；for-in／for-of
   回歸。MUST 新增涵蓋 §7、§11、§20、§21 的 golden fixture。[SRC USR D1、D7；Fable A8]
 - **FR-014**: `docs/known-issues.md` 對應各節 MUST 標為已由本 feature 修正（保留原始描述），並新增一節記錄「屬性賦值
   `o.p = 1` 被當成 `o` 的 def」（應為 `o.p` 的 def 與 `o` 的 use，另開 feature）與「具名 class／函式運算式的內部名稱
-  不是變數」；README 的限制 MUST 更新（新增的連結形式、Clarifications 列出的不連結形式、`var o = new A()` 不連
+  不是變數」，並記錄「`return f()` 等包在其他運算式中的呼叫也應視為 call-site」為後續項目（plan U1）；README 的限制 MUST 更新（新增的連結形式、Clarifications 列出的不連結形式、`var o = new A()` 不連
   constructor 而 `o.m()` 會連的不對稱、不追 super 鏈、遞迴以迴圈路徑表示、CLI 用法）。[SRC USR D1、D2、D3]
 - **FR-015**: 形成呼叫環的呼叫 MUST NOT 讓分析失敗：以 call 邊接回已展開的同一被呼叫端的 entry，該被呼叫端的 exit
   加一條 return 邊回到此呼叫的 CALL RETURN 節點。階層資料與 `hierarchy.dot` MUST 能表示這條回邊；003 契約中「遇環
@@ -307,7 +315,7 @@ dot 輸出中拆分呼叫點的 CALL RETURN 節點可以區分；for-in／for-of
   運算式中則不連結。[SRC USR D6；Fable A6]
 
 ### Key Entities
-
+  依 H3，欄位初始化式的 scope 看不到外層 class，`f = new B();` 實際不會連結；README 註明，測試斷言不連（plan U2）。
 - **Call-site**：連到被呼叫程式碼的節點；本輪擴充為函式呼叫敘述、`new` 敘述與可判定的方法呼叫敘述。
 - **被呼叫端（callee）**：函式、方法、constructor 或實例欄位初始化式的 scope；同一 call-site 的多個被呼叫端依執行
   順序串接。

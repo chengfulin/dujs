@@ -39,6 +39,7 @@ h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
 .cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
 text{font-family:var(--sans)}
 .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+.mermaid{min-width:640px;text-align:center}
 ul{margin:6px 0;padding-left:20px}
 li small{color:var(--sub)}
 table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
@@ -64,7 +65,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>修正其餘已知問題（§7、§10–§12、§14、§15、§17、§20、§21）</h1>
-<p class="meta">feature 004-fix-remaining-issues · clarify · 第 1 輪 · 2026-11-16</p>
+<p class="meta">feature 004-fix-remaining-issues · plan · 第 1 輪 · 2026-11-16</p>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -167,65 +168,118 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <li>有 <code>extends</code> 時不追 super 鏈；遞迴（如 <code>m(){ this.m(); }</code>）改以回邊成環，不再報錯。<small>（D3；FR-015）</small></li>
   </ul>
 </section>
-<div class="note">架構圖：plan 階段起才有，本輪（spec）不產出。</div>
+
+<section class="panel">
+  <span class="num">架構</span>
+  <h3>只新增 2 個模組，其餘是既有模組的局部改動</h3>
+  <div class="box"><div class="mermaid">
+flowchart LR
+  bin["bin/dujs.js 改"] --> cli["cli.js 新：util.parseArgs、exit 0/1/2"]
+  cli --> outw["outputwriter／reportgenerator 改：輸出目錄唯一"]
+  cli --> exe["defuseanalysisexecutor 既有"]
+  exe -.-> mb["modelbuilder 改：DFS 守衛、登記條件"]
+  mb --> cr["callresolver.js 新：new 與方法呼叫解析"]
+  cr --> st["scopetree 改：params、欄位合成 return"]
+  mb --> hx["hierarchy／expansion 改：回邊、bypass 記錄"]
+  hx --> md["model 改：存 bypass"]
+  an["defuseanalyzer 改：bypass 過濾"] --> md
+  ue["usedexpressions 改：條件模式"] --> an
+  </div></div>
+  <ul>
+    <li>新模組只有 <code>callresolver.js</code>（解析被呼叫 scope）與 <code>cli.js</code>；<code>inputreader.js</code> 刪除。<small>（plan Source Code）</small></li>
+    <li>呼叫環以階層<b>回邊</b>表示、繞過規則放在分析層；LGPL 衍生檔（<code>esgraph/index.js</code>、<code>dot.js</code>、<code>analyses/</code>）不動。<small>（research R5、R6；plan Technical Context）</small></li>
+    <li>另有 <code>cfggraphconverter</code>、<code>branchsplitter</code> 為獨立小改（標籤、支配關係），不在此圖。<small>（plan 變更影響範圍 US6）</small></li>
+  </ul>
+</section>
 
 <h3>範圍一覽</h3>
 <div class="box"><table>
-<tr><th>Story</th><th>優先</th><th>來源</th><th>一句話</th></tr>
-<tr><td>US1</td><td>P1</td><td>KI §20；Fable A5</td><td>條件內的讀取一律 p-use；呼叫（含 <code>new</code>）的引數一律 c-use</td></tr>
-<tr><td>US2</td><td>P1</td><td>KI §21；D3</td><td><code>new</code> 敘述成為 call-site，class 依序連欄位初始化式與 constructor</td></tr>
-<tr><td>US3</td><td>P2</td><td>KI §7；D2、D6</td><td>可靜態判定的 class 方法呼叫連到方法本體（含 constructor／欄位內的 <code>this.m()</code>；依賴 US2）</td></tr>
-<tr><td>US4</td><td>P2</td><td>KI §10、§11、§17</td><td>補回參數預設值函式、class 宣告名稱 static 內 use、解構內層預設值的 pair</td></tr>
-<tr><td>US5</td><td>P2</td><td>KI §12；D4</td><td>CLI help、失敗 exit 非零（任一頁失敗立即中止）、輸出目錄唯一（D5）</td></tr>
-<tr><td>US6</td><td>P3</td><td>KI §14、§15</td><td>CALL RETURN 標籤可區分；for-in／of 回邊防禦性修正（含外層迴圈＋break 回歸情境）</td></tr>
+<tr><th>Story</th><th>優先</th><th>來源</th><th>一句話</th><th>實作階段／相依</th></tr>
+<tr><td>(Foundational)</td><td>—</td><td>FR-016</td><td>呼叫端看不到的定義繞過被呼叫端，到達 CALL RETURN 之後</td><td>最先做；US2／US3 的前置</td></tr>
+<tr><td>US1</td><td>P1</td><td>KI §20；Fable A5</td><td>條件內的讀取一律 p-use；呼叫（含 <code>new</code>）的引數一律 c-use</td><td>獨立</td></tr>
+<tr><td>US2</td><td>P1</td><td>KI §21；D3</td><td><code>new</code> 敘述成為 call-site，class 依序連欄位初始化式與 constructor</td><td>需 Foundational</td></tr>
+<tr><td>US3</td><td>P2</td><td>KI §7；D2、D6</td><td>可靜態判定的 class 方法呼叫連到方法本體；呼叫環以回邊表示</td><td>依賴 US2</td></tr>
+<tr><td>US4</td><td>P2</td><td>KI §10、§11、§17</td><td>補回參數預設值函式、class 宣告名稱 static 內 use、解構內層預設值的 pair</td><td>獨立；與 US3 改同批檔案，須協調</td></tr>
+<tr><td>US5</td><td>P2</td><td>KI §12；D4</td><td>CLI help、失敗 exit 非零、輸出目錄唯一（D5）</td><td>獨立，檔案不重疊</td></tr>
+<tr><td>US6</td><td>P3</td><td>KI §14、§15</td><td>CALL RETURN 標籤可區分；for-in／of 回邊改以支配關係判定</td><td>獨立，檔案不重疊</td></tr>
 </table></div>
 
-<h2>本輪變更（clarify · 第 1 輪）</h2>
-<p class="meta">來源：Clarifications「Session 2026-11-16」與「Fable 仲裁」；以下皆已由使用者裁決或依憲章自行決定。</p>
+<h2>本輪變更（plan · 第 1 輪）</h2>
+
+<h3>技術選型</h3>
 <div class="box"><table>
-<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響 story</th></tr>
-<tr><td>US1 標題、情境 3、5、6；FR-001；SC-002</td><td>條件中巢狀運算之後的讀取是 p-use；<code>f(a)</code> 的 <code>a</code> 也算 p-use；SC-002 含 §14</td><td>條件內讀取一律 p-use，呼叫（含 <code>new</code>）引數一律 c-use（<code>f(a + 1)</code> 的 <code>a</code> 由 p-use 改 c-use）；SC-002 排除 §14</td><td>US1；US6</td></tr>
-<tr><td>FR-015、SC-006、Edge Cases（呼叫環）</td><td>遞迴建構「比照既有遞迴處理」；003 契約遇環丟錯</td><td>呼叫環不報錯：call 邊接回已展開的 entry、exit 多一條 return 回邊；修訂 003 的 <code>checkCycle</code>；環內 model 內容留給 plan</td><td>US2；US3</td></tr>
-<tr><td>FR-016、Edge Cases</td><td>被呼叫端 entry／exit 會 kill 呼叫端的區域變數與參數</td><td>呼叫端看不到的定義繞過被呼叫端，到達 CALL RETURN 之後（含既有 <code>f()</code>）</td><td>US2；US3；既有 golden</td></tr>
-<tr><td>US3 情境 5、FR-017</td><td>constructor／欄位內的 <code>this.m()</code> 未定義</td><td>連到同 class 的 <code>m</code>；欄位初始值本身是 <code>this.m()</code>／<code>new B()</code> 才算 call-site</td><td>US3；US2</td></tr>
-<tr><td>FR-007、US4 情境 3–4、Edge Cases</td><td>class 名稱（含運算式）在 static 內的 use 要有 pair</td><td>只修 class 宣告；順序為 superclass／computed key、定義名稱、static 成員；運算式內部名稱記入 KI 新節</td><td>US4</td></tr>
-<tr><td>US4 情境 1</td><td>箭頭函式成為 scope</td><td>另註明本體 <code>g();</code> 因此被連結，屬預期連帶變化</td><td>US4</td></tr>
-<tr><td>FR-010、US5</td><td>輸出目錄唯一</td><td>先讀完所有頁面才建目錄；中途失敗刪除本次輸出目錄</td><td>US5</td></tr>
-<tr><td>FR-012、US6 情境 4</td><td>判定不依賴原始碼範圍</td><td>有範圍者維持範圍判定；無範圍者以支配關係判定；新增外層 while＋break 回歸情境</td><td>US6</td></tr>
-<tr><td>FR-013、FR-014</td><td>golden 差異逐項記錄；README 更新</td><td>新增涵蓋 §7、§11、§20、§21 的 golden fixture；無差異節次明載「無差異」；KI 新增 <code>o.p = 1</code> 與具名運算式內部名稱兩節；README 補不對稱與遞迴說明</td><td>全部</td></tr>
+<tr><th>項目</th><th>決定</th><th>偏離？</th></tr>
+<tr><td>語言與執行環境</td><td>沿用 JavaScript（CommonJS，<code>lib/</code> ES5 風格）、Node ≥ 24</td><td>否</td></tr>
+<tr><td>測試與品質</td><td>沿用 mocha＋should＋fast-check、golden 回歸、eslint、c8；基線 933 passing、抑制 119 筆，不新增抑制</td><td>否</td></tr>
+<tr><td>第三方依賴</td><td>無新增</td><td>否</td></tr>
+<tr><td>CLI 參數解析</td><td>改用 Node 內建 <code>util.parseArgs</code>（<code>-js</code> 分組以 tokens 模式自行處理）</td><td class="no">新增選擇；使用者理由：help／參數錯誤需正式解析器，內建不增依賴</td></tr>
+<tr><td>tech-standards</td><td>針對服務後端／前端，對本 CLI／函式庫屬「不適用」</td><td>非偏離，無需 §CP-6 例外</td></tr>
+</table></div>
+
+<h3>獨立仲裁（Fable）發現，已修入 plan 文件</h3>
+<div class="box"><table>
+<tr><th>編號</th><th>發現</th><th>處置</th></tr>
+<tr><td>實驗結論</td><td>原型實跑：既有三個 golden case 零差異；FR-016 不需改 LGPL 檔；手推預期多數相符</td><td>plan 採用</td></tr>
+<tr><td>F2</td><td>三處手推預期漏 pair</td><td>已更正 acceptance.md</td></tr>
+<tr><td>F3</td><td>共有 4 處既有測試會受影響</td><td>列入 plan Technical Context 的修改清單</td></tr>
+<tr><td>F4</td><td><code>--help</code> 須優先於其他參數錯誤</td><td>寫入 cli.md；用法錯誤 exit 2</td></tr>
+<tr><td>F5</td><td>README 需說明遞迴限制</td><td>列入 Polish</td></tr>
+<tr><td>F1</td><td>環上方法內的事件 handler 接不上</td><td>列為判斷點 U3</td></tr>
+</table></div>
+
+<h3>plan 自行決定（已決，請 review，不入題）</h3>
+<div class="box"><table>
+<tr><th>事項</th><th>決定</th><th>出處</th></tr>
+<tr><td>case discriminant</td><td>一併套用條件模式（<code>switch (a + f(b))</code>：<code>a</code>、<code>f</code> p-use，<code>b</code> c-use）</td><td>research R1</td></tr>
+<tr><td>CLI 錯誤處理</td><td><code>--help</code> 優先；用法錯誤 exit 2、執行錯誤 exit 1</td><td>research R10；cli.md</td></tr>
+<tr><td>KI §16 後果段</td><td>由 FR-016 一併修正，known-issues 加註</td><td>research P4、R6</td></tr>
+<tr><td><code>new F().m()</code>（F 為函式）</td><td>只連 <code>F</code></td><td>research R2</td></tr>
+</table></div>
+
+<h3>已知會改的既有測試</h3>
+<div class="box"><table>
+<tr><th>檔案</th><th>改動</th><th>原因</th></tr>
+<tr><td><code>tests/dujs/usedexpressions.js</code>（約 139、145、273、279 行）</td><td><code>o</code>、<code>i</code>、read <code>'walk'</code> 改為 p-use</td><td>US1</td></tr>
+<tr><td><code>tests/dujs/es2015.js</code>（約 407 行）</td><td><code>o: L4 -&gt; L5</code> 變 p-use</td><td>US1</td></tr>
+<tr><td><code>tests/dujs/paramsandnew.js</code>（約 148 行）</td><td>預設值箭頭函式變 scope（多出 <code>f.$ANONYMOUS_FUN_0</code>）</td><td>US4</td></tr>
+<tr><td><code>call cycle</code> 測試</td><td>改斷言 <code>model cycle</code></td><td>US3</td></tr>
 </table></div>
 
 <h2>工程師要決定的事</h2>
 
 <h3>驗收條件盤點</h3>
+<p class="meta">前輪「待 plan 補完整預期」各項已由 plan 的 acceptance.md 補齊（42 個探針、修正前實跑輸出、修正後完整 pair）。</p>
 <div class="box"><table>
-<tr><th>Story</th><th>判定</th><th>說明（spec 小節）</th></tr>
-<tr><td>US1（6 條）</td><td class="ok">全部可驗證</td><td>情境 1–2、4、6 有具體程式與預期；情境 3、5 規則明確（US1 Acceptance）</td></tr>
-<tr><td>US2（5 條）</td><td><span class="ok">3 條可驗證</span>；<span class="no">2 條待 plan 補完整預期</span></td><td>情境 2、3 缺分行程式與完整 pair（延後釐清 M2）</td></tr>
-<tr><td>US3（7 條）</td><td><span class="ok">2 條可驗證</span>；<span class="no">5 條待 plan 補完整預期</span></td><td>情境 2–7 缺分行程式與完整 pair（M2）；情境 5 已含 constructor／欄位內 <code>this.m()</code></td></tr>
-<tr><td>US4（6 條）</td><td><span class="ok">2 條可驗證</span>；<span class="no">4 條待 plan 補完整預期</span></td><td>情境 1–4 同上（M2）；情境 5 改以節點數與定義數斷言，分行程式待 plan</td></tr>
-<tr><td>US5（5 條）</td><td><span class="ok">4 條可驗證</span>；<span class="no">1 條判準不明</span></td><td>情境 4「內容完整」未定義比對方式（US5 Acceptance 4；SC-005）</td></tr>
-<tr><td>US6（4 條）</td><td><span class="ok">3 條可驗證</span>；<span class="no">1 條待 plan 補完整標籤</span></td><td>情境 1 缺標籤字串（M2）；情境 3 以單元層級建構、情境 4 有完整程式</td></tr>
+<tr><th>Story</th><th>判定</th><th>說明（出處）</th></tr>
+<tr><td>US1（6 條）</td><td class="ok">全部可驗證</td><td>acceptance US1；另以單元斷言 case discriminant</td></tr>
+<tr><td>US2（5 條）</td><td><span class="ok">可驗證</span>；FR-017 的 <code>new B()</code> 部分<span class="no">待 U2</span></td><td>acceptance US2；<code>new B()</code> 依既有規則永遠不連（research P2）</td></tr>
+<tr><td>US3（7 條）</td><td class="ok">全部可驗證</td><td>acceptance US3 與 FR-015（m↔n 含各 inter-procedural 模型）</td></tr>
+<tr><td>US4（6 條）</td><td><span class="ok">5 條可驗證</span>；<span class="no">情境 1 待 U1</span></td><td>原程式 <code>return g();</code> 不是呼叫敘述，「<code>d</code> 有 pair」不可能成立（research P1）</td></tr>
+<tr><td>US5（5 條）</td><td class="ok">全部可驗證</td><td>情境 4 判準已定：並行啟動 2 次×10 輪，目錄數＝2×輪數且各自 <code>report.html</code> 引用自己的目錄（cli.md）</td></tr>
+<tr><td>US6（4 條）</td><td class="ok">全部可驗證</td><td>標籤格式 <code>callReturn (&lt;line&gt;:&lt;path&gt;)</code> 見 output.md §1</td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
 <div class="box"><table>
 <tr><th>項目</th><th>狀況</th></tr>
-<tr><td>CLI 的 help／exit status 慣例、輸出目錄唯一化</td><td>tech-standards 僅概述「CLI 依語言採成熟框架」，未涵蓋此二項；本 feature 無偏離，唯一化方式留待 plan（Assumptions）</td></tr>
-<tr><td>plan 偏離規範項目</td><td>尚無 plan；無</td></tr>
+<tr><td>規範未涵蓋</td><td>CLI 的 help／exit status 慣例、輸出目錄唯一化——規範對本 CLI／函式庫不適用，plan 於 cli.md 自訂</td></tr>
+<tr><td>plan 偏離規範</td><td>無（<code>util.parseArgs</code> 為內建、非新依賴）</td></tr>
 </table></div>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無。憲章 §CP-1（可追溯）已由每條需求標註 KI／USR 來源滿足；§CP-4（核心邏輯測試）對應 SC-001。</p>
+<p>無。Constitution Check 各條款（§CP-1～§CP-6、§GV）Phase 1 後皆 PASS，Complexity Tracking 不需填寫；§CP-1 的前提是 U1–U3 裁決後更新 spec／plan。</p>
 
 <h3>本輪判斷點</h3>
-<div class="note">本輪無未決判斷點。已決：D5 立即中止、D6 constructor／欄位內 <code>this.m()</code> 連結、D7 獨立檔 golden-diff.md（spec review）；本輪 Clarifications 各條已由使用者裁決或依憲章自行決定，不再重問。</div>
+<div class="note">已決（plan review）：U1 → A 驗收改用 <code>g();</code>，另將 <code>return f()</code> 當 call-site 記入 known-issues 後續項目；U2 → A 保留並註明不連；U3 → (a) handler 查找優先採頁面為根的模型。</div>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>選項（建議標粗）</th><th>影響</th><th>出處</th></tr>
+<tr><td>U1</td><td>US4 情境 1 以 KI §10 原程式驗收，但本體 <code>return g();</code> 依既有規則不是呼叫敘述，「<code>d</code> 有 pair」「<code>g();</code> 被連結」不可能成立</td><td><b>A：驗收程式改為本體 <code>g();</code>，原程式另列一條只斷言「箭頭函式是 scope」</b><br>B：保留原程式，刪除 <code>d</code> 的 pair 與連結的敘述<br>C：把 <code>return f();</code> 也納入 call-site</td><td>A、B 只動 spec 驗收文字；C 超出範圍並改變既有 golden</td><td>spec US4 情境 1；research P1</td></tr>
+<tr><td>U2</td><td>FR-017 的 <code>f = new B();</code>：欄位初始化式的 scope 看不到外層 <code>B</code>，依 H3 永遠不連，該部分形同無效</td><td><b>A：保留 FR-017 文字，補「依 H3 實際不會連結」，README 註明，測試斷言不連</b><br>B：對欄位初始化式例外以 scope 鏈找 class 宣告（偏離 H3）<br>C：FR-017 刪除 <code>new B()</code> 部分</td><td>A 最小改動；B 增加特例規則與測試；C 縮減 FR</td><td>spec FR-017；research P2</td></tr>
+<tr><td>U3</td><td>互遞迴／自我遞迴時，環上方法內註冊的事件 handler 接不上頁面流程（<code>modelbuilder.js</code> 約 401–409 行取到非頁面為根的模型）。實驗：有 <code>this.m()</code> 時頁面 21 節點未接上；無環 23 節點接上；改查找後 24 節點接上</td><td><b>(a) handler 查找優先採以頁面為根的模型（原型已驗證，不影響模型順序與 golden）</b><br>(b) 調整環上 scope 額外根模型的登記順序（改變 inter 索引與 FR-015 預期）<br>(c) 接受現狀並列入 README 限制</td><td>(a) 多一處小改；(b) 動到驗收預期；(c) 環上 handler 分析漏接</td><td>plan 待使用者裁決 U3；仲裁 F1</td></tr>
+</table></div>
 
 <h3>次要疑點</h3>
-<div class="box"><table>
-<tr><th>疑點</th><th>出處</th></tr>
-<tr><td>未知選項（如 <code>--foo</code>）或 <code>--help</code> 與頁面檔案並用時的行為</td><td>FR-009</td></tr>
-<tr><td>US5 情境 4「內容完整」的比對方式</td><td>US5 Acceptance 4；SC-005</td></tr>
-<tr><td>呼叫環中各 scope 的 inter-procedural model 內容（已明訂留給 plan，以 m↔n 完整預期驗收）</td><td>FR-015</td></tr>
-</table></div>
+<p>無。前輪三項（未知選項／<code>--help</code> 並用、US5 情境 4 比對方式、環內模型內容）已由 plan 的 cli.md 與 acceptance FR-015 回答。</p>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
