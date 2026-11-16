@@ -18,6 +18,9 @@ another model (the order of a call and its decision node in §16 is kept until
 stage 2), and fixes §19 (sub-models of the inter-procedural model leaked
 definitions of outer code), which is recorded after §18.
 
+§20 and §21 were found by checking the MDN "Advanced JavaScript objects"
+examples and are not fixed yet.
+
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
 
@@ -496,3 +499,54 @@ are unchanged. The full comparison of the probes `n1`, `n1b` and `n1c` is in
 `specs/003-hierarchical-models/probes/n1-leak-baseline.md`; the programs are in
 `specs/003-hierarchical-models/probes/` (copies used by the tests are in
 `tests/dujs/cases/probes/`).
+
+## Found by checking the MDN "Advanced JavaScript objects" examples (after feature `003-hierarchical-models`)
+
+The examples of the MDN module
+<https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Advanced_JavaScript_objects>
+(object prototypes, classes, the bouncing balls of "Object building practice")
+were analyzed and compared with def-use pairs derived by hand. The other
+differences found are the documented limits (assigning to `a.b` defines `a`,
+§7, only call statements `f();` are connected, §18).
+
+### 20. A use after a nested expression in a condition is a c-use (pre-existing)
+
+```js
+var a = 1, b = 2, c = 3;
+if (a + b >= c) {
+  a = 0;
+}
+```
+
+`c` is read by the condition of the decision node `L2`, so its pairs should be
+p-uses (`c: L1 -> L2>L3:T` and `c: L1 -> L2>exit:F`), but the result is the
+c-use `c: L1 -> L2`; `a` and `b` are p-uses. With the operands swapped
+(`if (c <= a + b)`) all three are p-uses. The same happens when the left
+operand is a unary expression or a call (`if (-a < c)`, `while (f(a) < c)`).
+
+In `findUSESet` (`lib/dujs/defuseanalyzer.js`), the handlers of
+`BinaryExpression`, `CallExpression` and `UnaryExpression` set `isPUse` to
+`false` when they finish, so the operands of the outer expression visited after
+a nested one are taken as c-uses. In the bouncing balls example the condition
+`this.x + this.size >= width` of `Ball.update` has this form; its result is not
+affected there only because class methods are not connected as call targets
+(§7).
+
+### 21. A `new` statement is not a call-site (pre-existing)
+
+```js
+var x = 0;
+function P(a) {
+  x = a;
+}
+new P(1);
+console.log(x);
+```
+
+`new P(1);` runs `P`, but no inter-procedural model is built and the
+intra-page model has `x: L1 -> L6` instead of `x: L3 -> L6`. With `P(1);` the
+call is connected and the pair is `x: L3 -> L6`. Only a node whose AST is a
+`CallExpression` is a call-site (`getInterProceduralModelStartFromTheScope` in
+`lib/dujs/modelbuilder.js`); a `NewExpression` is not. The README says that
+only call statements (`f();`) are connected, without saying whether `new`
+statements are included.
