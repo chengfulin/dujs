@@ -1,6 +1,6 @@
 # Golden 差異紀錄（FR-013）
 
-基準：`<Setup commit>`（新 fixture 以修正前程式產生）。dot 標記的行號＝fixture 行號＋1（CLI 在檔首加一行 `/// --- start ...`）。
+基準：`e091b1d`（新 fixture 以修正前程式產生）。dot 標記的行號＝fixture 行號＋1（CLI 在檔首加一行 `/// --- start ...`）。
 
 ## §20（US1，FR-001）
 
