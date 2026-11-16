@@ -162,9 +162,9 @@ loop、一般節點直接檢查「要讀的運算式與讀法」而不跑 workli
 
 **Purpose**: 全 feature 的最終驗收（quickstart.md）
 
-- [ ] T041 [P] 重跑 SC-004（T032 的 grep）與 SC-005（T039 的兩個 grep），確認三個 story 合併後仍成立
-- [ ] T042 [P] 確認 LGPL 檔未改：`git diff --exit-code 9254c18 -- lib/esgraph/index.js lib/esgraph/dot.js`（FR-011 不觸發）；執行 `npm run doc` 確認 API 文件可產生（含 `branchlabel.js`），`doc/` 不納入版控
-- [ ] T043 最終整體驗證：`npm test` 全過並記錄最終 passing 數（≥ 640 ＋ 新增）、`FC_NUM_RUNS=1000 npx mocha tests/dujs/branchsplit.property.js`（固定 seed 20261116）全部通過（失敗時依輸出的 `FC_SEED=<seed>` 重現並回頭修程式）、`npm run lint` 0 錯誤、`git diff --exit-code eslint-suppressions.json tests/golden tests/esgraph/tests` 無輸出（SC-001、SC-002、SC-006）
+- [X] T041 [P] 重跑 SC-004（T032 的 grep）與 SC-005（T039 的兩個 grep），確認三個 story 合併後仍成立
+- [X] T042 [P] 確認 LGPL 檔未改：`git diff --exit-code 9254c18 -- lib/esgraph/index.js lib/esgraph/dot.js`（FR-011 不觸發）；執行 `npm run doc` 確認 API 文件可產生（含 `branchlabel.js`），`doc/` 不納入版控
+- [X] T043 最終整體驗證：`npm test` 全過並記錄最終 passing 數（≥ 640 ＋ 新增）、`FC_NUM_RUNS=1000 npx mocha tests/dujs/branchsplit.property.js`（固定 seed 20261116）全部通過（失敗時依輸出的 `FC_SEED=<seed>` 重現並回頭修程式）、`npm run lint` 0 錯誤、`git diff --exit-code eslint-suppressions.json tests/golden tests/esgraph/tests` 無輸出（SC-001、SC-002、SC-006）
 
 ---
 
