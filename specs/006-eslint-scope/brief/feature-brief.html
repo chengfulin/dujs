@@ -62,8 +62,8 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>改用 eslint-scope 判定變數的宣告與參照</h1>
-<div class="meta">feature 006-eslint-scope · spec · 第 1 輪（首建）· 2026-11-16</div>
-<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。範圍決策 D1–D7 已由使用者決定，本頁不再重問。</div>
+<div class="meta">feature 006-eslint-scope · clarify · 第 1 輪 · 2026-11-16</div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。範圍決策 D1–D7 與本輪 clarify（含 Fable 仲裁）使用者已決的 7 題，本頁不再重問。</div>
 
 <h2>看懂它</h2>
 
@@ -134,7 +134,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <use href="#check" x="660" y="55" width="130" height="125" color="var(--green)"/>
     <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">只差預期的幾類</text>
   </svg></div>
-  <p class="cap">與舊結果相比，<b>只允許 D2 列出的差異</b>，並逐項寫入 golden-diff。<small>來源：Success Criteria SC-002、SC-004；範圍決策 D2</small></p>
+  <p class="cap">與舊結果相比，<b>只允許 D2 列出的 5 類差異</b>，由腳本逐筆判定並寫入 golden-diff。<small>來源：Success Criteria SC-002、SC-004；範圍決策 D2；FR-012</small></p>
 </section>
 
 <section class="panel">
@@ -144,7 +144,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
       <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">解析整頁</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">多檔串接後</text><text x="94" y="132" font-size="14" font-weight="400" fill="var(--sub)">一次分析</text>
       <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">eslint-scope</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">列出每層的</text><text x="264" y="132" font-size="14" font-weight="400" fill="var(--sub)">宣告與種類</text>
-      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">名字對宣告</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">同名分開</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">名字對宣告</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">同名分開</text><text x="434" y="132" font-size="14" font-weight="400" fill="var(--sub)">呼叫對象同理</text>
       <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">dujs 判定</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">def／use 規則</text><text x="604" y="132" font-size="14" font-weight="400" fill="var(--sub)">維持現行</text>
       <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">輸出 pair</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">格式不變</text>
     </g>
@@ -153,56 +153,61 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <rect x="170" y="210" width="240" height="90" rx="10" fill="var(--coral-soft)"/>
     <text x="290" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">找不到宣告</text>
     <text x="290" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">視為該頁 entry 定義的全域</text>
-    <text x="290" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">例：Math、alert（D3）</text>
+    <text x="290" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">新種類 global（D3）</text>
     <rect x="430" y="210" width="290" height="90" rx="10" fill="var(--coral-soft)"/>
     <text x="575" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">eval／with 造成動態</text>
     <text x="575" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">以名稱沿 scope 往外找</text>
     <text x="575" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">找不到才當全域（D6）</text>
-    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">scope 命名、CFG、worklist 與輸出格式皆不變（D1）</text>
+    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">scope 命名、CFG、worklist 與輸出格式皆不變（D1）；呼叫連結改依宣告判定（FR-013）</text>
   </svg></div>
-  <p class="cap">eslint-scope 只決定<b>有哪些宣告、名字指向誰</b>；def／use 分類仍由 dujs 決定。<small>來源：範圍決策 D1、D3、D6；FR-001、FR-002、FR-008</small></p>
-  <ul><li>block 內的函式宣告依 eslint-scope 只在該 block 可見，外部呼叫不再連結（D5；Annex B）。</li>
+  <p class="cap">eslint-scope 只決定<b>有哪些宣告、名字指向誰</b>；def／use 分類仍由 dujs 決定。<small>來源：範圍決策 D1、D3、D6；FR-001、FR-002、FR-008、FR-013</small></p>
+  <ul><li>block 內的函式宣告依 eslint-scope 只在該 block 可見，外部呼叫不再連結（D5；Annex B）；此類與 FR-013 的連結增減同列 D2 第 5 類。</li>
   <li>具名函式運算式的自我遞迴呼叫不連結，留給 005（D7；004 FR-018）。</li></ul>
 </section>
+
+<h2>本輪變更（clarify：使用者 7 題＋Fable 仲裁）</h2>
+<div class="box"><table>
+<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響 story</th></tr>
+<tr><td>D2、FR-010</td><td>允許 4 類 golden 差異</td><td>新增第 5 類「解析修正導致的呼叫連結增減」</td><td>US4 情境 1、2、7、10</td></tr>
+<tr><td>FR-013（新）、Assumptions</td><td>呼叫解析（<code>f()</code>、<code>new X()</code>、handler）與 004 FR-016 可見性仍以名稱查找，spec 未涵蓋</td><td>全改依 eslint-scope 宣告判定；004 規則內容不變；class 內外兩個綁定合併計數</td><td>US4 情境 10、11；US2 情境 3</td></tr>
+<tr><td>FR-012、SC-002</td><td>差異是否「屬允許類別」無判準；白名單只列 D3／D6</td><td>差異單位＝pair／<code>dupairs.dot</code> 列／模型數量；每類有機械判準；基準為動 lib 前的 <code>develop</code> 快照；白名單加固定清單與 <code>localStorage</code> 名稱對應</td><td>US4 情境 1、6、7</td></tr>
+<tr><td>D3、FR-006</td><td>全域的定義種類未定；<code>undefined</code> 等排除範圍不清</td><td>新增 <code>global</code> 種類；<code>undefined</code>／<code>NaN</code>／<code>Infinity</code> 只在未解析時以名稱排除</td><td>US3 情境 7、8</td></tr>
+<tr><td>FR-001、Key Entities</td><td>「可查詢宣告」介面模糊</td><td>以 Variable 為單位查全部宣告節點與種類；以參照解析為準；僅賦值＝隱含全域、僅讀取＝全域；<code>arguments</code> 不建變數</td><td>US4 情境 9；S005</td></tr>
+<tr><td>US1 情境 4–6</td><td>4 支 catch 探測</td><td>catchloop 補 <code>e: L11 -> L11</code>；新增 catchinner、catch-edge（無參數 catch、catch 內 <code>var e</code>）</td><td>US1</td></tr>
+<tr><td>FR-009、US4 情境 2</td><td>模型數量不變（僅 D5 例外）</td><td>例外再加 FR-013 的呼叫連結變化，逐項記錄</td><td>US4 情境 2、3</td></tr>
+<tr><td>Edge Cases</td><td>module、class 綁定僅敘述</td><td>module 守門（US4 情境 8）；class 內外合併計數，放寬留給 005（link-n5 守門）</td><td>US2 情境 3；US4 情境 8</td></tr>
+<tr><td>SC-003</td><td>1.5 倍門檻量測方式未定</td><td>同一台機器各跑 3 次取中位數</td><td>SC-003</td></tr>
+</table></div>
 
 <h2>工程師要決定的事</h2>
 
 <h3>驗收條件盤點</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>驗收條件</th><th>判定</th><th>說明（spec 小節）</th></tr>
-<tr><td>US1</td><td>情境 1–4（catch-b／a／c／catchloop 的 pair 有／沒有）</td><td class="ok">可驗證</td><td>pair 清單明確；情境 4「內層函式讀 e」措辭偏鬆（Acceptance Scenarios）</td></tr>
-<tr><td>US2</td><td>情境 1、3、4（named-expr、classdecl、pdef）</td><td class="ok">可驗證</td><td>pair 與模型層級均已指明</td></tr>
-<tr><td>US2</td><td>情境 2（自我遞迴不連結、「分析完成」）</td><td class="ok">可驗證</td><td>以不拋錯與無該 pair 判定</td></tr>
-<tr><td>US2</td><td>情境 5（shadow-*「與 develop 相同」）</td><td class="ok">可驗證</td><td>需先凍結 develop 的輸出作基準</td></tr>
-<tr><td>US3</td><td>情境 1–7（全域 pair、跨頁、arguments／this、typeof）</td><td class="ok">可驗證</td><td>情境 2 依賴 golden fixture 的涵蓋</td></tr>
-<tr><td>US4</td><td>情境 2–5（scope 名稱數量、annexb、with／evalouter、op）</td><td class="ok">可驗證</td><td>以 develop 輸出比對</td></tr>
-<tr><td>US4</td><td>情境 1、7（差異皆屬 D2 類別）</td><td class="no">部分</td><td>「歸類」需人為判斷；無機器可判的類別標記（SC-002）</td></tr>
-<tr><td>US4</td><td>情境 6（程式碼審查：無以名稱查找的路徑）</td><td class="no">不可驗證</td><td>僅靠人為審查，與 SC-001「全部情境有自動化測試」衝突</td></tr>
-<tr><td>SC</td><td>SC-003 時間不超過 develop 的 1.5 倍</td><td class="no">缺</td><td>量測方式（機器、次數、取值）spec 未定義</td></tr>
-<tr><td>Edge</td><td>module 程式「結果與 develop 相同」</td><td class="no">缺</td><td>無情境、無探測程式（Edge Cases）</td></tr>
-<tr><td>FR-001</td><td>每個變數可查詢宣告種類與宣告節點（供 005）</td><td class="no">缺</td><td>無對外觀察點與情境，無法驗證（FR-001）</td></tr>
+<tr><td>US1</td><td>情境 1–6（catch-a／b／c、catchloop、catchinner、catch-edge）</td><td class="ok">可驗證</td><td>pair 有／沒有均逐條列出；新增兩支探測已補情境（Acceptance Scenarios）</td></tr>
+<tr><td>US2</td><td>情境 1–5（named-expr、自我遞迴、classdecl、pdef、shadow-*）</td><td class="ok">可驗證</td><td>情境 5 需先凍結 develop 輸出作基準（FR-012）</td></tr>
+<tr><td>US3</td><td>情境 1–8（全域 pair、跨頁、arguments／this、typeof、globalThis、本地 undefined）</td><td class="ok">可驗證</td><td>情境 2 依賴 golden fixture 的涵蓋</td></tr>
+<tr><td>US4</td><td>情境 2–5、8（scope 數量、annexb、with／evalouter、op、mod）</td><td class="ok">可驗證</td><td>以 develop 輸出比對；module 已有情境與探測</td></tr>
+<tr><td>US4</td><td>情境 1、7（差異皆屬 D2 類別）</td><td class="ok">可驗證</td><td>FR-012 (2) 腳本判定；呼叫連結類衍生 pair 需人工簽核並釘住筆數（筆數 plan 才知）</td></tr>
+<tr><td>US4</td><td>情境 6（無名稱查找路徑）</td><td class="ok">可驗證</td><td>FR-012 (1) 靜態測試；被禁止的 API 清單由 plan 明列</td></tr>
+<tr><td>US4</td><td>情境 9（宣告介面）、10（link-*）、11（link-bypass）</td><td class="ok">可驗證</td><td>情境 9 有單元測試可觀察；10、11 有明確 pair／連結</td></tr>
+<tr><td>SC</td><td>SC-003 時間不超過 develop 的 1.5 倍</td><td class="ok">可驗證</td><td>量測已定；是否納入自動化測試或僅人工量測 spec 未定義（次要疑點）</td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
 <p>無缺漏（規範以服務部署為主，不涵蓋 library 依賴）。eslint-scope 由 devDependencies 轉為 runtime 依賴，版本策略 spec 未定義（見次要疑點）。plan 階段才有偏離項。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無。留意：憲章 §CP-4（核心邏輯須自動化測試）與 US4 情境 6 的審查式驗收有張力，已列為判斷點 1。</p>
+<p>無。前輪留意的憲章 §CP-4 與審查式驗收之張力，已由 FR-012 的自動檢查化解。</p>
 
-<h3>本輪判斷點（已決：三題皆採 A，spec review 通過，2026-11-16；見 spec Clarifications「spec review」）</h3>
-<div class="box"><table>
-<tr><th>#</th><th>問題</th><th>方案（建議標 *）</th><th>影響</th><th>出處</th></tr>
-<tr><td>1</td><td>US4 情境 6 與 D2 差異歸類只能人為審查，如何驗收？</td><td>A* 加自動檢查：靜態測試禁止名稱查找路徑（D6／D3 例外白名單）；golden-diff 每筆帶類別標記，由腳本核對<br>B 維持人為審查，SC-001 註明例外</td><td>A 多一組測試與 golden-diff 格式約定；B 無額外成本但憲章 §CP-4 較弱</td><td>US4 情境 1、6、7；SC-001、SC-002</td></tr>
-<tr><td>2</td><td>module 程式（import 綁定）要如何守門？</td><td>A* 新增 module 探測程式與驗收情境，結果須同 develop<br>B 僅依既有 golden，不另建情境</td><td>A 補 1 個情境與測試；B 若 golden 無 module 範例則完全未覆蓋</td><td>Edge Cases；FR-001</td></tr>
-<tr><td>3</td><td>FR-001「可查詢宣告種類與宣告節點」要驗什麼？</td><td>A* 規定內部查詢介面並補單元測試：變數與宣告一對一、種類列舉（var／let／const／函式／class／參數／catch／import／全域／隱含全域）<br>B 本輪不驗，留給 005 驗收</td><td>A 讓 005 可直接依賴且有測試；B 可能到 005 才發現欄位不足</td><td>FR-001；Key Entities；S005 R2-3</td></tr>
-</table></div>
+<h3>本輪判斷點：0 個</h3>
+<p>本輪 7 題答案皆已寫入 spec，且讓上列驗收條件都能寫成自動檢查，沒有「文件判不了、答案會改變交付物」的新問題。前輪三題（自動檢查、module 情境、宣告介面）維持已決。</p>
 
 <h3>次要疑點</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>SC-003 的 1.5 倍時間門檻之量測方式與基準環境未定</td><td>SC-003</td></tr>
-<tr><td>class field／static block 的 scope 與 <code>$ANONYMOUS_FUN_n</code> 對應僅有敘述，無情境或探測</td><td>Edge Cases</td></tr>
+<tr><td>SC-003 的 1.5 倍時間門檻是否納入自動化測試（計時易抖動）或僅人工量測，spec 未定義</td><td>SC-001；SC-003</td></tr>
+<tr><td>class field／static block 的 scope 與 <code>$ANONYMOUS_FUN_n</code> 對應仍僅有敘述，無情境或探測</td><td>Edge Cases</td></tr>
 <tr><td>eslint-scope 版本策略與分析時拋錯的處理，spec 未定義</td><td>Assumptions</td></tr>
-<tr><td>直接讀取 <code>eval</code>、<code>require</code> 等名稱是否也成為全域 pair，golden-diff 如何歸類</td><td>FR-006；D3</td></tr>
 </table></div>
 </main>
