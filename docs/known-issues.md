@@ -28,7 +28,8 @@ of the callee has the same name). It also changes how a call `f();` is
 resolved (strict rule) and records follow-up items; both are in §22, after
 §21. Not fixed yet: §16 (the call of a decision node is still modeled before
 the decision node) and §18, both left to stage 2 of the hierarchical model
-refactoring, and the follow-up items of §22.
+refactoring, the follow-up items of §22, and §23–§24, found by checking the
+MDN examples after the feature.
 
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
@@ -609,7 +610,10 @@ which are c-uses. The example now gives `c: L1 -> L2>L3:T` and
 `c: L1 -> L2>exit:F`, like `a` and `b`. As a consequence, the argument `a` of
 `if (f(a))` is now a c-use (it was a p-use). The head of a for-in/for-of loop
 and the walk of an entry node over a function body (§18) keep the previous
-rules. The description below is the behavior before the fix.
+rules. Checking the MDN examples after the fix also showed that, before the
+fix, a condition that is a member expression (`if (o.e)`) gave the c-use
+`o: L1 -> L2`; it is a p-use now as well. The description below is the
+behavior before the fix.
 
 ```js
 var a = 1, b = 2, c = 3;
@@ -760,3 +764,55 @@ processes the unreachable nodes, so the definition `x = 1` (L5) inside the
 unreachable cycle flows out to L9 and gives `x: L5 -> L9`
 (`specs/004-fix-remaining-issues/research.md` P8,
 `specs/004-fix-remaining-issues/probes/cyc-uncond.js`).
+
+## Found by checking the MDN examples (after feature `004-fix-remaining-issues`)
+
+The examples of the MDN modules "Advanced JavaScript objects" and "Dynamic
+scripting with JavaScript" (33 programs, about 1,070 lines;
+mdn/content@74f6e26e, mdn/learning-area@21973263) were analyzed with the
+feature and with `develop`, and compared with def-use pairs derived by hand.
+Every difference from `develop` is a fix of this feature and there is no
+regression; the other differences from the hand-derived pairs are the
+documented limits, except the two issues below.
+
+### 23. `o.m()` in a function is not connected when `o` is defined outside the function
+
+```js
+var x = 0;
+class A {
+  m() {
+    x = 1;
+  }
+}
+const o = new A();
+function g() {
+  o.m();
+}
+g();
+console.log(x);
+```
+
+`o.m();` is not connected: the intra-page pairs are `A: L2 -> L7`,
+`console: entry -> L12`, `g: entry -> L11` and `x: L1 -> L12`, instead of
+`x: L4 -> L12`. Like `f()`, the call
+is resolved with the reaching definitions of the intra-procedural model of the
+function (`classOfInstance` in `lib/dujs/callresolver.js`), where `o` has no
+definition; the class relaxation of FR-018 covers only `new A()` and `A.s()`.
+In the MDN "Object building practice" assessment, `evilBall.draw()`,
+`evilBall.checkBounds()` and `evilBall.collisionDetect()` inside `loop()` are
+not connected for this reason. A fix could relax the rule like FR-018 (connect
+when `o` has only one definition on the page and it is `new A(...)`).
+
+### 24. Only a fixed list of global objects is defined (pre-existing)
+
+```js
+console.log(Math.PI);
+```
+
+The only pair is `console: entry -> L1`; there is no pair for `Math`. A page
+scope defines only the built-in objects listed in `lib/dujs/pagescope.js`
+(`window`, `document`, `String`, `Number`, `Boolean`, `Array`, `Map`,
+`WeakMap`, `Set`, `Date`, `console`), and the domain scope defines
+`localStorage`. Other globals, such as `Math`, `Object`, `JSON`, `Promise`,
+`alert` and `requestAnimationFrame`, are not defined, so their uses have no
+pairs.
