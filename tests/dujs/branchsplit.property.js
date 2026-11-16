@@ -290,6 +290,17 @@ function analyzeProgram(statements) {
 var CALLEE_G = 'function g(v) { return v; }';
 
 /**
+ * Source of the generated program with g declared as a function (instead of
+ * the variable of HEADER)
+ * @param {Object} program from buildProgram
+ * @returns {String}
+ */
+function withCallsCode(program) {
+	'use strict';
+	return program.code.replace(', g = 0,', ',') + '\n' + CALLEE_G;
+}
+
+/**
  * Analyze the program with g declared as a function (instead of the variable
  * of HEADER), so the call sites in split nodes become call nodes
  * @returns {Object} {program, pageModels}
@@ -297,7 +308,7 @@ var CALLEE_G = 'function g(v) { return v; }';
 function analyzeProgramWithCalls(statements) {
 	'use strict';
 	var program = buildProgram(statements),
-		code = program.code.replace(', g = 0,', ',') + '\n' + CALLEE_G,
+		code = withCallsCode(program),
 		result = analyze(code);
 	return {program: program, code: code, pageModels: modelCtrl.collectionOfPageModels.get(result.scopeTree)};
 }
@@ -348,7 +359,7 @@ function checkProperty(name, check, analyzer) {
 	}), {numRuns: NUM_RUNS, seed: SEED});
 	if (details.failed) {
 		var counterexample = !!details.counterexample ? (analyzer === analyzeProgramWithCalls ?
-			buildProgram(details.counterexample[0]).code.replace(', g = 0,', ',') + '\n' + CALLEE_G :
+			withCallsCode(buildProgram(details.counterexample[0])) :
 			buildProgram(details.counterexample[0]).code) : '(none)';
 		console.error('[' + name + '] fast-check seed: ' + details.seed + ' (rerun with FC_SEED=' + details.seed + ')\n' +
 			'[' + name + '] counterexample program:\n' + counterexample);
