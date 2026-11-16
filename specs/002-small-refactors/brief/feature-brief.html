@@ -6,20 +6,20 @@
   --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
   --coral:#E4573D; --coral-soft:#FBDDD6;
   --green:#3A9D6B; --green-soft:#D8F0E3;
-  --grey:#AEB6C0;
+  --grey:#AEB6C0; --paper:#FFFFFF;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
     --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
-    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; --paper:#FFFFFF; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
   --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
-  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; --paper:#FFFFFF; color-scheme:dark;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
@@ -46,6 +46,8 @@ th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-alig
 th{background:var(--th)}
 .ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
 code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+.mermaid{background:var(--paper);color:#1F2937;border-radius:8px;padding:8px;min-width:640px;text-align:center}
+.lg{font-size:.82rem;color:var(--sub);margin:4px 0}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -61,7 +63,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>三項小型重構</h1>
-<div class="meta">feature：002-small-refactors · clarify · 第 1 輪 · 2026-11-16 · 目標分支 develop</div>
+<div class="meta">feature：002-small-refactors · plan · 第 1 輪 · 2026-11-16 · 目標分支 develop</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準</div>
 
 <h2>看懂它</h2>
@@ -168,34 +170,82 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
   </ul>
 </section>
 
-<h2>本輪變更（clarify · Session 2026-11-16，5 條）</h2>
+<section class="panel">
+  <span class="num">架構</span>
+  <h3>一個大檔拆三份，標籤與讀取規則各立一處</h3>
+  <div class="pic"><div class="mermaid">
+flowchart LR
+  IDX["index.js<br/>LGPL，不修改"]:::keep
+  BS["branchsplitter.js<br/>建節點、接邊"]:::mod
+  AR["astrewriter.js<br/>複製改寫 AST"]:::new
+  DF["decisionfinder.js<br/>只讀 AST"]:::new
+  FN["flownode.js<br/>split、labelPath"]:::mod
+  BL["branchlabel.js<br/>標籤格式唯一處"]:::new
+  RD["cfgbuilder、cfggraphconverter<br/>modelbuilder"]:::mod
+  TH["tests/helpers/analyze.js"]:::mod
+  DU["defuseanalyzer.js<br/>findUSESet 只走訪"]:::mod
+  UE["usedexpressions.js<br/>usedExpressionsOf"]:::new
+  IDX -->|split 呼叫不變| BS
+  BS --> AR --> DF
+  BS --> FN
+  BS --> BL
+  RD --> BL
+  TH --> BL
+  DU --> UE
+  UE -.->|讀 split| FN
+  RD -.->|讀 split、labelPath| FN
+  classDef new fill:#D8F0E3,stroke:#3A9D6B,color:#1F2937
+  classDef mod fill:#FDF1CF,stroke:#F5C242,color:#1F2937
+  classDef keep fill:#E5E7EB,stroke:#9CA3AF,color:#1F2937
+  </div></div>
+  <p class="lg">綠＝新增模組　黃＝修改　灰＝不變；實線＝require，虛線＝讀取欄位。</p>
+  <ul>
+    <li>依賴單向 <code>branchsplitter → astrewriter → decisionfinder</code>，後兩者不 require <code>flownode</code>。<small>（FR-001；research R1）</small></li>
+    <li>標籤字串只在 <code>branchlabel.js</code> 組，讀取端與測試 helper 都呼叫它。<small>（FR-006、SC-004；R5）</small></li>
+    <li><code>findUSESet</code> 只走訪 <code>usedExpressionsOf</code> 給的清單；<code>index.js</code> 不動故無 LGPL 紀錄。<small>（FR-007、FR-011；R2、R6）</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（plan · 第 1 輪）</h2>
+
+<h3>技術選型與偏離</h3>
 <div class="box"><table>
-<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響</th></tr>
-<tr><td>Clarifications 1；US3 敘述；FR-007；SC-005；Key Entities</td><td>「要讀哪些運算式」與「怎麼讀」的界線不清（p-use 是走訪時才依子運算式判定）</td><td><code>usedExpressionsOf</code> 只決定「要讀哪些運算式＋根層讀法」；走訪內 p-use 規則（二元、呼叫 callee、一元、<code>?:</code>、class 頭）留在找 USE 集合的函式。新增六類節點 characterization 表</td><td>US3</td></tr>
-<tr><td>US3 驗收情境 1–5；Clarifications 5</td><td>情境只寫「條件 p-use、已求值 c-use」等籠統讀法</td><td>情境改用具體樣本（<code>x = o.p[i] ? a : b</code>、<code>switch (x) { case y … }</code>）；「決策節點」＝任何有 true／false 邊的節點；case 的 test 一律不讀（現行行為保留）</td><td>US3</td></tr>
-<tr><td>Clarifications 2；FR-004；FR-006；Key Entities；US2 情境 3；Assumptions 4</td><td>呼叫節點與 call return 節點「沿用分支路徑」，存放處未定</td><td>新增只供標籤用的 <code>labelPath</code>（預設空字串）；標籤 helper：有 <code>split</code> 取 <code>split.path</code>，否則取 <code>labelPath</code>。FR-004 列出須改的檔案清單</td><td>US2</td></tr>
-<tr><td>Clarifications 3；FR-004、FR-007</td><td><code>modelbuilder.js</code> 的 <code>expressionsEvaluatedAtNode</code> 是否重用新函式未定</td><td>範圍外：只隨 FR-004 改讀 <code>split</code>，邏輯不動（語意與 USE 不同，留給分層模型 feature）</td><td>US2、US3</td></tr>
-<tr><td>Clarifications 4；FR-006；SC-004</td><td>「標籤字串只在 1 處」未定計算範圍（原寫目前 3 處）</td><td>範圍＝<code>lib/</code> 與 <code>tests/helpers/</code>；含 <code>:&lt;路徑&gt;</code> 後綴、<code>L&lt;行&gt;:&lt;路徑&gt;</code>、pair 的 <code>:T</code>／<code>:F</code>；測試檔預期字面值不算</td><td>US2</td></tr>
-<tr><td>FR-003；FR-011；SC-002；Edge Cases 末項</td><td>無明確測試覆蓋準則、模組授權清單、性質測試參數</td><td><code>searchByType</code> 各 case 至少一測；AST helper 歸屬由 plan 定；新模組列入 THIRD_PARTY_NOTICES 的 MIT 清單；<code>FC_SEED</code> 預設 20261116、<code>FC_NUM_RUNS=1000</code></td><td>US1</td></tr>
+<tr><th>項目</th><th>選擇</th><th>偏離 tech-standards？</th></tr>
+<tr><td>語言與執行環境</td><td>JavaScript（CommonJS）、Node.js ≥ 24，沿用既有專案</td><td>無偏離</td></tr>
+<tr><td>測試與品質</td><td>mocha＋should、fast-check、golden 回歸、eslint（抑制項維持 119 筆）</td><td>無偏離</td></tr>
+<tr><td>新增依賴</td><td>無</td><td>無偏離</td></tr>
+<tr><td>tech-standards 本身</td><td>針對服務後端／前端；本 CLI／函式庫內部重構屬「不適用」</td><td>不適用，非偏離，不需 §CP-6 例外</td></tr>
 </table></div>
 
-<h3>US3 節點種類（依序判斷，預期值取自重構前行為）</h3>
+<h3>plan 自行決定的事（spec 授權 plan 定，不改外部行為）</h3>
 <div class="box"><table>
-<tr><th>節點種類</th><th>要讀的運算式</th><th>根層讀法</th></tr>
-<tr><td>有已求值運算式的決策節點</td><td>各已求值運算式（在 astNode 前）</td><td>全部 c-use</td></tr>
-<tr><td>switch case，有 test 且 discriminant 未拆分</td><td>switch 的 discriminant</td><td>p-use</td></tr>
-<tr><td>switch case，default 或 discriminant 已拆分</td><td>無（test 一律不讀）</td><td>—</td></tr>
-<tr><td>for-in/for-of loop</td><td>左側成員物件、左側解構預設值與計算鍵；右側僅未拆分時</td><td>依走訪規則</td></tr>
-<tr><td>astNode 為單一識別字</td><td>該識別字</td><td>有 true/false 邊 p-use；拆分葉或 with 物件 c-use；其他不讀</td></tr>
-<tr><td>其他</td><td>astNode</td><td>依走訪規則</td></tr>
+<tr><th>#</th><th>決定</th><th>理由與替代案</th><th>出處</th></tr>
+<tr><td>1</td><td><code>usedExpressionsOf</code> 獨立成 <code>lib/dujs/usedexpressions.js</code></td><td>可直接以手建節點單測、不穿過 singleton；留在 <code>defuseanalyzer.js</code> 則檔案仍約 700 行</td><td>R6；FR-008</td></tr>
+<tr><td>2</td><td>新增 <code>lib/esgraph/branchlabel.js</code>（pathOf、pathSuffix、lineLabel、extendPath、branchMark）</td><td>spec 要求「流程節點模組旁」的 helper；做成 FlowNode 方法會讓 1057 行的檔案更大</td><td>R5；FR-006</td></tr>
+<tr><td>3</td><td><code>package.json</code>：<code>test</code> 改納入 <code>tests/esgraph/*.js</code>，<code>doc</code> 加 <code>branchlabel.js</code></td><td>目前該目錄頂層恰為三個既有檔，集合不變再加新檔；否則新測試不會被執行</td><td>R7；FR-003</td></tr>
+<tr><td>4</td><td>helper 歸屬：<code>PLACEHOLDER_TYPE</code>、<code>isInert</code>、<code>preEvaluatedOf</code> 歸 decisionfinder；<code>shallowCopy</code>、<code>branchesOf</code>、<code>staticChoice</code> 歸 astrewriter</td><td>各依「誰需要它」；預估 ≈265／195／280 行，皆 &lt; 350（SC-003 可行）</td><td>R1；FR-003</td></tr>
+<tr><td>5</td><td><code>split</code> 為凍結物件 <code>{path, origin, preEvaluated}</code>；<code>labelPath</code> 只由 <code>modelbuilder</code> 寫入</td><td>「<code>split</code> 為 null 即非拆分節點」語意單一；誤寫在 strict mode 直接丟錯</td><td>R4；FR-004</td></tr>
 </table></div>
+
+<h3>US3 重點：單一識別字的讀法改由 usedExpressionsOf 決定</h3>
+<p>走訪端不再知道根節點是什麼，只看每項的 <code>read</code> 三值（<code>c-use</code> 強制、<code>p-use</code> 起始、<code>walk</code> 預設）。依 spec 的 US3 節點種類表，預期值取自重構前行為（research R6 逐項對照）：</p>
+<div class="box"><table>
+<tr><th>節點種類</th><th>要讀的運算式</th><th>read</th></tr>
+<tr><td>有已求值運算式的決策節點</td><td>各已求值運算式（在 astNode 前）</td><td><code>c-use</code>（強制）</td></tr>
+<tr><td>switch case，有 test 且 discriminant 未拆分</td><td>switch 的 discriminant</td><td><code>p-use</code></td></tr>
+<tr><td>switch case，default 或 discriminant 已拆分</td><td>無（test 一律不讀）</td><td>無項目</td></tr>
+<tr><td>for-in/for-of loop</td><td>左側成員物件、左側解構預設值與計算鍵；右側僅未拆分時</td><td><code>walk</code></td></tr>
+<tr><td>astNode 為單一識別字</td><td>該識別字</td><td>有 true/false 邊 <code>p-use</code>；拆分葉或 with 物件 <code>c-use</code>；其他無項目</td></tr>
+<tr><td>其他</td><td>astNode</td><td><code>walk</code></td></tr>
+</table></div>
+<div class="note">易錯點：<code>for (k in x)</code> 的 loop 節點有 true/false 邊，但 <code>x</code> 重構前是 c-use。若沿用「根為識別字就 p-use」會誤判，所以此規則必須只在 <code>usedExpressionsOf</code> 決定、走訪端移除（R6）。</div>
 
 <h2>工程師要決定的事</h2>
 
 <h3>驗收條件盤點</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>驗收情境（Acceptance Scenarios）</th><th>可驗證？</th></tr>
-<tr><td rowspan="4">US1</td><td>1 直接對 AST 呼叫 decision finder，得第一個條件與已求值運算式</td><td class="ok">可驗證（回傳形狀由 plan 定）</td></tr>
+<tr><td rowspan="4">US1</td><td>1 直接對 AST 呼叫 decision finder，得第一個條件與已求值運算式</td><td class="ok">可驗證（plan 已定：<code>findFirstDecision</code> 回 <code>{split, condition, ancestors, entries}</code>，<code>preEvaluatedOf</code> 取已求值運算式）</td></tr>
 <tr><td>2 AST rewriter 回傳副本、不改原 AST</td><td class="ok">可驗證</td></tr>
 <tr><td>3 全測試與 golden 與重構前相同</td><td class="ok">可驗證</td></tr>
 <tr><td>4 呼叫端不需修改</td><td class="ok">可驗證</td></tr>
@@ -213,14 +263,14 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
-<p>無。規範針對服務後端／前端；本重構為 CLI／函式庫內部，不涉及。</p>
+<p>無缺漏、無偏離。規範針對服務後端／前端；本重構為 CLI／函式庫內部，屬「不適用」。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無（尚未跑 analyze；本輪 clarify 未引入衝突）。憲章 §CP-4 測試要求由 FR-003、FR-008 的新單元測試承接。</p>
+<p>無（尚未跑 analyze）。Constitution Check 兩次皆 PASS；§CP-4 測試要求由 FR-003、FR-008 的新單元測試承接，Complexity Tracking 免填。</p>
 
-<h3>本輪判斷點：無新判斷點</h3>
-<p>本輪 5 條 Clarifications 已把前輪疑點收斂，剩餘疑點皆不改變交付物（見次要疑點）。以下為前輪已決事項，不再詢問。</p>
-<h3>已決事項（spec 閘門：兩題皆採 A，見 spec D5、US3 情境；本輪 clarify 已進一步細化 US3 與 <code>labelPath</code>）</h3>
+<h3>本輪判斷點：無</h3>
+<p>上表五項都是 spec 明文交給 plan 決定（FR-003 helper 歸屬、FR-006 helper 位置），不改外部介面、輸出與驗收條件，且改檔案位置成本低，不值得佔用提問額度。US3 的讀法搬移有 R6 逐項對照，並由 golden 與 FR-008 單元測試把關。以下為前輪已決事項，不再詢問。</p>
+<h3>已決事項（spec 閘門兩題皆採 A；clarify 通過無新判斷點，plan 沿用 <code>labelPath</code> 與 US3 情境）</h3>
 <div class="box"><table>
 <tr><th>#</th><th>問題</th><th>方案（建議標示）</th><th>影響</th><th>出處</th></tr>
 <tr><td>1</td><td>拆分呼叫點產生的呼叫節點與 call return 節點，要不要帶 <code>split</code>？spec 交給 plan，但這兩種節點「不是拆分節點」，帶了就破壞「split 為 null 即未拆分」</td><td>A 不帶 split，標籤 helper 改吃行號與路徑兩個參數（建議）<br>B 帶 split 並加旗標區分</td><td>A 語意乾淨、helper 簽名較寬；B 要改 FR-004 與 Key Entities 的定義</td><td>Assumptions 第 4 項；Edge Cases 第 3 項；FR-004、FR-006</td></tr>
@@ -231,7 +281,10 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
 <tr><td>FR-003 的「D12 已求值／未求值判定」引用 001 spec 的決策，本 spec 內僅以例子說明；REF 為外部連結，審閱者無法直接核對</td><td>FR-003；規格來源</td></tr>
-<tr><td>SC-003「每個模組少於 350 行」是否可行，要待 plan 量過各函式行數才知道（原檔 687 行）；spec 已允許 plan 記錄理由</td><td>SC-003</td></tr>
-<tr><td>for-in/for-of 列「依走訪規則（無 true/false 雙邊時為 c-use）」的根層讀法措辭較鬆，測試時以重構前行為為準</td><td>US3 節點種類表第 4 列</td></tr>
+<tr><td>三個模組的行數（≈265／195／280）是依現行函式行數推估，實作後以 <code>wc -l</code> 量測才算確認；上限 350 目前有餘裕</td><td>plan 量測與 SC-003 可行性；SC-003</td></tr>
+<tr><td><code>test</code> 腳本改用 <code>tests/esgraph/*.js</code> 後，日後放進該目錄的檔案會自動納入 <code>npm test</code>（範圍比逐檔列出寬）</td><td>research R7</td></tr>
+<tr><td>已由 plan 收斂：SC-003 可行性（量測）；for-in/for-of 根層讀法（R6 定為 <code>walk</code>，<code>for (k in x)</code> 的 <code>x</code> 為 c-use）</td><td>R1、R6</td></tr>
 </table></div>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
