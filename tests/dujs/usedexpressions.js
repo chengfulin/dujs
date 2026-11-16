@@ -41,6 +41,11 @@ var CODE = {
 		'switch (a + b) { case y: break; }',
 		'switch (a || b) { case y: break; }'
 	].join('\n'),
+	/// scenario 3: a discriminant read in the condition mode (specs/004-fix-remaining-issues FR-001)
+	'switchCall': [
+		'var a, b, c, f, y;',
+		'switch (a + f(b) + c) { case y: break; }'
+	].join('\n'),
 	/// scenario 4
 	'loop': [
 		'var k, x, o, a, d, e, f, s, t;',
@@ -136,16 +141,18 @@ describe('findUSESet characterization', function () {
 	after(analyze.reset);
 
 	describe('scenario 1: decision node with expressions evaluated before the condition', function () {
-		it('should walk the condition of x = o.p[i] ? a : b by the walking rules', function () {
+		/// specs/004-fix-remaining-issues FR-001: every read of a decision condition is a p-use (was c-uses)
+		it('should read the condition of x = o.p[i] ? a : b as p-uses', function () {
 			var decision = nodeAt(nodes.decision, 2, '', 'MemberExpression');
 			decision.split.preEvaluated.should.eql([]);
-			usesOf(decision).should.eql({cuse: ['o', 'i'], puse: []});
+			usesOf(decision).should.eql({cuse: [], puse: ['o', 'i']});
 		});
 
-		it('should read the evaluated call as c-uses, even its callee, then the condition', function () {
+		/// specs/004-fix-remaining-issues FR-001: o and i of the condition were c-uses
+		it('should read the evaluated call as c-uses, even its callee, then the condition as p-uses', function () {
 			var decision = nodeAt(nodes.decision, 3, '', 'MemberExpression');
 			decision.split.preEvaluated.length.should.eql(1);
-			usesOf(decision).should.eql({cuse: ['f', 'y', 'o', 'i'], puse: []});
+			usesOf(decision).should.eql({cuse: ['f', 'y'], puse: ['o', 'i']});
 		});
 
 		it('should read the evaluated binary as c-uses and the identifier condition as a p-use', function () {
@@ -199,6 +206,13 @@ describe('findUSESet characterization', function () {
 			var caseNode = nodeAt(nodes['switch'], 4, '', 'SwitchCase');
 			caseNode.discriminantSplit.should.eql(true);
 			usesOf(caseNode).should.eql({cuse: [], puse: []});
+		});
+
+		/// specs/004-fix-remaining-issues FR-001: only the arguments of a call are c-uses
+		it('should read a, f and c of switch (a + f(b) + c) as p-uses and b as a c-use at its case', function () {
+			var caseNode = nodeAt(nodes.switchCall, 2, '', 'SwitchCase');
+			(!!caseNode.discriminantSplit).should.eql(false);
+			usesOf(caseNode).should.eql({cuse: ['b'], puse: ['a', 'f', 'c']});
 		});
 	});
 
@@ -269,14 +283,15 @@ describe('usedExpressionsOf', function () {
 	after(analyze.reset);
 
 	describe('scenario 1: decision node', function () {
-		it('should walk the condition when nothing is evaluated before it', function () {
-			itemsOf('decision', nodeAt(nodes.decision, 2, '', 'MemberExpression')).should.eql([['o.p[i]', 'walk']]);
+		/// specs/004-fix-remaining-issues FR-001: the condition is read in the condition mode (was 'walk')
+		it('should read the condition in the condition mode when nothing is evaluated before it', function () {
+			itemsOf('decision', nodeAt(nodes.decision, 2, '', 'MemberExpression')).should.eql([['o.p[i]', 'p-use']]);
 		});
 
 		it('should put the evaluated expressions first as c-uses, then the condition', function () {
 			itemsOf('decision', nodeAt(nodes.decision, 3, '', 'MemberExpression')).should.eql([
 				['f(y)', 'c-use'],
-				['o.p[i]', 'walk']
+				['o.p[i]', 'p-use']
 			]);
 			itemsOf('decision', nodeAt(nodes.decision, 4, '', 'Identifier')).should.eql([
 				['a + b', 'c-use'],

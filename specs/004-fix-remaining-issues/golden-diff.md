@@ -6,18 +6,27 @@
 
 | case | 結果 |
 |------|------|
-| `expected/` | 待填 |
-| `expected-es2015/` | 待填 |
-| `expected-interprocedural/` | 待填 |
-| `expected-fixes004/` | 待填 |
+| `expected/` | 無差異 |
+| `expected-es2015/` | 無差異 |
+| `expected-interprocedural/` | 無差異 |
+| `expected-fixes004/` | 4 檔差異（皆為 fixture 第 2 行 `if (a + b >= c)` 的 `c`） |
 
 | case | 檔案 | 差異位置 | 內容 | 舊 sha256（前 12 碼）→ 新 | FR |
 |------|------|----------|------|---------------------------|----|
+| `expected-fixes004/` | `page0/intra-procedurals/0.dupairs.dot` | 第 18 行（`c` 列） | `(2,3)` → `(2,(3,4))`、`(2,(3,9))`：決策 L3（fixture L2）右運算元 `c` 由 c-use 改為 T／F 兩條 p-use，與 `a`、`b` 相同 | `bc605ce580ed` → `e31229399c54` | FR-001 |
+| `expected-fixes004/` | `page0/inter-procedurals/0.dupairs.dot` | 第 18 行（`c` 列） | 同上 | `593eecf94eb3` → `01074adcad54` | FR-001 |
+| `expected-fixes004/` | `page0/intra-pages/0.dupairs.dot` | 第 18 行（`c` 列） | 同上 | `593eecf94eb3` → `01074adcad54` | FR-001 |
+| `expected-fixes004/` | `inter-page/0.dupairs.dot` | 第 18 行（`c` 列） | 同上 | `593eecf94eb3` → `01074adcad54` | FR-001 |
 
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/usedexpressions.js` 約 139 行（findUSESet scenario 1，`x = o.p[i] ? a : b`） | `{cuse: ['o', 'i'], puse: []}` → `{cuse: [], puse: ['o', 'i']}`；標題改為「as p-uses」 | FR-001 |
+| `tests/dujs/usedexpressions.js` 約 145 行（同上，前有 `f(y)`） | `{cuse: ['f', 'y', 'o', 'i'], puse: []}` → `{cuse: ['f', 'y'], puse: ['o', 'i']}`（`f(y)` 為先求值呼叫，維持 c-use） | FR-001 |
+| `tests/dujs/usedexpressions.js` 約 273、279 行（usedExpressionsOf scenario 1） | 決策條件 `o.p[i]` 的 read `'walk'` → `'p-use'`；標題改為「in the condition mode」 | FR-001 |
+| `tests/dujs/es2015.js` 約 407 行（`var v = o?.a?.b ?? t;`） | `'o: L4 -> L5'` → `'o: L4 -> L5>L5:F'`、`'o: L4 -> L5>L5:T'` | FR-001 |
+| `tests/dujs/usedexpressions.js`（新增） | 新增 `switchCall` 程式與測試：`switch (a + f(b) + c)` 的 case 節點 `{cuse: ['b'], puse: ['a', 'f', 'c']}` | FR-001 |
 
 ## §21（US2，FR-002、FR-003）
 

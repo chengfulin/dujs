@@ -84,17 +84,17 @@ description: "Task list for feature 004-fix-remaining-issues"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T018 [P] [US1] 新增 `tests/dujs/conditionpuse.js`（MIT）：acceptance US1 #1–#6（`us1-1.js`、`us1-2.js`、`us1-3.js`、`us1-4.js`、`us1-5a.js`、`us1-6.js`），斷言頁面 `result.intraProcedural()` 的完整 pair（`should.eql`）；確認 #1、#2、#3、#5、#6 失敗、#4 通過
-- [ ] T019 [US1] 在 `tests/dujs/usedexpressions.js` 新增 case discriminant 測試：`switch (a + f(b) + c)` 的 `a`、`f`、`c` 為 p-use、`b` 為 c-use（acceptance US1 表下註）
-- [ ] T020 [US1] 修改 `tests/dujs/usedexpressions.js` 既有期望（plan Constraints）：約 273、279 行決策條件的 read `'walk'` → `'p-use'`；約 139、145 行 `findUSESet` characterization（`x = o.p[i] ? a : b`）的 `o`、`i` 由 c-use 改為 p-use（`{cuse: [], puse: ['o', 'i']}`；145 行的 `f`、`y` 為先求值呼叫，維持 c-use，`o`、`i` 改 p-use）；修改 `tests/dujs/es2015.js` 約 407 行 `'o: L4 -> L5'` 改為 `'o: L4 -> L5>L5:F'`、`'o: L4 -> L5>L5:T'`（acceptance US1 表下註；目標是帶路徑的拆分葉，原型實跑核對）；同步更新這些測試的標題與註解。三處記下供 T024 填入 golden-diff §20「單元測試期望」
+- [X] T018 [P] [US1] 新增 `tests/dujs/conditionpuse.js`（MIT）：acceptance US1 #1–#6（`us1-1.js`、`us1-2.js`、`us1-3.js`、`us1-4.js`、`us1-5a.js`、`us1-6.js`），斷言頁面 `result.intraProcedural()` 的完整 pair（`should.eql`）；確認 #1、#2、#3、#5、#6 失敗、#4 通過
+- [X] T019 [US1] 在 `tests/dujs/usedexpressions.js` 新增 case discriminant 測試：`switch (a + f(b) + c)` 的 `a`、`f`、`c` 為 p-use、`b` 為 c-use（acceptance US1 表下註）
+- [X] T020 [US1] 修改 `tests/dujs/usedexpressions.js` 既有期望（plan Constraints）：約 273、279 行決策條件的 read `'walk'` → `'p-use'`；約 139、145 行 `findUSESet` characterization（`x = o.p[i] ? a : b`）的 `o`、`i` 由 c-use 改為 p-use（`{cuse: [], puse: ['o', 'i']}`；145 行的 `f`、`y` 為先求值呼叫，維持 c-use，`o`、`i` 改 p-use）；修改 `tests/dujs/es2015.js` 約 407 行 `'o: L4 -> L5'` 改為 `'o: L4 -> L5>L5:F'`、`'o: L4 -> L5>L5:T'`（acceptance US1 表下註；目標是帶路徑的拆分葉，原型實跑核對）；同步更新這些測試的標題與註解。三處記下供 T024 填入 golden-diff §20「單元測試期望」
 
 ### 實作
 
-- [ ] T021 [US1] `lib/dujs/usedexpressions.js`：決策節點（有 true 或 false 目標）的 astNode 項目回傳 `read: 'p-use'`（原 `'walk'`）；SwitchCase、for-in／for-of head 的規則不變；檔頭的 read 說明改為「`'p-use'` ＝條件模式（呼叫與 `new` 的引數子樹為 c-use，其餘 p-use）」（contracts/model-api §5）
-- [ ] T022 [US1] `lib/dujs/defuseanalyzer.js` 的 `findUSESet`：`read: 'p-use'` 的項目以條件模式走訪——所有讀取為 p-use，只有 `CallExpression`／`NewExpression` 的引數（及 `TaggedTemplateExpression` 的樣板運算式）子樹內是 c-use；callee（含 `o.m` 的 `o`）維持 p-use；`BinaryExpression`／`UnaryExpression`／`ConditionalExpression` 在條件模式下不切換 `isPUse`；`'walk'`、`'c-use'` 的既有規則（含 §18 entry 走訪與 for-in／for-of head）**完全不動**（research R1）
-- [ ] T023 [US1] T018–T020 全過；`node specs/004-fix-remaining-issues/probes/run.js specs/004-fix-remaining-issues/probes/us1-*.js` 與 acceptance US1 一致
-- [ ] T024 [US1] Golden（序列化）：既有三個 case 預期零差異；`expected-fixes004/` 的 §20 差異（L2 `if (a + b >= c)` 等）逐處判讀、更新 manifest 鍵；填 `golden-diff.md` §20：四個 case 的列或「無差異」，「單元測試期望」表列 T020 的三處（`usedexpressions.js` 約 139、145、273、279 行；`es2015.js` 約 407 行）
-- [ ] T025 [US1] US1 閘門（全程規則的閘門指令；golden 檢查 `tests/golden/manifest.json`、`specs/004-fix-remaining-issues/golden-diff.md`）
+- [X] T021 [US1] `lib/dujs/usedexpressions.js`：決策節點（有 true 或 false 目標）的 astNode 項目回傳 `read: 'p-use'`（原 `'walk'`）；SwitchCase、for-in／for-of head 的規則不變；檔頭的 read 說明改為「`'p-use'` ＝條件模式（呼叫與 `new` 的引數子樹為 c-use，其餘 p-use）」（contracts/model-api §5）
+- [X] T022 [US1] `lib/dujs/defuseanalyzer.js` 的 `findUSESet`：`read: 'p-use'` 的項目以條件模式走訪——所有讀取為 p-use，只有 `CallExpression`／`NewExpression` 的引數（及 `TaggedTemplateExpression` 的樣板運算式）子樹內是 c-use；callee（含 `o.m` 的 `o`）維持 p-use；`BinaryExpression`／`UnaryExpression`／`ConditionalExpression` 在條件模式下不切換 `isPUse`；`'walk'`、`'c-use'` 的既有規則（含 §18 entry 走訪與 for-in／for-of head）**完全不動**（research R1）
+- [X] T023 [US1] T018–T020 全過；`node specs/004-fix-remaining-issues/probes/run.js specs/004-fix-remaining-issues/probes/us1-*.js` 與 acceptance US1 一致
+- [X] T024 [US1] Golden（序列化）：既有三個 case 預期零差異；`expected-fixes004/` 的 §20 差異（L2 `if (a + b >= c)` 等）逐處判讀、更新 manifest 鍵；填 `golden-diff.md` §20：四個 case 的列或「無差異」，「單元測試期望」表列 T020 的三處（`usedexpressions.js` 約 139、145、273、279 行；`es2015.js` 約 407 行）
+- [X] T025 [US1] US1 閘門（全程規則的閘門指令；golden 檢查 `tests/golden/manifest.json`、`specs/004-fix-remaining-issues/golden-diff.md`）
 
 **Checkpoint**: US1 完成——決策條件 p-use 規則一致（SC-002 的 §20），可單獨交付（MVP）。
 

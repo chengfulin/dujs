@@ -15,7 +15,7 @@ struct1 [label=<
 <tr><td>console</td><td>(entry_a,52)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>a</td><td>(2,(3,4))</td><td>(2,(3,9))</td><td>(4,call_c)</td><td>(2,call_c)</td><td>(4,entry_e)</td><td>(2,entry_e)</td><td>(4,43)</td><td>(2,43)</td></tr>
 <tr><td>b</td><td>(2,(3,4))</td><td>(2,(3,9))</td><td>(2,call_e)</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>c</td><td>(2,3)</td><td>(2,(42,call_c))</td><td>(2,(42,call_e))</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>c</td><td>(2,(3,4))</td><td>(2,(3,9))</td><td>(2,(42,call_c))</td><td>(2,(42,call_e))</td><td></td><td></td><td></td><td></td></tr>
 <tr><td>x</td><td>(2,10)</td><td>(2,52)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>y</td><td>(14,52)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>counter</td><td>(37,38)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>

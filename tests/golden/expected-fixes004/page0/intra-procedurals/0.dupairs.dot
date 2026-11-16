@@ -15,7 +15,7 @@ struct1 [label=<
 <tr><td>console</td><td>(entry,52)</td><td></td><td></td><td></td></tr>
 <tr><td>a</td><td>(2,(3,4))</td><td>(2,(3,9))</td><td>(4,42:T)</td><td>(2,42:T)</td></tr>
 <tr><td>b</td><td>(2,(3,4))</td><td>(2,(3,9))</td><td>(2,42:F)</td><td></td></tr>
-<tr><td>c</td><td>(2,3)</td><td>(2,(42,42:T))</td><td>(2,(42,42:F))</td><td></td></tr>
+<tr><td>c</td><td>(2,(3,4))</td><td>(2,(3,9))</td><td>(2,(42,42:T))</td><td>(2,(42,42:F))</td></tr>
 <tr><td>x</td><td>(2,10)</td><td>(2,52)</td><td></td><td></td></tr>
 <tr><td>y</td><td>(10,52)</td><td></td><td></td><td></td></tr>
 <tr><td>counter</td><td>(37,38)</td><td></td><td></td><td></td></tr>
