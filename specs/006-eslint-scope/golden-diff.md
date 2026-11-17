@@ -179,17 +179,22 @@ CALL RETURN（`lib/dujs/expansion.js` 的 `replayCall`）。golden fixture 沒�
 
 ### 變化說明
 
-（待 US4 階段填寫）
+無差異。US4 只新增靜態測試 `tests/dujs/scopesource.js`（FR-012 (1)），`lib/` 零修改（T060 只有 S5 允許表的缺項，於測試檔補齊，無 lib 違規）；
+`UPDATE_GOLDEN=1 npm test` 重生後 `tests/golden/expected*` 相對 US3（428d36c）零差異，淨差異表不變（27 筆），manifest 未更新。
 
 ### 雜湊變化表（舊→新 sha256 前 12 碼）
 
 | case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
 |------|------|---------------------------|------|
 
+（無變化）
+
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+
+（無既有測試修改；新增 `tests/dujs/scopesource.js`）
 
 ## 驗收預期更正
 

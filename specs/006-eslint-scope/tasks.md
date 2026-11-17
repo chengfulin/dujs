@@ -191,15 +191,15 @@ description: "Task list for feature 006-eslint-scope"
 
 ### 測試（先寫）
 
-- [ ] T059 [US4] 新增 `tests/dujs/scopesource.js`（contracts/static-check.md）：以 espree（`ecmaVersion: 'latest'`、`sourceType: 'script'`）解析 `lib/**/*.js`、walkes 走訪；每條規則一個 `it`，失敗訊息列 `檔案:行:欄` 與片段——S1 禁用 22 個成員名稱；S2 `Scope.prototype`（及子類）不得定義 S1 名稱與 `vars`、`params`；S3 `require('eslint-scope')` 只在 `lib/dujs/scopebinding.js`；S4 `.set`（非 `Map#set` callee）只在白名單函式內、禁 `.implicit`、`.through`、`.__get` 及 `.resolve` 以外的 scopeManager 名稱 API；S5 `lib/dujs/*.js`（`scopebinding.js` 除外，由 S6 管）的 `.name` 讀取只允許測試檔內的精確允許表（初始項＝static-check.md S5 表，T061 補齊）；S6 `scopebinding.js` 內以字串名稱為鍵的 `Map#get/has/set`、`Set#has` 只在白名單函式內；白名單 `@nameLookup` 函式集合**恰為** W1 `globalVariableOf`、W2 `isExcludedGlobalName`、W3 `builtInVariableOf`、W4 `isShadowed`，只在 `scopebinding.js`，理由 ∈ `{D3, D6, FIXED_LIST, FR-013}`；§3 自我驗證：內嵌違規字串（`scope.getVariable(node.name)`、其他檔名中的 `require('eslint-scope')` 等）使每條規則失敗
-- [ ] T060 [US4] 執行 `npx mocha tests/dujs/scopesource.js`；列出違規（red／green 狀態記入回報）
+- [X] T059 [US4] 新增 `tests/dujs/scopesource.js`（contracts/static-check.md）：以 espree（`ecmaVersion: 'latest'`、`sourceType: 'script'`）解析 `lib/**/*.js`、walkes 走訪；每條規則一個 `it`，失敗訊息列 `檔案:行:欄` 與片段——S1 禁用 22 個成員名稱；S2 `Scope.prototype`（及子類）不得定義 S1 名稱與 `vars`、`params`；S3 `require('eslint-scope')` 只在 `lib/dujs/scopebinding.js`；S4 `.set`（非 `Map#set` callee）只在白名單函式內、禁 `.implicit`、`.through`、`.__get` 及 `.resolve` 以外的 scopeManager 名稱 API；S5 `lib/dujs/*.js`（`scopebinding.js` 除外，由 S6 管）的 `.name` 讀取只允許測試檔內的精確允許表（初始項＝static-check.md S5 表，T061 補齊）；S6 `scopebinding.js` 內以字串名稱為鍵的 `Map#get/has/set`、`Set#has` 只在白名單函式內；白名單 `@nameLookup` 函式集合**恰為** W1 `globalVariableOf`、W2 `isExcludedGlobalName`、W3 `builtInVariableOf`、W4 `isShadowed`，只在 `scopebinding.js`，理由 ∈ `{D3, D6, FIXED_LIST, FR-013}`；§3 自我驗證：內嵌違規字串（`scope.getVariable(node.name)`、其他檔名中的 `require('eslint-scope')` 等）使每條規則失敗
+- [X] T060 [US4] 執行 `npx mocha tests/dujs/scopesource.js`；列出違規（red／green 狀態記入回報）
 
 ### 實作
 
-- [ ] T061 [US4] 修正 T060 列出的 lib 違規（只改為身分查詢，不改行為；檔案限 plan「修改」清單）；S5 允許表以 `tests/dujs/scopesource.js` 內的表為準，依實際程式碼補齊（預期新增如 `scopetree.js` 的 `node.id.name`、`graphics.js` 的輸出名等；理由欄必填），新增項列於回報與 PR 說明，**不改 contracts**；`npx mocha tests/dujs/scopesource.js` 全過
-- [ ] T062 [US4] 重跑全部守門：`npx mocha tests/dujs/scopeguards.js tests/dujs/scopebinding.js tests/dujs/catchclause.js tests/dujs/scoperesolution.js tests/dujs/globals.js` 全過；quickstart §2 Foundational 的 run.js 迴圈與 `probes/develop.txt` 仍逐行相同
-- [ ] T063 [US4] Golden 收尾（序列化，US4；重生驗證零差異）：`UPDATE_GOLDEN=1 npm test` 後 `git -C <專案根> diff --exit-code -- tests/golden/expected*` 須零差異。**有任何差異一律先當 T061 的回歸**，修 `lib/` 直到重生後零差異（不更新 manifest、不改淨差異表）；確認無法零差異才停下請使用者裁決。零差異時 `golden-diff.md` US4 節記「無差異」；最終 `node specs/006-eslint-scope/tools/diffcheck.js golden --verify specs/006-eslint-scope/golden-diff.md` 結束碼 0（US4-1），orchestrator 親自重跑通過後才 commit
-- [ ] T064 [US4] US4 閘門：閘門全過；回報可提交
+- [X] T061 [US4] 修正 T060 列出的 lib 違規（只改為身分查詢，不改行為；檔案限 plan「修改」清單）；S5 允許表以 `tests/dujs/scopesource.js` 內的表為準，依實際程式碼補齊（預期新增如 `scopetree.js` 的 `node.id.name`、`graphics.js` 的輸出名等；理由欄必填），新增項列於回報與 PR 說明，**不改 contracts**；`npx mocha tests/dujs/scopesource.js` 全過
+- [X] T062 [US4] 重跑全部守門：`npx mocha tests/dujs/scopeguards.js tests/dujs/scopebinding.js tests/dujs/catchclause.js tests/dujs/scoperesolution.js tests/dujs/globals.js` 全過；quickstart §2 Foundational 的 run.js 迴圈與 `probes/develop.txt` 仍逐行相同
+- [X] T063 [US4] Golden 收尾（序列化，US4；重生驗證零差異）：`UPDATE_GOLDEN=1 npm test` 後 `git -C <專案根> diff --exit-code -- tests/golden/expected*` 須零差異。**有任何差異一律先當 T061 的回歸**，修 `lib/` 直到重生後零差異（不更新 manifest、不改淨差異表）；確認無法零差異才停下請使用者裁決。零差異時 `golden-diff.md` US4 節記「無差異」；最終 `node specs/006-eslint-scope/tools/diffcheck.js golden --verify specs/006-eslint-scope/golden-diff.md` 結束碼 0（US4-1），orchestrator 親自重跑通過後才 commit
+- [X] T064 [US4] US4 閘門：閘門全過；回報可提交
 - [ ] T070 [US4] **使用者簽核閘門（orchestrator 執行，非 implementer）**：T063／T064 後、PR 前，orchestrator 把 `golden-diff.md` 累積的「解析類移除簽核」「呼叫連結簽核」表（implementer 草擬，待簽核）連同淨差異對應列交使用者一次簽核；使用者同意後 orchestrator 把簽核欄改為簽核紀錄（簽核者、日期），重跑 `diffcheck.js golden --verify` 結束碼 0 並 commit；不同意的列視為回歸，退回 implementer 修正（重做受影響的 golden 任務）
 
 **Checkpoint**: US4 獨立可驗（唯一來源由靜態測試守住；golden 差異 100% 屬 D2 且已經使用者簽核〔T070〕）。
