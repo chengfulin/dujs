@@ -62,7 +62,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>拆分呼叫節點：修正求值順序，並追進運算式中的呼叫</h1>
-<div class="meta">feature 007-split-call-nodes · spec · 第 2 輪（複核：spec 依 review 修改後重走閘門）· 2026-11-18</div>
+<div class="meta">feature 007-split-call-nodes · clarify · 第 1 輪 · 2026-11-18</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -164,25 +164,24 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <text x="604" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">返回後也可能出錯</text>
     <text x="604" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">例外路徑帶被呼叫端的定義</text>
     <text x="604" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">例：f().p 會；單純 f(); 不會</text>
-    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">多個呼叫時，依運算元左至右、引數先於外層呼叫串接</text>
+    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">依運算元左至右、引數先於呼叫串接；new F().m(…) 算兩個呼叫點</text>
   </svg></div>
   <p class="cap">認得出被叫的是誰才拆，<b>認不出就照舊</b>，不報錯。<small>來源：spec Edge Cases；FR-001、FR-002、FR-005</small></p>
   <ul>
-    <li>迴圈的可迭代物件與 <code>switch</code> 的判別式只求值一次，呼叫不因每次迭代或每個 <code>case</code> 重複。<small>FR-004；US3 情境 6、9</small></li>
-    <li>每段是否可能拋錯，只看該段實際求值的子運算式，不含已返回的呼叫。<small>FR-005；US4 情境 1、2</small></li>
+    <li>迴圈的可迭代物件與 <code>switch</code> 判別式只求值一次，呼叫不重複；判別式的讀取仍每個 <code>case</code> 各記一筆，讀到的定義固定為求值當下的。<small>FR-004；US3 情境 6、9、12</small></li>
+    <li>某段可能拋錯 ⇔ 該段內完成求值的節點（不含已返回的呼叫）有 Assignment／Binary／Call／Member／New／Unary。<small>FR-005；US4 情境 1–5</small></li>
   </ul>
 </section>
 
-<h2>本輪變更（spec review 後修訂）</h2>
+<h2>本輪變更（Clarifications 2026-11-18）</h2>
 <div class="box"><table>
 <tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響</th></tr>
-<tr><td>FR-002；US3 情境 4、11</td><td>求值順序粒度待決（可簡化為「呼叫與引數在前、其餘在後」）</td><td>依 JS 完整由左至右求值；複合賦值先讀目標（<code>x += f()</code> 的 <code>x</code> 讀呼叫前定義）</td><td>US3</td></tr>
-<tr><td>FR-005；US4 情境 1、2</td><td>返回之後是否可能拋錯待決</td><td>保留 US4；每段只看該段實際求值的子運算式（不含已返回的呼叫）；新增守門情境 2（<code>f();</code> 返回後不拋錯）</td><td>US4</td></tr>
-<tr><td>FR-004；US3 情境 9</td><td>只規範 <code>for…in／of</code> 的可迭代物件求值一次</td><td>擴充到 <code>switch</code> 判別式只求值一次</td><td>US3</td></tr>
-<tr><td>US2 情境 10、11</td><td><code>throw</code>、generator 無情境</td><td>新增兩個驗收情境（generator 套用 KI §37 保守摘要）</td><td>US2</td></tr>
-<tr><td>US3 情境 10</td><td><code>?:</code> 無情境</td><td>新增 <code>c ? f() : 2</code> 情境</td><td>US3</td></tr>
-<tr><td>FR-008、FR-009、SC-004</td><td>差異以 pair 逐筆記錄</td><td>以去重 pair 比對，另列 develop 與本 feature 的重複列數（KI §43，不設門檻）；SC-004 補 §37</td><td>差異紀錄</td></tr>
-<tr><td>FR-010；Assumptions</td><td>未提 KI §36 說明、參數預設值近似</td><td>§36 註明「返回後不拋錯」只適用呼叫敘述；預設值中的呼叫一律視為會求值</td><td>US2 情境 7；文件</td></tr>
+<tr><td>呼叫點定義；Edge Cases；FR-001；US2 情境 12（P31）</td><td><code>new F().m(…)</code> 視為一個呼叫點</td><td>兩個呼叫點：先 <code>new F()</code>，再求 <code>m</code> 的引數，再呼叫 <code>m</code>；<code>new A()</code> 的欄位初始化式＋constructor 仍在一個呼叫點</td><td>US2</td></tr>
+<tr><td>FR-004；US3 情境 12（P32）</td><td><code>switch</code> 判別式的讀取如何記未定</td><td>呼叫只在第一個 <code>case</code> 前一次；讀取仍每個 <code>case</code> 各記 p-use，定義固定為判別式求值當下的。plan 須說明與 <code>switch (a &amp;&amp; b)</code> 先例如何並存，並列入 golden-diff</td><td>US3；plan</td></tr>
+<tr><td>FR-005；US4 情境 5（P34）</td><td>只看「實際求值的子運算式」，判定法未明</td><td>該段內完成求值的 AST 節點有 throwTypes 型別即可能拋錯（以呼叫結尾的段必拋，實際只決定最後一段）；plan 另寫按段歸屬的判定，不直接重用 <code>expressionThrows</code></td><td>US4；plan</td></tr>
+<tr><td>US2 情境 13（P33）；US4 情境 5；SC-002</td><td>箭頭函式運算式本體、try 內 <code>if (f() &gt; x)</code> 無情境</td><td>只補這兩個情境；<code>for(;;f())</code>、<code>do…while (f())</code> 作守門單元測試；SC-002 範圍擴到 P24–P34</td><td>US2、US4</td></tr>
+<tr><td>FR-008、FR-009；規格來源表（KI 列）</td><td>develop 基準未固定；KI 引用 §35–§43</td><td>基準固定 <code>edc22d5</code>，寫在 golden-diff.md／mdn-diff.md 基準行（rebase 時改行並整表重產）；KI 改引 §36–§43（§35 僅背景）</td><td>差異紀錄</td></tr>
+<tr><td>US3 情境 7；FR-001；FR-010；Edge Cases</td><td>預期含 <code>x: L3 -> L7>L8:T</code>（<code>case</code> test 讀取）</td><td>裁判追加：<code>case</code> test 的讀取與呼叫不建模，從 007 移出；情境 7 刪該預期、FR-001 移除 <code>case</code> 中的呼叫；限制記入 known-issues</td><td>US3；文件</td></tr>
 </table></div>
 
 <h2>工程師要決定的事</h2>
@@ -192,37 +191,47 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><th>Story</th><th>驗收條件</th><th>判定</th><th>出處</th></tr>
 <tr><td>US1</td><td>情境 1–4（條件引數、呼叫敘述引數、兩個守門）</td><td class="ok">可驗證</td><td>US1 Acceptance 1–4</td></tr>
 <tr><td>US2</td><td>情境 1–4（賦值、KI §10、先讀後寫、<code>new</code>），程式內嵌於 spec</td><td class="ok">可驗證</td><td>US2 Acceptance 1–4</td></tr>
+<tr><td>US2</td><td>情境 12（<code>new F().m(x = 1);</code>，兩個呼叫點）、13（箭頭函式運算式本體），程式內嵌</td><td class="ok">可驗證</td><td>US2 Acceptance 12–13</td></tr>
 <tr><td>US2</td><td>情境 5–9 以探測檔（P13、P14、P18、P19、P22）為輸入，spec 只摘行號</td><td class="ok">可驗證</td><td>US2 Acceptance 5–9；探測結果</td></tr>
 <tr><td>US2</td><td>情境 10（<code>throw f();</code>）、11（generator 保守摘要，KI §37），程式內嵌於 spec</td><td class="ok">可驗證</td><td>US2 Acceptance 10–11</td></tr>
-<tr><td>US3</td><td>情境 1–11（兩個呼叫、巢狀引數、<code>f() &gt; x</code>、<code>x &lt; f()</code>、<code>while</code>、<code>for…of</code>、<code>switch</code> 與其只求值一次、短路、<code>?:</code>、<code>x += f()</code>）</td><td class="ok">可驗證</td><td>US3 Acceptance 1–11</td></tr>
-<tr><td>US4</td><td>情境 1（<code>f().p</code> 返回後拋錯）、情境 2（<code>f();</code> 返回後不拋錯，守門）</td><td class="ok">可驗證</td><td>US4 Acceptance 1–2</td></tr>
-<tr><td>US4／FR-005</td><td><code>x = f()</code>、<code>f() &gt; x</code>、<code>h(f())</code> 列為「返回後可能拋錯」，但沒有各自的情境</td><td class="no">缺（次要）</td><td>FR-005</td></tr>
+<tr><td>US3</td><td>情境 1–12（兩個呼叫、巢狀引數、<code>f() &gt; x</code>、<code>x &lt; f()</code>、<code>while</code>、<code>for…of</code>、<code>switch</code> 與其只求值一次、短路、<code>?:</code>、<code>x += f()</code>、<code>switch (x + f())</code> 的讀取）；情境 7 已刪 <code>case</code> test 預期</td><td class="ok">可驗證</td><td>US3 Acceptance 1–12</td></tr>
+<tr><td>US4</td><td>情境 1–5（<code>f().p</code>、<code>f();</code> 守門、<code>x = f()</code>、<code>var y = f()</code> 守門、<code>if (f() &gt; x)</code>）</td><td class="ok">可驗證</td><td>US4 Acceptance 1–5</td></tr>
+<tr><td>FR-005</td><td><code>f() + 1</code>、<code>!f()</code>、<code>h(f())</code>、<code>f() ? a : b</code>、<code>[f()]</code> 的判定無獨立情境（規則已寫明，交 plan 單元測試）</td><td class="no">缺（次要）</td><td>FR-005</td></tr>
 <tr><td>US3</td><td>async 的保守摘要：Edge Cases 提及，無情境</td><td class="no">缺（次要）</td><td>Edge Cases</td></tr>
+<tr><td>跨 story</td><td><code>for(;;f())</code>、<code>do…while (f())</code> 守門單元測試；<code>??</code>／<code>||</code> 同 P17 機制（Clarifications 已決：不加情境）</td><td class="ok">可驗證</td><td>Clarifications Q4</td></tr>
 <tr><td>跨 story</td><td>intra-procedural 不拆分、pair 不變（以探測檔比對）</td><td class="ok">可驗證</td><td>FR-006；Edge Cases</td></tr>
 <tr><td>跨 story</td><td>攤平圖與配對資訊一致：每條 return 邊恰對應一個呼叫點，既有配對驗證測試通過</td><td class="ok">可驗證</td><td>FR-007</td></tr>
-<tr><td>跨 story</td><td>SC-001～SC-005（測試通過、探測結果、去重 pair 差異簽核與分類、時間 ≤2 倍）</td><td class="ok">可驗證</td><td>Success Criteria</td></tr>
+<tr><td>跨 story</td><td>SC-001～SC-005（測試通過、P1–P22／P20b／P24–P34 探測結果、去重 pair 差異簽核與分類、時間 ≤2 倍）</td><td class="ok">可驗證</td><td>Success Criteria</td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
 <p>無。Assumptions 維持 repo 現況，未引入新技術；新增的節點或邊型別由 plan 決定並寫入 README（FR-007）。</p>
+<p>plan 須處理的交付：FR-005 的按段判定（非遞迴、不直接重用 <code>expressionThrows</code>）、<code>switch</code> 判別式與 <code>switch (a &amp;&amp; b)</code> 先例的統一或並存說明（FR-004）。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
 <p>無（尚未 analyze）。005 Q-a「呼叫敘述只在呼叫之前拋錯」在運算式中的呼叫上不再足夠，已由 FR-005 以「每段只看該段實際求值的子運算式」處理，並在 FR-010 要求 KI §36 註明適用範圍。</p>
 
-<h3>已決事項（前輪使用者答案）</h3>
+<h3>已決事項</h3>
 <div class="box"><table>
 <tr><th>#</th><th>問題</th><th>決定</th><th>出處</th></tr>
-<tr><td>1</td><td>求值順序拆到多細</td><td>A：依 JS 完整由左至右；佐證 <code>x += f();</code></td><td>FR-002；US3 情境 4、11</td></tr>
-<tr><td>2</td><td>返回之後是否可能拋錯</td><td>A：保留 US4；FR-005 改寫並新增守門情境 2</td><td>FR-005；US4</td></tr>
+<tr><td>1</td><td>求值順序拆到多細（spec review）</td><td>A：依 JS 完整由左至右；佐證 <code>x += f();</code></td><td>FR-002；US3 情境 4、11</td></tr>
+<tr><td>2</td><td>返回之後是否可能拋錯（spec review）</td><td>A：保留 US4；FR-005 改寫並新增守門情境 2</td><td>FR-005；US4</td></tr>
+<tr><td>3</td><td><code>new F().m(x = 1)</code> 引數何時求值</td><td>依 ECMAScript：兩個呼叫點，先建構 F、再求 <code>m</code> 的引數</td><td>US2 情境 12；Edge Cases</td></tr>
+<tr><td>4</td><td><code>switch</code> 判別式讀取記在哪</td><td>每個 <code>case</code> 各記一筆 p-use，定義固定為判別式求值當下的</td><td>FR-004；US3 情境 12</td></tr>
+<tr><td>5</td><td>FR-005 拋錯判定規則</td><td>該段內完成求值的節點有 throwTypes 型別；plan 另寫按段歸屬判定</td><td>FR-005</td></tr>
+<tr><td>6</td><td>沒有情境的語法位置是否補</td><td>只補箭頭函式本體與 try 內 <code>if (f() &gt; x)</code>；其餘單元測試</td><td>US2 情境 13；US4 情境 5</td></tr>
+<tr><td>7</td><td>差異紀錄的 develop 基準</td><td>固定 <code>edc22d5</code>，寫於基準行</td><td>FR-008、FR-009</td></tr>
+<tr><td>8</td><td><code>case</code> test 是否建模（裁判）</td><td>不建模，移出 007，記入 known-issues</td><td>US3 情境 7；FR-010</td></tr>
 </table></div>
 
 <h3>本輪判斷點</h3>
-<p>無新的判斷點：前輪兩點已決，本輪 spec 修訂未引入「文件判不了、答案會改變交付物」的新問題。</p>
+<p>無新的判斷點：本輪 5 個 Q→A 與裁判追加皆已由使用者／裁判決定，列為已決事項，未引入「文件判不了、答案會改變交付物」的新問題。</p>
 
 <h3>次要疑點</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>FR-005 例示 <code>x = f()</code>、<code>f() &gt; x</code>、<code>h(f())</code> 返回後可能拋錯，但驗收只有 <code>f().p</code> 一例；<code>var y = f()</code>（不拋）與 <code>x = f()</code>（拋）的差別只靠「依既有判定」，無情境</td><td>FR-005；US4</td></tr>
+<tr><td>FR-005 的 <code>f() + 1</code>、<code>!f()</code>、<code>h(f())</code>、<code>f() ? a : b</code>、<code>[f()]</code> 判定只有規則與例示、無獨立驗收情境（靠 plan 單元測試）</td><td>FR-005</td></tr>
 <tr><td>Edge Cases 提 async 的保守摘要，無驗收情境（generator 已補）</td><td>Edge Cases</td></tr>
+<tr><td>FR-003 決策節點清單與「含呼叫的節點」定義仍列 <code>case</code>，但 <code>case</code> test 已不建模；措辭可能被誤讀為 <code>case</code> test 的讀取要記（實為判別式的 p-use）</td><td>FR-003；表示法「呼叫點」定義</td></tr>
 </table></div>
 </main>

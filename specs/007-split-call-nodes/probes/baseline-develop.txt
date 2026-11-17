@@ -136,3 +136,26 @@ intra-page (nodes 8): console: entry -> L9 | f: entry -> L7 | x: L1 -> L9
 scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
 intra(page): console: entry -> L9 | f: entry -> L7 | x: L1 -> L9
 intra-page (nodes 8): console: entry -> L9 | f: entry -> L7 | x: L1 -> L9
+=== p31-new-method-arg.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1, nodes 13): F: L2 -> L10 | console: entry -> L4 | console: entry -> L7 | x: L1 -> L4 | x: L1 -> L7
+intra(page): F: L2 -> L10
+intra-page (nodes 15): F: L2 -> L10 | console: entry -> L4 | console: entry -> L7 | x: L1 -> L4 | x: L1 -> L7
+=== p32-switch-read-before.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L8 | f: entry -> L7>L8:T | f: entry -> L7>exit:F | x: L1 -> L7>L8:T | x: L1 -> L7>exit:F | x: L1 -> L8
+intra-page (nodes 7): console: entry -> L8 | f: entry -> L7>L8:T | f: entry -> L7>Lnull:F | x: L1 -> L7>L8:T | x: L1 -> L7>Lnull:F | x: L1 -> L8
+=== p33-arrow-body.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, nodes 10): console: entry -> L8 | g: entry -> L6 | h: L6 -> L7 | x: L1 -> L8
+intra(page): console: entry -> L8 | h: L6 -> L7 | x: L1 -> L8
+intra-page (nodes 12): console: entry -> L8 | g: entry -> L6 | h: L6 -> L7 | x: L1 -> L8
+=== p34-cond-try.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L11 | f: entry -> L7>L8:T | f: entry -> L7>exit:F | x: L1 -> L11 | x: L1 -> L7>L8:T | x: L1 -> L7>exit:F
+intra-page (nodes 9): console: entry -> L11 | f: entry -> L7>L8:T | f: entry -> L7>Lnull:F | x: L1 -> L11 | x: L1 -> L7>L8:T | x: L1 -> L7>Lnull:F
+=== p35-if-call-try.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 13): console: entry -> L11 | f: entry -> L7>L8:T | f: entry -> L7>exit:F | x: L1 -> L11 | x: L3 -> L11
+intra(page): console: entry -> L11 | f: entry -> L7>L8:T | f: entry -> L7>exit:F | x: L1 -> L11
+intra-page (nodes 15): console: entry -> L11 | f: entry -> L7>L8:T | f: entry -> L7>Lnull:F | x: L1 -> L11 | x: L3 -> L11
