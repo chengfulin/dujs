@@ -15,6 +15,12 @@
     "tasks": {
       "done": true,
       "count": 65
+    },
+    "analyze": {
+      "done": true,
+      "findings": 18,
+      "remediated": 16,
+      "decisions": "DECISION 006"
     }
   },
   "brief": {

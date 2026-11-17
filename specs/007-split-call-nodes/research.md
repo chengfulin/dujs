@@ -49,12 +49,12 @@ FR-007 的「新增的節點或邊型別」答案為「無」。
 - 新增 `segment` 節點型別（每段一個獨立節點，CALL／CALL RETURN 只做呼叫）：節點數多一倍、`.dot` 多一種型別、matching 與 README 都要改，沒有資訊上的收益。
 - 在 intra-procedural CFG（esgraph）層就拆節點：違反 FR-006（intra-procedural 的 pair 會變，例如迴圈每次讀右側的 pair 消失）。
 
-## R2. 呼叫點的列舉與求值順序（FR-001、FR-002、Clarifications Q1）
+## R2. 呼叫點的列舉與求值順序（FR-001、FR-002、spec review Q1）
 
 **Decision**：新模組 `lib/dujs/callsplit.js`（MIT）以 `planOf(node, scopeTree)` 為每個 intra-procedural 原節點產出 **SegmentPlan**（data-model §1），步驟：
 
 1. **求值的運算式**（`evaluatedExpressionsOf`）：`split.preEvaluated`（依序）＋依節點種類——一般節點為 `astNode`；第一個 `case` 節點且判別式未被拆分時為 `switch` 的判別式（`case` test 不列入，Clarifications 裁判追加）；
-   其他 `case` 節點為空；`for…in`／`for…of` 未拆右側時為 `right`（`left` 不列入：Q2 A，FR-001 的明文例外，見 R13 L1）；entry／exit 為空。
+   其他 `case` 節點為空；`for…in`／`for…of` 未拆右側時為 `right`（`left` 不列入：DECISION 005 Q2 A，FR-001 的明文例外，見 R13 L1）；`CatchClause` 節點為 `param`（沒有參數時為空；讀取與定義都在 catch 節點，見 data-model §5「catch 參數」）；entry／exit 為空。
    沒有任何 `case` 的 `switch (f()) {}` 沒有「第一個 `case`」，判別式不列入任何節點（此規則不涵蓋它；develop 對它已拋錯，見 R13 L6）。
 2. **後序走訪**：依 ECMAScript 求值順序對上列運算式做後序編號（子節點由左至右，運算節點在其子節點之後；跳過巢狀函式本體、箭頭函式本體、class body 中非 computed key 的部分）。
    這個順序即「運算元由左至右、引數由左至右、引數先於呼叫、複合賦值先讀目標」：`x += f()` 的左側 `x` 在 `f()` 之前，`x = f()` 的賦值（AssignmentExpression 本身）在之後，`new F(a)` 為 `F`、`a`、New。
@@ -65,14 +65,16 @@ FR-007 的「新增的節點或邊型別」答案為「無」。
    **不列為呼叫點**（即使可解析；與 develop 一致，golden／MDN 皆 0 例；data-model §5）：
    - **條件求值而未被拆分的位置**：`ChainExpression` 中第一個 `optional: true` 節點之後求值的部分（`c?.m(f())` 的 `f()` 與 `.m()`、`c?.[f()]`），以及解構樣式內 `AssignmentPattern` 的預設值（`var [z = f()] = c`、`var {z = f()} = c`、賦值與 catch 參數的解構同理；
      參數本身的預設值除外，依 spec Assumptions 視為一定求值）。這些位置都在單一節點內，模型無法表示「可能不執行」；若列為呼叫點，呼叫會被當成必定發生，callee 的定義會錯殺可實現的 pair（例：`c` 為 undefined 時 `f` 沒被呼叫，`f` 之前的定義仍到達其後的讀取）。
-   - for-in/of 左側（步驟 1）與 `case` test（Clarifications 裁判追加；Q3 A 使含 class static 成員的 case test 亦不連結）。
+   - for-in/of 左側（步驟 1）與 `case` test（Clarifications 裁判追加；DECISION 005 Q3 A 使含 class static 成員的 case test 亦不連結）。
+   - 上列位置中的 class static 成員（`case` test、for-in/of 左側、`?.` 之後、解構預設值含 catch 參數）一律不是呼叫點；develop 經 `expressionsEvaluatedAtNode` 會連結其中的 static scope，屬相對 develop 的行為變更（DECISION 006 Q4 必修 3；R13 L2、L2'）。
    - **防護（L3）**：callee 為識別字、或成員呼叫的 receiver 為識別字時，若同一節點中該變數有 `generatedAt` 的後序位置早於此識別字的讀取，則此呼叫運算式不列為呼叫點。
      解析讀的是節點開始時的 ReachIn（步驟 4），這種情形會錯連到舊定義：`var f = h; f = g, f();` 的 ReachIn 只有 `f = h`，不防護會連到 `h`（develop 不連結，屬新增的錯誤 pair）。定義在讀取之後者（`f(f = g)`，callee 先求值）不受影響。
 4. 解析沿用 004 FR-018／005 FR-005 的規則，讀的是原節點的 ReachIn（節點開始時的定義），與 develop 相同；不擴充（IIFE、optional call、`super(…)`、tagged template、getter 等仍不是呼叫點）。
 
 `callresolver.calleeScopesOf(node)`（現行 API）保留，改為「節點上全部呼叫點的被呼叫端依序串接」的便利函式（供既有測試與 `modelbuilder` 外的呼叫者），欄位初始化式的特例（`dujsFieldInitializer`）由一般列舉涵蓋後刪除。
+階段性篩選（US1–US2 的暫時項，DECISION 006 Q2）：`planOf` 可帶 predicate，篩掉的呼叫點不進 `callSites`、段依留下的呼叫點重算；機制見 plan「階段性的呼叫點篩選」，T048 移除。
 
-**Rationale**：Clarifications Q1 → A 要求完整的由左至右求值順序；後序編號是 AST 上最直接的實作，且同一份編號同時供讀取、定義、拋錯判定三者使用（R3、R6），不會分岔。
+**Rationale**：spec review Q1 → A 要求完整的由左至右求值順序；後序編號是 AST 上最直接的實作，且同一份編號同時供讀取、定義、拋錯判定三者使用（R3、R6），不會分岔。
 
 **Alternatives considered**：只拆「callee 與引數在前、其餘在後」——spec review Q1 已否決（`x += f()` 會錯）。以 range 比較取代後序——`x = f()` 中賦值目標 `x` 的 range 在 `f()` 之前，但定義在之後，range 判斷不出來。
 
@@ -103,7 +105,7 @@ c-use 照常記在段節點上（標記為 N 的行號）。同一 owner、同�
 
 **Alternatives considered**：把段 0 的讀取都留在決策節點——P9 會讀到 callee 的定義（現行錯誤）。把 p-use 改成 c-use——違反 FR-003。
 
-## R5. 只求值一次：switch 判別式（Clarifications Q2 A'）與 for-in/of 右側（FR-004）
+## R5. 只求值一次：switch 判別式（clarify Q2 A'）與 for-in/of 右側（FR-004）
 
 **Decision**：
 - 判別式（未拆分）含呼叫點時，在上層模型把判別式的求值從各 `case` 節點移到插在第一個 `case` 之前的 CALL／CALL RETURN 段鏈（R1 第三列）；第一個 `case` 的所有前驅都改指向段 0
@@ -114,18 +116,18 @@ c-use 照常記在段節點上（標記為 N 的行號）。同一 owner、同�
 - **與已拆分判別式先例的關係——並存，不統一**：
   - 先例（`switch (a && b)`，lib/dujs/usedexpressions.js:61-63）由 branchsplitter 在 intra-procedural CFG 就產生真正的拆分節點（決策 `a` 的 p-use 記在拆分決策節點上，值葉 `b` 為 c-use），三種模型一致，**只記一次**；
   - 007 的判別式（未拆分、含呼叫點）只在上層模型處理，**每個 `case` 各記一筆**，intra-procedural 模型照舊由各 `case` 讀判別式（無呼叫時讀到的定義與求值當下相同，因為 `case` 節點之間沒有定義）。
-  - 統一成「只記一次」會違反 Q2 A' 並改變 intra-procedural 的 pair（FR-006）；統一成「每個 case 各一筆」要改 branchsplitter 的先例，也會改 intra-procedural 的 pair（FR-006）。兩者並存不衝突：
+  - 統一成「只記一次」會違反 clarify Q2 A' 並改變 intra-procedural 的 pair（FR-006）；統一成「每個 case 各一筆」要改 branchsplitter 的先例，也會改 intra-procedural 的 pair（FR-006）。兩者並存不衝突：
     判別式被拆分且葉節點含呼叫（`switch (a && f())`）時，葉節點是一般的值節點，依 R1 第一列拆段（c-use 記在段節點上），`case` 不讀判別式，仍是先例的「只記一次」。
   - 列入 golden-diff／mdn-diff 類別 `求值順序`（子標 `判別式`）：判別式含呼叫點的 switch，其 `case` 的 p-use pair 的定義端可能改變、`case` 本體的 pair 因呼叫只發生一次而改變；先例的 switch 應零差異（守門）。
 - **例外目標**：`case` 節點沒有 exception 邊，判別式段鏈需要「switch 所在處的例外目標」。在 `lib/esgraph/index.js` 的 `SwitchStatement` 處理中把 `getExceptionTarget()` 記到第一個 `case` 的 FlowNode 屬性
   `discriminantThrowTarget`（只記屬性、不連邊，intra-procedural 圖與 pair 不變；LGPL 檔頭補 Modified 行）。`FlowNode.copyNodes` 複製此屬性（指向原節點，攤平圖以 `copyOf` 取副本）。
 
-**Rationale**：FR-004 與 Q2 A'；P24（`f` 不因每個 `case` 重新呼叫）、P32（`x` 在呼叫之前讀）、P15b（`f` 只在進入迴圈前呼叫一次）。
+**Rationale**：FR-004 與 clarify Q2 A'；P24（`f` 不因每個 `case` 重新呼叫）、P32（`x` 在呼叫之前讀）、P15b（`f` 只在進入迴圈前呼叫一次）。
 
-**Alternatives considered**：判別式段鏈直接接在 `case` 1 上、其餘 `case` 照舊讀判別式——後面的 `case` 會讀到 callee 之後的定義且判別式被讀多次，違反 Q2 A'。
+**Alternatives considered**：判別式段鏈直接接在 `case` 1 上、其餘 `case` 照舊讀判別式——後面的 `case` 會讀到 callee 之後的定義且判別式被讀多次，違反 clarify Q2 A'。
 for-in/of 以攤平圖的可達性判斷迴圈內外——攤平圖不複製被呼叫端，經被呼叫端的不可實現路徑會讓迴圈內的節點看似「迴圈外可達」，判斷錯誤。
 
-## R6. 拋錯判定（FR-005；Clarifications Q3）
+## R6. 拋錯判定（FR-005；clarify Q3）
 
 **Decision**：`callsplit` 內的 `segmentThrows(plan, j)`，**不遞迴、按段歸屬**：每個 AST 節點依 R2 的後序位置歸到一段（呼叫運算式本身歸到它「進入」的那一段，即段尾；已返回的呼叫不在後面的段）；
 段 j 可能拋錯 ⇔ 歸到段 j 的 AST 節點中有任一個的**自身型別**屬於 `throwTypes`（AssignmentExpression、BinaryExpression、CallExpression、MemberExpression、NewExpression、UnaryExpression），
@@ -148,7 +150,7 @@ for-in/of 以攤平圖的可達性判斷迴圈內外——攤平圖不複製被�
 
 **Alternatives considered**：沿用 005 Q-a「呼叫敘述只在呼叫之前拋錯」並推廣到所有節點——P20（`f().p`）、P29（`x = f()`）、P34（`f() > x`）會漏掉返回後的例外。
 
-## R7. `new F().m()` 拆成兩個呼叫點（Clarifications Q1、US2-12）
+## R7. `new F().m()` 拆成兩個呼叫點（clarify Q1、US2-12）
 
 **Decision**：`callresolver` 新增 `calleeScopesOfExpression(node, expression, scopeTree)`（單一呼叫運算式的被呼叫端）。後序走訪先遇到內層 `new F()`（NewExpression，自己解析為 `calleeScopesOfNew`：欄位初始化式＋constructor 或函式 F），
 再遇到外層 `.m(…)`；`calleeScopesOfMethodCall` 的 `object.type === 'NewExpression'` 分支（lib/dujs/callresolver.js:427-434）改為只回傳 `[method]`（仍需解析 `F` 以找到 class 的 instance method；F 為函式時回傳 `[]`）。
@@ -164,7 +166,8 @@ for-in/of 以攤平圖的可達性判斷迴圈內外——攤平圖不複製被�
 intra-procedural 模型的節點、邊、GEN、USE、pair 不變。驗證：(1) 每個探測程式的 `intra(page)` 輸出與 `probes/baseline-develop.txt` 逐字相同（單元測試）；(2) golden 的 `intra-procedurals/*` 檔只允許 `共通` 類（cfgId 重新編號）差異。
 摘要（005）透過同一個 `replayCall` 取得分段後的摘要圖，因此摘要與攤平圖的規則一致；`reachingsolver.js` 不需改程式（exception 邊從 CALL RETURN 出發、CALL RETURN 帶 GEN／USE 都是求解器已泛用處理的情形），以單元測試確認。
 **`summary.js` 需修改**：`summaryGraphOf`（lib/dujs/summary.js:160-162）的讀取集合只取 `findUSESet` 的 `cuse`／`puse`；段節點上歸屬決策節點的讀取在 `deferredPuse`（R4），不併入的話，被呼叫端中 `if (x < f())` 的 `x` 會漏出 `upwardExposed`
-（此欄位輸出到 `*.matching.json` 的 `summaries`，也影響呼叫端經摘要的到達）。改為三者合併（去重），單元測試擴充 `tests/dujs/summary.js`（被呼叫端含 `if (x < f())`，斷言 `x` ∈ `upwardExposed`）。
+（此欄位輸出到 `*.matching.json` 的 `summaries`，也影響呼叫端經摘要的到達）。改為三者合併（去重），單元測試擴充 `tests/dujs/summary.js`：US1 以被呼叫端 `if (f(x))`（callee `f` 的讀取為延後 p-use，同 P21；`x` 為引數的 c-use）斷言兩者 ∈ `upwardExposed`（T021）；
+`if (x < f())` 的 `x` 在 US1 不會進段（該節點的 `astNode` 是 BinaryExpression，US1 的階段篩選不列 `f()`），此版本在 US2 補（T036）。
 
 ## R9. 輸出：標記與配對資訊（FR-007）
 
@@ -183,18 +186,18 @@ intra-procedural 模型的節點、邊、GEN、USE、pair 不變。驗證：(1) 
 **Decision**：新工具 `specs/007-split-call-nodes/tools/diffcheck.js`（不屬 lib，不進 `npm test`；自我測試 `diffcheck.test.js`），以 `require` 重用 005／006 diffcheck 的匯出（`.dot` 解析、
 `parseGraph`、`parseHierarchy`、`--report` 骨架、`--verify` 讀機器區塊、`exitcodes.json`），替換：
 
-1. **基準**：golden 固定 `edc22d5`，寫在 `golden-diff.md`／`mdn-diff.md` 檔頭「基準：」行（工具未給 `--base` 時讀此行；Clarifications Q5）；日後 rebase 到新 develop 時明確改該行並整表重產。
-   MDN 基準快照 `specs/007-split-call-nodes/mdn/baseline-develop/`，Setup 於任何 lib 變更前產生（工作樹 lib＝`edc22d5`，先以 `git diff --quiet edc22d5 -- lib` 確認）；語料讀 `specs/006-eslint-scope/mdn/corpus`（33 檔，`pages.json`）。
+1. **基準**：golden 固定 `edc22d5`，寫在 `golden-diff.md`／`mdn-diff.md` 檔頭「基準：」行（工具未給 `--base` 時讀此行；clarify Q5）；日後 rebase 到新 develop 時明確改該行並整表重產。
+   MDN 基準快照 `specs/007-split-call-nodes/mdn/baseline-develop/`（各模型的 `.dot` 與 `*.matching.json`；後者供標記改寫，DECISION 006 Q3），Setup 於任何 lib 變更前產生（工作樹 lib＝`edc22d5`，先以 `git diff --quiet edc22d5 -- lib` 確認）；語料讀 `specs/006-eslint-scope/mdn/corpus`（33 檔，`pages.json`）。
 2. **去重比對**：pair 單位以每個 (case, 頁, 檔案／層級, 變數) 的**集合**比對（005／006 為 multiset）；另產「重複列數」表：每個 `.dupairs.dot` 在 develop 與 007 各有幾列重複（同變數同標記出現 >1 次的超出筆數），
    只列出、不設門檻（KI §43、SC-004）；`--verify` 只核對表格與實測一致。
 3. **類別**（contracts/diff-check.md §2 有機械觸發條件）：`連結`（FR-001）、`求值順序`（FR-002／FR-004；子標 `判別式`、`可迭代`）、`返回後例外`（FR-005；子標 `決策返回不拋錯`＝US4-6 型：
-   基準側攤平圖該決策節點有 exception 出邊、007 側沒有，use 在其例外目標之後的 − pair）、KI 既有限制（`§37`、`§38`、`§41`、`§43`…，需註明節次）、`標記`（R9，Q1 A；以基準側 matching 換成帶行號的標記後仍只差標記者）、`共通`（cfgId 重新編號等純結構）。
+   基準側攤平圖該決策節點有 exception 出邊、007 側沒有，use 在其例外目標之後的 − pair）、KI 既有限制與行為變更（`§37`、`§38`、`§41`、`§43`、`§44`／`§46` 的 class static…，需註明節次）、`標記`（R9，DECISION 005 Q1 A；以基準側 matching 換成帶行號的標記後仍只差標記者）、`共通`（cfgId 重新編號等純結構）。
    新增或消失的 pair 只能歸前三類或 KI 類；歸不進即失敗（記為新已知問題後再以 KI 類記錄）。
 4. **釘選與簽核**：`連結`、`求值順序`、`返回後例外`、KI 類的每頁筆數釘選；「說明」欄必填；implementer 只填「草擬，待簽核」，使用者在 golden 收尾後簽核 golden-diff、MDN 驗證後簽核 mdn-diff。
    簽核後才更新 `tests/golden/expected*` 與 `manifest.json`（同一 commit）。
 5. 紀錄檔另依慣例保留各階段敘述、雜湊變化表、「單元測試期望」表（每一處改動既有測試的期望）。
 
-**Rationale**：Clarifications Q5 與 FR-008／FR-009 的要求；去重避免 §43 的重複列（新增呼叫點會讓它更常出現）淹沒真正的差異。
+**Rationale**：clarify Q5 與 FR-008／FR-009 的要求；去重避免 §43 的重複列（新增呼叫點會讓它更常出現）淹沒真正的差異。
 
 **Alternatives considered**：直接用 005 diffcheck——它是 multiset 比對、類別為 005 的（§18、finally…），基準為 `9e324be`，不合本 feature。
 
@@ -211,10 +214,11 @@ SegmentPlan 每個原節點計算一次（WeakMap 快取，以原節點為鍵）
 - §10：「`return g();` is still not connected」一句後加註「已由 007 修正（`d: L1 -> L3`）」。
 - §36：補充「被呼叫端正常返回後不再拋錯」只適用呼叫敘述（返回後沒有會拋錯的運算）；運算式中的呼叫依 FR-005 按段判定（例：`var y = f().p;`、`x = f();`），並註明決策節點 `if (f())` 返回後不再拋錯是 007 的行為變更。
 - 新增 §44「`case` test 的讀取與呼叫不建模」：`case` test 中的讀取與一般呼叫（`case x:`、`case g():`）在 develop 也不建模，維持不變、留給之後的 feature；
-  但**含 class static 成員的 case test 是相對 develop 的行為變更**（Q3 A）：develop 的 `case class { static y = g(); }:` 會把 static scope 連進模型（`modelbuilder.expressionsEvaluatedAtNode` 的 `SwitchCase` 分支取 `ast.test`），007 不再連結（R13 L2）。
+  但**含 class static 成員的 case test 是相對 develop 的行為變更**（DECISION 005 Q3 A）：develop 的 `case class { static y = g(); }:` 會把 static scope 連進模型（`modelbuilder.expressionsEvaluatedAtNode` 的 `SwitchCase` 分支取 `ast.test`），007 不再連結（R13 L2）。
   §44 須分開記這兩種情形（前者是既有限制、後者是行為變更），不可概括為「dujs 從不讀 case test」。
 - 新增 §45「007 的行為變更」：分段的語意與標記（R1、R9）、switch／for-in/of 只求值一次與已拆分先例並存（R5）、決策節點返回後不拋錯（R6）。
-- 新增 §46「不列為呼叫點的位置」：for-in/of 左側（FR-001 的明文例外，Q2 A；L1）、單一節點內的條件求值位置（L5）、同一節點先定義的 callee／receiver（防護，L3）。
+- 新增 §46「不列為呼叫點的位置」：for-in/of 左側（FR-001 的明文例外，DECISION 005 Q2 A；L1）、單一節點內的條件求值位置（L5）、同一節點先定義的 callee／receiver（防護，L3）。
+  另分開記**相對 develop 的行為變更**（L2'，DECISION 006 Q4 必修 3）：上述位置中 class 的 static 成員——`var [z = class { static y = g(); }] = c`、`catch ({a = class { static y = g(); }})`、`c?.m(class { static y = g(); })`、`for (o[class { static y = g(); }] of c)`——develop 會連結、007 不再連結；  若 golden／MDN 有實例，§44／§46 列出 golden-diff／mdn-diff 的計數。
 - 新增 §47「判別式拆分節點的例外邊」（L4）。
 - 新增 §48「`switch` 沒有 `case` 時判別式含呼叫會拋錯」（既有 bug，L6）。
 README 依 R9 更新。
@@ -223,9 +227,10 @@ README 依 R9 更新。
 
 | # | 項目 | 理由 | 依據 | KI | 測試 |
 |---|------|------|------|----|------|
-| L1 | `for…in`／`for…of` 左側（成員目標的物件、解構預設值）中的呼叫不是呼叫點（FR-001 的明文例外） | 左側在每次迭代「取得下一個值之後」（true 分支上）求值，要在迴圈節點的 true 邊上再插段鏈；develop 也不連結，golden／MDN 0 例 | Q2 A（DECISION 005） | §46 | characterization：`for (o[g()] of a) …`、`for (var [z = g()] of a) …` 不連結 `g`，pair 與 develop 相同 |
-| L2 | `case` test 中 class 的 static 成員不再連結——**相對 develop 的行為變更**（develop 經 `expressionsEvaluatedAtNode` 的 `SwitchCase` 分支取 `ast.test` 而連結） | 與「case test 不建模」一致；golden／MDN 0 例 | Q3 A（DECISION 005） | §44 | characterization：`case class { static y = g(); }:` 不連結 `g`（標明與 develop 不同） |
+| L1 | `for…in`／`for…of` 左側（成員目標的物件、解構預設值）中的呼叫不是呼叫點（FR-001 的明文例外） | 左側在每次迭代「取得下一個值之後」（true 分支上）求值，要在迴圈節點的 true 邊上再插段鏈；develop 也不連結（左側中 class static 成員例外，見 L2'），golden／MDN 0 例 | DECISION 005 Q2 A | §46 | characterization：`for (o[g()] of a) …`、`for (var [z = g()] of a) …` 不連結 `g`，pair 與 develop 相同 |
+| L2 | `case` test 中 class 的 static 成員不再連結——**相對 develop 的行為變更**（develop 經 `expressionsEvaluatedAtNode` 的 `SwitchCase` 分支取 `ast.test` 而連結） | 與「case test 不建模」一致；golden／MDN 0 例 | DECISION 005 Q3 A | §44 | characterization（US1，T066）：`case class { static y = g(); }:` 不連結 `g`（標明與 develop 不同） |
+| L2' | 其他不列為呼叫點的位置中 class 的 static 成員也不再連結——**相對 develop 的行為變更**：`var [z = class { static y = g(); }] = c`、`catch ({a = class { static y = g(); }})`（解構預設值，L5）、`c?.m(class { static y = g(); })`（`?.` 之後，L5）、`for (o[class { static y = g(); }] of c)`（for-in/of 左側，L1）；develop 經 `expressionsEvaluatedAtNode`（預設分支的 `analyzedExpressions`、for-in/of 的 `ast.left`、`CatchClause` 的 `ast.param`）連結 | 比照 L2：位置本身不是呼叫點，static 成員也不例外；自 T025 生效。golden／MDN 實例數由 diffcheck 計數（contracts/diff-check.md §2），有實例時簽核列出 | DECISION 006 Q4 必修 3 | §46 | characterization（US1，T066）：四例皆不連結 static scope（標明與 develop 不同） |
 | L3 | callee 解析讀節點開始時的 ReachIn：同一節點內先定義再呼叫（`var o = new A(), r = o.m();`、`var f = h; f = g, f();`）**不連結（有防護）** | 沿用 004 FR-018 的解析、不擴充（FR-001）；防護避免錯連到舊定義（R2 步驟 3）。`(f = g)()` 的 callee 不是識別字，本來就無法解析 | — | §46 | `var f = h; f = g, f();` 不連結 `h`、`g`；`var o = new A(), r = o.m();` 只連 `new A()`；`f(f = g)` 照常連結（定義在 callee 讀取之後） |
 | L4 | 判別式的拆分節點（`switch (a && f())`）在 develop 沒有 exception 邊（第一個 `case` 沒有例外目標可繼承）；007 由 `branchsplitter` 把第一個 `case` 的 `discriminantThrowTarget` 屬性複製到判別式的拆分節點（只屬性、不連邊），含呼叫者的段依 R6 連例外邊；不含呼叫者沿用 develop（沒有 exception 邊） | 不改 intra-procedural 的邊（FR-006） | — | §47 | 先例並存守門（contracts/acceptance.md） |
-| L5 | 單一節點內的條件求值位置不拆分、其中的呼叫不是呼叫點：`c?.m(f())`、`c?.[f()]`、`var [z = f()] = c`、`var {z = f()} = c` | 單一節點無法表示「可能不執行」；列為呼叫點會把 `f()` 當成必定執行，callee 的定義錯殺可實現的 pair；與 develop 一致（不連結），golden／MDN 0 例 | 本 plan（使用者必修 2） | §46 | characterization：四例各一，`f` 不連結、pair 與 develop 相同 |
+| L5 | 單一節點內的條件求值位置不拆分、其中的呼叫不是呼叫點：`c?.m(f())`、`c?.[f()]`、`var [z = f()] = c`、`var {z = f()} = c` | 單一節點無法表示「可能不執行」；列為呼叫點會把 `f()` 當成必定執行，callee 的定義錯殺可實現的 pair；與 develop 一致（不連結；其中 class static 成員例外，見 L2'），golden／MDN 0 例 | 本 plan（使用者必修 2） | §46 | characterization：四例各一，`f` 不連結、pair 與 develop 相同 |
 | L6 | `switch (f()) {}`（沒有 `case`）在 develop 拋 `Cannot read properties of undefined` | 既有 bug；「判別式記在第一個 `case`」的規則不涵蓋它 | — | §48 | 守門：007 不得更糟（develop 拋錯則 007 不新增其他失敗模式；若 007 能完成分析，更新 KI 與測試） |

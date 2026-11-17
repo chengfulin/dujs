@@ -63,7 +63,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>拆分呼叫節點：修正求值順序，並追進運算式中的呼叫</h1>
-<div class="meta">feature 007-split-call-nodes · plan · 第 1 輪 · 2026-11-18</div>
+<div class="meta">feature 007-split-call-nodes · analyze · 第 1 輪 · 2026-11-18（plan 已通過、tasks 65 項）</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -199,7 +199,7 @@ flowchart LR
   </ul>
 </section>
 
-<h2>本輪變更（plan 技術選型與關鍵設計）</h2>
+<h2>plan 技術選型與關鍵設計（已通過，供參照）</h2>
 
 <h3>技術選型</h3>
 <p>維持 repo 現況、<b>無偏離 tech-standards</b>（該規範未涵蓋靜態分析 CLI／函式庫）：Node ≥ 24、CommonJS、mocha＋should、eslint、c8、fast-check、espree、eslint-scope、walkes；不新增執行期相依。<small>來源：plan Technical Context</small></p>
@@ -219,6 +219,31 @@ flowchart LR
 </table></div>
 <p class="meta">既有測試基線 <code>npm test</code> 1495 passing；效能門檻為基準的 2 倍（SC-005）。</p>
 
+<h2>本輪變更（analyze 發現）</h2>
+<p>兩份檢查：speckit-analyze（CRITICAL 0／HIGH 0／MEDIUM 1／LOW 5）、sdd-spec-clarifier full（CRITICAL 0／HIGH 3／MEDIUM 5／INFO 2）。三個 HIGH 都是 plan／tasks 的階段順序與機制問題，不是 spec 需求矛盾。</p>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>一句話說明</th><th>建議處置</th></tr>
+<tr><td>H1</td><td class="no">HIGH</td><td>spec US2 情境 10；plan 實作順序；T032、T041</td><td>P25 <code>throw f();</code> 要 <code>x: L3 -> L9</code>（返回後例外邊），但 plan 規定例外邊 US4 才補，US2 的測試與 golden 檢查點不可能通過</td><td>判斷點 1</td></tr>
+<tr><td>H2</td><td class="no">HIGH</td><td>T025、T038；<code>modelbuilder.js</code></td><td>暫時篩選丟掉 develop 不連結的呼叫點，但段索引假設呼叫點連續（<code>h(g())</code> 丟 g 後段 1 的讀寫無處可掛；<code>new F().m(x = 1)</code> 在 US1 重複被呼叫端）；此篩選未登記於 plan</td><td>判斷點 2</td></tr>
+<tr><td>H3</td><td class="no">HIGH</td><td>T003、T006、T059；diff-check §1、§4</td><td>標記改寫需基準側 <code>*.matching.json</code>，MDN 快照卻只存 <code>.dot</code>，MDN 標記差異歸不進類別</td><td>判斷點 3</td></tr>
+<tr><td colspan="5">MEDIUM 以下：MEDIUM 6（其中 A1／M1、A3／M5 兩組重複）、LOW 5、INFO 2：皆為文件同步與補測試，彙總於下表，無需決策。</td></tr>
+</table></div>
+
+<h3>一併套用的修正（MEDIUM／LOW，不需使用者決策）</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>修正內容</th><th>改動對象</th></tr>
+<tr><td>A1／M1</td><td>diff-check §1 加第 0 步「007 側同模型 <code>.graph.dot</code> 含 <code>call (</code> 才改寫；<code>.dupairs.dot</code> 跟同模型」；T005(d) 補「007 側仍為 <code>call_x</code> 時零差異」例</td><td>contracts/diff-check.md、tasks</td></tr>
+<tr><td>A2</td><td>plan 補暫時排除機制（隨 H2 定案）；US3 主要檔案補 <code>modelbuilder.js</code>；T048 一併刪只供篩選用的 <code>expressionsEvaluatedAtNode</code>（免 lint 失敗）</td><td>plan、tasks</td></tr>
+<tr><td>A3／M5</td><td>plan Scale「擴充 7 個測試檔」改為「見變更影響範圍」（實約 18 個）；影響範圍補 T006 可能修改 005／006 diffcheck 匯出</td><td>plan</td></tr>
+<tr><td>A4</td><td>plan 註明 <code>tests/esgraph/test.js</code> 為擴充對象的理由</td><td>plan</td></tr>
+<tr><td>A5</td><td>T040、T055「受影響者」以 <code>npm test</code> 失敗清單為準，完成時回填 golden-diff 敘述節</td><td>tasks</td></tr>
+<tr><td>A6</td><td>T016 補「callsplit 依原圖自行計算 <code>reachableOutside</code>，算法同 branchsplitter，每迴圈一次」</td><td>tasks</td></tr>
+<tr><td>M2</td><td>Q 編號引用加前綴（<code>DECISION 005 Q2</code>、<code>clarify Q4</code>、<code>spec review Q1</code>）</td><td>plan、tasks</td></tr>
+<tr><td>M3</td><td>spec US2 情境 10 括號改為「<code>x: L1 -> L9</code> 為呼叫之前、<code>x: L3 -> L9</code> 為返回後」</td><td>spec（措辭，不改預期；須由 orchestrator 經 spec 修訂站處理）</td></tr>
+<tr><td>M4</td><td>spec 加一行：FR-001 四項例外的驗證指向 acceptance.md characterization 項</td><td>spec（同上）</td></tr>
+<tr><td>I1／I2</td><td>基線 5.6.0 與副本 5.7.0 已決定沿用；本 feature 來源不在 <code>.specify/context</code>，可追溯性檢查 8、9 不適用</td><td>無動作</td></tr>
+</table></div>
+
 <h2>工程師要決定的事</h2>
 
 <h3>驗收條件盤點</h3>
@@ -228,7 +253,7 @@ flowchart LR
 <tr><td>US2</td><td>情境 1–4（賦值、KI §10、先讀後寫、<code>new</code>），程式內嵌於 spec</td><td class="ok">可驗證</td><td>US2 Acceptance 1–4</td></tr>
 <tr><td>US2</td><td>情境 12（<code>new F().m(x = 1);</code>，兩個呼叫點）、13（箭頭函式運算式本體），程式內嵌</td><td class="ok">可驗證</td><td>US2 Acceptance 12–13</td></tr>
 <tr><td>US2</td><td>情境 5–9 以探測檔（P13、P14、P18、P19、P22）為輸入，spec 只摘行號</td><td class="ok">可驗證</td><td>US2 Acceptance 5–9；探測結果</td></tr>
-<tr><td>US2</td><td>情境 10（<code>throw f();</code>）、11（generator 保守摘要，KI §37），程式內嵌於 spec</td><td class="ok">可驗證</td><td>US2 Acceptance 10–11</td></tr>
+<tr><td>US2</td><td>情境 10（<code>throw f();</code>）、11（generator 保守摘要，KI §37），程式內嵌於 spec；情境 10 的 <code>x: L3 -> L9</code> 在 US2 階段不可能通過（H1），括號亦誤標「呼叫之前」（M3）</td><td class="no">可驗證，但階段衝突</td><td>US2 Acceptance 10–11；plan 實作順序</td></tr>
 <tr><td>US3</td><td>情境 1–12（兩個呼叫、巢狀引數、<code>f() &gt; x</code>、<code>x &lt; f()</code>、<code>while</code>、<code>for…of</code>、<code>switch</code> 與其只求值一次、短路、<code>?:</code>、<code>x += f()</code>、<code>switch (x + f())</code> 的讀取）；情境 7 已刪 <code>case</code> test 預期</td><td class="ok">可驗證</td><td>US3 Acceptance 1–12</td></tr>
 <tr><td>US4</td><td>情境 1–5（<code>f().p</code>、<code>f();</code> 守門、<code>x = f()</code>、<code>var y = f()</code> 守門、<code>if (f() &gt; x)</code>）</td><td class="ok">可驗證</td><td>US4 Acceptance 1–5</td></tr>
 <tr><td>FR-005</td><td><code>f() + 1</code>、<code>!f()</code>、<code>h(f())</code>、<code>f() ? a : b</code>、<code>[f()]</code> 的判定無獨立情境（規則已寫明，交 plan 單元測試）</td><td class="no">缺（次要）</td><td>FR-005</td></tr>
@@ -244,7 +269,13 @@ flowchart LR
 <p>plan 已交付先前列出的待辦：FR-005 按段判定（R6）、<code>switch</code> 判別式與先例並存說明（R5）。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無（尚未 analyze；憲章檢查全部 PASS）。005 Q-a「呼叫敘述只在呼叫之前拋錯」在運算式中的呼叫上不再足夠，已由 FR-005 按段判定處理，並在 FR-010 要求 KI §36 註明適用範圍。</p>
+<p>CRITICAL 0；兩份發現皆未列憲章條款衝突（plan 的憲章檢查全部 PASS）。HIGH 3 項見上方發現表，受影響 story 如下：</p>
+<div class="box"><table>
+<tr><th>HIGH</th><th>衝突內容</th><th>受影響 story</th></tr>
+<tr><td>H1</td><td>spec 驗收（US2 情境 10）與 plan 階段順序（例外邊 US4 才補）互斥</td><td>US2（T032、T041、golden 檢查點）、US4</td></tr>
+<tr><td>H2</td><td>US1 暫時篩選與「呼叫點連續」的段索引假設互斥，且超出 plan</td><td>US1（T025）、US2（T037、T038）、US3（T048）</td></tr>
+<tr><td>H3</td><td>diffcheck 契約要求的 matching.json 在 MDN 快照缺席</td><td>Setup（T003）、Polish（T059）；影響 SC-003 的 MDN 差異簽核</td></tr>
+</table></div>
 
 <h3>已決事項</h3>
 <div class="box"><table>
@@ -261,10 +292,32 @@ flowchart LR
 <tr><td>10</td><td><code>for…in</code>／<code>for…of</code> 左側的呼叫（plan Q2）</td><td>A：不算呼叫點，FR-001 明文例外，記入 KI</td><td>DECISION 005；R13</td></tr>
 <tr><td>11</td><td><code>case</code> test 中 class 的 static 成員（plan Q3）</td><td>A：不再連結；KI §44 記為相對 develop 的行為變更</td><td>DECISION 005；R12、R13</td></tr>
 <tr><td>12</td><td>plan 閘門附帶修改</td><td>summary.js 併入延後 p-use；<code>c?.m(f())</code>、預設值解構中的呼叫不列為呼叫點；同節點先定義 callee 的防護；once-loop 迴圈變數留在 N 副本；<code>switch (f()) {}</code> 既有 bug 記 KI；前插 CALL 例外邊自 US1 起</td><td>DECISION 005</td></tr>
+<tr><td>13</td><td>H1：<code>throw f();</code> 返回後例外邊（analyze Q1）</td><td>A：<code>x: L3 -> L9</code> 斷言移到 T052（US4），US2 只斷言 <code>x: L1 -> L9</code>；T041 若因 CALL RETURN 無出邊出錯，改走 B 並回報</td><td>DECISION 006</td></tr>
+<tr><td>14</td><td>H2：暫時篩選機制（analyze Q2）</td><td>A：<code>callsplit.planOf</code> 接受 modelbuilder 傳入的 predicate（預設全列、快取分開），once-* 排除併入同一 predicate，下游只用 plan，lib-api 登記為暫時項</td><td>DECISION 006</td></tr>
+<tr><td>15</td><td>H3：MDN 快照（analyze Q3）</td><td>A：同時保存 <code>*.matching.json</code>，補自我測試</td><td>DECISION 006</td></tr>
+<tr><td>16</td><td>analyze 附帶修改</td><td>MEDIUM／LOW 全部套用（判定用 <code>label="call (</code>；T025 一併刪 <code>expressionsEvaluatedAtNode</code>）；US1 測試改用 <code>if (f(x))</code>；T037 延後 require；解構預設值、<code>?.</code>、for-in/of 左側成員、catch 參數、case test 中 class static 一律不連結，屬相對 develop 的行為變更</td><td>DECISION 006</td></tr>
 </table></div>
 
 <h3>本輪判斷點</h3>
-<p>無：plan Q1–Q3 已由使用者裁決（皆選 A），plan 通過 review，附帶修改已套用到 plan 文件，見已決事項 9–12。</p>
+<p><b>已裁決（DECISION 006）：三題皆採 A，修正方案同意套用，見已決事項 13–16。</b>下表保留作為紀錄。</p>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>方案（建議標 *）</th><th>各方案影響</th><th>出處</th></tr>
+<tr><td>1</td><td>H1：<code>throw f();</code> 返回後段的例外邊與 US2 驗收衝突，怎麼處置？</td>
+<td><b>A*</b> 把 P25 的 <code>x: L3 -> L9</code> 斷言移到 US4，T032 只斷言 <code>x: L1 -> L9</code><br>B US2 就為 <code>throw</code> 返回後段連例外邊（plan 加例外）<br>C 全部返回後例外邊提前到 US2</td>
+<td>A：只動 tasks（T032、T041、T054 加斷言）；spec 預期不變，US2 該條件延到 US4 才完整通過<br>B：plan 加一條特例，US2 golden 會提早出現「返回後例外」類 pair<br>C：實質把 US4 併入 US2，US2 差異變大、難逐筆核對</td>
+<td>spec US2 情境 10；plan 實作順序（US4 之前的例外邊）；T032、T041、T054</td></tr>
+<tr><td colspan="5"><small>建議理由：plan 的順序理由是「返回後例外」類集中在 US4 以便簽核；B、C 都破壞它，A 不破壞且改動最小。spec 不改預期，只需 M3 的括號校正。</small></td></tr>
+<tr><td>2</td><td>H2：US1 暫時篩選與段索引衝突，怎麼處置？</td>
+<td><b>A*</b> <code>callsplit.planOf</code> 加暫時 predicate，篩掉的呼叫點不入 <code>callSites</code>，段由 plan 重算（lib-api 登記為暫時項）<br>B US1 只拆單一呼叫點的節點，多呼叫點節點維持 develop 行為到 US2<br>C 取消暫時篩選，US1 起列全部呼叫點</td>
+<td>A：段與呼叫點一致，T038、T048 移除 predicate；plan 要補登記與機制說明（A2）<br>B：實作最少，但 modelbuilder 須保留 develop 舊路徑一個階段，之後再拆除，易殘留<br>C：機制最單純，但 US1 golden 混入「連結」類，違反 plan「US1 只有求值順序差異」的順序理由</td>
+<td>plan 實作順序（US2 的暫時排除）；T025、T037、T038、T048</td></tr>
+<tr><td colspan="5"><small>建議理由：根因是篩選發生在 plan 之後，才破壞連續性；改在 plan 內做（A）才從源頭保持不變式，又保住 US1 差異單純。B 留下雙路徑、C 犧牲 golden 可核對性。</small></td></tr>
+<tr><td>3</td><td>H3：MDN 快照要如何支援標記改寫？</td>
+<td><b>A*</b> T003 與 diff-check §4 改為同時保存各模型的 <code>*.matching.json</code>，補自我測試<br>B 不存 matching，MDN 標記差異以行號推斷、一律歸「標記」類</td>
+<td>A：與已決事項 9（以基準側 matching 換標記、不抹掉節點身分）一致，快照多存檔案；T059 可完成<br>B：快照較小，但抹掉節點身分、可能掩蓋真實連結差異，與已決事項 9 抵觸</td>
+<td>T003；diff-check §4；已決事項 9（DECISION 005 Q1）；SC-003</td></tr>
+<tr><td colspan="5"><small>建議理由：已決事項 9 已排除 B 的做法，A 只是讓 MDN 側與 golden 側一致；此題可直接採 A，必要時 orchestrator 可僅告知而不單獨詢問。</small></td></tr>
+</table></div>
 
 <h3>次要疑點</h3>
 <div class="box"><table>

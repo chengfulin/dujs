@@ -5,12 +5,13 @@
 ## 1. SegmentPlan（`lib/dujs/callsplit.js`，R2、R3、R6）
 
 每個 intra-procedural 原節點（`FlowNode`，非 entry／exit）一份，`planOf(node, scopeTree)` 計算後以 WeakMap（鍵＝原節點）快取，凍結。
+**暫時項（US1–US2，DECISION 006 Q2）**：`planOf(node, scopeTree, predicate)` 可帶第三個參數，篩掉的呼叫點不進 `callSites`，`segmentCount`、`segmentOf`、`segmentOfVarDef`、`throws` 都依留下的呼叫點重算（被篩掉的呼叫運算式視同一般運算）；沒給 predicate 時列出全部呼叫點。快取依 predicate 分開（同一原節點、不同 predicate 各一份 plan）。機制與移除時點見 plan「階段性的呼叫點篩選」與 contracts/lib-api.md §1。
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
 | `node` | FlowNode | 原節點 N |
 | `shape` | `'statement'`／`'decision'`／`'once-switch'`／`'once-loop'` | R1 的三種形狀（`once-*` 為只求值一次） |
-| `expressions` | Array<AST> | 求值的運算式（`evaluatedExpressionsOf`，R2 步驟 1），依序 |
+| `expressions` | Array<AST> | 求值的運算式（`evaluatedExpressionsOf`，R2 步驟 1），依序；`CatchClause` 節點為 `[param]`（見 §5 末「catch 參數」） |
 | `order` | Map<AST, number> | 後序位置（0 起）；只含 `expressions` 子樹中被求值的節點（不含巢狀函式／class body 內部） |
 | `callSites` | Array<CallSiteEntry> | 依後序位置排序；長度 k ≥ 0；不含 §5「不列為呼叫點」的位置 |
 | `segmentCount` | number | k + 1；k = 0 表示不拆分（plan 仍存在，供查詢） |
@@ -100,11 +101,19 @@
 
 | 位置 | 例 | 理由 | 與 develop | KI |
 |------|----|------|------------|----|
-| 條件求值而未被拆分的位置：`ChainExpression` 中第一個 `optional: true` 節點之後求值的部分 | `c?.m(f())`（`f()` 與 `.m()`）、`c?.[f()]` | 單一節點內無法表示「可能不執行」；列為呼叫點會把呼叫當成必定執行，callee 的定義錯殺可實現的 pair | 相同（不連結） | §46（R13 L5） |
-| 條件求值而未被拆分的位置：解構樣式內 `AssignmentPattern` 的預設值（參數本身的預設值除外，依 spec Assumptions 視為一定求值） | `var [z = f()] = c`、`var {z = f()} = c`、`[z = f()] = c` | 同上 | 相同 | §46（R13 L5） |
-| `for…in`／`for…of` 左側 | `for (o[g()] of a)`、`for (var [z = g()] of a)` | FR-001 的明文例外（Q2 A） | 相同 | §46（R13 L1） |
-| `case` test（含 class static 成員） | `case g():`、`case class { static y = g(); }:` | Clarifications「case test 不建模」；static 成員為 Q3 A | 一般呼叫相同；**class static 為行為變更**（develop 連結） | §44（R13 L2） |
+| 條件求值而未被拆分的位置：`ChainExpression` 中第一個 `optional: true` 節點之後求值的部分 | `c?.m(f())`（`f()` 與 `.m()`）、`c?.[f()]`、`c?.m(class { static y = g(); })` | 單一節點內無法表示「可能不執行」；列為呼叫點會把呼叫當成必定執行，callee 的定義錯殺可實現的 pair | 一般呼叫相同（不連結）；**class static 成員為行為變更（不連結）**（develop 經 `expressionsEvaluatedAtNode` 連結） | §46（R13 L5、L2'） |
+| 條件求值而未被拆分的位置：解構樣式內 `AssignmentPattern` 的預設值（參數本身的預設值除外，依 spec Assumptions 視為一定求值；catch 參數的解構預設值同屬此列） | `var [z = f()] = c`、`var {z = f()} = c`、`[z = f()] = c`、`var [z = class { static y = g(); }] = c`、`catch ({a = class { static y = g(); }})` | 同上 | 一般呼叫相同（不連結）；**class static 成員為行為變更（不連結）**（develop 經 `expressionsEvaluatedAtNode` 連結） | §46（R13 L5、L2'） |
+| `for…in`／`for…of` 左側 | `for (o[g()] of a)`、`for (var [z = g()] of a)`、`for (o[class { static y = g(); }] of c)` | FR-001 的明文例外（DECISION 005 Q2 A） | 一般呼叫相同（不連結）；**class static 成員為行為變更（不連結）**（develop 的 `expressionsEvaluatedAtNode` 取 `ast.left`） | §46（R13 L1、L2'） |
+| `case` test（含 class static 成員） | `case g():`、`case class { static y = g(); }:` | Clarifications「case test 不建模」；static 成員為 DECISION 005 Q3 A | 一般呼叫相同；**class static 為行為變更**（develop 連結） | §44（R13 L2） |
 | 防護：callee 為識別字、或成員呼叫的 receiver 為識別字，且同一節點中該變數有 `generatedAt` 的後序位置早於此識別字的讀取 | `var f = h; f = g, f();`、`var o = new A(), r = o.m();` 的 `o.m()` | 解析讀節點開始時的 ReachIn，會錯連到舊定義（`f = h` → `h`，develop 沒有此錯誤 pair）；`f(f = g)` 的定義在 callee 讀取之後，不受影響 | 相同（不連結） | §46（R13 L3） |
+
+**class static 成員的行為變更（DECISION 006 Q4 必修 3，比照 DECISION 005 Q3）**：develop 以 `modelbuilder.findStaticMemberScopesOfClassesAtNode` 走訪 `expressionsEvaluatedAtNode(node)`（modelbuilder.js:285-303，含 `SwitchCase` 的 test、for-in/of 的 `left`、`CatchClause` 的 `param`、其他節點的全部 `analyzedExpressions`），
+把上表前三列位置中 class 的 static scope 也連進 inter-procedural 模型；007 一律**不連結**，標為相對 develop 的行為變更（KI §44 記 `case` test、§46 記其餘三種位置）。此變更自 US1 的 T025（刪除 `findStaticMemberScopesOfClassesAtNode`）生效；
+golden-diff／mdn-diff 以 diffcheck 計數其實例（contracts/diff-check.md §2「class static 行為變更」），有實例時於簽核時列出。
+
+**catch 參數**：`CatchClause` 節點的 `evaluatedExpressionsOf` 為 `[param]`（沒有參數的 `catch {}` 為空）。依程式現況：develop 的 `expressionsEvaluatedAtNode` 對 `CatchClause` 取 `ast.param`（modelbuilder.js:298-299）、
+`usedExpressionsOf` 在 catch 節點讀參數的預設值與 computed key（usedexpressions.js:72-78）、`findGENSet` 在 catch 節點定義參數的變數——讀取與定義都在 catch 節點，故 `param` 必須在 `expressions` 內，`segmentOf` 才對這些讀取與定義有定義。
+參數中的解構預設值屬上表第二列（不列為呼叫點），computed key 中的呼叫依一般規則是呼叫點。
 
 ## 6. 差異紀錄（`golden-diff.md`、`mdn-diff.md`）
 

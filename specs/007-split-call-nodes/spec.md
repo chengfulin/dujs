@@ -86,7 +86,7 @@
 - Q: 沒有情境的語法位置要補情境嗎？ → A: 只補箭頭函式運算式本體（US2 情境 13，P33）與 try 內 `if (f() > x)`（US4 情境 5，P34）；`for(;;f())`、`do…while (f())`（develop 已連結）作守門單元測試；`??`／`||` 與 P17 同機制；FR-006／FR-007 及其餘由 plan 的單元測試涵蓋。
 - Q: 差異紀錄的 develop 基準？ → A: 固定 `edc22d5`，寫在 golden-diff.md／mdn-diff.md 的基準行；日後若 rebase 到新的 develop，明確改該行並整表重產。
 - clarify review 通過（DECISION 004）：US4 情境 5 的本體改為不拋錯的 `var z = 0;`；FR-005 規則改為含段尾進入的呼叫點本身；新增 US4 情境 6（P35）；P33 改為一行一個敘述。
-- 裁判追加：`case` test 的讀取與呼叫不建模（相對 develop 的窄範圍行為變更：develop 會連結 case test 中 class 的 static 成員，007 不再連結；其餘 case test 的讀取與呼叫本就不建模），不納入 007：US3 情境 7 刪除 `x: L3 -> L7>L8:T` 的預期，FR-001 移除 `case` 中的呼叫，並於 `docs/known-issues.md` 記錄此限制（FR-010）。
+- 裁判追加：`case` test 的讀取與呼叫不建模（相對 develop 的窄範圍行為變更：develop 會連結 case test 中 class 的 static 成員，007 不再連結；同樣的行為變更也適用於解構預設值、`?.` 之後、for-in/of 左側成員、catch 參數預設值中的 class static，見 DECISION 006；其餘 case test 的讀取與呼叫本就不建模），不納入 007：US3 情境 7 刪除 `x: L3 -> L7>L8:T` 的預期，FR-001 移除 `case` 中的呼叫，並於 `docs/known-issues.md` 記錄此限制（FR-010）。
 
 ### spec review（2026-11-18）的使用者決策
 
@@ -169,7 +169,7 @@
 9. **Given** `p22-unresolved-arg.js`（L6 `console.log(f(), x);`、`f` 在 L3 賦值 `x = 1;`），**When** 分析，**Then** `f()` 連結；有 `x: L3 -> L6`，
    沒有 `x: L1 -> L6`（外層呼叫無法解析，不影響引數中的呼叫）。[SRC PRB P22]
 10. **Given** `var x = 0;` L1 / `function f() {` L2 / `x = 1;` L3 / `return 2;` L4 / `}` L5 / `try {` L6 / `throw f();` L7 / `} catch (e) {` L8 /
-   `console.log(x);` L9 / `}` L10，**When** 分析，**Then** 有 `x: L3 -> L9` 與 `x: L1 -> L9`（呼叫之前可能拋錯）。[SRC PRB P25]
+   `console.log(x);` L9 / `}` L10，**When** 分析，**Then** 有 `x: L3 -> L9` 與 `x: L1 -> L9`（`x: L1 -> L9` 為呼叫之前、`x: L3 -> L9` 為返回後）。[SRC PRB P25]
 11. **Given** `var x = 0;` L1 / `function* g() {` L2 / `x = 1;` L3 / `}` L4 / `var it = g();` L5 / `console.log(x);` L6，**When** 分析，**Then** 有
    `x: L1 -> L6` 與 `x: L3 -> L6`（generator 的保守摘要，KI §37）。[SRC KI §37；PRB P27]
 12. **Given** `var x = 0;` L1 / `class F {` L2 / `constructor() {` L3 / `console.log(x);` L4 / `}` L5 / `m(v) {` L6 / `console.log(x);` L7 / `}` L8 /
@@ -268,6 +268,7 @@
 
 - **FR-001**: 任何 CFG 節點中的每個呼叫點 MUST 連到其被呼叫端（不限呼叫敘述）：含賦值、變數宣告初始化、`return`、`throw`、條件、`switch` 判別式、
   迴圈節點、參數預設值、欄位初始化式中的呼叫運算式與 `new` 運算式。callee 的解析規則沿用 004 FR-018 與 005 FR-005，不擴充；`new F().m(…)` 中的 `new F()` 與 `.m(…)` 為兩個呼叫點。`case` test 中的呼叫不在範圍內；例外：`for…in`／`for…of` 左側的呼叫、選擇性鏈（`c?.m(f())`、`c?.[f()]`）與解構預設值（`var [z = f()] = c`）中的呼叫、callee 或 receiver 在同一節點中先被定義者，不列為呼叫點（DECISION 005，記入 known-issues）。[SRC KI §22 (3)；D004 U1]
+  上述例外（for-in/of 左側、選擇性鏈、解構預設值、同節點先定義的 callee／receiver）不在 SC-002 的驗收情境內，由 `contracts/acceptance.md` 的 characterization 測試驗證（DECISION 006 M4）。
 - **FR-002**: 含呼叫點的節點 MUST 在 inter-procedural 與 intra-page 模型中依求值順序分成「第一個呼叫之前」「每兩個呼叫之間」「最後一個呼叫返回之後」
   幾段，順序依 JavaScript 完整的求值順序（運算元由左至右、引數由左至右、引數先於呼叫、複合賦值先讀目標）；每段的讀取只得到該段中該讀取被求值時有效的定義，每段的定義只在其後生效。[SRC KI §16；PRB P1、P6–P9、P12]
 - **FR-003**: 決策節點（`if`／迴圈條件、拆分後的決策節點、`switch` 判別式（記在各 `case` 的 p-use；`case` test 本身不建模）、`for…in`／`for…of`）中的讀取 MUST 仍記為該決策節點的 p-use（標記形式不變），

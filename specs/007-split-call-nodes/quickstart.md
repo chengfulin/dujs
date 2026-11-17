@@ -32,7 +32,7 @@ P35 沒有 `x: L3 -> L11`；P23 與 `probes/baseline-develop.txt` 相同（SC-00
 node bin/dujs.js -js specs/007-split-call-nodes/probes/p6-two-calls.js
 ```
 
-在輸出目錄的 inter-procedural／intra-page 模型檢查：`.graph.dot` 中 L10 有兩組 `call`／`callReturn`（依求值順序串接，標為 `call (11)`、`callReturn (11)`（Q1 A），CLI 行號＝檔案行號＋1）；
+在輸出目錄的 inter-procedural／intra-page 模型檢查：`.graph.dot` 中 L10 有兩組 `call`／`callReturn`（依求值順序串接，標為 `call (11)`、`callReturn (11)`（DECISION 005 Q1 A），CLI 行號＝檔案行號＋1）；
 `*.matching.json` 的 `calls` 每條 return 邊恰對應一個 record（`seq` 依求值順序）；沒有新的節點或邊型別。
 
 ## 4. golden 與 MDN 差異
@@ -44,7 +44,7 @@ node specs/007-split-call-nodes/tools/diffcheck.js mdn --verify specs/007-split-
 ```
 
 預期：exit 0；每筆新增／消失的 pair（去重後）歸入 `連結`／`求值順序`／`返回後例外` 或 KI 類，含 `決策返回不拋錯` 子類；「重複列數」表與實測一致（不設門檻）；
-intra-procedural 層級沒有 pair 差異；釘選列經使用者簽核（SC-003、SC-004）。
+intra-procedural 層級沒有 pair 差異；「class static 不再連結」表與實測一致（有實例時簽核列出）；釘選列經使用者簽核（SC-003、SC-004）。
 
 ## 5. 效能（SC-005）
 
@@ -56,5 +56,5 @@ golden＋MDN 總分析時間 ≤ develop（`perf.md` 的基準）× 2。
 
 ## 6. 文件（FR-010）
 
-`docs/known-issues.md`：§16、§22 (3) 標為已修正；§10、§36 有 007 的補註；§44「`case` test 的讀取與呼叫不建模」（含 class static 成員不再連結，標明為相對 develop 的行為變更）、§45 行為變更、§46 不列為呼叫點的位置（for-in/of 左側、條件求值位置、同節點先定義的 callee）、§47 判別式拆分節點的例外邊、§48 `switch` 沒有 `case` 的既有崩潰存在（research R12、R13）。
+`docs/known-issues.md`：§16、§22 (3) 標為已修正；§10、§36 有 007 的補註；§44「`case` test 的讀取與呼叫不建模」（含 class static 成員不再連結，標明為相對 develop 的行為變更）、§45 行為變更、§46 不列為呼叫點的位置（for-in/of 左側、條件求值位置、同節點先定義的 callee；這些位置中 class static 成員不再連結，標明為相對 develop 的行為變更）、§47 判別式拆分節點的例外邊、§48 `switch` 沒有 `case` 的既有崩潰存在（research R12、R13）。
 README：Limits 不再寫「只有呼叫敘述是呼叫點」，並說明段節點、`beforeDecision` 與標記規則。
