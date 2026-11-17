@@ -17,9 +17,39 @@
     },
     "analyze": {
       "done": true,
-      "findings": 40,
-      "remediated": 40,
+      "findings": 27,
+      "remediated": 25,
       "fable_judge": true
+    },
+    "implement": {
+      "parallel_plan": {
+        "mode": "sequential",
+        "mode_reason": "波次估計加速 1.2x 未達 1.5x",
+        "granularity": "task",
+        "basis": "codegraph",
+        "tasks": 100,
+        "conflict_pairs": 983,
+        "pairs": 4950,
+        "by_type": {
+          "相依": 536,
+          "宣告": 217,
+          "未定": 39,
+          "寫入": 191
+        },
+        "batches": 44,
+        "max_width": 7,
+        "phases": 9,
+        "waves": 19,
+        "est_speedup": 1.19,
+        "low_conf": [
+          "T060",
+          "T061",
+          "T070",
+          "T080",
+          "T098"
+        ],
+        "plan_file": "specs/005-summary-analysis/parallel-plan.json"
+      }
     }
   },
   "brief": {
