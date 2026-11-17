@@ -444,6 +444,40 @@ describe('handlers registered again in a linked recursion (feature 005 T103, FR-
 		]);
 	});
 
+	/// review R4 (T102 (h)): g is registered by the page and by k, and h and k
+	/// call each other (k registers h and may call it, h calls k): the
+	/// registrations have a cycle, so g is listed once although two models
+	/// register it. x of L3 (g) reaches h (L7) only through the event loop, so
+	/// neither the decision of k (L12) nor var y = x (L18) reads it
+	it('lists once a handler registered by the page and in the cycle (k <-> h)', function () {
+		var result = analyzeInChild([
+			'var x = 0;',
+			'function g() {',
+			'x = 2;',
+			'}',
+			'function k() {',
+			'function h() {',
+			'x = x + 1;',
+			'k();',
+			'}',
+			'document.addEventListener(\'click\', g);',
+			'document.addEventListener(\'keyup\', h);',
+			'if (x < 3) {',
+			'h();',
+			'}',
+			'}',
+			'document.addEventListener(\'click\', g);',
+			'k();',
+			'var y = x;'
+		]);
+		result.handlers.should.eql(['g', 'h']);
+		result.pairsOfX.should.eql([
+			'x: L1 -> L12>L13:T', 'x: L1 -> L12>exit:F', 'x: L1 -> L18', 'x: L1 -> L7',
+			'x: L3 -> L7',
+			'x: L7 -> L12>L13:T', 'x: L7 -> L12>exit:F', 'x: L7 -> L18', 'x: L7 -> L7'
+		]);
+	});
+
 	/// a handler of the page registering itself
 	it('terminates with a handler of the page registering itself', function () {
 		var result = analyzeInChild([

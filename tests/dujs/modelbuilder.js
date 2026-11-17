@@ -841,6 +841,11 @@ describe('ModelBuilder upper models as hierarchies', function () {
 			var result = analyzeProbe('r8');
 			handlersOf(result).should.eql(['$DOMAIN.$PAGE_0.g', '$DOMAIN.$PAGE_0.h', '$DOMAIN.$PAGE_0.g']);
 			onEventOf(result).should.eql(['$DOMAIN.$PAGE_0.g', '$DOMAIN.$PAGE_0.h', '$DOMAIN.$PAGE_0.g']);
+			/// feature 005 T103 (review R4): the registrations have no cycle (page -> g, h; h -> g),
+			/// so the list is not deduplicated as with a cycle (tests/dujs/relaxedcallee.js)
+			var handlers = handlersOf(result);
+			handlers.length.should.eql(3);
+			new Set(handlers).size.should.eql(2);
 			result.intraPage().should.eql([
 				'g: entry -> L3', 'h: entry -> L4', 'h: entry -> L5',
 				/// feature 005 (US1, summaries): h() of L4 must-KILLs n (reg() of L3), and h as a handler

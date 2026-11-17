@@ -81,6 +81,14 @@
           "reviewed": true,
           "committed": true
         }
+      },
+      "polish": {
+        "reviewed": true,
+        "validated": true,
+        "signoff_pending": [
+          "T099",
+          "T100"
+        ]
       }
     }
   },
