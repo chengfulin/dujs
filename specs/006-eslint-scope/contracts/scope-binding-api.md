@@ -33,13 +33,14 @@
 | `var.binding.declarations` | `[{kind, node}]`，`node` 為 `Definition.node`（可取得名稱識別字 `Definition.name` 與宣告的 `kind`） |
 | `binding.declarationsOf(var)` | 同上（便利函式） |
 
-另有單元測試（`tests/dujs/scopebinding.js`）：`useVarsOf` 對宣告識別字（`var x` 的 `x`、函式名）回傳 `[]`、`defVarsOf` 回傳其 Var（F5）；可見性 (c)
+另有單元測試（`tests/dujs/scopebinding.js`）：`useVarsOf` 對宣告識別字（`var x` 的 `x`、函式名）回傳 `[]`、`defVarsOf` 回傳其 Var（F5）；非參照識別字（標籤、`o.p` 的 `p`、物件鍵、方法鍵、export 別名）的
+`useVarsOf`／`defVarsOf` 為 `[]`；`for (const x of xs)`、`for (var k in o)`、解構宣告的 `defVarsOf`；兩檔串接且第二檔含 `import` 時 `sourceType` 為 module；可見性 (c)
 （vis3 的內層 `A` 對 `g` 可見）；`isOnFunctionChain`（block `let`、catch 參數為 false）；optimistic 偏離案例（research R2）；保留名稱 `$ANONYMOUS_FUN_0`（research R12）；
 `binding.kind` 多宣告取法（`function f(a) { function a() {} }` → `function`、`function f(a) { var a; }` → `parameter`，data-model §2）。
 
 US4-9 的斷言（`tests/dujs/scopebinding.js`）：一個含 var、let、const、函式宣告、class、參數、catch 參數、import（module）、具名函式運算式、未宣告讀取、
 未宣告賦值的程式——每個有宣告的 Var 對應唯一 Variable；`var x; var x;` 兩個宣告；class 宣告兩個 Var（外 `class`、內 `class`）；catch-edge L10 `e` 的
-def 屬 catch 參數 Var、宣告節點在外層 `e` 的 `declarations`；未宣告有賦值 → `implicitGlobal`、只讀 → `global`，`declarations` 為空；`arguments` 無 Var。
+def 屬 catch 參數 Var、宣告節點在外層 `e` 的 `declarations`；未宣告有賦值 → `implicitGlobal`、只讀 → `global`，`declarations` 為空；`arguments` 無 Var。「只讀 → `global`」的斷言於 US3（T050）補入，Foundational（T017）先驗其餘項。
 
 ## 4. 錯誤
 

@@ -34,10 +34,12 @@ dujs scope 是被呼叫端的祖先或本身」涵蓋沒有自己 dujs scope 的
 `perf.md`，不進 `npm test`。eslint-scope 實測約 1.9 ms／1285 行；可見集合每個 dujs scope 計算一次並快取。
 
 **Constraints**: scope 名稱與數量、CFG、模型數量與結構不變（FR-009，D5／FR-013 的連結變化除外）；golden 差異只屬 D2 五類並逐項記錄（FR-010）；
-不新增 lint 抑制；`tests/` 中既有測試的修改都列入 golden-diff「單元測試期望」表（已知：`tests/dujs/scope.js` 的名稱 API 測試改寫、`modelbuilder.js`、
-`defuseanalyzer.js`、`bypass.js`、`es2015.js`、`model.js`、`nestedfunctions.js`、`analysisexecution.js` 中直接呼叫名稱 API 或 `setLocalVariables` 的段落）。
+`eslint-suppressions.json` 不得新增鍵或增加 count（有未使用抑制時跑 `npx eslint . --prune-suppressions` 並在回報列出）；`tests/` 中**既有測試案例**的修改限下列檔，
+且都列入 golden-diff「單元測試期望」表：`tests/dujs/scope.js` 的名稱 API 測試改寫、`modelbuilder.js`、`defuseanalyzer.js`、`bypass.js`、`es2015.js`、`model.js`、
+`nestedfunctions.js`、`analysisexecution.js` 中直接呼叫名稱 API 或 `setLocalVariables` 的段落；**新增案例**的檔以任務指名為準（`var.js`、`usedexpressions.js`、`def.js`、
+`deffactory.js`、`scopebinding.js` 等）。
 
-**Scale/Scope**: 4 個 user story、13 條 FR；新增 1 個 lib 模組，修改約 14 個 lib 檔；新增 6 個測試檔；feature 目錄新增 2 支工具與 MDN 範例集。
+**Scale/Scope**: 4 個 user story、13 條 FR；新增 1 個 lib 模組，修改 17 個 lib 檔（見「變更影響範圍」；Foundational 階段動 14 個 lib 檔，含新模組）；新增 6 個測試檔；feature 目錄新增 2 支工具與 MDN 範例集。
 
 **tech-standards**：`.specify/memory/baseline/tech-standards.md` 以服務部署為主，對本 library 無偏離項，無 §CP-6 例外。
 
@@ -81,7 +83,7 @@ dujs scope 是被呼叫端的祖先或本身」涵蓋沒有自己 dujs scope 的
   名稱表（`.set`／`.implicit`／`.through`）、S5 五個檔案的 `.name` 讀取精確允許表、S6 scopebinding 內字串鍵存取限白名單；白名單 W1 `globalVariableOf`（D3）、
   W2 `isExcludedGlobalName`（D3）、W3 `builtInVariableOf`（fixed list／localStorage）、W4 `isShadowed`（FR-013 可見性，U2 已裁決）。D6 由 optimistic 達成，無程式
   （唯一偏離見 research R2，符合 FR-005）。
-- (2) 見 [contracts/diff-check.md](./contracts/diff-check.md)：輸入（golden：基準 commit 的 expected* vs 工作樹；MDN：快照 vs 實跑）、單位（pair multiset、row、
+- (2) 見 [contracts/diff-check.md](./contracts/diff-check.md)：輸入（golden：基準 `584e17d` 的 expected* vs 工作樹；MDN：快照 vs 實跑）、單位（pair multiset、row、
   model 數、graph／hierarchy 雜湊）、五類判準（以 CLI 串接後原始碼的 eslint-scope 結果機械判定；全域類依 U4、catch 類 (d)(e) 依 U3／Q2）、紀錄檔的「淨差異」、
   「解析類移除簽核」（F3）與「呼叫連結簽核」三個機器區塊、釘選筆數；MDN 快照 6 步驟（33 個檔案先自 validation-004 的工作目錄複製並以附錄 A 雜湊核對，
   重新抽取為備援；存 `mdn/corpus/`，develop CLI `.dot` 存 `mdn/baseline-develop/`）。
@@ -120,7 +122,7 @@ dujs scope 是被呼叫端的祖先或本身」涵蓋沒有自己 dujs scope 的
 
 - **修改**：`lib/dujs/jsparser.js`、`scopectrl.js`、`scopetree.js`（`dujsClassMember` 標記）、`scope.js`、`pagescope.js`／`domainscope.js`（fixed list 建立方式）、
   `var.js`、`def.js`、`deffactory.js`、`vardeffactory.js`、`variableanalyzer.js`、`defuseanalysisexecutor.js`、`defuseanalyzer.js`、`usedexpressions.js`、
-  `callresolver.js`、`modelbuilder.js`、`hierarchy.js`；`package.json`／`package-lock.json`；`tests/golden/expected*`、`manifest.json`；`README.md`、
+  `callresolver.js`、`modelbuilder.js`、`hierarchy.js`；`package.json`／`package-lock.json`；`eslint.config.js`（T003：`ignores` 加 probes006 與 MDN 範例集）；`tests/golden/expected*`、`manifest.json`；`README.md`、
   `docs/known-issues.md`。
 - **新增**：`lib/dujs/scopebinding.js`；`tests/dujs/scopebinding.js`、`catchclause.js`、`scoperesolution.js`、`globals.js`、`scopeguards.js`、`scopesource.js`；
   `tests/dujs/cases/probes006/`；`specs/006-eslint-scope/{golden-diff.md, mdn-diff.md, perf.md, tools/, mdn/}`。
@@ -152,27 +154,31 @@ tests/golden/  expected*／manifest.json（更新）
 
 **Structure Decision**：維持單一 library＋CLI 結構；scope 綁定集中在一個新模組，其他模組只經其 API 取得變數（contracts/scope-binding-api.md §2）。
 
-## 實作順序與 story 相依（每階段結束 `npm test`、lint 全綠，改 golden 者 `diffcheck --verify` 通過）
+## 實作順序與 story 相依（每階段結束 `npm test`、lint 全綠，改 golden 者 `diffcheck --verify` 通過；diffcheck 不進 `npm test`，由 orchestrator 親自重跑 `--verify` 通過後才 commit）
 
 | 階段 | 內容 | lib 檔案 | 測試檔 | golden |
 |------|------|----------|--------|--------|
-| Setup | 依賴；probes 複製與 develop 記錄（`develop.txt`、`scopenames.json`、守門 probes 的 develop pair 清單）；MDN 33 檔自 validation-004 工作目錄複製進 `mdn/corpus/` 並核對附錄 A 雜湊（不符或目錄已清除→重新抽取）、develop 快照；`diffcheck.js`＋自我測試；`perf.js` 與 develop 基準 | — | `tests/dujs/cases/probes006/` | 不變（記錄基準 commit） |
-| Foundational（D1 切換，阻擋所有 story） | scopebinding（analyze、身分表、擁有者表、Var 建立、可見性、合併計數、宣告查詢）；Scope 身分儲存並移除名稱 API；variableanalyzer 改身分登記；defuseanalyzer GEN／USE／KILL／bypass 改身分；ClassDeclaration 同時定義內外 Var、具名 Function／ClassExpression 在節點定義名稱、CatchClause 定義參數；callresolver（含 FR-018 合併計數）、modelbuilder handler、hierarchy localStorage 改身分 | `scopebinding.js`、`jsparser.js`、`scopectrl.js`、`scopetree.js`、`scope.js`、`pagescope.js`、`domainscope.js`、`var.js`、`variableanalyzer.js`、`defuseanalysisexecutor.js`、`defuseanalyzer.js`、`callresolver.js`、`modelbuilder.js`、`hierarchy.js` | `scopebinding.js`（新，含 US4-9、可見性 (a)(b)(c)、entry 可見、optimistic 偏離、保留名稱）；`scopeguards.js`（新，全部「與 develop 相同」與 FR-013 連結守門，F6）；`var.js`（U1）；改寫 `scope.js`，調整 `modelbuilder.js`、`defuseanalyzer.js`、`bypass.js`、`es2015.js`、`model.js`、`nestedfunctions.js`、`analysisexecution.js` | **更新**（解析／AnnexB／連結類；catch 參數列） |
-| US1（P1） | catch 節點只讀參數求值運算式、GEN 不走進本體（D4，含 U3：不再定義區塊內賦值） | `usedexpressions.js`、`defuseanalyzer.js` | `catchclause.js`（新，含 plan-u3、plan-catch1）、`usedexpressions.js` | **更新**（catch 類 (a)–(e)） |
+| Setup | 依賴；probes 複製與 develop 記錄（`develop.txt`、`scopenames.json`、守門 probes 的 develop pair 清單）；MDN 33 檔自 validation-004 工作目錄複製進 `mdn/corpus/` 並核對附錄 A 雜湊（不符或目錄已清除→重新抽取）、develop 快照；`diffcheck.js`＋自我測試；`perf.js` 與 develop 基準 | — | `tests/dujs/cases/probes006/` | 不變（diffcheck golden 基準固定 `584e17d`） |
+| Foundational（D1 切換，阻擋所有 story） | scopebinding（analyze、身分表、擁有者表、Var 建立、可見性、合併計數、宣告查詢）；Scope 身分儲存並移除名稱 API；variableanalyzer 改身分登記；defuseanalyzer GEN／USE／KILL／bypass 改身分；ClassDeclaration 同時定義內外 Var、具名 Function／ClassExpression 在節點定義名稱、CatchClause 定義參數（本體仍照 develop 走訪，區塊內賦值的定義保留到 US1 才移除）；callresolver（含 FR-018 合併計數）、modelbuilder handler、hierarchy localStorage 改身分 | `scopebinding.js`、`jsparser.js`、`scopectrl.js`、`scopetree.js`、`scope.js`、`pagescope.js`、`domainscope.js`、`var.js`、`variableanalyzer.js`、`defuseanalysisexecutor.js`、`defuseanalyzer.js`、`callresolver.js`、`modelbuilder.js`、`hierarchy.js` | `scopebinding.js`（新，含 US4-9〔只讀→`global` 的斷言於 US3 T050 補入〕、可見性 (a)(b)(c)、entry 可見、optimistic 偏離、保留名稱）；`scopeguards.js`（新，全部「與 develop 相同」與 FR-013 連結守門，F6）；`var.js`（U1）；改寫 `scope.js`，調整 `modelbuilder.js`、`defuseanalyzer.js`、`bypass.js`、`es2015.js`、`model.js`、`nestedfunctions.js`、`analysisexecution.js` | **更新**（解析／AnnexB／連結類；catch 參數列） |
+| US1（P1） | catch 節點只讀參數求值運算式；GEN 不再走訪本體（D4，含 U3：移除 Foundational 仍保留的區塊內賦值定義） | `usedexpressions.js`、`defuseanalyzer.js` | `catchclause.js`（新，含 plan-u3、plan-catch1）、`usedexpressions.js` | **更新**（catch 類 (a)–(e)） |
 | US2（P1） | 驗收 US2-1…5；若 D7／pdef 有落差在此修正 | （預期無；必要時 `defuseanalyzer.js`、`scopebinding.js`） | `scoperesolution.js`（新） | 預期不變 |
 | US3（P2） | 未解析讀取的 `global` Var 與 `Def.GLOBAL_TYPE`；名稱排除；頁面 entry 的 global 定義；`++`／for-in 寫入的隱含全域補登記（R5） | `scopebinding.js`、`def.js`、`deffactory.js`、`vardeffactory.js`、`defuseanalyzer.js` | `globals.js`（新，含 plan-u1、plan-u4）、`def.js`、`deffactory.js` | **更新**（全域類） |
-| US4（P1） | 靜態測試；golden 淨差異最終核對（守門已在 Foundational 完成，此處只重跑） | （無新邏輯） | `scopesource.js`（新） | 最終 `--verify` |
+| US4（P1） | 靜態測試；golden 重生驗證（有差異一律先當回歸修 lib）與最終核對（守門已在 Foundational 完成，此處只重跑） | （無新邏輯） | `scopesource.js`（新） | 重生驗證零差異＋`--verify` |
 | Polish | MDN `--verify`、perf.md、known-issues、README、quickstart 全流程 | — | — | — |
 
 - **Foundational 完成條件**（F6）：除 `npm test`、lint、golden `--verify` 外，`scopeguards.js` 全過——scope 名稱與各層模型數（33 個 probes，模型數只在 annexb、
   link-n4／n8a／n9／n10 改變）、與 develop 相同的守門（shadow-*、with、evalouter、op、mod、classdecl、vis3、plan-bi、plan-pf、link-n5、Q3 的 entry 程式）、
   FR-013 連結（link-n4／n8a／n9／n10）與 link-bypass 的 `e: L6 -> L8`（US4-11）；且 `run.js` 對「與 develop 相同」那組 probe 檔（不含 Q3 內嵌程式）的 pair 輸出與 `probes/develop.txt` 逐行相同（只比 pair；class 內層綁定的新增 row 不在 run.js 輸出中）。catch-*、link-bypass 的其他 pair、globals、tyof、
   plan-u*、plan-catch1 此時仍可與 develop 不同（屬 US1／US3）。
-- **相依**：Setup → Foundational →（US1、US2、US3）→ US4 → Polish。US2 只加測試，可與 US1 並行；**改 golden 的階段（Foundational、US1、US3、US4 收尾）必須
+- **相依**：Setup → Foundational → US1 → US2 → US3 → US4 → Polish，逐 phase 依序；US2 只加測試，在 US1 commit 後執行。**改 golden 的階段（Foundational、US1、US3、US4 收尾）必須
   依序進行**，每次都重新產生 golden-diff「淨差異」並 `--verify`，因為淨差異是相對 develop 的累積結果，並行會互相覆蓋 expected 與 manifest。
 - 為何 Foundational 這麼大：Scope 名稱 API 一旦移除，所有呼叫端必須同時改為身分查詢才能通過測試；catch 參數、class 內層、具名運算式名稱的「節點定義」
   是新 Var 能有定義的最低需求，若延後到各 story，中間狀態會讓這些 Var 沒有定義而大量移除 pair（golden 反覆變動）。US1 只剩 D4 的 catch 節點讀取／GEN
   範圍，US3 只剩未解析讀取。
+- **Foundational 分批**（analyze N1；任務 ID 見 tasks.md）：2a 純新增（scopebinding、Var 名放寬、`ECMA_VERSION`、`dujsClassMember`、analyze／attach 掛載；
+  批末既有測試全綠、golden 零差異）→ 2b API 一次切換（Scope 身分儲存與所有呼叫端；批末 mocha 全綠）→ 2c golden 更新與閘門。
+- **人工簽核**（analyze N2）：解析類移除、呼叫連結衍生與 MDN 差異的簽核欄由 implementer 只填「草擬，待簽核」，不得自簽；使用者在 US4 golden 收尾後、
+  PR 前對累積表簽核一次（T070），MDN 在 Polish 的 MDN 驗證後簽核（T071）。
 
 ## 已裁決事項（plan review，2026-11-17；spec Clarifications 同日 Session 與 FR-012 已同步）
 

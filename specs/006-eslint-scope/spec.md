@@ -129,6 +129,13 @@
 - Q: 以 `$` 開頭的函式名（`function $(s){}`）在 develop 與本 feature 都拋 `Invalid value for a FunctionScope`，要一併處理嗎？ → A: 不在本次範圍（FR-009
   scope 命名不變），記入 KI。（plan review）
 - Q: entry 節點只認函式 scope 可見的變數，使「被 block 內 `let` 遮蔽的讀取」在 entry 的 pair 消失，接受嗎？ → A: 接受，歸解析類並走人工簽核。（plan review）
+
+### Session 2026-11-17（analyze）
+
+- Q: D6 的回退如何達成，與 FR-005 衝突時誰優先？ → A: D6 以 eslint-scope 的 `optimistic` 選項達成，lib 中沒有另寫的回退函式（FR-012 (1) 白名單的 D6 項
+  在程式中無對應）；同一函式有參數預設值又有直接 `eval` 時，FR-005（預設值依 eslint-scope 解析到外層）優先於 D6／FR-008 的「與 `develop` 相同」。（analyze M2）
+- Q: 解析類移除與呼叫連結衍生差異的人工簽核由誰、何時做？ → A: implementer 只草擬「待簽核」表，不得自簽；使用者在 US4 的 golden 核對後、PR 前，對累積表
+  簽核一次；MDN 範例集的差異在 Polish 一併簽核。中途各 phase 只做機器核對（`--verify`），由 orchestrator 親自重跑後才 commit。（analyze N2）
 ## 表示法
 
 沿用 `specs/001-fix-known-issues/spec.md`「表示法」：def-use pair 寫成 `<變數>: <def> -> <use>`，`<def>` 為 `entry` 或節點標記；p-use 為

@@ -13,10 +13,11 @@
 | S2 | `Scope.prototype` 上不得定義 S1 的名稱，也不得定義 `vars`、`params`（以 `require` 後檢查 `Object.getOwnPropertyNames`） | `lib/dujs/scope.js` 及其子類 |
 | S3 | `require('eslint-scope')` | `lib/dujs/scopebinding.js` 以外 |
 | S4 | 讀取 eslint-scope 的名稱表：成員 `.set`（非呼叫的屬性讀取，且物件來自 eslint scope；以「成員名為 `set` 且不是 `Map#set` 呼叫的 callee」判定）、`.implicit`、`.through`、`.__get`、`.resolve` 以外的 `scopeManager` 名稱 API | 全部 lib；`.set` 只允許在白名單函式內 |
-| S5 | 在 `defuseanalyzer.js`、`callresolver.js`、`modelbuilder.js`、`hierarchy.js`、`variableanalyzer.js` 中讀取 `<x>.name`：只允許下表的屬性名讀取（以「檔案＋所在函式名＋成員運算式原文」精確比對），其他一律失敗 | 五個檔案 |
+| S5 | 在 `lib/dujs/*.js`（`scopebinding.js` 除外，由 S6 管）中讀取 `<x>.name`：只允許允許表中的讀取（以「檔案＋所在函式名＋成員運算式原文」精確比對），其他一律失敗 | `lib/dujs/*.js`（不含 `scopebinding.js`） |
 | S6 | `scopebinding.js` 中以字串名稱為鍵的 `Map#get`／`Map#has`／`Map#set`、`Set#has`（參數是 `<x>.name`、名為 `name` 的識別字或字串字面值）只允許出現在白名單函式內 | `scopebinding.js` |
 
-S5 允許的 `.name` 讀取（屬性名、方法名、輸出用名稱，不是變數查找；implement 時以實際程式碼補齊並在本表登錄，新增項需在 PR 說明）：
+S5 允許的 `.name` 讀取（屬性名、方法名、輸出用名稱，不是變數查找）。**允許表以 `tests/dujs/scopesource.js` 內的表為準**；下表為初始項，implement 時（T061）
+依實際程式碼在測試檔補齊（預期新增如 `scopetree.js` 的 `node.id.name`、`graphics.js` 的輸出名等，理由必填），新增項列於回報與 PR 說明，不回寫本表：
 
 | 檔案 | 函式 | 運算式 | 理由 |
 |------|------|--------|------|

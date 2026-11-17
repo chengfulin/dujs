@@ -6,7 +6,7 @@
 
 | 模式 | 基準側（develop） | 新側 | 原始碼（判準用） |
 |------|------------------|------|------------------|
-| `golden` | `git archive <base> tests/golden/expected*` 解到暫存目錄（`<base>` 預設為 Setup 記錄的基準 commit） | 工作樹 `tests/golden/expected*` | `tests/golden/golden.js` 的 case 定義（頁面＝檔案清單）與 `tests/golden/fixtures/` |
+| `golden` | `git archive <base> tests/golden/expected*` 解到暫存目錄（`<base>` 預設讀 `golden-diff.md` 檔頭，固定寫 `584e17d`；檔頭未填且無 `--base` 時結束碼 2） | 工作樹 `tests/golden/expected*` | `tests/golden/golden.js` 的 case 定義（頁面＝檔案清單）與 `tests/golden/fixtures/` |
 | `mdn` | `specs/006-eslint-scope/mdn/baseline-develop/<id>/`（§5） | 以本 branch CLI 對 `mdn/corpus/` 實跑到暫存目錄 | `mdn/corpus/` 與 `mdn/pages.json`（每個 id 的頁面＝檔案清單） |
 
 - 頁面原始碼以 `lib/dujs/sourcereader.js` 的 `getSourceFromFiles(files)` 重建（CLI 實際分析的串接字串），dot 標籤的行號即此字串的行號。
@@ -21,7 +21,8 @@ node specs/006-eslint-scope/tools/diffcheck.js mdn --report
 node specs/006-eslint-scope/tools/diffcheck.js mdn --verify specs/006-eslint-scope/mdn-diff.md
 ```
 
-`--verify` 結束碼：0＝全部通過；1＝有差異未記錄、記錄與實際不符、類別判準不成立、釘選筆數不符（逐項列出）。
+`--verify` 結束碼：0＝全部通過；1＝有差異未記錄、記錄與實際不符、類別判準不成立、釘選筆數不符（逐項列出）；2＝golden 模式無法取得基準（`golden-diff.md` 檔頭未填且無 `--base`），
+不回退 `HEAD` 或其他 commit。diffcheck 不進 `npm test`；每個改 golden 或 MDN 紀錄的階段由 orchestrator 親自重跑 `--verify` 通過後才 commit。
 
 ## 2. 差異單位（每頁、每個模型層級）
 
@@ -68,18 +69,21 @@ CatchClause 的（所在行、行範圍、參數綁定名）；`nonCatchDecl(N)`
 
 | case | 頁 | 移除筆數 | 原因摘要 | 簽核 |
 |------|----|----------|----------|------|
-| （範例）expected | page0 | 2 | catch-edge 型：`var e` 初值改歸 catch 參數 | 已逐筆檢查（#7、#8） |
+| （範例）expected | page0 | 2 | catch-edge 型：`var e` 初值改歸 catch 參數 | 草擬，待簽核（#7、#8） |
 
 ## 呼叫連結簽核（衍生差異的釘選筆數）
 
 | case | 頁 | 觸發（呼叫點：行、callee、解析變化） | 衍生 + | 衍生 − | 簽核 |
 |------|----|----------------------------------------|---------|---------|------|
-| （範例）s99 | page0 | L5 `f()`：block 函式 → 未解析 | 0 | 3 | 已逐筆檢查（#12–#14） |
+| （範例）s99 | page0 | L5 `f()`：block 函式 → 未解析 | 0 | 3 | 草擬，待簽核（#12–#14） |
 ```
 
 - 「內容」與 §2 的正規化字串逐字相同（反引號內）；每筆實際差異恰對應一列，多列或少列皆失敗。
 - 衍生差異列的「類別」寫 `連結`／`AnnexB`，「說明」必填且引用簽核表的觸發。
 - 解析類移除列的「說明」必填；「解析類移除簽核」表每頁一列，「移除筆數」與實際不符即失敗，沒有解析類移除的頁面不列。
+- golden-diff.md 檔頭寫死基準行 `584e17d`（`diffcheck.js golden` 未給 `--base` 時讀此行）。
+- 「簽核」欄（analyze N2）：implementer 只填「草擬，待簽核」（附列號），不得自簽；使用者在 golden 收尾（T063）後、PR 前對 golden-diff.md 的兩張累積表
+  簽核一次（T070），mdn-diff.md 在 MDN 驗證（T065）後簽核（T071）；簽核紀錄（簽核者、日期）由 orchestrator 寫入，之後重跑 `--verify`。
 - golden-diff.md 另依 004 慣例保留各階段（Foundational、US1、US3、US4）的敘述節、雜湊變化表（舊→新 sha256 前 12 碼）與「單元測試期望」表；
   「淨差異」表在每個改 golden 的階段結束時重新產生並 `--verify`。
 
@@ -95,7 +99,7 @@ CatchClause 的（所在行、行範圍、參數綁定名）；`nonCatchDecl(N)`
    裁決（以新雜湊取代或剔除）。
 3. 檔名維持附錄 A 的檔名（`specs/006-eslint-scope/mdn/corpus/<檔名>.js`）；`mdn/pages.json` 記錄每個 id 的頁面（s09 為兩頁 `-js s09-first.js -js s09-second.js`，其他為單頁單檔）；
    `mdn/README.md` 記錄來源 commit、授權（CC0）與 sha256 全碼。
-4. 以 develop 的 lib（本 branch 在 Setup 時與 develop 相同；或 `git worktree add <tmp> develop`）對每個 id 執行 CLI，只保存 `.dot` 檔到
+4. 以 develop 的 lib（本 branch 在 Setup 時與 develop 相同；或 `git archive 584e17d | tar -x -C <scratchpad>/develop` 後 `npm ci`）對每個 id 執行 CLI，只保存 `.dot` 檔到
    `mdn/baseline-develop/<id>/`（不存 `.png`、`report.html`），並以 `docs/research/mdn-baseline/tools/run-pairs.js` 輸出 `mdn/baseline-develop/<id>.pairs.txt` 供人工閱讀。
 5. 以 `tools/perf.js` 量 develop 的分析時間（research R15），寫入 `perf.md`。
-6. 同一個 commit 提交 corpus、快照與 perf 基準；此 commit 為 MDN 的「修正前」。
+6. 同一個 commit 提交 corpus、快照與 perf 基準；此 commit 為 MDN 的「修正前」。golden 的「修正前」不取此 commit，固定為 `584e17d`（Setup 不改 `tests/golden`）。

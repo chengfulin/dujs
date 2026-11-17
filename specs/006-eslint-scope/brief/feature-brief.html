@@ -63,8 +63,8 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>改用 eslint-scope 判定變數的宣告與參照</h1>
-<div class="meta">feature 006-eslint-scope · plan · 第 1 輪 · 2026-11-17</div>
-<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。範圍決策 D1–D7、clarify 與 plan review（Fable 仲裁）使用者已決的各題，本頁不再重問。</div>
+<div class="meta">feature 006-eslint-scope · analyze · 第 1 輪 · 2026-11-17</div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。範圍決策 D1–D7、clarify 與 plan review 使用者已決的各題，本頁不再重問。analyze 發現表已經 Fable 仲裁，嚴重度與修正方案以仲裁後為準；修正尚未套用。</div>
 
 <h2>看懂它</h2>
 
@@ -187,18 +187,33 @@ flowchart TD
 <li>外部依賴只有 eslint-scope（選項 <code>optimistic: true</code>）；espree 沿用。<small>來源：plan Technical Context；research R2</small></li>
 </ul>
 
-<h2>本輪變更（plan：技術選型與偏離）</h2>
+<h2>本輪變更（analyze：發現表）</h2>
+<p class="meta">來源：speckit-analyze（K／F）、sdd-spec-clarifier（M／I）、Fable 仲裁新發現（N）。本輪無 CRITICAL；HIGH 2 筆、MEDIUM 9 筆、LOW／INFO 10 筆。</p>
+
+<h3>HIGH（全列）</h3>
 <div class="box"><table>
-<tr><th>項目</th><th>選擇</th><th>狀態</th><th>說明（plan 小節）</th></tr>
-<tr><td>語言與執行環境</td><td>Node.js ≥ 24、CommonJS；<code>lib/</code> 維持 ES5 風格</td><td>沿用</td><td>Technical Context</td></tr>
-<tr><td>解析與測試工具</td><td>espree ^11.2.0、mocha、c8、ESLint 10</td><td>沿用</td><td>Technical Context；基線 1102 passing、抑制 118 筆</td></tr>
-<tr><td>eslint-scope</td><td>^9.1.2，由 devDependencies 轉為 runtime 依賴，lock 鎖版</td><td>新增</td><td>憲章 §TR-3；樹中已有 9.1.2；回答前輪「版本策略」疑點</td></tr>
-<tr><td>SC-003 量測</td><td>feature 目錄內獨立腳本 <code>tools/perf.js</code> 人工執行，結果記入 <code>perf.md</code>，不進 <code>npm test</code></td><td>使用者已決</td><td>回答前輪「是否自動化」疑點；計時易抖動</td></tr>
-<tr><td>模組範圍</td><td>新增 1 個 lib 模組、修改約 14 個 lib 檔、新增 6 個測試檔</td><td>新增</td><td>變更影響範圍</td></tr>
-<tr><td>偏離 tech-standards</td><td class="ok">無</td><td>—</td><td>規範以服務部署為主；無 §CP-6 例外</td></tr>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>說明</th><th>建議處置（仲裁後）</th></tr>
+<tr><td>N1</td><td class="no">HIGH</td><td>tasks Phase 2 Foundational</td><td>Foundational 一次派遣做完不可行（新增模組、API 全面切換、golden 三種性質混在一起）</td><td>明訂三批：2a 純新增、2b API 一次切換、2c golden；批間設檢查點</td></tr>
+<tr><td>N2</td><td class="no">HIGH</td><td>tasks T063、T065；diff-check 簽核</td><td>人工簽核會被 implementer 自己簽掉，失去把關意義</td><td>implementer 只草擬「待簽核」表，不得自簽；簽核時點見判斷點 2</td></tr>
 </table></div>
-<p class="meta">plan 階段已決（使用者 7 題）：U1 變數名放寬為 ES IdentifierName、U2 遮蔽以 eslint-scope 比對、U3 catch 不再定義區塊內賦值、U4 全域類放寬、Q1 可見性加 (c)、Q2 僅有 catch 參數的頁面、Q3 entry 只認函式 scope 可見者（見 plan「已裁決事項」）。</p>
-<p class="meta">告知（非判斷點）：Foundational 階段的 link-bypass 守門只驗 <code>e: L6 -&gt; L8</code>，其餘差異留到 US1。</p>
+
+<h3>MEDIUM（仲裁後修正方案）</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>位置</th><th>說明</th><th>建議處置</th></tr>
+<tr><td>K3</td><td>T013、T015、T016</td><td>diffcheck 比對基準不固定</td><td>基準固定 <code>584e17d</code>：T015 檔頭寫死、T013 未填即 exit 2、T016 驗 golden 與 suppressions 未變</td></tr>
+<tr><td>K5</td><td>T063</td><td>US4 golden 差異可能被當成預期差異放行</td><td>一律先當 T061 回歸，修到零差異才過</td></tr>
+<tr><td>F1</td><td>tasks 相依／並行</td><td>US1 與 US2 並行會同改 golden</td><td>刪 US1‖US2 並行；US2 在 US1 commit 後，T047 不用 <code>UPDATE_GOLDEN</code></td></tr>
+<tr><td>F2</td><td>contracts S5 允許表</td><td>契約與測試檔可能不同步</td><td>S5 允許表以測試檔為準；implementer 不改 contracts，回報後由 orchestrator 改</td></tr>
+<tr><td>M1</td><td>T029、T034</td><td>catch 的 GEN 歸屬不清</td><td>catch GEN 不走本體、歸 US1；T029 只加參數定義，T034 預期只列 catch 參數列</td></tr>
+<tr><td>M2</td><td>spec D6、FR-005、FR-008、FR-012 (1)</td><td>spec 未定義 D6 以 optimistic 達成；參數預設值＋直接 <code>eval</code> 時 FR-005 與 FR-008 互相牴觸；FR-012 (1) 的 D6 白名單無對應函式</td><td>spec 補 Clarification（見判斷點 1）</td></tr>
+<tr><td>M4</td><td>T035、靜態測試 S5</td><td>掃描範圍不足</td><td>S5 掃描擴到 <code>lib/dujs</code> 全部</td></tr>
+<tr><td>M6</td><td>Edge Cases 測試</td><td>缺測試：非參照識別字、for-of／for-in／解構宣告、串接後 module、<code>$</code>／非 ASCII 的 CLI 與 dot 輸出</td><td>補上述測試並指名到任務</td></tr>
+<tr><td>N3</td><td>T066</td><td><code>git worktree add</code> 違反 implementer 只准查詢類 git</td><td>改 <code>git archive</code>，或由 orchestrator 建立</td></tr>
+</table></div>
+
+<h3>LOW／INFO（彙總）</h3>
+<p>K1 plan 修改清單補 <code>eslint.config.js</code>；K2 US4-9 的 global 斷言於 US3 T050 補並註明；K4 acceptance 指名 <code>developpairs.json</code>；K6 不搬靜態測試、T035 加 grep 檢查；F3 quickstart 暫存路徑統一；M3 diffcheck 不進 <code>npm test</code>、每個 golden 閘門由 orchestrator 親跑 <code>--verify</code> 後才 commit、列入 PR 檢查清單；M5（LOW–MEDIUM）測試檔「修改限 Constraints 檔、新增案例依任務指名」、lib 檔數 14→17；I1 suppressions 閘門改「不得新增或增加 count」、必要時 <code>--prune-suppressions</code>；I2 MDN 暫存來源 Setup 先做 T008；N4 T016 先有雞才有蛋，隨 K3 消失。</p>
+<p class="meta">已決事項（不再問）：plan 階段使用者 7 題（U1–U4、Q1–Q3）與前輪 2 個判斷點皆採 A，見 plan「已裁決事項」。</p>
 
 <h2>工程師要決定的事</h2>
 
@@ -209,9 +224,11 @@ flowchart TD
 <tr><td>US2</td><td>情境 1–5（named-expr、自我遞迴、classdecl、pdef、shadow-*）</td><td class="ok">可驗證</td><td>情境 5 以凍結的 develop 輸出為基準（FR-012）</td></tr>
 <tr><td>US3</td><td>情境 1–8（全域 pair、跨頁、arguments／this、typeof、globalThis、本地 undefined）</td><td class="ok">可驗證</td><td>plan 以 <code>globals.js</code>（plan-u1、plan-u4）對應</td></tr>
 <tr><td>US4</td><td>情境 2–5、8（scope 數量、annexb、with／evalouter、op、mod）</td><td class="ok">可驗證</td><td>Foundational 以 <code>scopeguards.js</code> 守門</td></tr>
-<tr><td>US4</td><td>情境 1、7（差異皆屬 D2 類別）</td><td class="ok">可驗證</td><td>FR-012 (2) 腳本判定；解析類移除與呼叫連結需人工簽核並釘住筆數</td></tr>
-<tr><td>US4</td><td>情境 6（無名稱查找路徑）</td><td class="ok">可驗證</td><td>靜態測試；禁止清單 S1–S6、白名單 W1–W4 已由 plan 明列（contracts/static-check.md）</td></tr>
-<tr><td>US4</td><td>情境 9（宣告介面）、10（link-*）、11（link-bypass）</td><td class="ok">可驗證</td><td>情境 11 於 Foundational 只驗 <code>e: L6 -&gt; L8</code>，其餘到 US1</td></tr>
+<tr><td>US4</td><td>情境 1、7（差異皆屬 D2 類別）</td><td class="ok">可驗證</td><td>FR-012 (2) 腳本判定；解析類移除與呼叫連結需人工簽核並釘住筆數（K3 基準 <code>584e17d</code>、K5 差異先當回歸、N2 不得自簽）</td></tr>
+<tr><td>US4</td><td>情境 6（無名稱查找路徑）</td><td class="ok">可驗證</td><td>靜態測試；禁止清單 S1–S6、白名單 W1–W4 已由 plan 明列（contracts/static-check.md）；M4 掃描擴到 <code>lib/dujs</code> 全部、K6 於 T035 加 grep 檢查</td></tr>
+<tr><td>US4</td><td>情境 9（宣告介面）、10（link-*）、11（link-bypass）</td><td class="ok">可驗證</td><td>情境 11 於 Foundational 只驗 <code>e: L6 -&gt; L8</code>，其餘到 US1；情境 9 的 global 斷言於 US3 T050 補（K2）</td></tr>
+<tr><td>Edge Cases</td><td>非參照識別字、for-of／for-in／解構宣告、串接後 module、<code>$</code>／非 ASCII 的 CLI 與 dot 輸出</td><td class="no">缺</td><td>目前無對應測試任務（M6）；修正套用後轉為可驗證</td></tr>
+<tr><td>FR-005／FR-008</td><td>參數預設值＋直接 <code>eval</code> 時的解析結果</td><td class="no">不可驗證</td><td>兩條 FR 互相牴觸，spec 未定義優先順序（M2；判斷點 1）</td></tr>
 <tr><td>SC</td><td>SC-003 時間不超過 develop 的 1.5 倍</td><td class="ok">可驗證（人工）</td><td>3 次取中位數，以獨立腳本量測；不在自動測試中（Success Criteria）</td></tr>
 </table></div>
 
@@ -219,19 +236,19 @@ flowchart TD
 <p>無缺漏、無偏離（規範以服務部署為主，不涵蓋 library 依賴）。新增的 runtime 依賴屬已確認的技術選型。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無。憲章 §CP-1／§CP-4／§CP-6 逐條檢查皆 PASS（plan Constitution Check）。</p>
+<p>無 CRITICAL。HIGH 2 筆（N1、N2）為執行流程風險，附件未標註對應憲章條款；受影響 story：N1＝Foundational 之後的全部 story（US1–US4），N2＝US4 的 golden 差異簽核（T063、T065）。憲章 §CP-1／§CP-4／§CP-6 於 plan 階段逐條 PASS。</p>
 
-<h3>本輪判斷點：2 個（已決：皆採 A，plan review 通過，2026-11-17）</h3>
+<h3>本輪判斷點：2 個（已決：皆採 A；修正方案同意套用，2026-11-17；見 spec Clarifications「analyze」）</h3>
 <div class="box"><table>
 <tr><th>#</th><th>問題</th><th>方案（建議標 *）</th><th>影響</th><th>出處</th></tr>
-<tr><td>1</td><td><code>function $(s){}</code> 等以 <code>$</code> 開頭的函式名在 develop 與本 feature 都會拋 <code>Invalid value for a FunctionScope</code>（只放寬了變數名，函式 scope 名稱規則未動）；要不要一併處理？</td>
-<td>A* 記入 KI、不在本次範圍（FR-009 scope 命名不變；plan 現寫法）<br>B 一併放寬 FunctionScope 名稱（需改 spec）</td>
-<td>A：行為與 develop 相同，MDN 範例集無此寫法；B：改動 scope 命名，牴觸 FR-009 需先改 spec</td>
-<td>spec FR-009、Clarifications（U1）；plan「已知風險」</td></tr>
-<tr><td>2</td><td>Q3（entry 節點只認函式 scope 可見的變數）會讓「被 block 內 <code>let</code> 遮蔽的讀取」在 entry 的 pair 消失；這類差異如何處理？</td>
-<td>A* 接受，歸解析類、走人工簽核（plan 現寫法）<br>B 其他（需使用者指定做法）</td>
-<td>A：維持 develop 的 entry 行為，KI §18 留給 005，差異需逐筆簽核；B：可能改動 entry 規則與 D2 類別</td>
-<td>spec Clarifications（Q3）；plan R6a、diff-check「解析類移除簽核」</td></tr>
+<tr><td>1</td><td>spec 是否補 Clarification：「D6 以 eslint-scope 的 <code>optimistic</code> 達成；參數預設值＋直接 <code>eval</code> 時 FR-005 優先於 D6／FR-008；FR-012 (1) 的 D6 白名單無對應函式」？</td>
+<td>A* 補上<br>B 堅持 spec 字面（D6 自寫回退）、需 replan</td>
+<td>A：只補 spec 一段，兩條 FR 的優先順序與白名單空項一併釐清；B：改自寫回退，需 replan</td>
+<td>spec D6、FR-005、FR-008、FR-012 (1)；Clarifications</td></tr>
+<tr><td>2</td><td>解析類移除與呼叫連結衍生差異的人工簽核，由誰、何時做？</td>
+<td>A* implementer 草擬「待簽核」表，使用者在 US4 T063 後、PR 前對累積表簽一次；MDN 在 T065 後一併簽<br>B 每個改 golden 的 phase 都停下來簽<br>C orchestrator 或 validator 代簽</td>
+<td>A：簽核一次、仍由人把關；B：最嚴但會中斷流程多次；C：省人力但失去「人工」簽核意義</td>
+<td>spec FR-012 (2)；tasks T063、T065；plan「diff-check 簽核」</td></tr>
 </table></div>
 
 <h3>次要疑點</h3>
