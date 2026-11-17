@@ -186,18 +186,18 @@ description: "Task list for feature 005-summary-analysis"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T064 [P] [US3] 新增 `tests/dujs/exceptionsummary.js`（讀 `probes005/`）：US3-1 `p4.js`（有 `x: L4 -> L7`、無 `x: L1 -> L7`）；US3-2 `m1-mdn-error-objects.js`（有 `state: L1 -> L13`、`state: L1 -> L15`、`state: L7 -> L15`、`e: L11 -> L12`；無 `state: L7 -> L13`），另以 `g2-try-catch.js` 對照同結論；US3-3 `us3-3.js`（有 `x: L3 -> L10`、`x: L1 -> L10`；無 `x: L5 -> L10`）；US3-4 `m2-mdn-finally.js`（有 `opened: L3 -> L16`、`opened: L9 -> L22`；無 `opened: L1 -> L16`、`opened: L1 -> L22`）；US3-6 `m3-mdn-finally-return.js`（有 `r: L10 -> L16`、`r: L10 -> L18`）；US3-7 `c-nt.js`（有 `x: L6 -> L9`）
-- [ ] T065 [P] [US3] 在 `tests/dujs/summary.js` 加：`exceptional`＝例外抵達 exit 的定義（例外邊帶 IN、不做 KILL）∪ 呼叫紀錄 `exceptionalReturn` 為 exit 者的 `applyExceptional`（沿呼叫鏈往外）；`finallyExit` 重拋屬例外抵達；可見性過濾
-- [ ] T066 [P] [US3] 在 `tests/dujs/reachingsolver.js` 加：`exceptionalReturn` 得 `applyExceptional(S, OUT(callNode))`、`exceptionalReturn` 為 null 時不貢獻、callNode 改變時重新入列
-- [ ] T067 [US3] 執行 `npx mocha tests/dujs/exceptionsummary.js tests/dujs/summary.js tests/dujs/reachingsolver.js` 確認失敗（red；US3-4、US3-7 守門可能已通過，列於回報）
+- [X] T064 [P] [US3] 新增 `tests/dujs/exceptionsummary.js`（讀 `probes005/`）：US3-1 `p4.js`（有 `x: L4 -> L7`、無 `x: L1 -> L7`）；US3-2 `m1-mdn-error-objects.js`（有 `state: L1 -> L13`、`state: L1 -> L15`、`state: L7 -> L15`、`e: L11 -> L12`；無 `state: L7 -> L13`），另以 `g2-try-catch.js` 對照同結論；US3-3 `us3-3.js`（有 `x: L3 -> L10`、`x: L1 -> L10`；無 `x: L5 -> L10`）；US3-4 `m2-mdn-finally.js`（有 `opened: L3 -> L16`、`opened: L9 -> L22`；無 `opened: L1 -> L16`、`opened: L1 -> L22`）；US3-6 `m3-mdn-finally-return.js`（有 `r: L10 -> L16`、`r: L10 -> L18`）；US3-7 `c-nt.js`（有 `x: L6 -> L9`）
+- [X] T065 [P] [US3] 在 `tests/dujs/summary.js` 加：`exceptional`＝例外抵達 exit 的定義（例外邊帶 IN、不做 KILL）∪ 呼叫紀錄 `exceptionalReturn` 為 exit 者的 `applyExceptional`（沿呼叫鏈往外）；`finallyExit` 重拋屬例外抵達；可見性過濾
+- [X] T066 [P] [US3] 在 `tests/dujs/reachingsolver.js` 加：`exceptionalReturn` 得 `applyExceptional(S, OUT(callNode))`、`exceptionalReturn` 為 null 時不貢獻、callNode 改變時重新入列
+- [X] T067 [US3] 執行 `npx mocha tests/dujs/exceptionsummary.js tests/dujs/summary.js tests/dujs/reachingsolver.js` 確認失敗（red；US3-4、US3-7 守門可能已通過，列於回報）
 
 ### 實作
 
-- [ ] T068 [US3] `lib/dujs/summary.js`：計算 `exceptional`（`exitArrivals.exceptional` 的非哨兵 VarDef ∪ 以 exit 為 `exceptionalReturn` 的呼叫紀錄貢獻），`conservative` 的 gen 合併照 R13
-- [ ] T069 [US3] `lib/dujs/reachingsolver.js`：CallSiteRecord 的 `exceptionalReturn` 虛擬貢獻 `applyExceptional(summaryOf(callee), OUT(callNode))`（經 `flatVarDefOf`）；`lib/dujs/outputwriter.js` 的 `summaries` 輸出 `exceptional`
-- [ ] T070 [US3] `npx mocha tests/dujs/exceptionsummary.js tests/dujs/summary.js tests/dujs/reachingsolver.js tests/dujs/matching.js` 全過；`run.js` 對 p4、m1、us3-3、m2、m3、c-nt 符合 spec 預期；還原 T047、T062 標「US3 還原」的暫改期望，並核對 `grep -rn "US3 還原" tests` 無殘留
-- [ ] T071 [US3] Golden 更新（序列化，US3；依「全程規則」步驟 1–5）：預期 US1 階段暫時消失的例外路徑 pair 恢復、`摘要` 類（例外不返回）；寫入 `golden-diff.md` US3 節，列出與 US1「US3 還原」各列（golden 與單元測試期望）的沖銷並核對無殘留；orchestrator 親自重跑 `--verify` 通過後才 commit
-- [ ] T072 [US3] US3 閘門：閘門全過、`diffcheck.js golden --verify` 結束碼 0；回報可提交
+- [X] T068 [US3] `lib/dujs/summary.js`：計算 `exceptional`（`exitArrivals.exceptional` 的非哨兵 VarDef ∪ 以 exit 為 `exceptionalReturn` 的呼叫紀錄貢獻），`conservative` 的 gen 合併照 R13
+- [X] T069 [US3] `lib/dujs/reachingsolver.js`：CallSiteRecord 的 `exceptionalReturn` 虛擬貢獻 `applyExceptional(summaryOf(callee), OUT(callNode))`（經 `flatVarDefOf`）；`lib/dujs/outputwriter.js` 的 `summaries` 輸出 `exceptional`
+- [X] T070 [US3] `npx mocha tests/dujs/exceptionsummary.js tests/dujs/summary.js tests/dujs/reachingsolver.js tests/dujs/matching.js` 全過；`run.js` 對 p4、m1、us3-3、m2、m3、c-nt 符合 spec 預期；還原 T047、T062 標「US3 還原」的暫改期望，並核對 `grep -rn "US3 還原" tests` 無殘留
+- [X] T071 [US3] Golden 更新（序列化，US3；依「全程規則」步驟 1–5）：預期 US1 階段暫時消失的例外路徑 pair 恢復、`摘要` 類（例外不返回）；寫入 `golden-diff.md` US3 節，列出與 US1「US3 還原」各列（golden 與單元測試期望）的沖銷並核對無殘留；orchestrator 親自重跑 `--verify` 通過後才 commit
+- [X] T072 [US3] US3 閘門：閘門全過、`diffcheck.js golden --verify` 結束碼 0；回報可提交
 
 **Checkpoint**: US3 獨立可驗（例外不返回呼叫之後、例外定義流向 catch／finally）。
 
@@ -268,7 +268,7 @@ description: "Task list for feature 005-summary-analysis"
 - [ ] T099 **Golden 使用者簽核閘門（orchestrator 執行，非 implementer）**：T098 後、PR 前，orchestrator 把 `golden-diff.md` 的「釘選與簽核」表（`摘要`、`連結`、`finally`、`保守摘要`、`例外IN` 新增 pair）交使用者簽核；同意後改簽核欄（簽核者、日期）、重跑 `diffcheck.js golden --verify` 結束碼 0 並 commit；不同意的列視為回歸，退回 implementer 修正
 - [ ] T100 **MDN 使用者簽核閘門（orchestrator 執行，非 implementer）**：T094、T098 後，orchestrator 把 `mdn-diff.md` 的「釘選與簽核」表交使用者簽核；同意後改簽核欄、重跑 `diffcheck.js mdn --verify` 結束碼 0 並 commit；不同意的列退回修正。完成後建立 PR（目標 `develop`）
 - [ ] T101 [P] 處理 Setup 審查延後的 diffcheck SHOULD-FIX（`specs/005-summary-analysis/tools/diffcheck.js`、`diffcheck.test.js`）：R3 graph `~` 不計入釘選表 ±；R4 消失 pair 的 例外IN `throwingLines` 以 `頁:行` 為鍵，不跨頁碰撞；R5 鏈式呼叫（`p.then(function () {…}).catch(g)`）的 callback 本體行不算呼叫點；各補自我測試。須在 T094（MDN 差異）與 T099（golden 簽核）之前完成
-- [ ] T102 [P] US5 收尾的延後項：(a) `lib/dujs/defuseanalyzer.js` `findUSESet` 中巢狀 ForIn／ForOf／SwitchCase 規則與 `useNestedLoopHead`（US5 後可能為死碼）：以覆蓋率或探針確認是否可達，不可達則移除、可達則補測試（US5 審查 R1）；(b) `docs/known-issues.md` §18：更正「這些 use 在各自敘述節點也讀得到」——`case` 的 test、單獨識別字敘述在任何節點都不算讀取（既有建模；US5 驗收發現），隨 T096 一併處理；(c) `tests/dujs/summary.js` 的 `should not hold a variable defined before the nested callee reads it` 呼叫頁面函式 `g()`，在 US2 D2 之前未連結而空泛通過——US2 後確認它確實驗到行為，否則改寫（US1 第 3 批回報）；(d) US1 審查 SHOULD-FIX：`lib/dujs/summary.js` 的 `pages` 只當「已算過」旗標，改 WeakSet（R1）；`reachingsolver.js` 的 `applySummary` 與 `summary.apply` 兩份實作，加註須同步並補兩者結果相等的測試（R2）；`tests/dujs/matching.js` 的「callNode 保有 exception 邊」斷言只套鏈首 call，排除 callNode 為另一筆 call 之 callReturn 者（R3）；`defuseanalyzer.js` 的 `bypassFilter` 已無 lib 呼叫端，刪除或改測 `isVisibleToCallee`（R4）
+- [ ] T102 [P] US5 收尾的延後項：(a) `lib/dujs/defuseanalyzer.js` `findUSESet` 中巢狀 ForIn／ForOf／SwitchCase 規則與 `useNestedLoopHead`（US5 後可能為死碼）：以覆蓋率或探針確認是否可達，不可達則移除、可達則補測試（US5 審查 R1）；(b) `docs/known-issues.md` §18：更正「這些 use 在各自敘述節點也讀得到」——`case` 的 test、單獨識別字敘述在任何節點都不算讀取（既有建模；US5 驗收發現），隨 T096 一併處理；(c) `tests/dujs/summary.js` 的 `should not hold a variable defined before the nested callee reads it` 呼叫頁面函式 `g()`，在 US2 D2 之前未連結而空泛通過——US2 後確認它確實驗到行為，否則改寫（US1 第 3 批回報）；(d) US1 審查 SHOULD-FIX：`lib/dujs/summary.js` 的 `pages` 只當「已算過」旗標，改 WeakSet（R1）；`reachingsolver.js` 的 `applySummary` 與 `summary.apply` 兩份實作，加註須同步並補兩者結果相等的測試（R2）；`tests/dujs/matching.js` 的「callNode 保有 exception 邊」斷言只套鏈首 call，排除 callNode 為另一筆 call 之 callReturn 者（R3）；`defuseanalyzer.js` 的 `bypassFilter` 已無 lib 呼叫端，刪除或改測 `isVisibleToCallee`（R4）；(e) US3 審查 SHOULD-FIX：可達性補洞補模型層端到端測試——`try { if (h()) {…} } catch (e) { use(x) }`（審查實測 `x: L2 -> L6` 成立）與鏈式呼叫 `a().b()` 例外抵達 catch／exit（R1）；`reachingsolver.js` 的 `applyExceptionalSummary` 與 `summary.applyExceptional` 互註「語意須同步」或抽到無循環的共用模組（R2，與 (d) R2 併處理）
 
 **Checkpoint**: oracle、MDN、效能、文件與最終驗證完成，golden 與 MDN 差異皆經使用者簽核；可建立 PR。
 

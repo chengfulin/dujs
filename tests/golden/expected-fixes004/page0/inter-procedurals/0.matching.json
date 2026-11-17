@@ -47,7 +47,11 @@
       "upwardExposed": [
         "c"
       ],
-      "exceptional": []
+      "exceptional": [
+        "c@n99",
+        "x@n103",
+        "y@n105"
+      ]
     },
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5": {
       "normalReturn": true,
@@ -63,7 +67,11 @@
       "upwardExposed": [
         "c"
       ],
-      "exceptional": []
+      "exceptional": [
+        "c@n99",
+        "x@n103",
+        "y@n105"
+      ]
     }
   }
 }

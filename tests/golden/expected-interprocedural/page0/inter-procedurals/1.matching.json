@@ -57,7 +57,9 @@
       "upwardExposed": [
         "total"
       ],
-      "exceptional": []
+      "exceptional": [
+        "total@n27"
+      ]
     },
     "$DOMAIN.$PAGE_0.addTo.scale": {
       "normalReturn": true,

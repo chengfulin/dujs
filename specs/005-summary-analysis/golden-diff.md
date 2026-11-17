@@ -312,8 +312,8 @@ cfgId 為全域計數器，其後建立的模型（page0 intra-procedurals 6–8
 | `tests/dujs/modelbuilder.js` | should keep the onEvent targets g, h, g of probe r8 in order with duplicates | 去掉 `n: L1 -> L6`、`n: L2 -> L6` | 同 r8 | FR-001、FR-002 | — |
 | `tests/dujs/methodcalls.js` | US3-7 should connect new A().m(); to the field, the constructor and then m | 去掉 `x: L5 -> L13` | m 每條正常路徑定義 x（L9）；L8 例外不再回 L12 callReturn | FR-001、FR-002 | — |
 | `tests/dujs/newcallsite.js` | US2-3 should connect new B(); to B only without following extends | 去掉 `x: L1 -> L15` | B 的 constructor 正常返回必經 L11 `x = 2`；`super()` 例外不再回 L14 callReturn | FR-001、FR-002 | — |
-| `tests/dujs/finallyflow.js` | US6-1（c-fin1） | present `r: L4 -> L14`、`r: L4 -> L16` → present 空（absent 不變） | f 例外離開時的定義暫失（Q-a 後 callNode 例外邊只帶呼叫前定義；`exceptional` 待 US3） | FR-006、FR-013 | US3 還原 |
-| `tests/dujs/finallyflow.js` | US6-2（c-fin3） | present `r: L7 -> L16`、`r: L7 -> L18` → present 空 | 同上 | FR-006、FR-013 | US3 還原 |
+| `tests/dujs/finallyflow.js` | US6-1（c-fin1） | present `r: L4 -> L14`、`r: L4 -> L16` → present 空（absent 不變） | f 例外離開時的定義暫失（Q-a 後 callNode 例外邊只帶呼叫前定義；`exceptional` 待 US3） | FR-006、FR-013 | US3 還原（已沖銷，見 US3 節） |
+| `tests/dujs/finallyflow.js` | US6-2（c-fin3） | present `r: L7 -> L16`、`r: L7 -> L18` → present 空 | 同上 | FR-006、FR-013 | US3 還原（已沖銷，見 US3 節） |
 | `tests/dujs/summary.js`、`tests/dujs/summaryanalysis.js` | `scopeNamed`、US1-8 的 scope 查找；`invariants` 的 no-write 快照；`applyExceptional` 的 `containEql` | 期望不變；修測試工具：`Scope.name` 為全名改比對末段；`Model.graph`／FlowNode Set 欄位讀取即複本，改比對元素 identity；`containEql(VarDef)` 會讓 should-format 拋錯，改 `indexOf` | 測試本身無法執行（與實作無關） | — | — |
 | `tests/dujs/summary.js` | `upward-exposed uses` › `should hold the upward-exposed uses of a nested callee` | 程式由「函式 f 內呼叫頁面函式 `g()`」改為 class 方法 `f() { this.g(); }`、`g() { return y; }`；斷言同為 g 與 f 的 `upwardExposed` 含 `y` | 函式內呼叫頁面函式需 US2 的 D2 才連結；依 T044 遞迴案例用 `this.m()` 的同一原則改寫（orchestrator 裁決），驗的仍是巢狀被呼叫端的 `upwardExposed` 併入（測試註解說明） | FR-001 | — |
 | `tests/dujs/matching.js` | US1-5 p1、us3-3 的 `calleeScope` 比對 | 期望不變；修測試工具：`Scope.name` 為全名（`$DOMAIN.$PAGE_0.f`），改比對末段（`lastPartOf`）。`matching.json` 的 `callee` 依 contracts/matching-output.md §2 為全名，不變 | 測試本身無法執行（與實作無關） | — | — |
@@ -322,17 +322,46 @@ cfgId 為全域計數器，其後建立的模型（page0 intra-procedurals 6–8
 
 ### 變化說明
 
-（待 T071 填寫）
+- 摘要第四項 `exceptional`（T068，`lib/dujs/summary.js`）：例外抵達 exit 的非哨兵定義（`exitArrivals.exceptional`：exception 邊帶 IN，含 finallyExit 的重拋）
+  ∪ 以本圖 exit 為 `exceptionalReturn` 的呼叫紀錄 `applyExceptional(S_callee, OUT(callNode))`（沿呼叫鏈往外），經可見性過濾；generator／async 的 `gen`
+  另併入完整 `exceptional`（R13）。求解器的 `exitArrivals` 維持只依邊計算，呼叫紀錄的貢獻由摘要自行取聯集（orchestrator 裁決，兩者不重複）。
+- `exceptionalReturn` 虛擬貢獻（T069，`lib/dujs/reachingsolver.js`）：`calls` 模式下，每筆 `exceptionalReturn` 不為 null 的呼叫紀錄，其 `exceptionalReturn` 的 IN 併入
+  `OUT(callNode) ∪ exceptional`（經 `flatVarDefOf`，對不到時拋錯；不做 KILL）；callNode 的 OUT 改變時重新入列；可達性：callNode 可達即視 `exceptionalReturn` 可達
+  （決策前的 CALL NODE 與串接後段的 callNode 沒有例外邊）。`summary.computeSummary` 與 `defuseanalyzer.doAnalysis` 兩個呼叫端同時生效；`outputwriter.js` 未改（已輸出 `exceptional`）。
+- golden（T071）：所有 `.dot` 位元組不變，淨差異維持 114 筆（`--report` 與既有表逐列相同），`tests/golden/manifest.json` 不需更新（`*.matching.json` 只登記於 `added`、無雜湊）。
+  變化只在 8 個 `*.matching.json` 的 `summaries.<scope>.exceptional` 由空變非空（`expected-fixes004` 5、`expected-interprocedural` 3）：
+  - `expected-fixes004`：`Counter` 的 add（`$ANONYMOUS_FUN_4`）、bump（`$ANONYMOUS_FUN_5`）互相遞迴，`exceptional`＝`{c, x, y}`（與 `gen` 相同：內層呼叫的例外沿 add↔bump 往外）；
+    `page0/inter-procedurals/1.matching.json` 只有一個無例外定義的被呼叫端，不變。
+  - `expected-interprocedural`：`addTo` 的 `exceptional`＝`{total}`（fixture L8 `scale()` 拋錯時帶 L7 的 `total`）；`inter-procedurals/0`、`2` 的被呼叫端沒有例外定義，不變。
+  - 這些例外定義在頁面層的 `exceptionalReturn` 是 LOOP（`replayLoop` 後），但與正常返回的 `gen` 相同，經 LOOP 到處理器的 pair 已存在，因此沒有新增 pair；
+    `y: 14 -> 52`（#93、#104、#114，US1 標「US3 不還原」）維持消失。
+- 與 US1「US3 還原」各列的沖銷：golden 中 US1 標「US3 還原」者 0 筆（無需沖銷）；單元測試期望表兩列（`finallyflow.js` US6-1、US6-2）於下表沖銷，
+  `grep -rn "US3 還原" tests` 無輸出。
 
 ### 雜湊變化表（舊→新 sha256 前 12 碼）
 
+`.dot` 無變化；下列為新增檔 `*.matching.json`（不在 manifest `baseline`）的雜湊變化，僅供核對。
+
 | case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
 |------|------|---------------------------|------|
+| expected-fixes004 | inter-page/0.matching.json | e848c5d44262 → dc1328f5741b | add、bump 的 `exceptional` 填入 `c`、`x`、`y` |
+| expected-fixes004 | page0/inter-procedurals/0.matching.json | 8629aa556f01 → 4616b726692c | 同上 |
+| expected-fixes004 | page0/inter-procedurals/2.matching.json | b441d7d2d4cb → 267dc6594a86 | 同上 |
+| expected-fixes004 | page0/inter-procedurals/3.matching.json | 838401ceef76 → 5ca05fb3918d | 同上 |
+| expected-fixes004 | page0/intra-pages/0.matching.json | da2ba7360f42 → 25efed8683d5 | 同上 |
+| expected-interprocedural | inter-page/0.matching.json | 655b95be61d6 → 0fa2541b0f5e | addTo 的 `exceptional` 填入 `total` |
+| expected-interprocedural | page0/inter-procedurals/1.matching.json | 8e57c9794bc2 → 13b742cb86c1 | 同上 |
+| expected-interprocedural | page0/intra-pages/0.matching.json | 106a3ac1c0bb → ec8075b4634c | 同上 |
 
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/finallyflow.js` | US6-1（c-fin1）：present 空 → `r: L4 -> L14`、`r: L4 -> L16`（還原；沖銷 US1 節單元測試期望表 US6-1 列），刪除「US3 還原」註解 | FR-006、FR-013 |
+| `tests/dujs/finallyflow.js` | US6-2（c-fin3）：present 空 → `r: L7 -> L16`、`r: L7 -> L18`（還原；沖銷 US1 節單元測試期望表 US6-2 列），刪除「US3 還原」註解 | FR-006、FR-013 |
+| `tests/dujs/exceptionsummary.js` | 新增（T064）：US3-1…4、6、7，US3-2 另以 g2-try-catch 對照；既有測試期望無其他翻轉 | FR-006、FR-014 |
+| `tests/dujs/summary.js` | 新增 `exceptional (User Story 3)` 六案例（T065） | FR-001、FR-006 |
+| `tests/dujs/reachingsolver.js` | 新增 `calls mode (exceptional return)` 六案例（T066） | FR-006 |
 
 ## US4
 

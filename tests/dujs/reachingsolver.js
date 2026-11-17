@@ -265,6 +265,126 @@ describe('reachingsolver', function () {
 		});
 	});
 
+	/// User Story 3 (T066, research R2, R5): the exceptionalReturn of a CallSiteRecord gets
+	/// applyExceptional(summary, OUT(call node)) = OUT(call node) U exceptional, without KILL
+	describe('calls mode (exceptional return)', function () {
+		/// entry (d0 of x, dy of y) -> head; head -T-> body (d1 of x) -> head; head -F-> call; the call
+		/// node has no exception edge (a CALL NODE before a decision): the handler is reached by the record only
+		function solveWithExceptional(summary, options) {
+			options = options || {};
+			var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
+				exit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
+				head = new FlowNode(),
+				body = new FlowNode(),
+				call = new FlowNode(FlowNode.CALL_NODE_TYPE),
+				calleeEntry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
+				calleeExit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
+				callReturn = new FlowNode(FlowNode.CALL_RETURN_NODE_TYPE),
+				handler = new FlowNode(),
+				d0 = vardefOf(x, entry),
+				dy = vardefOf(y, entry),
+				d1 = vardefOf(x, body),
+				dE = vardefOf(x, calleeEntry),
+				calleeScope = {};
+			entry.connect(head);
+			head.connect(body, FlowNode.TRUE_BRANCH_CONNECTION_TYPE);
+			body.connect(head);
+			head.connect(call, FlowNode.FALSE_BRANCH_CONNECTION_TYPE);
+			call.connect(calleeEntry, FlowNode.CALL_CONNECTION_TYPE);
+			calleeEntry.connect(calleeExit);
+			calleeExit.connect(callReturn, FlowNode.RETURN_CONNECTION_TYPE);
+			callReturn.connect(exit);
+			if (options.handlerToExit !== false) {
+				handler.connect(exit);
+			}
+			var exceptionalReturn = handler;
+			if (options.toExit) {
+				exceptionalReturn = exit;
+			} else if (options.noTarget) {
+				exceptionalReturn = null;
+			}
+			var record = {callNode: call, callReturn: callReturn, calleeScope: calleeScope, exceptionalReturn: exceptionalReturn},
+				ofCallee = summary(dE),
+				solveOptions = optionsOf(new Map([[entry, [d0, dy]], [body, [d1]]]), {
+					calls: [record],
+					summaryOf: function () {
+						return ofCallee;
+					}
+				});
+			if (!!options.flatVarDefOf) {
+				solveOptions.flatVarDefOf = options.flatVarDefOf;
+			}
+			var solved = solver.solve(graphOf([entry, exit, head, body, call, calleeEntry, calleeExit, callReturn, handler]),
+				solveOptions);
+			return {
+				solved: solved,
+				handler: solved.results.has(handler) ? solved.results.get(handler).in : null,
+				exit: solved.results.has(exit) ? solved.results.get(exit).in : null,
+				d0: d0, dy: dy, d1: d1, dE: dE
+			};
+		}
+
+		it('should give applyExceptional(summary, OUT(call node)) to the exceptionalReturn, without KILL', function () {
+			var solved = solveWithExceptional(function (dE) {
+				return {normalReturn: true, gen: new Set(), mustKill: new Set([x]), exceptional: new Set([dE])};
+			});
+			shouldHaveExactly(solved.handler, [solved.d0, solved.dy, solved.d1, solved.dE]);
+		});
+
+		it('should analyze the exceptionalReturn of a callee without a normal return', function () {
+			var solved = solveWithExceptional(function (dE) {
+				return {normalReturn: false, gen: new Set(), mustKill: new Set(), exceptional: new Set([dE])};
+			});
+			shouldHaveExactly(solved.handler, [solved.d0, solved.dy, solved.d1, solved.dE]);
+			shouldHaveExactly(solved.exit, [solved.d0, solved.dy, solved.d1, solved.dE]);
+		});
+
+		/// the call node is in a loop: OUT(call node) grows after the handler is analyzed first
+		it('should analyze the exceptionalReturn again when OUT of the call node changes', function () {
+			var solved = solveWithExceptional(function () {
+				return {normalReturn: false, gen: new Set(), mustKill: new Set(), exceptional: new Set()};
+			});
+			shouldHaveExactly(solved.handler, [solved.d0, solved.dy, solved.d1]);
+		});
+
+		it('should give nothing when the exceptionalReturn is null', function () {
+			var solved = solveWithExceptional(function (dE) {
+				return {normalReturn: true, gen: new Set(), mustKill: new Set(), exceptional: new Set([dE])};
+			}, {noTarget: true});
+			should(solved.handler).be.null();
+			shouldHaveExactly(solved.exit, [solved.d0, solved.dy, solved.d1]);
+		});
+
+		it('should map the exceptional definitions to the graph by flatVarDefOf', function () {
+			var mapped = vardefOf(y, new FlowNode()),
+				solved = solveWithExceptional(function (dE) {
+					return {normalReturn: false, gen: new Set(), mustKill: new Set(), exceptional: new Set([dE])};
+				}, {flatVarDefOf: function () {
+					return mapped;
+				}});
+			solved.handler.has(mapped).should.be.true();
+			solved.handler.has(solved.dE).should.be.false();
+			should(function () {
+				solveWithExceptional(function (dE) {
+					return {normalReturn: false, gen: new Set(), mustKill: new Set(), exceptional: new Set([dE])};
+				}, {flatVarDefOf: function () {
+					return null;
+				}});
+			}).throw(/no VarDef in the graph/);
+		});
+
+		/// the virtual contribution to the exit is in IN(exit), not in exitArrivals (computed from the edges
+		/// only; the summary adds the records whose exceptionalReturn is the exit itself)
+		it('should not add the virtual contribution to the exit into exitArrivals', function () {
+			var solved = solveWithExceptional(function (dE) {
+				return {normalReturn: false, gen: new Set(), mustKill: new Set(), exceptional: new Set([dE])};
+			}, {toExit: true, handlerToExit: false});
+			shouldHaveExactly(solved.exit, [solved.d0, solved.dy, solved.d1, solved.dE]);
+			shouldHaveExactly(solved.solved.exitArrivals.exceptional, []);
+			shouldHaveExactly(solved.solved.exitArrivals.normal, []);
+		});
+	});
+
 	describe('transfer', function () {
 		it('should compute OUT = (IN - KILL) U GEN and give GEN and KILL', function () {
 			var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),

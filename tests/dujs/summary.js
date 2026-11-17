@@ -310,6 +310,106 @@ describe('summary (feature 005, User Story 1)', function () {
 		});
 	});
 
+	/// User Story 3 (T065, research R3, R5): the definitions reaching the exit exceptionally
+	describe('exceptional (User Story 3)', function () {
+		/// probes005/us3-3.js: L4 throwing leaves s with x of L3; L5 throwing carries IN (x of L3), not x of L5
+		it('should hold the definitions reaching the exit by an exception edge, carrying IN (us3-3)', function () {
+			var result = analyzeAndSummarize(fs.readFileSync(path.join(PROBES005, 'us3-3.js'), 'utf8')),
+				summary = summaryOf(result, 's');
+			defsOf(summary.exceptional).should.eql(['x@L3']);
+			defsOf(summary.gen).should.eql(['x@L5']);
+		});
+
+		/// f calls g by this.g() (linked since feature 004) out of any try: the call leaves f by its exit,
+		/// so the exceptional definitions of g (applyExceptional at the call) are exceptional for f too
+		it('should hold the exceptional definitions of a callee whose exception leaves by the exit', function () {
+			var result = analyzeAndSummarize([
+				'var x = 0;',
+				'class A {',
+				'f() {',
+				'this.g();',
+				'x = 3;',
+				'}',
+				'g() {',
+				'x = 1;',
+				'console.log(1);',
+				'x = 2;',
+				'}',
+				'}',
+				'new A().f();'
+			].join('\n'));
+			/// f is $ANONYMOUS_FUN_0, g is $ANONYMOUS_FUN_1; x of L10 reaches the exit of f by L5 throwing
+			defsOf(summaryOf(result, '$ANONYMOUS_FUN_1').exceptional).should.eql(['x@L8']);
+			defsOf(summaryOf(result, '$ANONYMOUS_FUN_0').exceptional).should.eql(['x@L10', 'x@L8']);
+		});
+
+		/// the callee of a call caught in the caller: its exceptional definitions go to the catch, not the exit
+		it('should not hold the exceptional definitions of a callee caught in the caller', function () {
+			var result = analyzeAndSummarize([
+				'var x = 0;',
+				'class A {',
+				'f() {',
+				'try {',
+				'this.g();',
+				'} catch (e) {',
+				'}',
+				'}',
+				'g() {',
+				'x = 1;',
+				'console.log(1);',
+				'x = 2;',
+				'}',
+				'}',
+				'new A().f();'
+			].join('\n'));
+			defsOf(summaryOf(result, '$ANONYMOUS_FUN_0').exceptional).should.eql([]);
+			defsOf(summaryOf(result, '$ANONYMOUS_FUN_0').gen).should.eql(['x@L10', 'x@L12']);
+		});
+
+		/// probes005/m3-mdn-finally-return.js: the rethrow of the catch body leaves f through the finallyExit
+		it('should take the rethrow of a finallyExit as an exceptional arrival (m3-mdn-finally-return)', function () {
+			var result = analyzeAndSummarize(fs.readFileSync(path.join(PROBES005, 'm3-mdn-finally-return.js'), 'utf8')),
+				summary = summaryOf(result, 'f');
+			summary.normalReturn.should.be.false();
+			defsOf(summary.exceptional).should.containEql('r@L10');
+			defsOf(summary.gen).should.eql([]);
+		});
+
+		it('should not hold the own variables of the callee', function () {
+			var result = analyzeAndSummarize([
+				'var x = 0;',
+				'function f(p) {',
+				'var local = p;',
+				'x = local;',
+				'console.log(1);',
+				'}',
+				'f(1);'
+			].join('\n'));
+			defsOf(summaryOf(result, 'f').exceptional).should.eql(['x@L4']);
+		});
+
+		/// R13: the gen of a generator holds the exceptional definitions of its callees as well
+		it('should merge the exceptional definitions of the callees into the gen of a generator', function () {
+			var result = analyzeAndSummarize([
+				'var x = 0;',
+				'class A {',
+				'*g() {',
+				'this.h();',
+				'}',
+				'h() {',
+				'x = 1;',
+				'console.log(1);',
+				'x = 2;',
+				'}',
+				'}',
+				'new A().g();'
+			].join('\n'));
+			var summary = summaryOf(result, '$ANONYMOUS_FUN_0');
+			summary.conservative.should.be.true();
+			defsOf(summary.gen).should.eql(['x@L7', 'x@L9']);
+		});
+	});
+
 	describe('visibility filter', function () {
 		it('should not hold the own variables, parameters and block variables of the callee', function () {
 			var result = analyzeAndSummarize([

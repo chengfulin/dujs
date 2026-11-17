@@ -1,0 +1,101 @@
+/*
+ * Acceptance tests of User Story 3 of feature 005 (FR-006, FR-014, research
+ * R5, contracts/acceptance.md US3-1...4, US3-6, US3-7): an exception leaving a
+ * callee does not return to the call; the definitions reaching the exit of
+ * the callee exceptionally (the fourth item of its summary, exceptional) go to
+ * the exception target of the call (applyExceptional), along the chain of
+ * calls. US3-5 needs the relaxed callees of User Story 2 (D2) and is added
+ * with it (T085).
+ *
+ * The programs are the probes of tests/dujs/cases/probes005/. The pairs are
+ * asserted on the inter-procedural model of the page (when the page has one)
+ * and on the intra-page model.
+ *
+ * Original dujs code, MIT License (see LICENSE).
+ */
+var fs = require('fs'),
+	path = require('path');
+require('should');
+var modelCtrl = require('../../lib/dujs/modelctrl'),
+	analyze = require('../helpers/analyze');
+
+var PROBES = path.join(__dirname, 'cases', 'probes005');
+
+/**
+ * Pairs of the inter-procedural model of the page (when there is one) and of
+ * the intra-page model of a probe, each model as an Array
+ * @param {string} probe file name
+ * @returns {Array} arrays of pairs
+ */
+function pairsOfProbe(probe) {
+	'use strict';
+	var result = analyze(fs.readFileSync(path.join(PROBES, probe), 'utf8')),
+		pageModels = modelCtrl.collectionOfPageModels.get(result.scopeTree),
+		models = pageModels.interProceduralModels.filter(function (model) {
+			return model.mainlyRelatedScope === result.scopeTree.root;
+		});
+	return models.map(analyze.pairsOfModel).concat([result.intraPage()]);
+}
+
+/**
+ * Assert the pairs of every model of a probe
+ * @param {string} probe file name
+ * @param {Array} present pairs expected
+ * @param {Array} absent pairs not expected
+ */
+function shouldHavePairs(probe, present, absent) {
+	'use strict';
+	pairsOfProbe(probe).forEach(function (pairs) {
+		present.forEach(function (pair) {
+			pairs.should.containEql(pair, probe + ' should have ' + pair);
+		});
+		absent.forEach(function (pair) {
+			pairs.should.not.containEql(pair, probe + ' should not have ' + pair);
+		});
+	});
+}
+
+describe('exceptions leaving a callee (feature 005 US3)', function () {
+	'use strict';
+	after(analyze.reset);
+
+	/// P4: no try; an exception of s leaves the page, so only the normal return reaches L7
+	it('US3-1: an exception leaving the callee does not return after the call (p4)', function () {
+		shouldHavePairs('p4.js', ['x: L4 -> L7'], ['x: L1 -> L7']);
+	});
+
+	/// P13: the definitions before the call reach the catch by the exception of the callee;
+	/// after a normal return the call statement does not throw again
+	it('US3-2: an exception of the callee reaches the catch of the caller (m1-mdn-error-objects)', function () {
+		shouldHavePairs('m1-mdn-error-objects.js',
+			['state: L1 -> L13', 'state: L1 -> L15', 'state: L7 -> L15', 'e: L11 -> L12'],
+			['state: L7 -> L13']);
+	});
+
+	/// the same conclusion on the smaller program: x of L4 never reaches the catch (L4 throwing carries x of L1)
+	it('US3-2: the same conclusion on g2-try-catch', function () {
+		shouldHavePairs('g2-try-catch.js', ['x: L1 -> L9', 'x: L1 -> L11', 'x: L4 -> L11'], ['x: L4 -> L9']);
+	});
+
+	/// R2-2: L4 throwing leaves s with x of L3 (exceptional of the summary of s); L3 throwing carries x of L1;
+	/// x of L5 never leaves s exceptionally (L5 throwing carries IN, Q-a: the call statement does not throw again)
+	it('US3-3: the exceptional definitions of the callee reach the catch of the caller (us3-3)', function () {
+		shouldHavePairs('us3-3.js', ['x: L3 -> L10', 'x: L1 -> L10'], ['x: L5 -> L10']);
+	});
+
+	/// P14 (a guard, holding already): the call of the finally block kills on both paths
+	it('US3-4: a call in a finally block kills the definitions before it on both paths (m2-mdn-finally)', function () {
+		shouldHavePairs('m2-mdn-finally.js', ['opened: L3 -> L16', 'opened: L9 -> L22'],
+			['opened: L1 -> L16', 'opened: L1 -> L22']);
+	});
+
+	/// P17: the rethrow of the catch body goes through the finally block before it leaves f
+	it('US3-6: a rethrow leaves the callee through its finally block (m3-mdn-finally-return)', function () {
+		shouldHavePairs('m3-mdn-finally-return.js', ['r: L10 -> L16', 'r: L10 -> L18'], []);
+	});
+
+	/// P25 (a guard, holding already): the call statement may throw before the call, with x of L6
+	it('US3-7: the call statement throwing before the call carries the definitions before it (c-nt)', function () {
+		shouldHavePairs('c-nt.js', ['x: L6 -> L9'], []);
+	});
+});

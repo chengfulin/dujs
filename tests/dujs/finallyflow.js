@@ -60,19 +60,16 @@ describe('finally and exception paths (feature 005 US6)', function () {
 
 	/// P18: the exception of f passes through the empty finally block and leaves f
 	it('US6-1: an exception through an empty finally block goes on throwing (c-fin1)', function () {
-		/// US3 還原: r: L4 -> L14 and r: L4 -> L16 come back with the exceptional return of the call
-		/// (applyExceptional of the summary of f at the catch of L13); until User Story 3 the definitions of
-		/// f reaching its exit exceptionally are lost (feature 005 US1: the exception of f no longer goes back
-		/// through its exit to the call; golden-diff.md US1 "unit test expectations")
-		shouldHavePairs('c-fin1.js', [/* US3 還原: 'r: L4 -> L14', 'r: L4 -> L16' */], ['r: L9 -> L14', 'r: L9 -> L16']);
+		/// r of L4 reaches the catch of L13 by the exceptional return of the call (applyExceptional of the
+		/// summary of f, feature 005 US3)
+		shouldHavePairs('c-fin1.js', ['r: L4 -> L14', 'r: L4 -> L16'], ['r: L9 -> L14', 'r: L9 -> L16']);
 	});
 
 	/// P19: the rethrow of the catch body passes through the finally block and leaves f as an exception
 	it('US6-2: a rethrow through a finally block leaves the function as an exception (c-fin3)', function () {
-		/// US3 還原: r: L7 -> L16 and r: L7 -> L18 come back with the exceptional return of the call
-		/// (applyExceptional of the summary of f at the catch of L15); until User Story 3 the definitions of
-		/// f reaching its exit exceptionally are lost (feature 005 US1; golden-diff.md US1 "unit test expectations")
-		shouldHavePairs('c-fin3.js', [/* US3 還原: 'r: L7 -> L16', 'r: L7 -> L18' */], []);
+		/// r of L7 reaches the catch of L15 by the exceptional return of the call (applyExceptional of the
+		/// summary of f, feature 005 US3)
+		shouldHavePairs('c-fin3.js', ['r: L7 -> L16', 'r: L7 -> L18'], []);
 	});
 
 	/// P20: the finally block entered by an exception goes on throwing; L8 is unreachable
