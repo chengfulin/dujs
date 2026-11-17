@@ -136,6 +136,14 @@
   在程式中無對應）；同一函式有參數預設值又有直接 `eval` 時，FR-005（預設值依 eslint-scope 解析到外層）優先於 D6／FR-008 的「與 `develop` 相同」。（analyze M2）
 - Q: 解析類移除與呼叫連結衍生差異的人工簽核由誰、何時做？ → A: implementer 只草擬「待簽核」表，不得自簽；使用者在 US4 的 golden 核對後、PR 前，對累積表
   簽核一次；MDN 範例集的差異在 Polish 一併簽核。中途各 phase 只做機器核對（`--verify`），由 orchestrator 親自重跑後才 commit。（analyze N2）
+
+### Session 2026-11-17（implement US2）
+
+- Q: 具名 class 運算式在 static 初值讀自己的內部名稱（`var B = class Q { static s = Q; }`）拿不到定義——根因是 static 成員連結時，class 運算式所在節點的
+  GEN 整組搬到 CALL RETURN（只有 class 宣告保留在呼叫點），要在 006 修正嗎？ → A: 在 006 修正：class 運算式的內部名稱定義留在呼叫點（static 成員執行前已綁定），
+  其餘 GEN／KILL（如外層 `B`）照舊在 CALL RETURN；允許修改 `lib/dujs/modelbuilder.js` 與 `lib/dujs/expansion.js`。若 golden 因此改變，於 US2 依序列化規則
+  寫入並歸解析類（US1 已 commit、US3 尚未開始，順序不衝突）。
+
 ## 表示法
 
 沿用 `specs/001-fix-known-issues/spec.md`「表示法」：def-use pair 寫成 `<變數>: <def> -> <use>`，`<def>` 為 `entry` 或節點標記；p-use 為

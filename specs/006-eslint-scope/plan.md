@@ -120,7 +120,7 @@ dujs scope 是被呼叫端的祖先或本身」涵蓋沒有自己 dujs scope 的
 
 ## 變更影響範圍（§TR-8，參考）
 
-- **修改**：`lib/dujs/jsparser.js`、`scopectrl.js`、`scopetree.js`（`dujsClassMember` 標記）、`scope.js`、`pagescope.js`／`domainscope.js`（預計；實作時 fixed list 建立改在 `scope.js` 的 `setBuiltInObjectVariables`，此兩檔未修改）、
+- **修改**：`lib/dujs/jsparser.js`、`scopectrl.js`、`scopetree.js`（`dujsClassMember` 標記）、`scope.js`、`modelbuilder.js`／`expansion.js`（US2 T073：class 運算式內部名稱定義留在 static 成員呼叫點，implement 階段使用者裁決）、`pagescope.js`／`domainscope.js`（預計；實作時 fixed list 建立改在 `scope.js` 的 `setBuiltInObjectVariables`，此兩檔未修改）、
   `var.js`、`def.js`、`deffactory.js`、`vardeffactory.js`、`variableanalyzer.js`、`defuseanalysisexecutor.js`、`defuseanalyzer.js`、`usedexpressions.js`、
   `callresolver.js`、`modelbuilder.js`、`hierarchy.js`；`package.json`／`package-lock.json`；`eslint.config.js`（T003：`ignores` 加 probes006 與 MDN 範例集）；`tests/golden/expected*`、`manifest.json`；`README.md`、
   `docs/known-issues.md`。

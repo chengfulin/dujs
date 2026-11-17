@@ -99,6 +99,27 @@ catch 子句節點只讀參數中的求值運算式、GEN 只含參數綁定、`
 
 （無既有測試修改；只新增案例：`tests/dujs/catchclause.js`（新檔）與 `tests/dujs/usedexpressions.js` 的 scenario 6）
 
+## US2
+
+### 變化說明
+
+T073（spec Clarifications「implement US2」）：static 成員連結時，callee 所屬具名 ClassExpression 的內部名稱 VarDef 留在呼叫點，其餘 GEN／KILL 照舊移到
+CALL RETURN（`lib/dujs/expansion.js` 的 `replayCall`）。golden fixture 沒有在 static 初值讀具名 class 運算式內部名稱的寫法，`tests/golden` 相對 dccf4bf
+零差異；淨差異表不變（8 筆）。
+
+### 雜湊變化表（舊→新 sha256 前 12 碼）
+
+| case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
+|------|------|---------------------------|------|
+
+（無變化）
+
+### 單元測試期望
+
+| 檔案 | 變更 | FR |
+|------|------|----|
+| `tests/dujs/classfields.js`「should not pair the inner name of a named class expression in its static members」（004 Fable A7） | 原斷言 `Q` 無 pair，與 US2-1 衝突；改為斷言含 `Q: L1 -> L2`（另有 KI §18 的 `Q: L1 -> entry`，以 containEql 斷言），`B` 仍為空；測試名稱與註解同步 | FR-004、Clarifications「implement US2」 |
+
 ## US3
 
 ### 變化說明

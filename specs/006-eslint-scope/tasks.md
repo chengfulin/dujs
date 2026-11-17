@@ -144,13 +144,14 @@ description: "Task list for feature 006-eslint-scope"
 
 ### 測試（先寫）
 
-- [ ] T045 [P] [US2] 新增 `tests/dujs/scoperesolution.js`（acceptance US2-1…5）：named-expr（inter-procedural、intra-page 有 `Q: L1 -> L2`、`fact: L4 -> L5`；頁面 intra-procedural 無 `Q`／`fact` 的 pair）；US2-2 內嵌程式（L5 改 `fact(n - 1);`、另起 `return n;`）分析完成、有 `fact: L4 -> L5`、`fact(n - 1)` 不連結（inter-procedural 模型的 relatedScopes）；classdecl（`A: L1 -> L2`、`A: L5 -> L6`）；pdef（有 `x: L1 -> L2`、無 `x: entry -> L2`）；shadow-block／param／loop 的 pair 等於 `tests/dujs/cases/probes006/developpairs.json`
-- [ ] T046 [US2] 執行 `npx mocha tests/dujs/scoperesolution.js`；預期已通過（記錄 red／green 狀態於回報）
+- [X] T045 [P] [US2] 新增 `tests/dujs/scoperesolution.js`（acceptance US2-1…5）：named-expr（inter-procedural、intra-page 有 `Q: L1 -> L2`、`fact: L4 -> L5`；頁面 intra-procedural 無 `Q`／`fact` 的 pair）；US2-2 內嵌程式（L5 改 `fact(n - 1);`、另起 `return n;`）分析完成、有 `fact: L4 -> L5`、`fact(n - 1)` 不連結（inter-procedural 模型的 relatedScopes）；classdecl（`A: L1 -> L2`、`A: L5 -> L6`）；pdef（有 `x: L1 -> L2`、無 `x: entry -> L2`）；shadow-block／param／loop 的 pair 等於 `tests/dujs/cases/probes006/developpairs.json`
+- [X] T046 [US2] 執行 `npx mocha tests/dujs/scoperesolution.js`；預期已通過（記錄 red／green 狀態於回報）
 
 ### 實作（預期無）
 
-- [ ] T047 [US2] 若 T046 有失敗：先依「全程規則」判斷推導或實作偏離；實作偏離者修正 `lib/dujs/defuseanalyzer.js` 或 `lib/dujs/scopebinding.js`。**本 story 預期不改 golden**：修正後執行普通 `npm test`（**不得**用 `UPDATE_GOLDEN=1`）：golden 測試失敗即表示 golden 會變，停下回報（須改排入序列化 golden 任務，不得在此寫 golden）。無失敗時本任務標為「不需修改」
-- [ ] T048 [US2] US2 閘門：閘門全過；`git -C <專案根> diff --exit-code HEAD -- tests/golden`（US1 已 commit；golden 相對 HEAD 無變化）；回報可提交
+- [X] T047 [US2] 若 T046 有失敗：先依「全程規則」判斷推導或實作偏離；實作偏離者修正 `lib/dujs/defuseanalyzer.js` 或 `lib/dujs/scopebinding.js`。**本 story 原預期不改 golden**（T073 例外：依該任務的序列化步驟處理）。無失敗時本任務標為「不需修改」
+- [X] T073 [US2] `lib/dujs/modelbuilder.js`、`lib/dujs/expansion.js`：static 成員連結時，具名 ClassExpression 所在節點的內部名稱 VarDef（宣告於 eslint `class` scope 的 Var）留在呼叫點，其餘 GEN／KILL 照舊移到 CALL RETURN（spec Clarifications「implement US2」）；named-expr 有 `Q: L1 -> L2`；`var B;`（L1）／`B = class Q {`（L2）／`static s = Q;`（L3）有 `Q: L2 -> L3`；`tests/dujs/scoperesolution.js` 加第二個程式的案例。若普通 `npm test` 的 golden 測試因此失敗，本 story 依「全程規則」步驟 1–5 序列化更新 golden（歸解析類），寫入 `golden-diff.md` US2 節（新增該節）與 manifest；orchestrator 親自重跑 `--verify` 後才 commit
+- [X] T048 [US2] US2 閘門：閘門全過；golden 相對 HEAD 無變化，或其變化只來自 T073 且 `diffcheck.js golden --verify` 結束碼 0；回報可提交
 
 **Checkpoint**: US2 獨立可驗。US2 在 US1 commit 後執行，不與 US1 並行。
 
