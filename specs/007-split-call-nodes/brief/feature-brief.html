@@ -1,0 +1,228 @@
+<title>拆分呼叫節點</title>
+<style>
+/* 版面：單欄 900px；上半「看懂它」一格一件事（編號＋大標＋SVG 場景＋一句重點），下半表格 */
+:root{
+  --bg:#FFFBF2; --card:#FFFFFF; --ink:#1F2937; --sub:#5B6470; --line:#E6E0D2; --th:#F4EFE3;
+  --blue:#2B59C3; --blue-soft:#DCE6FA;
+  --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
+  --coral:#E4573D; --coral-soft:#FBDDD6;
+  --green:#3A9D6B; --green-soft:#D8F0E3;
+  --grey:#AEB6C0;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+    --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+  --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding-block:32px 72px;padding-inline:20px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:900;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
+.meta{color:var(--sub);font-size:.9rem}
+.note{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:8px 12px;margin:10px 0;font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin:16px 0;display:grid;gap:12px}
+.panel h3{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;line-height:1.2;margin:0;text-wrap:balance}
+.num{display:inline-block;font-weight:900;font-size:.75rem;letter-spacing:.15em;color:var(--blue);background:var(--blue-soft);padding:2px 10px;border-radius:999px;width:max-content}
+.pic{overflow-x:auto}
+.pic svg{display:block;width:100%;min-width:640px;height:auto}
+.cap{font-size:1.05rem;font-weight:500;max-width:52ch;margin:0}
+.cap b{font-weight:900}
+.cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
+text{font-family:var(--sans)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+ul{margin:6px 0;padding-left:20px}
+li small{color:var(--sub)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--th)}
+.ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
+code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 100 110"><circle cx="50" cy="28" r="20" fill="currentColor"/><path d="M12 108 a38 38 0 0 1 76 0 z" fill="currentColor"/></symbol>
+    <symbol id="doc" viewBox="0 0 100 120"><path d="M14 6 h50 l22 22 v86 h-72 z" fill="currentColor"/><path d="M64 6 v22 h22" fill="none" stroke="#FFFFFF" stroke-width="4"/><g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"><path d="M28 50 h44 M28 68 h44 M28 86 h30"/></g></symbol>
+    <symbol id="sheet" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="6" fill="currentColor"/><g stroke="#FFFFFF" stroke-width="3"><path d="M4 28 h112 M4 50 h112 M4 72 h112 M40 4 v92 M78 4 v92"/></g></symbol>
+    <symbol id="warn" viewBox="0 0 100 100"><path d="M50 8 L96 90 H4 Z" fill="currentColor"/><path d="M50 36 v26" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="76" r="5" fill="#FFFFFF"/></symbol>
+    <symbol id="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="currentColor"/><path d="M28 52 l15 15 l30 -34" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grey)"/></marker>
+  </defs>
+</svg>
+
+<main>
+<h1>拆分呼叫節點：修正求值順序，並追進運算式中的呼叫</h1>
+<div class="meta">feature 007-split-call-nodes · spec · 第 2 輪（複核：spec 依 review 修改後重走閘門）· 2026-11-18</div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
+
+<h2>看懂它</h2>
+
+<section class="panel">
+  <span class="num">01 · 背景</span>
+  <h3>研究者用工具，查「誰寫入、誰讀取」</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="研究者拿一段網頁腳本去分析，得到寫入與讀取的對照表">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">研究者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">拿來分析</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">一段網頁腳本</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="98">1. 先把庫存設成 1</text><text x="280" y="128">2. 呼叫「補貨」去處理</text><text x="280" y="158">3. 最後印出庫存</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">腳本：研究者要看的程式</text>
+    <path d="M590 115 h50" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <use href="#sheet" x="650" y="55" width="150" height="125" color="var(--blue)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">對照表：誰寫、誰讀</text>
+  </svg></div>
+  <p class="cap">工具替研究者列出<b>每個值在哪裡被寫入、在哪裡被讀取</b>。<small>來源：spec User Scenarios &amp; Testing 開頭</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">02 · 要解決的問題</span>
+  <h3>一行裡有「叫別人幫忙」時，工具算錯</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="同一行同時叫補貨並記錄結果，工具把先後排錯，也沒追進補貨">
+    <use href="#warn" x="55" y="50" width="110" height="110" color="var(--coral)"/>
+    <text x="110" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--coral)">工具算錯</text>
+    <rect x="250" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="270" y="62" font-size="18" font-weight="900" fill="var(--coral)">同一行做兩件事</text>
+    <g font-size="17" fill="var(--ink)"><text x="270" y="102">① 叫「補貨」去改庫存</text><text x="270" y="134">② 再把結果記進訂單</text></g>
+    <text x="410" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">工具把這兩件事的先後排錯</text>
+    <rect x="590" y="40" width="240" height="150" rx="12" fill="var(--coral-soft)"/>
+    <text x="710" y="76" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">兩種後果</text>
+    <text x="710" y="116" text-anchor="middle" font-size="15" fill="var(--ink)">補貨讀到過期的庫存</text>
+    <text x="710" y="150" text-anchor="middle" font-size="15" fill="var(--ink)">一行裡的補貨沒被追蹤</text>
+  </svg></div>
+  <p class="cap">先後排錯會<b>多報不可能發生的關係、漏報真正發生的</b>；一行中的呼叫則整個漏掉。<small>來源：spec User Scenarios &amp; Testing 開頭；US1、US2 Why this priority</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">03 · 目的</span>
+  <h3>把那一行拆成「叫之前」與「回來之後」</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="把含呼叫的一行拆成呼叫之前與返回之後兩段，依真實執行順序串接">
+    <use href="#doc" x="60" y="50" width="90" height="108" color="var(--blue)"/>
+    <text x="105" y="195" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">那一行</text>
+    <path d="M170 110 h70" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="205" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">拆成兩段</text>
+    <g text-anchor="middle" font-weight="700" fill="var(--ink)">
+      <rect x="250" y="40" width="148" height="110" rx="10" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="2.5"/><text x="324" y="75" font-size="16">呼叫之前</text><text x="324" y="102" font-size="14" font-weight="400" fill="var(--sub)">先備好要用的</text><text x="324" y="124" font-size="14" font-weight="400" fill="var(--sub)">值與參數</text>
+      <rect x="428" y="40" width="148" height="110" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="502" y="75" font-size="16">返回之後</text><text x="502" y="102" font-size="14" font-weight="400" fill="var(--sub)">補貨做完才</text><text x="502" y="124" font-size="14" font-weight="400" fill="var(--sub)">記下結果</text>
+    </g>
+    <path d="M400 95 h24" stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"/>
+    <text x="413" y="190" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">中間才輪到「補貨」本身</text>
+    <path d="M584 95 h58" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <use href="#check" x="660" y="50" width="100" height="100" color="var(--green)"/>
+    <text x="710" y="190" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">照實際執行順序</text>
+  </svg></div>
+  <p class="cap">拆開後，每段只讀到<b>該段開始時有效的值</b>，被叫的補貨也看得到前一段做的事。<small>來源：spec FR-001、FR-002；Key Entities「節點分段」</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">04 · 預期結果</span>
+  <h3>對照表與真實執行一致</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="新的對照表與真實執行一致，所有差異逐筆記錄並經使用者簽核">
+    <use href="#sheet" x="50" y="55" width="120" height="100" color="var(--green)"/>
+    <text x="110" y="195" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">新的對照表</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--green)">做完之後</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="98">補貨改的庫存，被後面讀到</text><text x="280" y="128">過期的舊庫存，不再誤報</text><text x="280" y="158">一行中的補貨，也追得進去</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">與真實執行一致</text>
+    <use href="#check" x="680" y="50" width="90" height="90" color="var(--green)"/>
+    <text x="725" y="175" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">既有範例的差異逐筆記錄</text>
+    <text x="725" y="200" text-anchor="middle" font-size="15" fill="var(--sub)">經使用者簽核才更新</text>
+  </svg></div>
+  <p class="cap">已知例子全部得到預期結果，<b>變動的既有結果以去重 pair 逐筆分類並簽核</b>。<small>來源：spec SC-001～SC-004；FR-008、FR-009</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">流程</span>
+  <h3>一行含呼叫：先拆、再串、返回後收尾</h3>
+  <div class="pic"><svg viewBox="0 0 860 350" role="img" aria-label="含呼叫的一行被拆成呼叫之前、進入被呼叫端、返回之後；無法解析的呼叫維持不拆，返回後拋錯待決">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">讀到含呼叫的行</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">例：var y = f();</text>
+      <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">切出呼叫之前</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">先求出對象</text><text x="264" y="132" font-size="14" font-weight="400" fill="var(--sub)">與引數</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">進入被呼叫端</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">它的效果生效</text>
+      <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">返回之後</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">才做賦值</text><text x="604" y="132" font-size="14" font-weight="400" fill="var(--sub)">或條件判斷</text>
+      <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">寫入與讀取</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">依序對上</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M168 100 h14"/><path d="M338 100 h14"/><path d="M508 100 h14"/><path d="M678 100 h14"/></g>
+    <g stroke="var(--coral)" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arr)"><path d="M264 150 v50"/><path d="M604 150 v50"/></g>
+    <rect x="154" y="210" width="220" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="264" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">認不出被叫的是誰</text>
+    <text x="264" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">維持不連結、不拆分</text>
+    <text x="264" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">例：立即執行的函式</text>
+    <rect x="474" y="210" width="260" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="604" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">返回後也可能出錯</text>
+    <text x="604" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">例外路徑帶被呼叫端的定義</text>
+    <text x="604" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">例：f().p 會；單純 f(); 不會</text>
+    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">多個呼叫時，依運算元左至右、引數先於外層呼叫串接</text>
+  </svg></div>
+  <p class="cap">認得出被叫的是誰才拆，<b>認不出就照舊</b>，不報錯。<small>來源：spec Edge Cases；FR-001、FR-002、FR-005</small></p>
+  <ul>
+    <li>迴圈的可迭代物件與 <code>switch</code> 的判別式只求值一次，呼叫不因每次迭代或每個 <code>case</code> 重複。<small>FR-004；US3 情境 6、9</small></li>
+    <li>每段是否可能拋錯，只看該段實際求值的子運算式，不含已返回的呼叫。<small>FR-005；US4 情境 1、2</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（spec review 後修訂）</h2>
+<div class="box"><table>
+<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響</th></tr>
+<tr><td>FR-002；US3 情境 4、11</td><td>求值順序粒度待決（可簡化為「呼叫與引數在前、其餘在後」）</td><td>依 JS 完整由左至右求值；複合賦值先讀目標（<code>x += f()</code> 的 <code>x</code> 讀呼叫前定義）</td><td>US3</td></tr>
+<tr><td>FR-005；US4 情境 1、2</td><td>返回之後是否可能拋錯待決</td><td>保留 US4；每段只看該段實際求值的子運算式（不含已返回的呼叫）；新增守門情境 2（<code>f();</code> 返回後不拋錯）</td><td>US4</td></tr>
+<tr><td>FR-004；US3 情境 9</td><td>只規範 <code>for…in／of</code> 的可迭代物件求值一次</td><td>擴充到 <code>switch</code> 判別式只求值一次</td><td>US3</td></tr>
+<tr><td>US2 情境 10、11</td><td><code>throw</code>、generator 無情境</td><td>新增兩個驗收情境（generator 套用 KI §37 保守摘要）</td><td>US2</td></tr>
+<tr><td>US3 情境 10</td><td><code>?:</code> 無情境</td><td>新增 <code>c ? f() : 2</code> 情境</td><td>US3</td></tr>
+<tr><td>FR-008、FR-009、SC-004</td><td>差異以 pair 逐筆記錄</td><td>以去重 pair 比對，另列 develop 與本 feature 的重複列數（KI §43，不設門檻）；SC-004 補 §37</td><td>差異紀錄</td></tr>
+<tr><td>FR-010；Assumptions</td><td>未提 KI §36 說明、參數預設值近似</td><td>§36 註明「返回後不拋錯」只適用呼叫敘述；預設值中的呼叫一律視為會求值</td><td>US2 情境 7；文件</td></tr>
+</table></div>
+
+<h2>工程師要決定的事</h2>
+
+<h3>驗收條件盤點</h3>
+<div class="box"><table>
+<tr><th>Story</th><th>驗收條件</th><th>判定</th><th>出處</th></tr>
+<tr><td>US1</td><td>情境 1–4（條件引數、呼叫敘述引數、兩個守門）</td><td class="ok">可驗證</td><td>US1 Acceptance 1–4</td></tr>
+<tr><td>US2</td><td>情境 1–4（賦值、KI §10、先讀後寫、<code>new</code>），程式內嵌於 spec</td><td class="ok">可驗證</td><td>US2 Acceptance 1–4</td></tr>
+<tr><td>US2</td><td>情境 5–9 以探測檔（P13、P14、P18、P19、P22）為輸入，spec 只摘行號</td><td class="ok">可驗證</td><td>US2 Acceptance 5–9；探測結果</td></tr>
+<tr><td>US2</td><td>情境 10（<code>throw f();</code>）、11（generator 保守摘要，KI §37），程式內嵌於 spec</td><td class="ok">可驗證</td><td>US2 Acceptance 10–11</td></tr>
+<tr><td>US3</td><td>情境 1–11（兩個呼叫、巢狀引數、<code>f() &gt; x</code>、<code>x &lt; f()</code>、<code>while</code>、<code>for…of</code>、<code>switch</code> 與其只求值一次、短路、<code>?:</code>、<code>x += f()</code>）</td><td class="ok">可驗證</td><td>US3 Acceptance 1–11</td></tr>
+<tr><td>US4</td><td>情境 1（<code>f().p</code> 返回後拋錯）、情境 2（<code>f();</code> 返回後不拋錯，守門）</td><td class="ok">可驗證</td><td>US4 Acceptance 1–2</td></tr>
+<tr><td>US4／FR-005</td><td><code>x = f()</code>、<code>f() &gt; x</code>、<code>h(f())</code> 列為「返回後可能拋錯」，但沒有各自的情境</td><td class="no">缺（次要）</td><td>FR-005</td></tr>
+<tr><td>US3</td><td>async 的保守摘要：Edge Cases 提及，無情境</td><td class="no">缺（次要）</td><td>Edge Cases</td></tr>
+<tr><td>跨 story</td><td>intra-procedural 不拆分、pair 不變（以探測檔比對）</td><td class="ok">可驗證</td><td>FR-006；Edge Cases</td></tr>
+<tr><td>跨 story</td><td>攤平圖與配對資訊一致：每條 return 邊恰對應一個呼叫點，既有配對驗證測試通過</td><td class="ok">可驗證</td><td>FR-007</td></tr>
+<tr><td>跨 story</td><td>SC-001～SC-005（測試通過、探測結果、去重 pair 差異簽核與分類、時間 ≤2 倍）</td><td class="ok">可驗證</td><td>Success Criteria</td></tr>
+</table></div>
+
+<h3>tech-standards 缺漏或變更</h3>
+<p>無。Assumptions 維持 repo 現況，未引入新技術；新增的節點或邊型別由 plan 決定並寫入 README（FR-007）。</p>
+
+<h3>CRITICAL／HIGH 衝突與影響</h3>
+<p>無（尚未 analyze）。005 Q-a「呼叫敘述只在呼叫之前拋錯」在運算式中的呼叫上不再足夠，已由 FR-005 以「每段只看該段實際求值的子運算式」處理，並在 FR-010 要求 KI §36 註明適用範圍。</p>
+
+<h3>已決事項（前輪使用者答案）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>決定</th><th>出處</th></tr>
+<tr><td>1</td><td>求值順序拆到多細</td><td>A：依 JS 完整由左至右；佐證 <code>x += f();</code></td><td>FR-002；US3 情境 4、11</td></tr>
+<tr><td>2</td><td>返回之後是否可能拋錯</td><td>A：保留 US4；FR-005 改寫並新增守門情境 2</td><td>FR-005；US4</td></tr>
+</table></div>
+
+<h3>本輪判斷點</h3>
+<p>無新的判斷點：前輪兩點已決，本輪 spec 修訂未引入「文件判不了、答案會改變交付物」的新問題。</p>
+
+<h3>次要疑點</h3>
+<div class="box"><table>
+<tr><th>疑點</th><th>出處</th></tr>
+<tr><td>FR-005 例示 <code>x = f()</code>、<code>f() &gt; x</code>、<code>h(f())</code> 返回後可能拋錯，但驗收只有 <code>f().p</code> 一例；<code>var y = f()</code>（不拋）與 <code>x = f()</code>（拋）的差別只靠「依既有判定」，無情境</td><td>FR-005；US4</td></tr>
+<tr><td>Edge Cases 提 async 的保守摘要，無驗收情境（generator 已補）</td><td>Edge Cases</td></tr>
+</table></div>
+</main>

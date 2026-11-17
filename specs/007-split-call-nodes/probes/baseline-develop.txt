@@ -1,0 +1,138 @@
+=== p1-ki16.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 10): f: entry -> L5>L6:T | f: entry -> L5>exit:F | x: L1 -> L3
+intra(page): f: entry -> L5>L6:T | f: entry -> L5>exit:F
+intra-page (nodes 12): f: entry -> L5>L6:T | f: entry -> L5>Lnull:F | x: L1 -> L3
+=== p2-ki16-shadow.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.check
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.check, nodes 12): a: L2 -> L3 | a: L2 -> L6 | a: entry -> L1 | b: L2 -> L3:F>L4:T | b: L2 -> L3:F>L6:F | check: entry -> L3>L3:F | check: entry -> L3>L4:T
+intra(page): a: L2 -> L3 | a: L2 -> L6 | b: L2 -> L3:F>L4:T | b: L2 -> L3:F>L6:F | check: entry -> L3>L3:F | check: entry -> L3>L4:T
+intra-page (nodes 14): a: L2 -> L3 | a: L2 -> L6 | a: entry -> L1 | b: L2 -> L3:F>L4:T | b: L2 -> L3:F>L6:F | check: entry -> L3>L3:F | check: entry -> L3>L4:T
+=== p3-assign.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g
+intra(page): console: entry -> L7 | g: entry -> L6 | x: L1 -> L7 | y: L6 -> L7
+intra-page (nodes 7): console: entry -> L7 | g: entry -> L6 | x: L1 -> L7 | y: L6 -> L7
+=== p4-ki10-return.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, $DOMAIN.$PAGE_0.f.$ANONYMOUS_FUN_0
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 9): f: entry -> L6 | g: L2 -> L4
+intra(page): f: entry -> L6
+intra-page (nodes 11): f: entry -> L6 | g: L2 -> L4
+=== p5-use-before-def.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L7 | f: entry -> L6 | x: L6 -> L7
+intra-page (nodes 7): console: entry -> L7 | f: entry -> L6 | x: L6 -> L7
+=== p6-two-calls.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, $DOMAIN.$PAGE_0.g
+intra(page): f: entry -> L10 | g: entry -> L10
+intra-page (nodes 6): f: entry -> L10 | g: entry -> L10
+=== p7-nested-arg.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, $DOMAIN.$PAGE_0.h
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.h, nodes 8): console: entry -> L7 | f: entry -> L9 | h: entry -> L9 | x: L1 -> L7
+intra(page): f: entry -> L9 | h: entry -> L9
+intra-page (nodes 10): console: entry -> L7 | f: entry -> L9 | h: entry -> L9 | x: L1 -> L7
+=== p8-cond-after.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L7 | f: entry -> L6>L7:T | f: entry -> L6>exit:F | x: L1 -> L6>L7:T | x: L1 -> L6>exit:F | x: L1 -> L7
+intra-page (nodes 7): console: entry -> L7 | f: entry -> L6>L7:T | f: entry -> L6>Lnull:F | x: L1 -> L6>L7:T | x: L1 -> L6>Lnull:F | x: L1 -> L7
+=== p9-cond-before.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L7 | f: entry -> L6>L7:T | f: entry -> L6>exit:F | x: L1 -> L6>L7:T | x: L1 -> L6>exit:F | x: L1 -> L7
+intra-page (nodes 7): console: entry -> L7 | f: entry -> L6>L7:T | f: entry -> L6>Lnull:F | x: L1 -> L6>L7:T | x: L1 -> L6>Lnull:F | x: L1 -> L7
+=== p10-new-var.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+intra(page): A: L2 -> L7 | console: entry -> L8 | x: L1 -> L8
+intra-page (nodes 8): A: L2 -> L7 | console: entry -> L8 | x: L1 -> L8
+=== p11-while.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.next
+intra(page): console: entry -> L7 | n: L1 -> L7 | next: entry -> L6>L7:T | next: entry -> L6>exit:F
+intra-page (nodes 7): console: entry -> L7 | n: L1 -> L7 | next: entry -> L6>L7:T | next: entry -> L6>Lnull:F
+=== p12-stmt-arg.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 9): console: entry -> L3 | console: entry -> L6 | f: entry -> L5 | x: L1 -> L3 | x: L5 -> L6
+intra(page): console: entry -> L6 | f: entry -> L5 | x: L5 -> L6
+intra-page (nodes 11): console: entry -> L3 | console: entry -> L6 | f: entry -> L5 | x: L1 -> L3 | x: L5 -> L6
+=== p13-method-expr.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+intra(page): A: L2 -> L8 | console: entry -> L10 | o: L8 -> L9 | x: L1 -> L10
+intra-page (nodes 9): A: L2 -> L8 | console: entry -> L10 | o: L8 -> L9 | x: L1 -> L10
+=== p14-return-in-fn.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g, $DOMAIN.$PAGE_0.f
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 9): console: entry -> L10 | f: entry -> L9 | g: entry -> L7 | x: L1 -> L10
+intra(page): console: entry -> L10 | f: entry -> L9 | x: L1 -> L10
+intra-page (nodes 11): console: entry -> L10 | f: entry -> L9 | g: entry -> L7 | x: L1 -> L10
+=== p15b-for-of-once.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): f: entry -> L6>L7:T | f: entry -> L6>exit:F
+intra-page (nodes 7): f: entry -> L6>L7:T | f: entry -> L6>Lnull:F
+=== p15-for-of.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L7 | f: entry -> L6>L7:T | f: entry -> L6>exit:F | x: L1 -> L7
+intra-page (nodes 7): console: entry -> L7 | f: entry -> L6>L7:T | f: entry -> L6>Lnull:F | x: L1 -> L7
+=== p16-switch.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L8 | f: entry -> L7>L8:T | f: entry -> L7>exit:F | x: L1 -> L8
+intra-page (nodes 7): console: entry -> L8 | f: entry -> L7>L8:T | f: entry -> L7>Lnull:F | x: L1 -> L8
+=== p17-short-circuit.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): c: L2 -> L7>L7:F | c: L2 -> L7>L7:T | console: entry -> L8 | f: entry -> L7:T | x: L1 -> L8
+intra-page (nodes 10): c: L2 -> L7>L7:F | c: L2 -> L7>L7:T | console: entry -> L8 | f: entry -> L7:T | x: L1 -> L8
+=== p18-default-param.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g, $DOMAIN.$PAGE_0.f
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 9): console: entry -> L7 | f: entry -> L9 | g: entry -> L6 | x: L1 -> L7
+intra(page): f: entry -> L9
+intra-page (nodes 11): console: entry -> L7 | f: entry -> L9 | g: entry -> L6 | x: L1 -> L7
+=== p19-field-init.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, nodes 10): A: L6 -> L9 | console: entry -> L10 | g: entry -> L7 | x: L1 -> L10
+intra(page): A: L6 -> L9 | console: entry -> L10 | x: L1 -> L10
+intra-page (nodes 12): A: L6 -> L9 | console: entry -> L10 | g: entry -> L7 | x: L1 -> L10
+=== p20b-stmt-call-try.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 12): console: entry -> L10 | f: entry -> L8 | o: L2 -> L5 | x: L1 -> L10
+intra(page): console: entry -> L10 | f: entry -> L8 | x: L1 -> L10
+intra-page (nodes 14): console: entry -> L10 | f: entry -> L8 | o: L2 -> L5 | x: L1 -> L10
+=== p20-after-return-throws.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L10 | f: entry -> L8 | x: L1 -> L10
+intra-page (nodes 9): console: entry -> L10 | f: entry -> L8 | x: L1 -> L10
+=== p21-callee-in-if-stmt.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 11): console: entry -> L7 | f: entry -> L6>L7:T | f: entry -> L6>exit:F | x: L3 -> L7
+intra(page): console: entry -> L7 | f: entry -> L6>L7:T | f: entry -> L6>exit:F | x: L1 -> L7
+intra-page (nodes 13): console: entry -> L7 | f: entry -> L6>L7:T | f: entry -> L6>Lnull:F | x: L3 -> L7
+=== p22-unresolved-arg.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L6 | f: entry -> L6 | x: L1 -> L6
+intra-page (nodes 6): console: entry -> L6 | f: entry -> L6 | x: L1 -> L6
+=== p23-iife.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+intra(page): console: entry -> L6 | x: L1 -> L6
+intra-page (nodes 7): console: entry -> L6 | x: L1 -> L6
+=== p24-switch-two-case.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): f: entry -> L7>L9:F | f: entry -> L7>exit:T | f: entry -> L9>exit:F | f: entry -> L9>exit:T
+intra-page (nodes 7): f: entry -> L7>L9:F | f: entry -> L7>Lnull:T | f: entry -> L9>Lnull:F | f: entry -> L9>Lnull:T
+=== p25-throw.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L9 | f: entry -> L7 | x: L1 -> L9
+intra-page (nodes 8): console: entry -> L9 | f: entry -> L7 | x: L1 -> L9
+=== p26-conditional.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): c: L2 -> L7>L7:F | c: L2 -> L7>L7:T | console: entry -> L8 | f: entry -> L7:T | x: L1 -> L8
+intra-page (nodes 10): c: L2 -> L7>L7:F | c: L2 -> L7>L7:T | console: entry -> L8 | f: entry -> L7:T | x: L1 -> L8
+=== p27-generator.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g
+intra(page): console: entry -> L6 | g: entry -> L5 | x: L1 -> L6
+intra-page (nodes 7): console: entry -> L6 | g: entry -> L5 | x: L1 -> L6
+=== p28-compound.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L7 | f: entry -> L6 | x: L1 -> L6 | x: L6 -> L7
+intra-page (nodes 7): console: entry -> L7 | f: entry -> L6 | x: L1 -> L6 | x: L6 -> L7
+=== p29-assign-try.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L9 | f: entry -> L7 | x: L1 -> L9
+intra-page (nodes 8): console: entry -> L9 | f: entry -> L7 | x: L1 -> L9
+=== p30-var-try.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+intra(page): console: entry -> L9 | f: entry -> L7 | x: L1 -> L9
+intra-page (nodes 8): console: entry -> L9 | f: entry -> L7 | x: L1 -> L9
