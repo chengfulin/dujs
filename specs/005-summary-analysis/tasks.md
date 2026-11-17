@@ -68,20 +68,20 @@ description: "Task list for feature 005-summary-analysis"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T010 [P] 新增 `tests/dujs/reachingsolver.js`（contracts/lib-api.md §2、research R2）：以手建 FlowNode 小圖驗邊貢獻表——normal／true／false／call／onEvent／load／save 帶 `OUT(p)`；exception 帶 `IN(p)`；未給 `options.calls`／`options.loops` 時 return 邊與處理器 exit → LOOP RETURN 邊帶 `OUT(p)`（相容模式）；過渡規則開啟時，指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊帶 `OUT(p)`、其他 exception 邊仍帶 `IN(p)`；`OUT = (IN − KILL) ∪ GEN`（沿用 `computeKILLSet`，含 entry 殺不可見、exit 殺區域）；`entryInput`；`solve` 為純函式（不寫入節點的 `reachIns`／`reachOuts`）；回傳 `exitArrivals.normal`／`exitArrivals.exceptional` 依最後一條邊型別分開
-- [ ] T011 在 `tests/dujs/reachingsolver.js` 加 FR-014 整合案例（讀 `tests/dujs/cases/probes005/c-out3.js`，頁面 intra-procedural 與 intra-page）：有 `x: L1 -> L6`、沒有 `x: L4 -> L6`（US6-7 的正式驗收於 T034 `finallyflow.js`）
-- [ ] T012 執行 `npx mocha tests/dujs/reachingsolver.js` 確認新測試失敗（red）
+- [X] T010 [P] 新增 `tests/dujs/reachingsolver.js`（contracts/lib-api.md §2、research R2）：以手建 FlowNode 小圖驗邊貢獻表——normal／true／false／call／onEvent／load／save 帶 `OUT(p)`；exception 帶 `IN(p)`；未給 `options.calls`／`options.loops` 時 return 邊與處理器 exit → LOOP RETURN 邊帶 `OUT(p)`（相容模式）；過渡規則開啟時，指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊帶 `OUT(p)`、其他 exception 邊仍帶 `IN(p)`；`OUT = (IN − KILL) ∪ GEN`（沿用 `computeKILLSet`，含 entry 殺不可見、exit 殺區域）；`entryInput`；`solve` 為純函式（不寫入節點的 `reachIns`／`reachOuts`）；回傳 `exitArrivals.normal`／`exitArrivals.exceptional` 依最後一條邊型別分開
+- [X] T011 在 `tests/dujs/reachingsolver.js` 加 FR-014 整合案例（讀 `tests/dujs/cases/probes005/c-out3.js`，頁面 intra-procedural 與 intra-page）：有 `x: L1 -> L6`、沒有 `x: L4 -> L6`（US6-7 的正式驗收於 T034 `finallyflow.js`）
+- [X] T012 執行 `npx mocha tests/dujs/reachingsolver.js` 確認新測試失敗（red）
 
 ### 實作
 
-- [ ] T013 新增 `lib/dujs/reachingsolver.js`（MIT，ES5）：`solve(graph, options)`，`options = {entryInput, generateOf, useOf, calls, loops, summaryOf, flatVarDefOf, extraReachIns, exceptionToCalleeExitCarriesOut}`（data-model §6、contracts/lib-api.md §2）；worklist 依邊型別合併貢獻（research R2 表）；exception 帶 IN；KILL 用 `defuseanalyzer` 的 `computeKILLSet`（必要時由 `lib/dujs/defuseanalyzer.js` 匯出供共用）；未給 `calls`／`loops` 時 return 與處理器 exit → LOOP RETURN 帶 OUT（相容模式，US1／US4 才關閉）；過渡規則 `exceptionToCalleeExitCarriesOut`（analyze Q1）：指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊帶 OUT，Foundational 由 `doAnalysis` 開啟、US1 刪除（T054）；回傳 `{results: Map(node → {in, out, generate, kill}), exitArrivals: {normal, exceptional}}`
-- [ ] T014 `lib/dujs/defuseanalyzer.js`：`doAnalysis` 改呼叫 `reachingsolver.solve`，callReturn 的 `bypassFilter` 合併以 `extraReachIns` 傳入（行為照舊；`extraReachIns` 必須是動態回呼，依迭代中當下的 `OUT(callNode)` 計算，callNode 的 OUT 變動時 callReturn 重新入列，不得在求解前算一次的靜態集合）；開啟過渡規則；把結果寫回 `reachIns`／`reachOuts`／`kill` 並 `model.setAnalysisResults`（API 不變）；不再 require `lib/analyses`（該目錄不修改）
-- [ ] T015 `npx mocha tests/dujs/reachingsolver.js` 全過；跑 `npx mocha "tests/dujs/*.js" "tests/esgraph/*.js"`，預期只翻轉 `tests/dujs/catchclause.js` 的 catch-edge 一筆（should read nothing at a catch without parameter and give var e = 4 to the catch parameter），依 FR-014 改期望並記入 `golden-diff.md` Foundational「單元測試期望」；其他既有測試失敗即先查過渡規則是否生效（Fable 原型未加過渡規則時翻轉 26 個），無法歸因停下回報
-- [ ] T016 執行 `node specs/005-summary-analysis/probes/run.js specs/005-summary-analysis/probes/c-out3.js`，確認 P24 改為預期；其他 probes 與 spec「探測結果」表的差異只能來自 FR-014（列於回報）
-- [ ] T017 確認 `git -C <專案根> diff --exit-code 9e324be -- lib/analyses` 無輸出
-- [ ] T018 執行 `npm run lint`，`lib/dujs/reachingsolver.js` 不加抑制
-- [ ] T019 Golden 更新（序列化，Foundational；依「全程規則」步驟 1–5）：預期零差異（至多 `例外IN` 類）；寫入 `specs/005-summary-analysis/golden-diff.md` Foundational 節與 `tests/golden/manifest.json`；orchestrator 親自重跑 `--verify` 通過後才 commit
-- [ ] T020 Foundational 閘門：閘門全過；淨差異表為空或只有 `例外IN`（其他類別出現即視為回歸；預期零差異，有 `例外IN` 列時於回報說明）。回報可提交
+- [X] T013 新增 `lib/dujs/reachingsolver.js`（MIT，ES5）：`solve(graph, options)`，`options = {entryInput, generateOf, useOf, calls, loops, summaryOf, flatVarDefOf, extraReachIns, exceptionToCalleeExitCarriesOut}`（data-model §6、contracts/lib-api.md §2）；worklist 依邊型別合併貢獻（research R2 表）；exception 帶 IN；KILL 用 `defuseanalyzer` 的 `computeKILLSet`（必要時由 `lib/dujs/defuseanalyzer.js` 匯出供共用）；未給 `calls`／`loops` 時 return 與處理器 exit → LOOP RETURN 帶 OUT（相容模式，US1／US4 才關閉）；過渡規則 `exceptionToCalleeExitCarriesOut`（analyze Q1）：指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊帶 OUT，Foundational 由 `doAnalysis` 開啟、US1 刪除（T054）；回傳 `{results: Map(node → {in, out, generate, kill}), exitArrivals: {normal, exceptional}}`
+- [X] T014 `lib/dujs/defuseanalyzer.js`：`doAnalysis` 改呼叫 `reachingsolver.solve`，callReturn 的 `bypassFilter` 合併以 `extraReachIns` 傳入（行為照舊；`extraReachIns` 必須是動態回呼，依迭代中當下的 `OUT(callNode)` 計算，callNode 的 OUT 變動時 callReturn 重新入列，不得在求解前算一次的靜態集合）；開啟過渡規則；把結果寫回 `reachIns`／`reachOuts`／`kill` 並 `model.setAnalysisResults`（API 不變）；不再 require `lib/analyses`（該目錄不修改）
+- [X] T015 `npx mocha tests/dujs/reachingsolver.js` 全過；跑 `npx mocha "tests/dujs/*.js" "tests/esgraph/*.js"`，預期只翻轉 `tests/dujs/catchclause.js` 的 catch-edge 一筆（should read nothing at a catch without parameter and give var e = 4 to the catch parameter），依 FR-014 改期望並記入 `golden-diff.md` Foundational「單元測試期望」；其他既有測試失敗即先查過渡規則是否生效（Fable 原型未加過渡規則時翻轉 26 個），無法歸因停下回報
+- [X] T016 執行 `node specs/005-summary-analysis/probes/run.js specs/005-summary-analysis/probes/c-out3.js`，確認 P24 改為預期；其他 probes 與 spec「探測結果」表的差異只能來自 FR-014（列於回報）
+- [X] T017 確認 `git -C <專案根> diff --exit-code 9e324be -- lib/analyses` 無輸出
+- [X] T018 執行 `npm run lint`，`lib/dujs/reachingsolver.js` 不加抑制
+- [X] T019 Golden 更新（序列化，Foundational；依「全程規則」步驟 1–5）：預期零差異（至多 `例外IN` 類）；寫入 `specs/005-summary-analysis/golden-diff.md` Foundational 節與 `tests/golden/manifest.json`；orchestrator 親自重跑 `--verify` 通過後才 commit
+- [X] T020 Foundational 閘門：閘門全過；淨差異表為空或只有 `例外IN`（其他類別出現即視為回歸；預期零差異，有 `例外IN` 列時於回報說明）。回報可提交
 
 **Checkpoint**: 所有模型由 `reachingsolver` 計算、例外邊帶 IN；之後依序 US5 → US6 → US1 → US3 → US4 → US2（golden 寫入須依序）。
 

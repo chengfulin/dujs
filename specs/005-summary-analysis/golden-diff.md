@@ -22,17 +22,22 @@
 
 ### 變化說明
 
-（待 T019 填寫）
+`doAnalysis` 改用新求解器 `lib/dujs/reachingsolver.js`（research R2）：exception 邊帶 `IN(p)`（FR-014）；相容模式下 return 邊與處理器 exit → LOOP RETURN 邊照舊帶 `OUT(p)`，
+callReturn 的 bypass 合併以動態 `extraReachIns` 傳入；過渡規則 `exceptionToCalleeExitCarriesOut`（analyze Q1）開啟，指向被呼叫端 exit 的 exception 邊仍帶 `OUT(p)`（US1 刪除）。
+求解器的入列順序沿用原 worklist（已在佇列中的節點移到尾端；callNode 的 OUT 改變時先入列讀取它的 callReturn，再入列後繼），使集合的元素順序與 develop 相同。
+golden 4 個 case 重建後**位元組不變**（`diffcheck.js golden --report`「無差異」），淨差異表為空，`tests/golden/manifest.json` 不需更新。
 
 ### 雜湊變化表（舊→新 sha256 前 12 碼）
 
 | case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
 |------|------|---------------------------|------|
+| （全部） | （無） | 不變 | golden 重建後無任何檔案變化 |
 
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/catchclause.js` | catch-edge（US1-6）：`e: L3 -> L5` 改為 `e: L1 -> L5`（L3 `e = 2` 拋錯時 `e` 仍為 L1 的定義），`e: L3 -> L5` 移入 absent；新增 present `e: L1 -> L13`、`e: L3 -> L13`（L8 `e = 3` 拋錯時帶 L1、L3 的定義經 catch 到 L13） | FR-014 |
 
 ## US5
 

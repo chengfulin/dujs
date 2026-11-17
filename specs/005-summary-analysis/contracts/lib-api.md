@@ -16,7 +16,7 @@
 ## 2. `lib/dujs/reachingsolver.js`（新）
 
 `solve(graph, options)`：純函式。邊貢獻依 research R2；`options.calls`（CallSiteRecord）與 `options.loops`（LoopRecord）提供虛擬貢獻；`options.summaryOf` 與
-`options.flatVarDefOf`（摘要的 original VarDef → 本圖 VarDef；摘要圖為恆等）。相容模式（未給 `calls`／`loops`，Foundational 至 US1 前）：`options.extraReachIns(node)`
+`options.flatVarDefOf`（摘要的 original VarDef → 本圖 VarDef；摘要圖為恆等）。相容模式（未給 `calls`／`loops`，Foundational 至 US1 前）：`options.extraReachIns(node, outOf)`（`outOf(m)` 回傳 m 當下的 OUT 並登記依賴；求解前對全部節點先呼叫一次，見 data-model §6）
 為動態回呼（依迭代中的 `OUT(callNode)`，變動時 callReturn 重新入列）；`options.exceptionToCalleeExitCarriesOut` 為過渡規則（analyze Q1：指向被呼叫端 exit 的 exception 邊帶
 `OUT(p)`），US1 刪除。完整選項見 data-model §6。回傳 `{results: Map(node → {in, out, generate, kill}), exitArrivals: {normal: Set, exceptional: Set}}`。
 
