@@ -11,6 +11,10 @@
     "plan": {
       "done": true,
       "decisions": "DECISION 005"
+    },
+    "tasks": {
+      "done": true,
+      "count": 65
     }
   },
   "brief": {
