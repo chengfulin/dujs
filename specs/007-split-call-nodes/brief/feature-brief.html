@@ -45,6 +45,7 @@ li small{color:var(--sub)}
 table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
 th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
 th{background:var(--th)}
+.mermaid{text-align:center;min-width:560px}
 .ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
 code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 </style>
@@ -62,7 +63,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>拆分呼叫節點：修正求值順序，並追進運算式中的呼叫</h1>
-<div class="meta">feature 007-split-call-nodes · clarify · 第 1 輪 · 2026-11-18</div>
+<div class="meta">feature 007-split-call-nodes · plan · 第 1 輪 · 2026-11-18</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -173,16 +174,50 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
   </ul>
 </section>
 
-<h2>本輪變更（Clarifications 2026-11-18）</h2>
+<section class="panel">
+  <span class="num">架構</span>
+  <h3>一個新模組算「怎麼拆」，其餘只照著做</h3>
+  <div class="pic"><div class="mermaid">
+flowchart LR
+  A["原節點<br/>intra 模型不動"] --> B["callsplit.js 新<br/>算出各段計畫"]
+  J["esgraph LGPL<br/>只加屬性與匯出"] --> B
+  B --> C["callresolver<br/>解析被呼叫端"]
+  B --> G["defuseanalyzer<br/>依段過濾讀寫"]
+  C --> D["modelbuilder / hierarchy<br/>依計畫建呼叫邊"]
+  D --> E["expansion.replayCall<br/>把各段擺到圖上"]
+  G --> E
+  E --> F["攤平圖與 005 摘要圖"]
+  F --> H["reachingsolver / summary<br/>預期不改"]
+  H --> I["pair 與 matching.json<br/>格式不變"]
+  K["diffcheck 新<br/>去重比對 golden 與 MDN"] -.-> I
+  </div></div>
+  <p class="cap"><b>分段只發生在 <code>replayCall</code></b>，攤平圖與摘要圖共用同一套規則。<small>來源：plan 關鍵設計 5；R1、R8</small></p>
+  <ul>
+    <li>「哪些呼叫點、讀寫歸哪段、哪段會拋錯」集中在 <code>callsplit.js</code>（純計算、可單元測試）。<small>plan Structure Decision</small></li>
+    <li>被呼叫端不為每個呼叫點複製（沿用 005 D4）；新增的呼叫邊讓圖變大，效能以 2 倍為門檻。<small>plan Constraints；R11</small></li>
+    <li>新增 lib 模組 1 個、修改 lib 檔 9 個；<code>lib/analyses/**</code>、<code>cli.js</code> 等明確不受影響。<small>plan 變更影響範圍</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（plan 技術選型與關鍵設計）</h2>
+
+<h3>技術選型</h3>
+<p>維持 repo 現況、<b>無偏離 tech-standards</b>（該規範未涵蓋靜態分析 CLI／函式庫）：Node ≥ 24、CommonJS、mocha＋should、eslint、c8、fast-check、espree、eslint-scope、walkes；不新增執行期相依。<small>來源：plan Technical Context</small></p>
+<p>唯一的授權注意點：LGPL 衍生的 <code>lib/esgraph/index.js</code> 只加屬性與匯出，不改建圖行為，檔頭記 Modified。</p>
+
+<h3>關鍵設計決策</h3>
 <div class="box"><table>
-<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響</th></tr>
-<tr><td>呼叫點定義；Edge Cases；FR-001；US2 情境 12（P31）</td><td><code>new F().m(…)</code> 視為一個呼叫點</td><td>兩個呼叫點：先 <code>new F()</code>，再求 <code>m</code> 的引數，再呼叫 <code>m</code>；<code>new A()</code> 的欄位初始化式＋constructor 仍在一個呼叫點</td><td>US2</td></tr>
-<tr><td>FR-004；US3 情境 12（P32）</td><td><code>switch</code> 判別式的讀取如何記未定</td><td>呼叫只在第一個 <code>case</code> 前一次；讀取仍每個 <code>case</code> 各記 p-use，定義固定為判別式求值當下的。plan 須說明與 <code>switch (a &amp;&amp; b)</code> 先例如何並存，並列入 golden-diff</td><td>US3；plan</td></tr>
-<tr><td>FR-005；US4 情境 5（P34）</td><td>只看「實際求值的子運算式」，判定法未明</td><td>該段內完成求值的 AST 節點有 throwTypes 型別即可能拋錯（以呼叫結尾的段必拋，實際只決定最後一段）；plan 另寫按段歸屬的判定，不直接重用 <code>expressionThrows</code></td><td>US4；plan</td></tr>
-<tr><td>US2 情境 13（P33）；US4 情境 5；SC-002</td><td>箭頭函式運算式本體、try 內 <code>if (f() &gt; x)</code> 無情境</td><td>只補這兩個情境；<code>for(;;f())</code>、<code>do…while (f())</code> 作守門單元測試；SC-002 範圍擴到 P24–P34</td><td>US2、US4</td></tr>
-<tr><td>FR-008、FR-009；規格來源表（KI 列）</td><td>develop 基準未固定；KI 引用 §35–§43</td><td>基準固定 <code>edc22d5</code>，寫在 golden-diff.md／mdn-diff.md 基準行（rebase 時改行並整表重產）；KI 改引 §36–§43（§35 僅背景）</td><td>差異紀錄</td></tr>
-<tr><td>US3 情境 7；FR-001；FR-010；Edge Cases</td><td>預期含 <code>x: L3 -> L7>L8:T</code>（<code>case</code> test 讀取）</td><td>裁判追加：<code>case</code> test 的讀取與呼叫不建模，從 007 移出；情境 7 刪該預期、FR-001 移除 <code>case</code> 中的呼叫；限制記入 known-issues</td><td>US3；文件</td></tr>
+<tr><th>議題</th><th>plan 的決定</th><th>對應</th></tr>
+<tr><td>節點／邊型別</td><td><b>不新增</b>：段放在既有 CALL／CALL RETURN／決策節點上，<code>*.matching.json</code> 格式不變；只有 <code>replayCall</code> 分段，intra-procedural 模型完全不變</td><td>FR-006、FR-007；R1、R8</td></tr>
+<tr><td>求值順序與歸段</td><td>新模組 <code>callsplit.js</code> 以「後序編號」一份同時決定讀取、定義、拋錯各歸哪一段；class 名稱位置規則取代 <code>keepGenerateAtCallSite</code>、<code>splitByInnerClassName</code></td><td>FR-001、FR-002；R2、R3</td></tr>
+<tr><td>決策節點的 p-use</td><td>呼叫前讀到的 p-use 以「延後 p-use」歸到決策節點的分支，標記不變</td><td>FR-003；R4</td></tr>
+<tr><td><code>switch</code> 判別式</td><td>與 <code>switch (a &amp;&amp; b)</code> 先例<b>並存不統一</b>：統一任一方向都會改 intra pair（違反 FR-006）；判別式含呼叫時前插段鏈，各 <code>case</code> 仍各記一筆 p-use</td><td>FR-004；R5</td></tr>
+<tr><td>返回後會不會拋錯</td><td><code>segmentThrows</code> 按段、不遞迴判定；不重用 <code>expressionThrows</code>（會把 <code>var y = f()</code>、<code>if (f())</code> 誤判）</td><td>FR-005；R6</td></tr>
+<tr><td><code>new F().m()</code></td><td>後序先遇內層 <code>new</code>，再遇 <code>.m()</code>，串成兩個呼叫點，段 1 帶 <code>m</code> 的引數</td><td>US2 情境 12；R7</td></tr>
+<tr><td>差異紀錄</td><td>新 <code>diffcheck.js</code>：去重集合比對、另列重複列數；基準 <code>edc22d5</code>；類別 <code>連結／求值順序／返回後例外／KI／標記／共通</code>，歸不進類別即失敗</td><td>FR-008、FR-009；R10</td></tr>
+<tr><td>實作順序</td><td>Setup → Foundational（不接模型）→ US1 → US2 → US3 → US4 → Polish；改 golden 的階段依序、每階段 <code>--verify</code></td><td>plan 實作順序</td></tr>
 </table></div>
+<p class="meta">既有測試基線 <code>npm test</code> 1495 passing；效能門檻為基準的 2 倍（SC-005）。</p>
 
 <h2>工程師要決定的事</h2>
 
@@ -205,11 +240,11 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
-<p>無。Assumptions 維持 repo 現況，未引入新技術；新增的節點或邊型別由 plan 決定並寫入 README（FR-007）。</p>
-<p>plan 須處理的交付：FR-005 的按段判定（非遞迴、不直接重用 <code>expressionThrows</code>）、<code>switch</code> 判別式與 <code>switch (a &amp;&amp; b)</code> 先例的統一或並存說明（FR-004）。</p>
+<p>無缺漏、無偏離：tech-standards 未涵蓋靜態分析 CLI／函式庫，plan 維持 repo 現況，無 §CP-6 例外；「新增節點或邊型別」答案為無（FR-007）。<small>來源：plan tech-standards</small></p>
+<p>plan 已交付先前列出的待辦：FR-005 按段判定（R6）、<code>switch</code> 判別式與先例並存說明（R5）。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無（尚未 analyze）。005 Q-a「呼叫敘述只在呼叫之前拋錯」在運算式中的呼叫上不再足夠，已由 FR-005 以「每段只看該段實際求值的子運算式」處理，並在 FR-010 要求 KI §36 註明適用範圍。</p>
+<p>無（尚未 analyze；憲章檢查全部 PASS）。005 Q-a「呼叫敘述只在呼叫之前拋錯」在運算式中的呼叫上不再足夠，已由 FR-005 按段判定處理，並在 FR-010 要求 KI §36 註明適用範圍。</p>
 
 <h3>已決事項</h3>
 <div class="box"><table>
@@ -222,10 +257,14 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>6</td><td>沒有情境的語法位置是否補</td><td>只補箭頭函式本體與 try 內 <code>if (f() &gt; x)</code>；其餘單元測試</td><td>US2 情境 13；US4 情境 5</td></tr>
 <tr><td>7</td><td>差異紀錄的 develop 基準</td><td>固定 <code>edc22d5</code>，寫於基準行</td><td>FR-008、FR-009</td></tr>
 <tr><td>8</td><td><code>case</code> test 是否建模（裁判）</td><td>不建模，移出 007，記入 known-issues</td><td>US3 情境 7；FR-010</td></tr>
+<tr><td>9</td><td>CLI <code>.dot</code> 標記（plan Q1）</td><td>A：<code>call (行)</code>、<code>callReturn (行[:路徑])</code>；golden 共 117 個標記差異；比對時以基準側 matching.json 把 develop 標記換成帶行號形式，不抹掉節點身分</td><td>DECISION 005；FR-007；R9</td></tr>
+<tr><td>10</td><td><code>for…in</code>／<code>for…of</code> 左側的呼叫（plan Q2）</td><td>A：不算呼叫點，FR-001 明文例外，記入 KI</td><td>DECISION 005；R13</td></tr>
+<tr><td>11</td><td><code>case</code> test 中 class 的 static 成員（plan Q3）</td><td>A：不再連結；KI §44 記為相對 develop 的行為變更</td><td>DECISION 005；R12、R13</td></tr>
+<tr><td>12</td><td>plan 閘門附帶修改</td><td>summary.js 併入延後 p-use；<code>c?.m(f())</code>、預設值解構中的呼叫不列為呼叫點；同節點先定義 callee 的防護；once-loop 迴圈變數留在 N 副本；<code>switch (f()) {}</code> 既有 bug 記 KI；前插 CALL 例外邊自 US1 起</td><td>DECISION 005</td></tr>
 </table></div>
 
 <h3>本輪判斷點</h3>
-<p>無新的判斷點：本輪 5 個 Q→A 與裁判追加皆已由使用者／裁判決定，列為已決事項，未引入「文件判不了、答案會改變交付物」的新問題。</p>
+<p>無：plan Q1–Q3 已由使用者裁決（皆選 A），plan 通過 review，附帶修改已套用到 plan 文件，見已決事項 9–12。</p>
 
 <h3>次要疑點</h3>
 <div class="box"><table>
@@ -233,5 +272,8 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>FR-005 的 <code>f() + 1</code>、<code>!f()</code>、<code>h(f())</code>、<code>f() ? a : b</code>、<code>[f()]</code> 判定只有規則與例示、無獨立驗收情境（靠 plan 單元測試）</td><td>FR-005</td></tr>
 <tr><td>Edge Cases 提 async 的保守摘要，無驗收情境（generator 已補）</td><td>Edge Cases</td></tr>
 <tr><td>FR-003 決策節點清單與「含呼叫的節點」定義仍列 <code>case</code>，但 <code>case</code> test 已不建模；措辭可能被誤讀為 <code>case</code> test 的讀取要記（實為判別式的 p-use）</td><td>FR-003；表示法「呼叫點」定義</td></tr>
+<tr><td>同一節點內先定義再呼叫（<code>var o = new A(), r = o.m();</code>、<code>(f = g)()</code>）不連結，且有防護：callee／receiver 在同節點有較早的定義時不列為呼叫點（避免 <code>f = g, f()</code> 錯連到舊定義）</td><td>plan R13 L3；DECISION 005</td></tr>
 </table></div>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>

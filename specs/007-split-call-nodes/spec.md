@@ -86,7 +86,7 @@
 - Q: 沒有情境的語法位置要補情境嗎？ → A: 只補箭頭函式運算式本體（US2 情境 13，P33）與 try 內 `if (f() > x)`（US4 情境 5，P34）；`for(;;f())`、`do…while (f())`（develop 已連結）作守門單元測試；`??`／`||` 與 P17 同機制；FR-006／FR-007 及其餘由 plan 的單元測試涵蓋。
 - Q: 差異紀錄的 develop 基準？ → A: 固定 `edc22d5`，寫在 golden-diff.md／mdn-diff.md 的基準行；日後若 rebase 到新的 develop，明確改該行並整表重產。
 - clarify review 通過（DECISION 004）：US4 情境 5 的本體改為不拋錯的 `var z = 0;`；FR-005 規則改為含段尾進入的呼叫點本身；新增 US4 情境 6（P35）；P33 改為一行一個敘述。
-- 裁判追加：`case` test 的讀取與呼叫不建模（dujs 從不讀 case test），不納入 007：US3 情境 7 刪除 `x: L3 -> L7>L8:T` 的預期，FR-001 移除 `case` 中的呼叫，並於 `docs/known-issues.md` 記錄此限制（FR-010）。
+- 裁判追加：`case` test 的讀取與呼叫不建模（相對 develop 的窄範圍行為變更：develop 會連結 case test 中 class 的 static 成員，007 不再連結；其餘 case test 的讀取與呼叫本就不建模），不納入 007：US3 情境 7 刪除 `x: L3 -> L7>L8:T` 的預期，FR-001 移除 `case` 中的呼叫，並於 `docs/known-issues.md` 記錄此限制（FR-010）。
 
 ### spec review（2026-11-18）的使用者決策
 
@@ -254,7 +254,7 @@
 - 巢狀函式、箭頭函式本體中的呼叫屬於該函式，不是外層節點的呼叫點；作為引數傳遞的函式（回呼）不因此被呼叫。
 - 短路（`&&`、`||`、`??`）與條件運算子（`?:`）：既有的分支拆分先決定哪些部分在哪個分支執行，每個分支節點再依本 feature 拆分（US3 情境 8）。
 - `new A(…)` 的欄位初始化式與 constructor、class static 成員仍在**一個**呼叫點內依序串接（引數在兩者之前求值），維持 004／005 的順序；`new F().m(…)` 則是兩個呼叫點，`m` 的引數在 F 建構完成後才求值（US2 情境 12）。
-- `case` test（`case x:`、`case g():`）的讀取與呼叫不建模（既有限制，dujs 從不讀 case test），不在本 feature 範圍；記入 `docs/known-issues.md`。
+- `case` test（`case x:`、`case g():`）的讀取與呼叫不建模（case test 中 class 的 static 成員在 develop 會連結，007 不再連結，屬相對 develop 的行為變更；其餘為既有限制），不在本 feature 範圍；記入 `docs/known-issues.md`。
 - 遞迴、互相遞迴、無正常返回、generator／async 的保守摘要、例外沿呼叫鏈往外與 LOOP：沿用 005 的摘要規則，對新增的呼叫點同樣適用。
 - 事件處理器的註冊查找（`addEventListener` 呼叫的引數）不受影響；註冊呼叫本身無法解析，維持不連結。
 - 005 FR-016 繞過（呼叫端的區域變數、參數、block `let`／`const` 不被被呼叫端殺掉）對新增的呼叫點同樣成立。
@@ -267,10 +267,10 @@
 ### Functional Requirements
 
 - **FR-001**: 任何 CFG 節點中的每個呼叫點 MUST 連到其被呼叫端（不限呼叫敘述）：含賦值、變數宣告初始化、`return`、`throw`、條件、`switch` 判別式、
-  迴圈節點、參數預設值、欄位初始化式中的呼叫運算式與 `new` 運算式。callee 的解析規則沿用 004 FR-018 與 005 FR-005，不擴充；`new F().m(…)` 中的 `new F()` 與 `.m(…)` 為兩個呼叫點。`case` test 中的呼叫不在範圍內。[SRC KI §22 (3)；D004 U1]
+  迴圈節點、參數預設值、欄位初始化式中的呼叫運算式與 `new` 運算式。callee 的解析規則沿用 004 FR-018 與 005 FR-005，不擴充；`new F().m(…)` 中的 `new F()` 與 `.m(…)` 為兩個呼叫點。`case` test 中的呼叫不在範圍內；例外：`for…in`／`for…of` 左側的呼叫、選擇性鏈（`c?.m(f())`、`c?.[f()]`）與解構預設值（`var [z = f()] = c`）中的呼叫、callee 或 receiver 在同一節點中先被定義者，不列為呼叫點（DECISION 005，記入 known-issues）。[SRC KI §22 (3)；D004 U1]
 - **FR-002**: 含呼叫點的節點 MUST 在 inter-procedural 與 intra-page 模型中依求值順序分成「第一個呼叫之前」「每兩個呼叫之間」「最後一個呼叫返回之後」
   幾段，順序依 JavaScript 完整的求值順序（運算元由左至右、引數由左至右、引數先於呼叫、複合賦值先讀目標）；每段的讀取只得到該段中該讀取被求值時有效的定義，每段的定義只在其後生效。[SRC KI §16；PRB P1、P6–P9、P12]
-- **FR-003**: 決策節點（`if`／迴圈條件、拆分後的決策節點、`case` 節點（其判別式的 p-use；`case` test 本身不建模）、`for…in`／`for…of`）中的讀取 MUST 仍記為該決策節點的 p-use（標記形式不變），
+- **FR-003**: 決策節點（`if`／迴圈條件、拆分後的決策節點、`switch` 判別式（記在各 `case` 的 p-use；`case` test 本身不建模）、`for…in`／`for…of`）中的讀取 MUST 仍記為該決策節點的 p-use（標記形式不變），
   只改變其得到的定義；不在條件中的讀取仍為 c-use。[SRC KI §16；PRB P21]
 - **FR-004**: `for…in`／`for…of` 的可迭代物件與 `switch` 的判別式 MUST 只求值一次（可迭代物件在進入迴圈前；判別式在第一個 `case` 比較之前），其中的呼叫不因每次迭代或每個 `case` 重複。`switch` 判別式的讀取仍在每個 `case` 各記一筆 p-use（FR-003），但讀到的定義固定為判別式求值當下有效的那些。已拆分的判別式（如 `switch (a && b)`，develop 只記一次）的記錄方式由 plan 定案。[SRC PRB P15、P24、P32]
 - **FR-005**: 拆分的每一段 MUST 依 005 FR-014 決定例外路徑：該段可能拋錯時，例外路徑帶該段執行前的定義（返回之後的段含被呼叫端的定義）。
