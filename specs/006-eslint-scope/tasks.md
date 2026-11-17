@@ -200,7 +200,7 @@ description: "Task list for feature 006-eslint-scope"
 - [X] T062 [US4] 重跑全部守門：`npx mocha tests/dujs/scopeguards.js tests/dujs/scopebinding.js tests/dujs/catchclause.js tests/dujs/scoperesolution.js tests/dujs/globals.js` 全過；quickstart §2 Foundational 的 run.js 迴圈與 `probes/develop.txt` 仍逐行相同
 - [X] T063 [US4] Golden 收尾（序列化，US4；重生驗證零差異）：`UPDATE_GOLDEN=1 npm test` 後 `git -C <專案根> diff --exit-code -- tests/golden/expected*` 須零差異。**有任何差異一律先當 T061 的回歸**，修 `lib/` 直到重生後零差異（不更新 manifest、不改淨差異表）；確認無法零差異才停下請使用者裁決。零差異時 `golden-diff.md` US4 節記「無差異」；最終 `node specs/006-eslint-scope/tools/diffcheck.js golden --verify specs/006-eslint-scope/golden-diff.md` 結束碼 0（US4-1），orchestrator 親自重跑通過後才 commit
 - [X] T064 [US4] US4 閘門：閘門全過；回報可提交
-- [ ] T070 [US4] **使用者簽核閘門（orchestrator 執行，非 implementer）**：T063／T064 後、PR 前，orchestrator 把 `golden-diff.md` 累積的「解析類移除簽核」「呼叫連結簽核」表（implementer 草擬，待簽核）連同淨差異對應列交使用者一次簽核；使用者同意後 orchestrator 把簽核欄改為簽核紀錄（簽核者、日期），重跑 `diffcheck.js golden --verify` 結束碼 0 並 commit；不同意的列視為回歸，退回 implementer 修正（重做受影響的 golden 任務）
+- [X] T070 [US4] **使用者簽核閘門（orchestrator 執行，非 implementer）**：T063／T064 後、PR 前，orchestrator 把 `golden-diff.md` 累積的「解析類移除簽核」「呼叫連結簽核」表（implementer 草擬，待簽核）連同淨差異對應列交使用者一次簽核；使用者同意後 orchestrator 把簽核欄改為簽核紀錄（簽核者、日期），重跑 `diffcheck.js golden --verify` 結束碼 0 並 commit；不同意的列視為回歸，退回 implementer 修正（重做受影響的 golden 任務）
 
 **Checkpoint**: US4 獨立可驗（唯一來源由靜態測試守住；golden 差異 100% 屬 D2 且已經使用者簽核〔T070〕）。
 

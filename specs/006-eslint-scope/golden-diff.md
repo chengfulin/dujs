@@ -38,6 +38,9 @@
 | 26 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | 同 #24：外／內層列分拆，pair multiset 不變 |
 | 27 | expected-fixes004 | page0 | intra-procedurals/0.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | class 內層綁定列（無 pair）；外層列 `(11,36)`、`(11,37)`、`(11,39)` 不變 |
 
+> **使用者簽核（T070）**：2026-11-17 由使用者（changfulin）對上表 27 筆淨差異（全為新增：全域 19、解析 7、catch 1）一次簽核通過；
+> 「解析類移除簽核」與「呼叫連結簽核」兩表無列，無需逐筆簽核。
+
 ## 解析類移除簽核（F3：歸「解析」的移除 pair 的釘選筆數）
 
 | case | 頁 | 移除筆數 | 原因摘要 | 簽核 |
