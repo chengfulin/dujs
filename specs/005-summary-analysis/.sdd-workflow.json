@@ -8,6 +8,9 @@
       "done": true,
       "clarifier_findings": 15,
       "fable_judge": true
+    },
+    "plan": {
+      "done": true
     }
   },
   "brief": {

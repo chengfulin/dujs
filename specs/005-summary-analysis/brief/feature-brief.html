@@ -61,7 +61,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>摘要式分析：同一個小程序被多處叫用時只報走得到的配對</h1>
-<p class="meta">005-summary-analysis · clarify · 第 4 輪（Session 2026-11-17：4 個使用者答案＋裁判定案項目，新增 US6、FR-013 整族、FR-014）· 2026-11-17</p>
+<p class="meta">005-summary-analysis · plan · 第 1 輪（plan.md、research R0–R14、data-model、contracts；沿用 clarify 第 4 輪的 spec）· 2026-11-17</p>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -171,23 +171,52 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
   </ul>
 </section>
 
-<h2>本輪變更（clarify · Session 2026-11-17）</h2>
+<section class="panel">
+  <span class="num">架構</span>
+  <h3>新增兩個模組，其餘沿用；攤平圖結構不變</h3>
+  <div class="box"><div class="mermaid">
+flowchart LR
+  A["espree 解析<br/>(沿用)"] --> B["scopebinding<br/>宣告與解析 (改)"]
+  A --> C["esgraph CFG<br/>finally 整族 (改)"]
+  B --> D["callresolver<br/>D2 放寬連結 (改)"]
+  C --> E["modelbuilder／expansion<br/>攤平圖＋呼叫紀錄 (改)"]
+  D --> E
+  E --> F["summary.js<br/>SCC 不動點 (新)"]
+  F --> G["reachingsolver.js<br/>邊型別感知求解 (新)"]
+  E --> G
+  G --> H["defuseanalyzer<br/>寫回 reachIns (改)"]
+  H --> I["outputwriter<br/>.dot／.dupairs／.matching.json (改)"]
+  I --> J["diffcheck<br/>golden／MDN 差異核對 (新)"]
+  classDef n fill:#D8F0E3,stroke:#3A9D6B,color:#1F2937
+  class F,G,J n
+  </div></div>
+  <ul>
+    <li>摘要先算（呼叫圖 SCC 反拓撲序，遞迴從「無正常返回」起算），求解器的 callReturn 只吃摘要。<small>（R1、R3）</small></li>
+    <li>例外邊帶拋錯節點的 IN；LOOP 不套 must-KILL；<code>.dot</code> 為進出配對另寫 <code>*.matching.json</code>。<small>（R2、R4、R9；FR-010、FR-014）</small></li>
+    <li>綠色＝新增；其餘為修改或沿用。不動 <code>lib/analyses/**</code>、<code>hierarchy.js</code>、CLI。<small>（plan 變更影響範圍）</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（plan · 第 1 輪）</h2>
+<h3>技術選型（使用者已確認：沿用現有技術棧，不新增執行期相依）</h3>
 <div class="box"><table>
-<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響 story</th></tr>
-<tr><td>D1、標題</td><td>範圍＝摘要分析＋§18</td><td>再納入 <code>finally</code> 整族缺陷（FR-013）與例外路徑只帶執行前定義（FR-014）</td><td>新增 US6；US3</td></tr>
-<tr><td>D3、FR-006、Q-a</td><td>Q-a 待定：返回後呼叫敘述是否仍可拋錯</td><td>不算；只有呼叫之前（求 callee、引數）可拋錯並帶呼叫前定義；運算式中與決策節點前的呼叫維持現況（007）。可能拋錯節點以展開前 CFG 例外邊判定</td><td>US3-2、3、7</td></tr>
-<tr><td>FR-014（新）、D3</td><td>例外邊帶拋錯節點執行後的定義（P24：漏 <code>x: L1 -> L6</code>）</td><td>所有例外邊與摘要第四項只帶拋錯節點<b>執行前</b>（IN）的定義</td><td>US3-2、3；US6-7</td></tr>
-<tr><td>FR-013、US3-6</td><td>只修函式內 <code>catch</code> 重拋略過 <code>finally</code>（Q-b）</td><td>整族：頁面層同修；<code>return</code>／<code>break</code>／<code>continue</code> 穿過 <code>finally</code> 先執行它；例外進入的 <code>finally</code> 做完往外拋，不接正常後繼</td><td>US3-6；US6-1～6</td></tr>
-<tr><td>FR-001、US1-8</td><td>未區分 generator／async</td><td>摘要不做 must-KILL，只保留可能的 GEN；記入 known-issues。upward-exposed uses 對所有路徑計算</td><td>US1-8</td></tr>
-<tr><td>FR-003、US1-7</td><td>遞迴不動點起點未明</td><td>從「無正常返回」起算；無條件遞迴後的節點不可達</td><td>US1-7</td></tr>
-<tr><td>FR-007、US4-3</td><td>LOOP 處理未明</td><td>LOOP 不套 must-KILL；各處理器 GEN 經 LOOP 流向所有處理器（含自己）</td><td>US4-3</td></tr>
-<tr><td>D2、US2-5～7</td><td>自身遞迴與 block 內函式宣告未列驗收</td><td>具名運算式內部名稱納入；block 內函式宣告 binding 只在該 block（006 D5），block 外不連結</td><td>US2-5、6、7</td></tr>
-<tr><td>FR-010、US1-5</td><td>配對資訊只說 call／return 對應</td><td>加：例外經 exit 只接呼叫端例外後繼，正常到達 exit 不得接例外後繼；LOOP 進出亦配對</td><td>US1-5；US4</td></tr>
-<tr><td>FR-009</td><td>intra-procedural 的呼叫處理未明</td><td>維持不透明，只受 FR-008、FR-013、FR-014 影響</td><td>全部</td></tr>
-<tr><td>FR-012、SC-005</td><td>未列 <code>window.f</code>、generator 限制；消失理由缺「無正常返回」</td><td>README 加 <code>window.f = …</code> 可能誤連、generator／async 保守摘要；SC-005 補理由與 FR-013／FR-014 例外路徑修正</td><td>文件、SC-005</td></tr>
-<tr><td>D6（新）</td><td>003：golden 差異不得放行；004 FR-018：函式不適用放寬</td><td>修訂一覽：golden 依 FR-011 記錄後更新（含 003 鎖定的 ES5 baseline，如 <code>page0/intra-procedurals/5.graph.dot</code> 的例外邊）；004 該句由 D2 取代</td><td>全部</td></tr>
+<tr><th>項目</th><th>選型</th><th>偏離 tech-standards</th></tr>
+<tr><td>語言／執行環境</td><td>JavaScript（CommonJS，<code>lib/</code> 維持 ES5 風格）、Node.js ≥24</td><td>無</td></tr>
+<tr><td>解析／作用域／CFG</td><td>espree ^11.2.0、eslint-scope ^9.1.2、自有 esgraph（LGPL 衍生檔 <code>index.js</code>、<code>dot.js</code> 需改，檔頭記 Modified）</td><td>無</td></tr>
+<tr><td>測試</td><td>mocha＋should＋fast-check（inlining oracle 做 property test）、golden fixture；基線 1273 passing</td><td>無</td></tr>
+<tr><td>效能門檻</td><td>總分析時間 ≤ develop（<code>9e324be</code>）× 2（SC-004）</td><td>無</td></tr>
 </table></div>
-<div class="note"><b>golden 影響擴大：</b>FR-014 適用所有模型的例外邊，凡例外邊所帶定義與先前不同的 fixture 都會變（含 ES5 baseline）；FR-013 改動含 <code>finally</code> 的 CFG 邊。差異不會被放行成回歸，須逐項寫進 <code>golden-diff.md</code> 並對到 FR（FR-011）。使用者已在 Session 2026-11-17 選定（FR-014 更正後改選 IN），不另列判斷點。</div>
+<p class="meta">tech-standards 未涵蓋靜態分析 CLI／函式庫，無偏離項、無 §CP-6 例外。</p>
+
+<h3>關鍵設計與影響</h3>
+<div class="box"><table>
+<tr><th>議題</th><th>決策</th><th>影響</th></tr>
+<tr><td>實作順序</td><td>Setup → 求解器（FR-014）→ US5 → US6 → US1 → US3 → US4 → US2 → Polish</td><td>US2 雖 P1，連結放寬須等摘要，否則出現不可實現 pair；改 golden 的階段須依序並逐次 <code>diffcheck --verify</code></td></tr>
+<tr><td>FR-013 finally</td><td>新增 <code>finallyExit</code> 節點與多目標 <code>finally</code> 邊（見判斷點 2）</td><td>golden 只動 page0 <code>parseSaved</code> 一處；MDN 語料無 <code>try</code></td></tr>
+<tr><td>Q-a</td><td>呼叫敘述的例外邊留在 CALL 節點；被呼叫端例外以虛擬貢獻帶出</td><td>US3-2、3、7</td></tr>
+<tr><td>generator／async</td><td>摘要標 <code>conservative</code>：恆正常返回、無 must-KILL</td><td>US1-8</td></tr>
+<tr><td>golden／MDN</td><td>新 <code>tools/diffcheck.js</code> 以類別（§18、連結、finally、例外IN、Q-a、摘要）核對；差異記 <code>golden-diff.md</code></td><td>FR-011；釘選類別由使用者簽核</td></tr>
+</table></div>
 
 <h2>工程師要決定的事</h2>
 
@@ -212,7 +241,8 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <h3>驗收條件盤點</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>情境</th><th>判定</th><th>說明</th></tr>
-<tr><td>US1 多處叫用</td><td>1、2、3、4、6、7、8</td><td class="ok">可驗證</td><td>皆有程式與具體 pair（3、4、6 為守門）；6 為多被叫端串接（<code>new Person</code>），改自 MDN；7 無正常返回（<code>c-noret.js</code>）；8 generator／async（<code>c-gen.js</code>、<code>c-asy.js</code>）</td></tr>
+<tr><td>US1 多處叫用</td><td>1、2、3、6、7、8</td><td class="ok">可驗證</td><td>皆有程式與具體 pair（3、6 為守門）；6 為多被叫端串接（<code>new Person</code>），改自 MDN；7 無正常返回（<code>c-noret.js</code>）；8 generator／async（<code>c-gen.js</code>、<code>c-asy.js</code>）</td></tr>
+<tr><td>US1</td><td>4 外層區域變數不受內層影響</td><td class="ok">可驗證</td><td>判斷點 1 → A：改用加終止條件的 <code>c-cyc3-cond.js</code>（<code>t: L4 -> L8</code>）；原 cyc-3 驗「沒有以 L6 為 use 端的 pair、分析終止」</td></tr>
 <tr><td>US1</td><td>5 配對資訊</td><td class="ok">可驗證</td><td>以「每條 return 邊對應唯一 call 邊」驗，另驗 US3-3 程式 <code>s</code> 的例外只接 L9 <code>catch</code>；輸出格式由 plan 定（FR-010）</td></tr>
 <tr><td>US2 函式內叫用</td><td>1–7</td><td class="ok">可驗證</td><td>皆有程式與 pair；4、7 為守門；5、6 自身遞迴與具名運算式內部名稱；7 block 內函式宣告不在 block 外連結</td></tr>
 <tr><td>US3 例外離開</td><td>1–7</td><td class="ok">可驗證</td><td>2 明確斷言沒有 <code>state: L7 -> L13</code>（Q-a 已決）；3 有 <code>x: L1 -> L10</code>、沒有 <code>x: L5 -> L10</code>；4、7 守門；5 例外沿呼叫鏈進 LOOP；6 為 <code>catch</code> 重拋經 <code>finally</code>（P17，FR-013 修正後成立，現況不成立）</td></tr>
@@ -224,20 +254,30 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
-<p>無偏離。規範以服務與前端為主，未涵蓋靜態分析的輸出格式與 golden 比對；配對資訊格式、摘要是否輸出成檔案留待 plan 決定。</p>
+<p>無偏離，無缺漏。規範以服務與前端為主，未涵蓋靜態分析的輸出格式與 golden 比對。spec 交 plan 決定的兩項已定：配對資訊另存 <code>*.matching.json</code>（<code>.dot</code> 不變）、摘要不單獨輸出成檔案而併入該檔。<small>（FR-010；plan 關鍵設計；contracts/matching-output.md）</small></p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無（未做 analyze）。需留意：D4 修訂 003 spec「範圍外」中「每個呼叫點各自展開屬 stage 2」的說法；D2 取代 004 Clarifications H3 的一部分與 FR-018「函式不適用放寬」一句；D6 明列 003「golden 差異不得放行」不適用於本 feature。</p>
+<div class="box"><table>
+<tr><th>條款</th><th>衝突內容</th><th>受影響 story</th></tr>
+<tr><td>§CP-1 可追溯（spec 內部矛盾，HIGH）</td><td>US1-4 用無條件遞迴的 <code>cyc-3.js</code> 要求 <code>t: L4 -> L6</code>，與 FR-003「從無正常返回起算」、US1-7「無條件遞迴後不可達」互斥（research R3）</td><td>US1-4、US1-7</td></tr>
+<tr><td>§CP-1 可追溯（spec 與設計落差，HIGH）</td><td>FR-013 的 spec 只提「邊」變化；實際需新增 <code>finallyExit</code> 節點型別與多目標 <code>finally</code> 邊，出現在 <code>.dot</code></td><td>US6、US3-6</td></tr>
+</table></div>
+<p class="meta">尚未做 analyze。D4 修訂 003「每個呼叫點各自展開屬 stage 2」、D2 取代 004 FR-018 一句、D6 讓 003「golden 差異不得放行」不適用，皆已於 spec 明列。</p>
 
 <h3>本輪判斷點</h3>
-<p><b>無。</b>前輪的 Q-a、Q-b 與先前「可能拋錯節點範圍」「處理器間 GEN 流動」兩個疑點，都已由本輪 4 個使用者答案與裁判定案項目回答（見上方已決事項）；
-文件上沒有仍會改變交付物、卻判不了的問題。golden 變動擴大（FR-013／FR-014，含 ES5 baseline）已由 D6 與 FR-011 明定處理方式，屬已決事項。</p>
+<p><b>已決：1 → A、2 → A</b>（使用者 2026-11-17 採建議；spec US1 情境 4、FR-013 已改）。以下保留當時的選項供參照。</p>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>方案（建議標 *）</th><th>影響</th><th>出處</th></tr>
+<tr><td>1</td><td>US1-4 與 FR-003 矛盾，要怎麼改驗收？</td><td>*A：US1-4 改用有終止條件的變體（<code>if (p) { this.m(0); }</code>）驗「外層區域變數不受內層影響」；原 cyc-3 改驗「沒有以 L6 為 use 端的 pair、分析終止」<br>B：改 FR-003／US1-7，讓無條件遞迴後仍可達（推翻已決的不動點起點）</td><td>A：只改一條驗收，其餘不變；B：影響 US1-7、US6-3 與多處 golden</td><td>US1 情境 4、7；FR-003；research R3</td></tr>
+<tr><td>2</td><td>是否接受 <code>.dot</code> 新增 <code>finallyExit</code> 節點與多目標 <code>finally</code> 邊？</td><td>*A：接受（golden 只動 page0 <code>parseSaved</code>）<br>B：依續行種類複製 finally 節點（同一行多節點、pair 重複）</td><td>A：<code>.dot</code> 多一種節點／邊，spec 需補述；B：不改圖型別，但 pair 重複、較難驗證</td><td>FR-013；US6；research R6；data-model §7</td></tr>
+</table></div>
 
 <h3>次要疑點（不佔判斷點）</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>SC-005 的「每個消失／新增的 pair 都能說明」靠人工歸類，無自動判準；FR-013／FR-014 加入後歸類項目增多</td><td>SC-005</td></tr>
-<tr><td>配對資訊的輸出格式與摘要是否輸出成檔案，spec 明確交 plan 決定</td><td>FR-010；Assumptions</td></tr>
-<tr><td>Edge Cases 改為「本 feature 造成的 dead-code pair 增減列入 golden-diff」，仍無量測方式；KI §22 (5) 其餘在 008</td><td>Edge Cases</td></tr>
+<tr><td>SC-005 的「每個消失／新增的 pair 都能說明」靠人工歸類，無自動判準；diffcheck 只能做到類別核對，歸類項目隨 FR-013／FR-014 增多</td><td>SC-005</td></tr>
+<tr><td>Edge Cases「dead-code pair 增減列入 golden-diff」仍無量測方式；KI §22 (5) 其餘在 008</td><td>Edge Cases</td></tr>
 </table></div>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>

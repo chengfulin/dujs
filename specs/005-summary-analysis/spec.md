@@ -120,6 +120,12 @@ spec review 時（584e17d）的結果與下表相同，除 P5（改用新程式�
 - **N5**：US4 情境 2 標為守門；US5 情境 2 拆成一行一個節點；US1 情境 5 的 return 邊目標為呼叫點的返回節點（callReturn）。
 - SC-005 的消失理由加「呼叫無正常返回」。
 
+### plan review（2026-11-17）的使用者決策
+
+- **plan Q1 → A**：US1 情境 4 原用的 004 `cyc-3.js` 是無條件遞迴，與 FR-003、US1 情境 7 矛盾；改用加終止條件的 `c-cyc3-cond.js`，原 cyc-3 改驗
+  「沒有以 L6 為 use 端的 pair、分析終止」。
+- **plan Q2 → A**：FR-013 在 `.dot` 新增 `finallyExit` 節點型別與多目標 `finally` 邊型別。
+
 ### spec review（2026-11-17，續作後）的使用者決策
 
 - SC-002 改為 P1–P11（自身遞迴與具名函式運算式內部名稱列入成功準則）。
@@ -186,9 +192,10 @@ def-use pair，並以 pair 與攤平圖產生測試需求與測試路徑。多�
    到達 L6、L10、L13。[SRC PRB P2]
 3. **Given** `var x = 0;` L1 / `function f(c) {` L2 / `if (c) {` L3 / `x = 1;` L4 / `}` L5 / `}` L6 / `f(0);` L7 / `console.log(x);` L8，
    **When** 分析，**Then** 有 `x: L1 -> L8` 與 `x: L4 -> L8`（被呼叫端只在一條分支定義 `x`，不是 must-KILL）。迴歸守門：現況已成立。[SRC HD D3]
-4. **Given** 004 的 `specs/004-fix-remaining-issues/probes/cyc-3.js`（方法 `m` 有區域變數 `t`，L5 遞迴呼叫自己、L6 讀 `t`），
-   **When** 分析，**Then** 仍有 `t: L4 -> L6`：遞迴呼叫返回後，外層那次執行的區域變數不被內層那次的定義汙染或殺掉；分析會終止。
-   [SRC D004 FR-015、FR-016]
+4. **Given** `var y;` L1 / `class A {` L2 / `m(p) {` L3 / `var t = p;` L4 / `if (p) {` L5 / `this.m(0);` L6 / `}` L7 / `y = t;` L8 / `}` L9 /
+   `}` L10 / `new A().m(1);` L11（`probes/c-cyc3-cond.js`，004 cyc-3 加上終止條件），**When** 分析，**Then** 仍有 `t: L4 -> L8`：遞迴呼叫返回後，
+   外層那次執行的區域變數不被內層那次的定義汙染或殺掉；分析會終止。另，004 的 `cyc-3.js`（無條件遞迴）沒有以 L6 為 use 端的 pair，分析會終止。
+   [SRC D004 FR-015、FR-016；plan Q1]
 5. **Given** 上述程式，**When** 輸出攤平圖，**Then** 另有 call 邊與 return 邊的配對資訊：每條 return 邊都能對應到唯一的 call 邊（呼叫點），
    且 US1 情境 1 中 `f` 的 exit 到 L4 與到 L7 呼叫點的返回節點（callReturn）的兩條 return 邊，分別對應 L4 與 L7 的 call 邊。US3 情境 3 程式的配對資訊中，`s` 的例外經 exit 之後只接到 L8 呼叫所屬 `try` 的
    `catch`（L9），不接到 L8 的返回節點。[SRC USR D4]
@@ -408,7 +415,8 @@ intra-page 中，事件處理器由 LOOP 節點進入時，其返回只回到 LO
   D3 的例外語意、generator／async 的保守摘要、`window.f` 誤連的限制）。[SRC USR D1；Session 2026-11-17]
 - **FR-013**: `try` 有 `finally` 時，函式內與頁面層都 MUST：`catch` 中拋出的例外先經 `finally` 才往外；`return`／`break`／`continue` 穿過
   `finally` 時先執行 `finally` 再到原目標；因例外進入的 `finally` 做完後繼續往外拋（到外層 handler 或例外離開），不接到正常後繼。
-  `docs/known-issues.md` 新增此問題的章節並標為已修正。[SRC PRB P17–P23；USR Q-b；Session 2026-11-17]
+  `.dot` 為此新增 `finallyExit` 節點型別與多目標的 `finally` 邊型別（plan Q2），列入 golden-diff。`docs/known-issues.md` 新增此問題的章節並標為已修正。
+  [SRC PRB P17–P23；USR Q-b；Session 2026-11-17]
 - **FR-014**: 例外路徑 MUST 只帶拋錯節點**執行前**的定義（拋錯的敘述視為沒有完成），適用於所有模型的例外邊與摘要第四項；
   `docs/known-issues.md` 記錄此行為變更。[SRC PRB P24；Session 2026-11-17]
 
