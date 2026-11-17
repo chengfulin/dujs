@@ -694,6 +694,20 @@ describe('PageBinding (scopebinding)', function () {
 			binding.ownerScopeOf(eslintScopeOfType(binding, 'function-expression-name')).variables.indexOf(h).should.not.eql(-1);
 		});
 
+		it('should give the owner scope of a Var by ownerScopeOfVar, null without Variable', function () {
+			var code = 'var a;\nfunction f(p) { return p + u; }\nf(a);';
+			var result = analyze(code),
+				binding = result.scopeTree.binding,
+				ast = binding.scopeManager.globalScope.block;
+			var a = binding.defVarsOf(idOf(ast, 'a', 0))[0],
+				p = binding.defVarsOf(idOf(ast, 'p', 0))[0],
+				u = binding.useVarsOf(idOf(ast, 'u', 0))[0];
+			binding.ownerScopeOfVar(a).should.equal(result.scopeTree.root);
+			binding.ownerScopeOfVar(p).should.equal(binding.ownerScopeOf(eslintScopeOfType(binding, 'function')));
+			binding.ownerScopeOfVar(p).should.not.equal(result.scopeTree.root);
+			should.equal(binding.ownerScopeOfVar(u), null);
+		});
+
 		/// US3 (T050, R5): implicit globals written only by ++ or for-in after the existing Vars, then the
 		/// read-only globals, each in source order
 		it('should register the implicit globals of ++ and for-in, then the read-only globals, after the existing Vars', function () {

@@ -100,9 +100,8 @@ var NAME_LOOKUP_REASONS = ['D3', 'D6', 'FIXED_LIST', 'FR-013'];
  * S5 allow list: reads of <x>.name in lib/dujs/*.js (scopebinding.js
  * excluded) that are property names, method names or output names, not
  * variable lookups; matched exactly by file, function (see header) and the
- * member expression source. The first three entries are those of
- * contracts/static-check.md S5; the others are added by T061 (this table is
- * authoritative, the contract is not updated).
+ * member expression source. Kept equal to the table of
+ * contracts/static-check.md S5.
  * @type {Array}
  */
 var S5_ALLOWED = [
@@ -113,8 +112,6 @@ var S5_ALLOWED = [
 	{file: 'lib/dujs/modelbuilder.js', fn: 'getRegisteredEventHandlerCallback',
 		expr: 'callExpression.callee.property.name', reason: 'addEventListener method name'},
 	/// added by T061
-	{file: 'lib/dujs/bindingpattern.js', fn: 'getBoundNames', expr: 'target.name',
-		reason: 'names bound by a pattern as a result (not called by lib), no lookup'},
 	{file: 'lib/dujs/cli.js', fn: 'parsePages', expr: 'token.name', reason: 'command line option name'},
 	{file: 'lib/dujs/graphics.js', fn: 'convertGraphToDot', expr: 'model.mainlyRelatedScope.name',
 		reason: 'scope name in the DOT output'},

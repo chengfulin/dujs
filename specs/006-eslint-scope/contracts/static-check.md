@@ -16,14 +16,21 @@
 | S5 | 在 `lib/dujs/*.js`（`scopebinding.js` 除外，由 S6 管）中讀取 `<x>.name`：只允許允許表中的讀取（以「檔案＋所在函式名＋成員運算式原文」精確比對），其他一律失敗 | `lib/dujs/*.js`（不含 `scopebinding.js`） |
 | S6 | `scopebinding.js` 中以字串名稱為鍵的 `Map#get`／`Map#has`／`Map#set`、`Set#has`（參數是 `<x>.name`、名為 `name` 的識別字或字串字面值）只允許出現在白名單函式內 | `scopebinding.js` |
 
-S5 允許的 `.name` 讀取（屬性名、方法名、輸出用名稱，不是變數查找）。**允許表以 `tests/dujs/scopesource.js` 內的表為準**；下表為初始項，implement 時（T061）
-依實際程式碼在測試檔補齊（預期新增如 `scopetree.js` 的 `node.id.name`、`graphics.js` 的輸出名等，理由必填），新增項列於回報與 PR 說明，不回寫本表：
+S5 允許的 `.name` 讀取（屬性名、方法名、輸出用名稱，不是變數查找）。本表與 `tests/dujs/scopesource.js` 的 `S5_ALLOWED` 須**完全相同**（前三項為初始項，其餘由 T061 依實際程式碼補齊；code review 後回寫本表，並刪除已無呼叫端的 `bindingpattern.js getBoundNames`）：
 
 | 檔案 | 函式 | 運算式 | 理由 |
 |------|------|--------|------|
 | `callresolver.js` | `createClassInfo` | `member.key.name` | 方法名（屬性） |
 | `callresolver.js` | `calleeScopesOfMethodCall` | `member.property.name` | 方法名（屬性） |
 | `modelbuilder.js` | `getRegisteredEventHandlerCallback` | `callExpression.callee.property.name` | `addEventListener` 方法名 |
+| `cli.js` | `parsePages` | `token.name` | 命令列選項名 |
+| `graphics.js` | `convertGraphToDot` | `model.mainlyRelatedScope.name` | DOT 輸出的 scope 名 |
+| `graphics.js` | `convertDUPairsToDot` | `key.name` | DOT 輸出的變數名 |
+| `scope.js` | `toString` | `this.name` | scope 名作為字串形式 |
+| `scope.js` | `name` | `internal(this)._parent.name` | 以父 scope 名組成 scope 名 |
+| `scopetree.js` | `addScope` | `scope.name` | scope 名作為 scope tree map 的鍵（FR-009） |
+| `scopetree.js` | `makeScopeNamesUnique` | `scope.name` | scope 名作為 scope tree map 的鍵（FR-009） |
+| `scopetree.js` | `astFunctionDeclarationHandler` | `node.id.name` | 函式宣告名作為 scope 名（FR-009） |
 
 ## 2. 白名單（`scopebinding.js` 內以 JSDoc `@nameLookup <理由>` 標記的函式；集合須與下表**完全相同**）
 

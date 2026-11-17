@@ -19,6 +19,7 @@
 | `defVarsOf(identifier)` | `Var[]`：Reference 優先，否則 `declaredBy`；class 宣告 id → 外層＋內層 | defuseanalyzer `findGENSet`／`getDefinedVariables`（含 `o` of `o.p = v`）、variableanalyzer |
 | `declaredVarsOf(identifier)` | `Var[]`：只查 `declaredBy`（宣告歸屬）；`defVarsOf` 無 Reference 時回退至此（Foundational 2b 新增：讓 `catch (e) { var e = 4; }` 的 `var e` 在走訪時登記外層 `e`，維持 entry 初值順序） | variableanalyzer |
 | `variableVar(variable)` | `Var|null`（eslint-scope Variable → Var） | variableanalyzer |
+| `ownerScopeOfVar(var)` | `Scope|null`：宣告該 Var 之 Variable 的 eslint scope 所屬的 dujs scope（research R4）；無 Variable（全域、builtin）為 null（code review 後補：取代 variableanalyzer 對測試介面 `ownerScopeOf` 的依賴） | variableanalyzer |
 | `isVisible(var, dujsScope)` | boolean（research R6 (a)∪(b)∪(c)，快取；(a) 的遮蔽判定為白名單 W4 `isShadowed`；(c) 用 `definingScopeOf`） | `getNonReachableVarDefs`、`bypassFilter` |
 | `isOnFunctionChain(var, dujsFunctionScope)` | boolean：Var 的宣告 eslint scope 是函式 eslint scope 本身或其祖先，或 Var 無宣告（全域／builtin）（research R6a，Q3） | `findUSESet` 處理函式 entry 節點時過濾 |
 | `classBindingGroupOf(var)` | `Var[]`（class 宣告的外層＋內層；其他為 `[var]`） | callresolver `definitionsOnThePage`（FR-018 合併計數） |
