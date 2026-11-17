@@ -31,6 +31,12 @@
         "Foundational": {
           "reviewed": true,
           "committed": true
+        },
+        "Polish": {
+          "reviewed": true,
+          "validated": true,
+          "committed": true,
+          "signoff": "2026-11-17 使用者簽核（T071）"
         }
       },
       "stories": {
@@ -55,7 +61,8 @@
           "committed": true,
           "signoff": "2026-11-17 使用者簽核（T070）"
         }
-      }
+      },
+      "done": true
     }
   },
   "brief": {
