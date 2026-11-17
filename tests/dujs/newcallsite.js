@@ -10,7 +10,8 @@
  * is resolved when its definitions reaching the call-site are at least one
  * and all refer to the same function or class (strict rule, also for f());
  * when none reaches, a class (not a function) is resolved from the only
- * definition of the variable on the page (class relaxation). The expected
+ * definition of the variable on the page (class relaxation); since feature
+ * 005 (D2) a function too, for f() (not new F()) in a function. The expected
  * pairs are those of contracts/acceptance.md "US2", "FR-017／FR-018" and
  * "Edge cases" (intra-page pairs and inter-procedural models).
  */
@@ -117,17 +118,20 @@ describe('new statements as call-sites (FR-002, FR-003)', function () {
 	it('US2-2 should connect new A(); to the field initializer and then the constructor', function () {
 		var result = analyzeProbe('us2-2');
 		/// x: L1 -> entry is the §18 residue of the entry of the field
-		result.intraPage().should.eql(['A: L2 -> L8', 'x: L1 -> L3', 'x: L1 -> entry', 'x: L5 -> L9']);
+		result.intraPage().should.eql(['A: L2 -> L8', 'x: L1 -> L3', 'x: L5 -> L9']);
 		result.interProceduralScopes().should.eql([[PAGE, ANONYMOUS + '0', ANONYMOUS + '1']]);
 	});
 
 	/// US2 #3: extends is not followed (A's constructor is not connected)
 	it('US2-3 should connect new B(); to B only without following extends', function () {
 		var result = analyzeProbe('us2-3');
-		/// x: L1 -> L15: super(); is not connected and its exception edge goes to the exit of B's constructor
+		/// super(); is not connected and its exception edge goes to the exit of B's constructor; before
+		/// feature 005 that exception went back to the CALL RETURN NODE of L14 (x: L1 -> L15). With the
+		/// summaries (US1) B's constructor defines x on every normal path and its exception leaves the
+		/// page, so x: L1 -> L15 is gone
 		result.intraPage().should.eql([
 			'A: L2 -> L7', 'B: L7 -> L14',
-			'x: L1 -> L15', 'x: L1 -> L8', 'x: L1 -> entry', 'x: L11 -> L15'
+			'x: L1 -> L8', 'x: L11 -> L15'
 		]);
 		result.interProceduralScopes().should.eql([[PAGE, ANONYMOUS + '1', ANONYMOUS + '2']]);
 	});
@@ -151,7 +155,7 @@ describe('new statements as call-sites (FR-002, FR-003)', function () {
 		var result = analyzeProbe('fn-new');
 		/// A: L2 -> entry is the §18 residue of the entry of g
 		result.intraPage().should.eql([
-			'A: L2 -> L8', 'A: L2 -> entry', 'console: entry -> L11', 'g: entry -> L10', 'x: L4 -> L11'
+			'A: L2 -> L8', 'console: entry -> L11', 'g: entry -> L10', 'x: L4 -> L11'
 		]);
 		result.interProceduralScopes().should.eql([
 			[PAGE + '.g', ANONYMOUS + '0'],
@@ -180,7 +184,7 @@ describe('new statements as call-sites (FR-002, FR-003)', function () {
 		var result = analyzeProbe('field-new');
 		/// B: L2 -> entry is the §18 residue of the entry of the field
 		result.intraPage().should.eql([
-			'A: L7 -> L10', 'B: L2 -> L8', 'B: L2 -> entry', 'console: entry -> L11', 'x: L4 -> L11'
+			'A: L7 -> L10', 'B: L2 -> L8', 'console: entry -> L11', 'x: L4 -> L11'
 		]);
 		result.interProceduralScopes().should.eql([
 			[ANONYMOUS + '1', ANONYMOUS + '0'],
@@ -448,7 +452,9 @@ describe('callResolver (research R2, FR-018)', function () {
 			calleesAt(result, PAGE + '.g', 5).should.eql([]);
 		});
 
-		it('should not relax for a function declaration (H3)', function () {
+		/// 004 H3 replaced by feature 005 D2 for F(): a call in a function is relaxed to the function declaration,
+		/// new F() is not (golden-diff.md of feature 005, US2 "unit test expectations")
+		it('should relax F() but not new F() for a function declaration (005 D2)', function () {
 			var result = analyze([
 				'function F() {}',
 				'function g() {',
@@ -457,7 +463,7 @@ describe('callResolver (research R2, FR-018)', function () {
 				'}'
 			].join('\n'));
 			calleesAt(result, PAGE + '.g', 3).should.eql([]);
-			calleesAt(result, PAGE + '.g', 4).should.eql([]);
+			calleesAt(result, PAGE + '.g', 4).should.eql([PAGE + '.F']);
 		});
 
 		it('should not relax when a definition of A reaches the call-site', function () {

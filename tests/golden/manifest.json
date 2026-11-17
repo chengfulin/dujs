@@ -1,9 +1,9 @@
 {
 	"expected": {
 		"baseline": {
-			"inter-page/0.dupairs.dot": "0f8c365bdb97dbacc3106e27f45f58d67f1b9d53f888621a7c1bfb6a3eb3bb4f",
-			"inter-page/0.graph.dot": "a711401e27805b46542a7e34ee22211751831120c3d8b3ff7125d318e23210c8",
-			"page0/intra-pages/0.dupairs.dot": "419aa93ab44de6996bfe3fd3a89e18ad8ee99d8ae99654eab77f4c1b6e5b1731",
+			"inter-page/0.dupairs.dot": "fd399e593d8094f1bea9cc6db01e8e1e4a14445651e15b973e98e627ace302b9",
+			"inter-page/0.graph.dot": "3f0b8095455f53321b79543c6c16e7ff3e1a3d61d4d71b6c70f01633ab130480",
+			"page0/intra-pages/0.dupairs.dot": "20f1636ff0457db7efedd5904805e1f193e1a4be526774ab9a37748c7136d988",
 			"page0/intra-pages/0.graph.dot": "08bf749a604e77a270ec40a17451363ef581c30dc4ec86e64728ff9331328e5e",
 			"page0/intra-procedurals/0.dupairs.dot": "fb4aa3646fb86720993ababfdbe86ff59416ce705c5d5d078bccf9c97c0e1752",
 			"page0/intra-procedurals/0.graph.dot": "ee59eaa56d21b5b7e65856128076bea70bdce82cedb516956ffd82acd8642684",
@@ -15,35 +15,38 @@
 			"page0/intra-procedurals/3.graph.dot": "4246b0d5aae397dda3c5efc2b9b46be24609798bb696e0a9838c33e1c61cf873",
 			"page0/intra-procedurals/4.dupairs.dot": "d6ad626b4a645bcef27dedd2768f7afefc6e4373e09f087e8c67b2a110ed1401",
 			"page0/intra-procedurals/4.graph.dot": "10422cd01f13636b9f99275f35323fe03fd5166937e2edaee4541fa1df9609e8",
-			"page0/intra-procedurals/5.dupairs.dot": "1ebe3e9447bdb44d71d1bad6aa267d9f86c3028866c771a0ac5bda6d702dfaef",
-			"page0/intra-procedurals/5.graph.dot": "b8554f1a9d7a1d80989e5afe28df9830ca3cc9691dbc5dfe259010eff3c57c02",
+			"page0/intra-procedurals/5.dupairs.dot": "56621c6f95f12af5d77bb095d081b504dd7d00df807bb08cf1cd566da1606e31",
+			"page0/intra-procedurals/5.graph.dot": "66136b5f43f032e5b0b80f4c54379eb2454a4bce9246dbd5d1370a38a50865be",
 			"page0/intra-procedurals/6.dupairs.dot": "0e1ea622e13e6be9a3295e0105009f4696ff076b8a6405af50d5e4a6b02fcfa0",
-			"page0/intra-procedurals/6.graph.dot": "70a954c4acefed1ae0ae665fa73e14600f0928d2e6a437251fde2b3cc749e727",
+			"page0/intra-procedurals/6.graph.dot": "fdab9e0a8122f63913756feabf0a9ae1d3c33409631b2fb4d191eeb4c12a6ff3",
 			"page0/intra-procedurals/7.dupairs.dot": "0f4ba74e7fb0f976e579b9fc2c98eeb5e62b608af6b7a82aa1be798996c56d31",
-			"page0/intra-procedurals/7.graph.dot": "108b41b8a13d9dd8c44160d25a52e0cb265b74775804f7b16439992f6c5d2013",
+			"page0/intra-procedurals/7.graph.dot": "fd22f796bd58a0527ef1d62f1b8bebd667bd92eb4170b24adde6422387cb5264",
 			"page0/intra-procedurals/8.dupairs.dot": "d239fdea9b7807354970625e46cc7c54e978a5f398767f17a94a88020091e67c",
-			"page0/intra-procedurals/8.graph.dot": "8420fe7f313099ffbb8b5f67e25f40fee742c797832b7d693b877c127f4d340e",
-			"page1/intra-pages/0.dupairs.dot": "49980f7fbfcc0eeee1b2be39e901fd686e6372e6bf52fa3f7fb2426d49a74f5d",
-			"page1/intra-pages/0.graph.dot": "b6656468faa3cd3b544a69248d1ba366e33ad4355715d9e09d75fa43e8e26107",
+			"page0/intra-procedurals/8.graph.dot": "35bec807b4b2f82145f801a0fde0cd56e181812d3f5fc8858eebfb49c89bf991",
+			"page1/intra-pages/0.dupairs.dot": "77ab6c4af2ff325e818d5cf7395c8b9e6dfd685e179836e3ff50437dad776598",
+			"page1/intra-pages/0.graph.dot": "6b7c07528b0b78d7e02ccb8bb5f1d742136bcde651006d3402f617fd51b8d47e",
 			"page1/intra-procedurals/0.dupairs.dot": "288475fbb8e3f9a60e6e25e2dbfbce78b27d0553058c29f548e782f17dd15338",
-			"page1/intra-procedurals/0.graph.dot": "4eb550c61fe1c53b4a842fd69fa05e125a9f270c74dd19ecb9e439cad5127c1d",
+			"page1/intra-procedurals/0.graph.dot": "2ac10291e0b43b3430c3596b4df4d67953ff9c1cc30ad7a262131460bd668fd9",
 			"page1/intra-procedurals/1.dupairs.dot": "a061119decc33f00c68e66a3c0ade6e41310649adb3ad9f50f7b3515d6498974",
-			"page1/intra-procedurals/1.graph.dot": "278085bed1cc2c55952ef8f7efc1f1fb2eebf219a0c02e21be4e3339dabac094",
+			"page1/intra-procedurals/1.graph.dot": "6f244f9991605ee544ac3104da9c80791a768b5f1e055a923be35c95d5428b57",
 			"page1/intra-procedurals/2.dupairs.dot": "518ab8e27631abcef89f85acbbcae744d9712c0c8550c6f5671aa75a5d15503e",
-			"page1/intra-procedurals/2.graph.dot": "8b2504943c78b72177ba9cf5ed6cf22b55ca130e6c0ab2a084dfc6959472b5e1"
+			"page1/intra-procedurals/2.graph.dot": "262cfdd60c3ab13a8cffa41b6ae74c23d2ae0fa26da3d73ffd27d5f4eeef88ac"
 		},
 		"added": [
 			"inter-page/0.hierarchy.dot",
+			"inter-page/0.matching.json",
 			"page0/intra-pages/0.hierarchy.dot",
-			"page1/intra-pages/0.hierarchy.dot"
+			"page0/intra-pages/0.matching.json",
+			"page1/intra-pages/0.hierarchy.dot",
+			"page1/intra-pages/0.matching.json"
 		]
 	},
 	"expected-es2015": {
 		"baseline": {
-			"inter-page/0.dupairs.dot": "eb4f45437f3f80ce655a97583e2b5f50f8c42a963fddc0d963ec1162343703da",
-			"inter-page/0.graph.dot": "caa8f6241dc851834469ab76371109da4630355a3154c84304317670a09d9c01",
-			"page0/intra-pages/0.dupairs.dot": "eb4f45437f3f80ce655a97583e2b5f50f8c42a963fddc0d963ec1162343703da",
-			"page0/intra-pages/0.graph.dot": "14f7942d8d694bffe21c6241f05c5e4fb10887d1c4574516624712620f042230",
+			"inter-page/0.dupairs.dot": "ae6308300018c62e00f6896d3b9b7e604c81d951fe6de96815dd562077e7ac89",
+			"inter-page/0.graph.dot": "82ccdd814580f4f64c20bfa4911b28f153532f027fc2a900164a64d6898e7145",
+			"page0/intra-pages/0.dupairs.dot": "ae6308300018c62e00f6896d3b9b7e604c81d951fe6de96815dd562077e7ac89",
+			"page0/intra-pages/0.graph.dot": "4cb3b1a1979e5045514144005457ccef458421997ae16f0346fe411973b7b938",
 			"page0/intra-procedurals/0.dupairs.dot": "58fc5a25ce9c4d427ee27e72ad0b32a969a43d513ceb5acaf8049feadad7fa82",
 			"page0/intra-procedurals/0.graph.dot": "8b937733b2896085a4cc0181bcc6340e0aa2bbf5b56a5267a1a0d2fa21b90830",
 			"page0/intra-procedurals/1.dupairs.dot": "305c94753444e6405dbf8969b862823b54c594e53be1f764f1faeb5a8ec521b1",
@@ -61,21 +64,27 @@
 		},
 		"added": [
 			"inter-page/0.hierarchy.dot",
-			"page0/intra-pages/0.hierarchy.dot"
+			"inter-page/0.matching.json",
+			"page0/inter-procedurals/0.dupairs.dot",
+			"page0/inter-procedurals/0.graph.dot",
+			"page0/inter-procedurals/0.hierarchy.dot",
+			"page0/inter-procedurals/0.matching.json",
+			"page0/intra-pages/0.hierarchy.dot",
+			"page0/intra-pages/0.matching.json"
 		]
 	},
 	"expected-interprocedural": {
 		"baseline": {
-			"inter-page/0.dupairs.dot": "eefbd316e37e8c967db3870d79449bf22cbde07aef0d0421b84f547059e6ccbc",
-			"inter-page/0.graph.dot": "984a9b950a938dbf80123c8ed11cdb1f3ce46a9a9767314a4291e5db24865de5",
-			"page0/inter-procedurals/0.dupairs.dot": "34b3720a6225ecec4a75822ff72e152236f100c83731cfa314145e876e9e3017",
-			"page0/inter-procedurals/0.graph.dot": "6358657de2d00bb060013a6c011f7e88bd1ef93c40570d19f4e5a261a11dc1aa",
-			"page0/inter-procedurals/1.dupairs.dot": "2da50b1615f6e56864913a0a63f85b5c5d4bff128b924cb6be849e058d73e067",
-			"page0/inter-procedurals/1.graph.dot": "6e41ae057c7f541db5239ec4b3a5fd90a5436cac8277d62bc84ce25b36c07822",
+			"inter-page/0.dupairs.dot": "98da3f06a99f23e0148925171bfb01cf0a9329661dff916184dcfd9d6b3f64a2",
+			"inter-page/0.graph.dot": "37ee3d700c980d47d8be58736d5f3d65f3a8e69fcfd27b444ce7c4e204628c70",
+			"page0/inter-procedurals/0.dupairs.dot": "627d2003cd9e15baa7198b1e38f18def72a37817f14ee531881ef0779f23e05e",
+			"page0/inter-procedurals/0.graph.dot": "c0dc33fb5f88f4452d0aa16bf10b956319b25b2dc4d15f1f00b05d8dd2accf01",
+			"page0/inter-procedurals/1.dupairs.dot": "1f434e0b7bebb6db66f9cd65f8f1397ad797f7e6e4cfdb5f21ad02a2709d144e",
+			"page0/inter-procedurals/1.graph.dot": "1de49a9e02eefb5854e767fb45d509678961713a93f6d37b0b1a1940c5c44e5e",
 			"page0/inter-procedurals/2.dupairs.dot": "f06d85cef8160bf764159e04056b2eff9bbbc0d0a241f38dc60a27281492c473",
-			"page0/inter-procedurals/2.graph.dot": "1ccd8d44b12646ed31290794ace45377ee1e442f3eeac88ad990b5f4c469b864",
-			"page0/intra-pages/0.dupairs.dot": "44ab28868e6bdb27db9c30eb73bdc9bf6f87b5372cc972a7c0e7a164fcef3717",
-			"page0/intra-pages/0.graph.dot": "d8c9a6ea00d5626c1f9e17cb56b34d516e3e16dbca906604c35762a4b8d287da",
+			"page0/inter-procedurals/2.graph.dot": "52ee22d5a537b953e234152e578a3bb2b55ba75f64bb6850e3e9aa59a7a56946",
+			"page0/intra-pages/0.dupairs.dot": "9965cedd14871f989abc3aa94ca22986be44a5d2c0a1ea53db2f0e84bbbf274b",
+			"page0/intra-pages/0.graph.dot": "2a92a0d7a9988f807cb1f11bc9cde89cc918a75e94ab6fec81a53eaa4c3d3e5d",
 			"page0/intra-procedurals/0.dupairs.dot": "084268a9dca740f87e6318d6c7c5611056f0fa42c478c2a5dcd15374df762228",
 			"page0/intra-procedurals/0.graph.dot": "970a539b0769073f326047b38f0ed5ef63616ef7aea0fd47a4b9a95d9f365d55",
 			"page0/intra-procedurals/1.dupairs.dot": "06f0d87cf7606c2e3216f29a8b6f1ad16bff87fd70dea2acdc563dd583fb6573",
@@ -93,31 +102,36 @@
 		},
 		"added": [
 			"inter-page/0.hierarchy.dot",
+			"inter-page/0.matching.json",
 			"page0/inter-procedurals/0.hierarchy.dot",
+			"page0/inter-procedurals/0.matching.json",
 			"page0/inter-procedurals/1.hierarchy.dot",
+			"page0/inter-procedurals/1.matching.json",
 			"page0/inter-procedurals/2.hierarchy.dot",
-			"page0/intra-pages/0.hierarchy.dot"
+			"page0/inter-procedurals/2.matching.json",
+			"page0/intra-pages/0.hierarchy.dot",
+			"page0/intra-pages/0.matching.json"
 		]
 	},
 	"expected-fixes004": {
 		"baseline": {
-			"inter-page/0.dupairs.dot": "78fd272ab42ad8dd1e5f8e203fbc5f9ccbe820aff78e88ee27002bdcc7bdaa8e",
-			"inter-page/0.graph.dot": "dbe14af147e100bacba6f96ebfadf748a24993e475d9d3820a6651e3cba27d29",
+			"inter-page/0.dupairs.dot": "3b8024a6c6420415e6de2ff7c27d69ee288904a919ddcca12a4009d2c0b5add0",
+			"inter-page/0.graph.dot": "270dee2acc57edf4c3827cd54c08676ab8e0fad3538a9639abb5180cf95e2d0e",
 			"inter-page/0.hierarchy.dot": "72bfe08d76c88a4b29c0688189b19761fd7191b4112a4c7013df99c488618a67",
-			"page0/inter-procedurals/0.dupairs.dot": "bdf4ba013185c737ff5f63f4e84d5a1ad2521a9fc06692a161a9dd4b82086c2f",
-			"page0/inter-procedurals/0.graph.dot": "15aa29de3b01954d2ee482617b7b91c1d0ea65d2737f0ab1e2227aef3b04abec",
+			"page0/inter-procedurals/0.dupairs.dot": "1b233dcf964ebd752186044b6c0ba3dba5315837fce101a1c29881ad71659f00",
+			"page0/inter-procedurals/0.graph.dot": "79aaf94c45898ac419e82ae0e2b78b7ad58050df768c7c9e9652db5dcf9fde4b",
 			"page0/inter-procedurals/0.hierarchy.dot": "b7b7d8290c1eb707c6c7932845811480d5078371635ec56c4645864064803db0",
-			"page0/inter-procedurals/1.dupairs.dot": "2df60ae299392e1c25cc94876f9a287c1634e5443791105a3f995b8070f7f038",
-			"page0/inter-procedurals/1.graph.dot": "c7e843bc8efcaf436513fc44449b7c1ab532b318003b8032a8c61cb4d73d0b67",
+			"page0/inter-procedurals/1.dupairs.dot": "95c6e893d24dcf08d54c93f704fb6628e4acfe267816830f1cd7a72605340ee3",
+			"page0/inter-procedurals/1.graph.dot": "b57af69454b01941084abcaf5e0873886747da3cf7d95ee5fc642f329cd0961c",
 			"page0/inter-procedurals/1.hierarchy.dot": "b6ede78c2c16edfcd21e8d430602e76a70bf94e789df0309cf442d6da4fce05a",
-			"page0/inter-procedurals/2.dupairs.dot": "78fd272ab42ad8dd1e5f8e203fbc5f9ccbe820aff78e88ee27002bdcc7bdaa8e",
-			"page0/inter-procedurals/2.graph.dot": "41e81ffde555754e6d2a3b50c4e0fe43d62e8a1d99a5c81bdde4fe3c63ef58c9",
+			"page0/inter-procedurals/2.dupairs.dot": "3b8024a6c6420415e6de2ff7c27d69ee288904a919ddcca12a4009d2c0b5add0",
+			"page0/inter-procedurals/2.graph.dot": "39b85cf6f25da675bc2e4addc9222066fe6c5cae04bcbd986e134d0bdc4133be",
 			"page0/inter-procedurals/2.hierarchy.dot": "a3c90364678ecd25a55e867b6bd304c34537a5ccf452e38d442ea33869135089",
-			"page0/inter-procedurals/3.dupairs.dot": "2a3b853d58059d2dbc1b3247d098ad73ece7fddcdacb6adb4e09ef37cbeac98f",
-			"page0/inter-procedurals/3.graph.dot": "f9edebfc6ee833a19cad928ee69029dc34f0a0d398624a9e6386d3be7988f0fc",
+			"page0/inter-procedurals/3.dupairs.dot": "f7ee511e7800bdc34c56c882a6ebe887f8f5195c68adb57a060a2bdc3d4d41cb",
+			"page0/inter-procedurals/3.graph.dot": "f360f12e11693e20da6449fbe8392a80c86c9bf1a4c8721d6d69fcc857361570",
 			"page0/inter-procedurals/3.hierarchy.dot": "c039426dfc3eff250b3bcea40e2c658439b0dde3954a935ee0b59c9cd0b015d9",
-			"page0/intra-pages/0.dupairs.dot": "78fd272ab42ad8dd1e5f8e203fbc5f9ccbe820aff78e88ee27002bdcc7bdaa8e",
-			"page0/intra-pages/0.graph.dot": "26c9d70364b5e424eafd3d5e6d1bde7c4d9a4fddc38ecfbdce7f3c6bc88e3550",
+			"page0/intra-pages/0.dupairs.dot": "3b8024a6c6420415e6de2ff7c27d69ee288904a919ddcca12a4009d2c0b5add0",
+			"page0/intra-pages/0.graph.dot": "9bc65091578e62da0022b05832adff24b08da7c6c10cc214e312ab02abbaf432",
 			"page0/intra-pages/0.hierarchy.dot": "5fa77389fe1a2cf4312b5d5e3340ddc01a6ad714f1d9367bd3fb3e9fc2d5aca8",
 			"page0/intra-procedurals/0.dupairs.dot": "ba35aaf252edfad90f3a3b61a787b8cb8c6e5b26442a2db1840c70e0098d2324",
 			"page0/intra-procedurals/0.graph.dot": "3fd6ced53d6ab951e9120c19e6678f41b6912e0133f39bf3c9abffe028bca18a",
@@ -144,6 +158,13 @@
 			"page0/intra-procedurals/9.dupairs.dot": "84c2689c71295a1120765fe077bd043038b0ecc0d36c3b324e9bb0f559e93372",
 			"page0/intra-procedurals/9.graph.dot": "2d018cef6e7eb50030036889d9258942b93b8432d3c78b4b8e7cd42414f27baf"
 		},
-		"added": []
+		"added": [
+			"inter-page/0.matching.json",
+			"page0/inter-procedurals/0.matching.json",
+			"page0/inter-procedurals/1.matching.json",
+			"page0/inter-procedurals/2.matching.json",
+			"page0/inter-procedurals/3.matching.json",
+			"page0/intra-pages/0.matching.json"
+		]
 	}
 }

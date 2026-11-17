@@ -139,15 +139,16 @@ describe('call cycles (FR-015)', function () {
 	after(analyze.reset);
 
 	/// m calls this.m() in if (c): the model of m has a back call edge at L6;
-	/// the exception edge of the assignment c = 0 at L5 goes to the exit of m
-	/// and back to the CALL RETURN NODE of L11, so x@L1 reaches L12
+	/// feature 005 (US1, summaries): m defines x on every normal path (must-KILL)
+	/// and an exception of m does not go back to the CALL RETURN NODE of L11
+	/// (it leaves the page), so x@L1 no longer reaches L12
 	it('cyc-1 should analyze a self recursive method with a back call edge', function () {
 		var result = analyzeProbe('cyc-1'),
 			models = pageModelsOf(result).interProceduralModels,
 			intraPage = [
-				'A: L2 -> L11', 'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F', 'c: L1 -> entry',
-				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry',
-				'console: entry -> L12', 'x: L1 -> L12', 'x: L8 -> L12'
+				'A: L2 -> L11', 'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F',
+				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F',
+				'console: entry -> L12', 'x: L8 -> L12'
 			];
 		result.intraPage().should.eql(intraPage);
 		pageModelsOf(result).intraPageModels[0].graph[2].length.should.eql(16);
@@ -155,7 +156,7 @@ describe('call cycles (FR-015)', function () {
 		summaryOf(models[0]).should.eql({
 			scopes: ['P.$A0'],
 			nodes: 7,
-			pairs: ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry']
+			pairs: ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F']
 		});
 		callEdgesOf(models[0]).should.eql(['P.$A0 L6 => P.$A0 (back)']);
 		summaryOf(models[1]).should.eql({scopes: ['P', 'P.$A0'], nodes: 14, pairs: intraPage});
@@ -164,15 +165,17 @@ describe('call cycles (FR-015)', function () {
 
 	/// m calls this.n() and n calls this.m() (research R5.3): M, the page model
 	/// and N are registered in this order; M has an open unit of n with a back
-	/// call edge to m, N an open unit of m with a back call edge to n
+	/// call edge to m, N an open unit of m with a back call edge to n;
+	/// feature 005 (US1, summaries): m returns after x = 1 of L8 on every normal
+	/// path, so only x@L8 reaches L16 (x@L1 and x@L12 of n are killed)
 	it('cyc-2 should analyze mutually recursive methods with a model per scope', function () {
 		var result = analyzeProbe('cyc-2'),
 			models = pageModelsOf(result).interProceduralModels,
-			methodPairs = ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry'],
+			methodPairs = ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F'],
 			intraPage = [
-				'A: L2 -> L15', 'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F', 'c: L1 -> entry',
-				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry',
-				'console: entry -> L16', 'x: L1 -> L16', 'x: L12 -> L16', 'x: L8 -> L16'
+				'A: L2 -> L15', 'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F',
+				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F',
+				'console: entry -> L16', 'x: L8 -> L16'
 			];
 		result.intraPage().should.eql(intraPage);
 		pageModelsOf(result).intraPageModels[0].graph[2].length.should.eql(21);
@@ -192,13 +195,19 @@ describe('call cycles (FR-015)', function () {
 		callEdgesOf(models[2]).should.eql(['P.$A1 L11 -> P.$A0', 'P.$A0 L6 => P.$A1 (back)']);
 	});
 
-	/// m(p) { var t = p; this.m(0); y = t; }: t@L4 reaches L6 through the
-	/// bypass of the recursive call (FR-016, SC-006)
-	it('cyc-3 should keep t: L4 -> L6 over a recursive call', function () {
+	/// m(p) { var t = p; this.m(0); y = t; }: the recursion is unconditional, so m
+	/// never returns normally (feature 005 US1-4, research R3 Q1: the fixpoint
+	/// starts from no normal return) and L6 is unreachable: no pair is used at
+	/// L6 (t: L4 -> L6 of the bypass of FR-016 is gone); the analysis terminates
+	/// (SC-006). US1-4 keeps t over a conditional recursion (c-cyc3-cond, summaryanalysis.js)
+	it('cyc-3 should have no pair used at L6 after an unconditional recursive call', function () {
 		var result = analyzeProbe('cyc-3'),
 			models = pageModelsOf(result).interProceduralModels,
-			methodPairs = ['p: entry -> L4', 'p: entry -> entry', 't: L4 -> L6', 't: L4 -> entry'];
+			methodPairs = ['p: entry -> L4'];
 		result.intraPage().should.eql(['A: L2 -> L9'].concat(methodPairs));
+		result.intraPage().filter(function (pair) {
+			return / -> L6(:|>|$)/.test(pair);
+		}).should.eql([]);
 		models.length.should.eql(2);
 		summaryOf(models[0]).should.eql({scopes: ['P.$A0'], nodes: 6, pairs: methodPairs});
 		callEdgesOf(models[0]).should.eql(['P.$A0 L5 => P.$A0 (back)']);
@@ -206,15 +215,16 @@ describe('call cycles (FR-015)', function () {
 	});
 
 	/// the constructor of A runs new A() in if (c): a back call edge at L6 to
-	/// the constructor (the class relaxation of FR-018 makes the cycle)
+	/// the constructor (the class relaxation of FR-018 makes the cycle);
+	/// feature 005 (US1, summaries): as cyc-1, x@L1 no longer reaches L12
 	it('ctor-cycle should analyze a constructor calling new A()', function () {
 		var result = analyzeProbe('ctor-cycle'),
 			models = pageModelsOf(result).interProceduralModels,
 			intraPage = [
-				'A: L2 -> L11', 'A: L2 -> L6', 'A: L2 -> entry',
-				'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F', 'c: L1 -> entry',
-				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry',
-				'console: entry -> L12', 'x: L1 -> L12', 'x: L8 -> L12'
+				'A: L2 -> L11', 'A: L2 -> L6',
+				'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F',
+				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F',
+				'console: entry -> L12', 'x: L8 -> L12'
 			];
 		result.intraPage().should.eql(intraPage);
 		pageModelsOf(result).intraPageModels[0].graph[2].length.should.eql(16);
@@ -222,7 +232,7 @@ describe('call cycles (FR-015)', function () {
 		summaryOf(models[0]).should.eql({
 			scopes: ['P.$A0'],
 			nodes: 7,
-			pairs: ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry']
+			pairs: ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F']
 		});
 		callEdgesOf(models[0]).should.eql(['P.$A0 L6 => P.$A0 (back)']);
 		summaryOf(models[1]).should.eql({scopes: ['P', 'P.$A0'], nodes: 14, pairs: intraPage});
@@ -233,16 +243,18 @@ describe('call cycles (FR-015)', function () {
 	/// CALL RETURN NODE, so every node after L4 (and after the CALL RETURN NODE
 	/// of L8 in the page) is unreachable from the entry (dead code):
 	/// console: entry -> L9 and x: L1 -> L9 disappear, while x@L5 of the
-	/// unreachable cycle still flows out by the worklist (x: L5 -> L9)
+	/// unreachable cycle still flowed out by the worklist (x: L5 -> L9) before
+	/// feature 005; with the summaries m never returns normally (US1, research
+	/// R3) and the nodes after its calls are not analyzed, so x: L5 -> L9 is gone
 	it('cyc-uncond should analyze an unconditional recursion as dead code', function () {
 		var result = analyzeProbe('cyc-uncond'),
 			models = pageModelsOf(result).interProceduralModels;
-		result.intraPage().should.eql(['A: L2 -> L8', 'x: L5 -> L9']);
+		result.intraPage().should.eql(['A: L2 -> L8']);
 		pageModelsOf(result).intraPageModels[0].graph[2].length.should.eql(14);
 		models.length.should.eql(2);
 		summaryOf(models[0]).should.eql({scopes: ['P.$A0'], nodes: 5, pairs: []});
 		callEdgesOf(models[0]).should.eql(['P.$A0 L4 => P.$A0 (back)']);
-		summaryOf(models[1]).should.eql({scopes: ['P', 'P.$A0'], nodes: 12, pairs: ['A: L2 -> L8', 'x: L5 -> L9']});
+		summaryOf(models[1]).should.eql({scopes: ['P', 'P.$A0'], nodes: 12, pairs: ['A: L2 -> L8']});
 	});
 
 	/// n(p) { var t = 1; this.m(); y = t + p; }: t and p are variables of n
@@ -310,9 +322,10 @@ describe('call cycles (FR-015)', function () {
 		models[1].graph[2].length.should.eql(22);
 		result.intraPage().should.eql([
 			'A: L2 -> L15', 'a: L15 -> L16', 'a: L15 -> L17',
-			'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F', 'c: L1 -> entry',
-			'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry',
-			'console: entry -> L18', 'x: L1 -> L18', 'x: L12 -> L18', 'x: L8 -> L18'
+			'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F',
+			'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F',
+			/// feature 005 (US1, summaries): a.n() of L17 returns after x = 2 of L12 on every normal path
+			'console: entry -> L18', 'x: L12 -> L18'
 		]);
 	});
 
@@ -340,13 +353,13 @@ describe('call cycles (FR-015)', function () {
 			'A: L2 -> L10', 'a: L10 -> L12', 'console: entry -> L15',
 			'i: L1 -> L11>L12:T', 'i: L1 -> L11>L15:F', 'i: L1 -> L13',
 			'i: L13 -> L11>L12:T', 'i: L13 -> L11>L15:F', 'i: L13 -> L13',
-			'x: L1 -> L15', 'x: L1 -> L4>L5:T', 'x: L1 -> L4>exit:F', 'x: L1 -> L5', 'x: L1 -> entry',
-			'x: L5 -> L15', 'x: L5 -> L4>L5:T', 'x: L5 -> L4>exit:F', 'x: L5 -> L5', 'x: L5 -> entry'
+			'x: L1 -> L15', 'x: L1 -> L4>L5:T', 'x: L1 -> L4>exit:F', 'x: L1 -> L5',
+			'x: L5 -> L15', 'x: L5 -> L4>L5:T', 'x: L5 -> L4>exit:F', 'x: L5 -> L5'
 		]);
 		summaryOf(pageModelsOf(result).interProceduralModels[0]).should.eql({
 			scopes: ['P.$A0'],
 			nodes: 6,
-			pairs: ['x: L5 -> L4>L5:T', 'x: L5 -> L4>exit:F', 'x: L5 -> L5', 'x: L5 -> entry']
+			pairs: ['x: L5 -> L4>L5:T', 'x: L5 -> L4>exit:F', 'x: L5 -> L5']
 		});
 	});
 });
@@ -372,11 +385,11 @@ describe('event handlers registered in a call cycle (FR-015, plan U3)', function
 	it('cyc-handler should connect the handler h registered in n', function () {
 		var result = analyzeProbe('cyc-handler'),
 			models = pageModelsOf(result).interProceduralModels,
-			methodPairs = ['c: L8 -> L7>L11:F', 'c: L8 -> L7>L8:T', 'c: L8 -> entry'],
+			methodPairs = ['c: L8 -> L7>L11:F', 'c: L8 -> L7>L8:T'],
 			intraPage = [
-				'A: L5 -> L19', 'c: L1 -> L7>L11:F', 'c: L1 -> L7>L8:T', 'c: L1 -> entry',
-				'c: L8 -> L7>L11:F', 'c: L8 -> L7>L8:T', 'c: L8 -> entry',
-				'document: entry -> L14', 'document: entry -> entry', 'h: entry -> L14', 'h: entry -> entry'
+				'A: L5 -> L19', 'c: L1 -> L7>L11:F', 'c: L1 -> L7>L8:T',
+				'c: L8 -> L7>L11:F', 'c: L8 -> L7>L8:T',
+				'document: entry -> L14', 'h: entry -> L14'
 			];
 		result.intraPage().should.eql(intraPage);
 		pageModelsOf(result).intraPageModels[0].graph[2].length.should.eql(24);
@@ -396,8 +409,8 @@ describe('event handlers registered in a call cycle (FR-015, plan U3)', function
 		var result = analyzeProbe('cyc-handler-nocyc'),
 			models = pageModelsOf(result).interProceduralModels,
 			intraPage = [
-				'A: L5 -> L19', 'c: L1 -> L7>L11:F', 'c: L1 -> L7>L8:T', 'c: L1 -> entry',
-				'document: entry -> L14', 'document: entry -> entry', 'h: entry -> L14', 'h: entry -> entry'
+				'A: L5 -> L19', 'c: L1 -> L7>L11:F', 'c: L1 -> L7>L8:T',
+				'document: entry -> L14', 'h: entry -> L14'
 			];
 		result.intraPage().should.eql(intraPage);
 		pageModelsOf(result).intraPageModels[0].graph[2].length.should.eql(23);

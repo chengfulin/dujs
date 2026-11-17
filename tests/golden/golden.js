@@ -24,7 +24,9 @@ var CLI = path.resolve(__dirname, '../../bin/dujs.js'),
 	MANIFEST = path.join(__dirname, 'manifest.json');
 
 /**
- * List the relative paths of all .dot files under a directory, sorted
+ * List the relative paths of all .dot files and call matching files
+ * (*.matching.json, feature 005 contracts/matching-output.md §4) under a
+ * directory, sorted
  * @param {string} dir
  * @returns {Array}
  */
@@ -36,7 +38,7 @@ function listDotFiles(dir) {
 			var full = path.join(current, entry.name);
 			if (entry.isDirectory()) {
 				walk(full);
-			} else if (/\.dot$/.test(entry.name)) {
+			} else if (/\.dot$/.test(entry.name) || /\.matching\.json$/.test(entry.name)) {
 				result.push(path.relative(dir, full));
 			}
 		});

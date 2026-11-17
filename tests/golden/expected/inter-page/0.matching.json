@@ -1,0 +1,135 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interPage",
+  "mainScope": "$DOMAIN",
+  "calls": [],
+  "loops": [
+    {
+      "loop": "n232",
+      "loopReturn": "n238",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.onLoad",
+          "entry": "n234",
+          "exit": "n237"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.onAdd",
+          "entry": "n239",
+          "exit": "n243"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.onModeChange",
+          "entry": "n244",
+          "exit": "n246"
+        }
+      ]
+    },
+    {
+      "loop": "n252",
+      "loopReturn": "n258",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_1.onLoad",
+          "entry": "n254",
+          "exit": "n257"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_1.onClear",
+          "entry": "n259",
+          "exit": "n262"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.onAdd": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "total@n241"
+      ],
+      "mustKill": [
+        "total"
+      ],
+      "upwardExposed": [
+        "JSON",
+        "countDown",
+        "items",
+        "localStorage",
+        "sumAll"
+      ],
+      "exceptional": [
+        "total@n241"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.onLoad": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "items@n235",
+        "total@n236"
+      ],
+      "mustKill": [
+        "items",
+        "total"
+      ],
+      "upwardExposed": [
+        "localStorage",
+        "parseSaved",
+        "sumAll"
+      ],
+      "exceptional": [
+        "items@n235"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.onModeChange": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "mode@n245"
+      ],
+      "mustKill": [
+        "mode"
+      ],
+      "upwardExposed": [
+        "describeMode",
+        "mode"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_1.onClear": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "count@n261"
+      ],
+      "mustKill": [
+        "count"
+      ],
+      "upwardExposed": [
+        "localStorage"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_1.onLoad": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "saved@n255",
+        "count@n256"
+      ],
+      "mustKill": [
+        "count",
+        "saved"
+      ],
+      "upwardExposed": [
+        "JSON",
+        "localStorage"
+      ],
+      "exceptional": [
+        "saved@n255"
+      ]
+    }
+  }
+}

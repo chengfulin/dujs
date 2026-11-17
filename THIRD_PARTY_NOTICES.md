@@ -85,6 +85,24 @@ only because the forked CFG builder uses them.
     was updated for the split of `1 && call()` into a decision node `1` and the
     leaf `call()` (the empty false branch gets no node); the change is recorded
     in `tests/esgraph/tests/README.md`.
+- 2026-11-17, by ChengFuLin
+  - `lib/esgraph/index.js`: catch throws, jumps and exceptional completion are
+    routed through non-empty finally blocks (an empty `finally {}` or
+    `finally { ; }` is the same as no finally block; emptiness is decided on
+    the AST, so `finally { continue; }` is not empty): an exception in a try
+    block without a catch clause, or in a catch body, goes to the entry of the
+    finally block; `return`, `break` and `continue` leaving a try block or a
+    catch clause go through each non-empty finally block on the way to their
+    target; a finally block entered otherwise than by the normal completion of
+    its try block ends at a new `finallyExit` node (normal, exception and
+    `finally` edges to the pending targets), inserted before the branch
+    splitting. Only the edges falling off the end of a finally block (marked
+    by a temporary end marker that is not part of the graph) are redirected;
+    a `break` or `continue` inside the finally block keeps its own target. `linkSiblings` links a finally block before its try block and
+    catch clause; the ordering of the nodes also follows `finally` edges.
+  - `lib/esgraph/dot.js`: `finallyExit` nodes are drawn as ellipses labeled by
+    their type, `finally` edges with `label="finally"`.
+  - The test fixtures `tests/esgraph/tests/*.js` are unchanged.
 
 The full history is in `git log -- lib/esgraph tests/esgraph`.
 

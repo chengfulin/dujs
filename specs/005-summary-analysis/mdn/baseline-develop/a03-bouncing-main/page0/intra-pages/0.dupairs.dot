@@ -1,0 +1,25 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="2">Def-Use pairs</td></tr><tr><td>window</td><td>(entry,7)</td><td>(entry,8)</td></tr>
+<tr><td>document</td><td>(entry,4)</td><td></td></tr>
+<tr><td>String</td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td></tr>
+<tr><td>random</td><td></td><td></td></tr>
+<tr><td>randomRGB</td><td></td><td></td></tr>
+<tr><td>Math</td><td></td><td></td></tr>
+<tr><td>canvas</td><td>(4,5)</td><td></td></tr>
+<tr><td>ctx</td><td></td><td></td></tr>
+<tr><td>width</td><td></td><td></td></tr>
+<tr><td>height</td><td></td><td></td></tr>
+</TABLE>
+>];
+}

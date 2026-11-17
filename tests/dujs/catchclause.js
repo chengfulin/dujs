@@ -103,11 +103,13 @@ describe('Catch clause (feature 006, US1)', function () {
 		checkPairs(result.intraPage(), ['e: L5 -> L6'], ['g: entry -> L5']);
 	});
 
-	/// US1-6
+	/// US1-6; feature 005 FR-014: an exception edge carries the definitions reaching the throwing
+	/// node, so e = 2 (L3) throwing gives e of L1 to L5, and e = 3 (L8) throwing gives e of L1 and L3 to L13
 	it('should read nothing at a catch without parameter and give var e = 4 to the catch parameter (catch-edge)', function () {
 		var result = analyzeProbe('catch-edge.js'),
-			present = ['e: L3 -> L5', 'e: L10 -> L11', 'e: L8 -> L13'],
-			absent = ['e: L3 -> L4', 'console: entry -> L4', 'e: L10 -> L13', 'e: L8 -> L9', 'console: entry -> L9'];
+			present = ['e: L1 -> L5', 'e: L10 -> L11', 'e: L8 -> L13', 'e: L1 -> L13', 'e: L3 -> L13'],
+			absent = ['e: L3 -> L5', 'e: L3 -> L4', 'console: entry -> L4', 'e: L10 -> L13', 'e: L8 -> L9',
+				'console: entry -> L9'];
 		checkPairs(result.intraProcedural(), present, absent);
 		checkPairs(result.intraPage(), present, absent);
 	});

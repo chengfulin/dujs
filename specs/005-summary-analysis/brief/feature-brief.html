@@ -1,0 +1,290 @@
+<title>摘要式分析</title>
+<style>
+:root{
+  --bg:#FFFBF2; --card:#FFFFFF; --ink:#1F2937; --sub:#5B6470; --line:#E6E0D2; --th:#F4EFE3;
+  --blue:#2B59C3; --blue-soft:#DCE6FA;
+  --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
+  --coral:#E4573D; --coral-soft:#FBDDD6;
+  --green:#3A9D6B; --green-soft:#D8F0E3;
+  --grey:#AEB6C0;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+    --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+  --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding-block:32px 72px;padding-inline:20px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:900;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
+.meta{color:var(--sub);font-size:.9rem}
+.note{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:8px 12px;margin:10px 0;font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin:16px 0;display:grid;gap:12px}
+.panel h3{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;line-height:1.2;margin:0;text-wrap:balance}
+.num{display:inline-block;font-weight:900;font-size:.75rem;letter-spacing:.15em;color:var(--blue);background:var(--blue-soft);padding:2px 10px;border-radius:999px;width:max-content}
+.pic{overflow-x:auto}
+.pic svg{display:block;width:100%;min-width:640px;height:auto}
+.cap{font-size:1.05rem;font-weight:500;max-width:52ch;margin:0}
+.cap b{font-weight:900}
+.cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
+text{font-family:var(--sans)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+ul{margin:6px 0;padding-left:20px}
+li small{color:var(--sub)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--th)}
+.ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
+code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 100 110"><circle cx="50" cy="28" r="20" fill="currentColor"/><path d="M12 108 a38 38 0 0 1 76 0 z" fill="currentColor"/></symbol>
+    <symbol id="doc" viewBox="0 0 100 120"><path d="M14 6 h50 l22 22 v86 h-72 z" fill="currentColor"/><path d="M64 6 v22 h22" fill="none" stroke="#FFFFFF" stroke-width="4"/><g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"><path d="M28 50 h44 M28 68 h44 M28 86 h30"/></g></symbol>
+    <symbol id="sheet" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="6" fill="currentColor"/><g stroke="#FFFFFF" stroke-width="3"><path d="M4 28 h112 M4 50 h112 M4 72 h112 M40 4 v92 M78 4 v92"/></g></symbol>
+    <symbol id="warn" viewBox="0 0 100 100"><path d="M50 8 L96 90 H4 Z" fill="currentColor"/><path d="M50 36 v26" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="76" r="5" fill="#FFFFFF"/></symbol>
+    <symbol id="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="currentColor"/><path d="M28 52 l15 15 l30 -34" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grey)"/></marker>
+  </defs>
+</svg>
+
+<main>
+<h1>摘要式分析：同一個小程序被多處叫用時只報走得到的配對</h1>
+<p class="meta">005-summary-analysis · analyze · 第 1 輪（speckit-analyze、sdd-spec-clarifier、全新 context 裁判三方發現；上半沿用 plan 第 1 輪）· 2026-11-17</p>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
+
+<h2>看懂它</h2>
+
+<section class="panel">
+  <span class="num">01 · 背景</span>
+  <h3>研究者用工具檢查網頁程式的資料走向</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="研究者把網頁程式交給分析工具，得到一張資料配對表">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">研究者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">交出</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">第 1 行　把 x 設成 0</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">第 4 行　叫用小程序 f</text><text x="280" y="134">第 5 行　印出 x</text><text x="280" y="166">第 6 行　把 x 設成 1</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">網頁程式：f 在多處被叫用</text>
+    <use href="#sheet" x="650" y="55" width="150" height="125" color="var(--blue)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">資料配對表</text>
+  </svg></div>
+  <p class="cap">工具列出「某處設的值，會在哪一處被讀到」，研究者據此設計測試。<small>來源：User Scenarios &amp; Testing 開頭</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">02 · 要解決的問題</span>
+  <h3>工具報出實際上不可能發生的配對</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="從第 7 行叫用進去、卻從第 4 行的叫用返回，這種配對被誤報">
+    <rect x="40" y="20" width="300" height="190" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <g font-size="17" fill="var(--ink)"><text x="60" y="56">第 4 行　叫用 f</text><text x="60" y="92">第 5 行　印出 x</text><text x="60" y="128">第 6 行　x 設成 1</text><text x="60" y="164">第 7 行　叫用 f</text></g>
+    <text x="190" y="238" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">f 被叫用兩次</text>
+    <path d="M360 110 h70" stroke="var(--coral)" stroke-width="6" stroke-dasharray="7 5" marker-end="url(#arr)"/>
+    <rect x="440" y="30" width="270" height="150" rx="12" fill="var(--coral-soft)"/>
+    <text x="460" y="64" font-size="18" font-weight="900" fill="var(--coral)">誤報：第 6 行 → 第 5 行</text>
+    <g font-size="16" fill="var(--ink)"><text x="460" y="100">從第 7 行叫用 f 進去，</text><text x="460" y="126">卻從第 4 行的叫用返回</text></g>
+    <use href="#warn" x="740" y="60" width="90" height="90" color="var(--coral)"/>
+    <text x="785" y="180" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">永遠測不到</text>
+    <text x="575" y="230" text-anchor="middle" font-size="15" fill="var(--sub)">多報的配對會變成無法滿足的測試需求</text>
+  </svg></div>
+  <p class="cap">現在工具把「所有叫用處」混在一起，<b>進去和返回對不上</b>。<small>來源：User Story 1；探測 P1、P2</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">03 · 目的</span>
+  <h3>每個小程序先寫一張「摘要」，叫用處只看摘要</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="小程序整理出摘要，叫用的人只依摘要接上資料走向">
+    <use href="#doc" x="50" y="50" width="100" height="120" color="var(--blue)"/>
+    <text x="100" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">小程序 f</text>
+    <path d="M170 110 h70" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="205" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">整理</text>
+    <rect x="250" y="20" width="330" height="190" rx="12" fill="var(--yellow-soft)" stroke="var(--yellow)" stroke-width="3"/>
+    <text x="270" y="52" font-size="18" font-weight="900" fill="var(--yellow-ink)">摘要（四項）</text>
+    <g font-size="16" fill="var(--ink)"><text x="270" y="86">1. 正常結束時留下哪些值</text><text x="270" y="116">2. 一定會被改掉哪些變數</text><text x="270" y="146">3. 需要叫用者先給哪些值</text><text x="270" y="176">4. 中途出錯時可能留下的值</text></g>
+    <text x="415" y="238" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">只算「正常結束」的路</text>
+    <path d="M600 110 h40" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <use href="#check" x="660" y="55" width="120" height="120" color="var(--green)"/>
+    <text x="720" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">叫用處依摘要</text>
+    <text x="720" y="228" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">接上資料走向</text>
+  </svg></div>
+  <p class="cap">在小程序<b>內部</b>也能叫用頁面上唯一定義的小程序（含自己叫自己）。<small>來源：D2、D3、FR-001、FR-005</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">04 · 預期結果</span>
+  <h3>配對表只剩走得到的，不可能的消失</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="新的配對表只含第 1→5、第 6→8，誤報的 6→5 不再出現">
+    <use href="#sheet" x="50" y="50" width="130" height="108" color="var(--blue)"/>
+    <text x="115" y="198" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">新配對表</text>
+    <path d="M200 110 h50" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <rect x="260" y="20" width="330" height="190" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="60">x：第 1 行 → 第 5 行</text><text x="280" y="96">x：第 6 行 → 第 8 行</text></g>
+    <text x="280" y="140" font-size="17" font-weight="900" fill="var(--coral)">x：第 6 行 → 第 5 行　消失</text>
+    <text x="280" y="172" font-size="15" fill="var(--sub)">同時多輸出「進去與返回」的配對資訊</text>
+    <text x="425" y="238" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">範例取自 US1 情境 1</text>
+    <use href="#check" x="650" y="55" width="120" height="120" color="var(--green)"/>
+    <text x="710" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">每筆都走得到</text>
+  </svg></div>
+  <p class="cap">成功＝US1–US6 的驗收配對全成立，且<b>舊的誤報有記錄地消失</b>。<small>來源：SC-001、SC-002、SC-005</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">流程</span>
+  <h3>先算摘要，再接資料流；出錯往下走</h3>
+  <div class="pic"><svg viewBox="0 0 860 350" role="img" aria-label="五步主流程與兩條錯誤支線">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">讀入程式</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">建立各層模型</text>
+      <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">找出叫用</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">連到小程序</text><text x="264" y="132" font-size="14" font-weight="400" fill="var(--sub)">函式內也放寬</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">算每個摘要</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">遞迴算到穩定</text>
+      <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">叫用處接線</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">只依摘要</text>
+      <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">輸出結果</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">配對表＋</text><text x="774" y="132" font-size="14" font-weight="400" fill="var(--sub)">進出配對資訊</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M168 100 h14"/><path d="M338 100 h14"/><path d="M508 100 h14"/><path d="M678 100 h14"/></g>
+    <g stroke="var(--coral)" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arr)"><path d="M264 150 v50"/><path d="M434 150 v50"/></g>
+    <rect x="154" y="210" width="200" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="254" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">判不出叫用對象</text>
+    <text x="254" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">維持不連結、不報錯</text>
+    <text x="254" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">不確定時寧可保守</text>
+    <rect x="374" y="210" width="300" height="115" rx="10" fill="var(--coral-soft)"/>
+    <text x="524" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">小程序中途出錯</text>
+    <text x="524" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">不回到叫用之後的那一行</text>
+    <text x="524" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">改走 catch；沒人接住就進 LOOP</text>
+    <text x="524" y="308" text-anchor="middle" font-size="13" fill="var(--sub)">只帶出錯行「執行前」的值；finally 先做</text>
+  </svg></div>
+  <p class="cap">叫用與返回<b>一對一配對</b>，出錯另走自己的路。<small>來源：D3、D4、FR-006、FR-010、Edge Cases</small></p>
+  <ul>
+    <li>圖不為每個叫用複製小程序；配對資訊另外輸出，<code>.dot</code> 圖結構不變。<small>（D4、FR-009）</small></li>
+    <li>函式的 entry 節點不再讀取本體變數，否則分析會拋錯。<small>（US5、FR-008）</small></li>
+    <li>try／finally 整族修正：catch 重拋、return／break／continue 都先過 finally；例外進入的 finally 做完繼續往外拋。<small>（US6、FR-013）</small></li>
+  </ul>
+</section>
+
+<section class="panel">
+  <span class="num">架構</span>
+  <h3>新增兩個模組，其餘沿用；攤平圖結構不變</h3>
+  <div class="box"><div class="mermaid">
+flowchart LR
+  A["espree 解析<br/>(沿用)"] --> B["scopebinding<br/>宣告與解析 (改)"]
+  A --> C["esgraph CFG<br/>finally 整族 (改)"]
+  B --> D["callresolver<br/>D2 放寬連結 (改)"]
+  C --> E["modelbuilder／expansion<br/>攤平圖＋呼叫紀錄 (改)"]
+  D --> E
+  E --> F["summary.js<br/>SCC 不動點 (新)"]
+  F --> G["reachingsolver.js<br/>邊型別感知求解 (新)"]
+  E --> G
+  G --> H["defuseanalyzer<br/>寫回 reachIns (改)"]
+  H --> I["outputwriter<br/>.dot／.dupairs／.matching.json (改)"]
+  I --> J["diffcheck<br/>golden／MDN 差異核對 (新)"]
+  classDef n fill:#D8F0E3,stroke:#3A9D6B,color:#1F2937
+  class F,G,J n
+  </div></div>
+  <ul>
+    <li>摘要先算（呼叫圖 SCC 反拓撲序，遞迴從「無正常返回」起算），求解器的 callReturn 只吃摘要。<small>（R1、R3）</small></li>
+    <li>例外邊帶拋錯節點的 IN；LOOP 不套 must-KILL；<code>.dot</code> 為進出配對另寫 <code>*.matching.json</code>。<small>（R2、R4、R9；FR-010、FR-014）</small></li>
+    <li>綠色＝新增；其餘為修改或沿用。不動 <code>lib/analyses/**</code>、<code>hierarchy.js</code>、CLI。<small>（plan 變更影響範圍）</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（analyze · 第 1 輪）</h2>
+<p class="meta">三方：speckit-analyze、sdd-spec-clarifier（full）、全新 context 裁判（跑了兩個原型：全測試＋golden）。CRITICAL 0、HIGH 4（含 3 個判斷點）、MEDIUM 7、LOW 約 10。</p>
+<h3>CRITICAL／HIGH 發現（全列）</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>一句話說明</th><th>建議處置</th></tr>
+<tr><td>F1／H2</td><td class="no">HIGH</td><td>diff-check.md「例外IN」；T019</td><td>判準只能歸類「消失」的 pair；新增 pair（如 c-out3 <code>x: L1 -> L6</code>）歸不了類，T019 必卡</td><td>判斷點 2</td></tr>
+<tr><td>H1</td><td class="no">HIGH</td><td>acceptance.md US1-7；T044/T045/T060/T083/T089</td><td>US1-7（<code>c-noret.js</code>）要 US2 的 D2 連結才過，卻排在 US1 phase</td><td>移到 US2 phase（orchestrator 直接改）</td></tr>
+<tr><td>N1</td><td class="no">HIGH</td><td>Foundational 相容模式；T015</td><td>被呼叫端賦值的例外邊帶 IN 到 exit、經 return 邊回到呼叫之後，破壞 must-KILL。原型實測：26 個既有測試翻轉、golden 21 筆新增 pair 歸不了類</td><td>判斷點 1</td></tr>
+<tr><td>N2</td><td class="no">HIGH</td><td>spec US6-5</td><td>同因：「無 <code>r: L4 -> L11</code>」在 US6 phase 不成立</td><td>隨判斷點 1</td></tr>
+</table></div>
+<p class="meta">MEDIUM 7 筆：F2／M4（generator／async 新增 pair 無允許類別 → 判斷點 3）、F3／M1（US1→US3 間被呼叫端例外 pair 暫失，需暫改還原規則）、M2（未列名的翻轉測試）、M3（FR-008 括號與 US5-1 矛盾）、M5（T030 缺兩種 finally 測試）、N3（US5 實測 14 檔 58 個測試翻轉）、N4（US5-2 手推預期錯，已採 A 改 case 節點）。LOW：F4–F9、N5–N8、I1 等文字與細節修正。駁回：F3「T068／T069 提前」、I2、I3。</p>
+<div class="note">orchestrator 直接套用、不需使用者決策：diff-check.md、tasks.md、acceptance.md、data-model §6、spec 文字（Status、P13 列、FR-008 括號、US5-2）、plan 兩處。M2 翻轉測試以「實跑失敗為準」。</div>
+
+<h3>plan 既定設計（沿用，供對照）</h3>
+<div class="box"><table>
+<tr><th>議題</th><th>決策</th><th>影響</th></tr>
+<tr><td>實作順序</td><td>Setup → 求解器（FR-014）→ US5 → US6 → US1 → US3 → US4 → US2 → Polish</td><td>US2 雖 P1，連結放寬須等摘要，否則出現不可實現 pair；改 golden 的階段須依序並逐次 <code>diffcheck --verify</code></td></tr>
+<tr><td>FR-013 finally</td><td>新增 <code>finallyExit</code> 節點與多目標 <code>finally</code> 邊（plan 判斷點 2 已決 A）</td><td>golden 只動 page0 <code>parseSaved</code> 一處；MDN 語料無 <code>try</code></td></tr>
+<tr><td>Q-a</td><td>呼叫敘述的例外邊留在 CALL 節點；被呼叫端例外以虛擬貢獻帶出</td><td>US3-2、3、7</td></tr>
+<tr><td>generator／async</td><td>摘要標 <code>conservative</code>：恆正常返回、無 must-KILL</td><td>US1-8</td></tr>
+<tr><td>golden／MDN</td><td>新 <code>tools/diffcheck.js</code> 以類別（§18、連結、finally、例外IN、Q-a、摘要）核對；差異記 <code>golden-diff.md</code></td><td>FR-011；釘選類別由使用者簽核</td></tr>
+</table></div>
+
+<h2>工程師要決定的事</h2>
+
+<h3>已決事項（不再問）</h3>
+<div class="box"><table>
+<tr><th>編號</th><th>決定</th><th>出處</th></tr>
+<tr><td>D1</td><td>原需求拆三輪：005＝摘要分析＋§18；007＝§16、§22(3)；008＝§22(1)(5)、§23；localStorage 儲存模型另開</td><td>範圍決策 D1</td></tr>
+<tr><td>D2、R2-3</td><td>函式內 <code>f()</code> 在無到達定義時，若 binding 全頁僅一筆定義且為函式宣告／<code>const</code>／<code>let</code> 函式運算式／具名運算式內部名稱則連結；<code>new F()</code> 不放寬</td><td>D2</td></tr>
+<tr><td>D3、R2-2</td><td>摘要只看正常返回；另有第四項「例外離開時可能有效的定義」流向 catch／finally／LOOP</td><td>D3</td></tr>
+<tr><td>D4、R2-1</td><td>攤平圖不複製被呼叫端；以配對資訊表達進出與「只看正常返回」，<code>.dot</code> 不變</td><td>D4</td></tr>
+<tr><td>D5、N1、N5</td><td>golden 差異記於 <code>golden-diff.md</code>；US4 情境 1 改 loop-pair 程式；US4-2 為守門</td><td>D5；Clarifications</td></tr>
+<tr><td>SC-002</td><td>以 P1–P11 為準（自身遞迴、具名函式運算式內部名稱列入成功準則）；P12–P16 由 SC-001 的情境測試涵蓋</td><td>Clarifications（2026-11-17）；SC-002</td></tr>
+<tr><td>plan 裁決</td><td>US1-4 改用 <code>c-cyc3-cond.js</code>；接受 <code>.dot</code> 新增 <code>finallyExit</code> 節點與多目標 <code>finally</code> 邊</td><td>Clarifications（plan review）；FR-013</td></tr>
+<tr><td>analyze Q4</td><td>US5-2 預期改為 case 節點（<code>x: L1 -> L7>L8:T</code>、<code>x: L1 -> L7>L10:F</code>）；B 方案超出範圍，由 orchestrator 採 A</td><td>analyze N4</td></tr>
+<tr><td>驗收缺口</td><td>先查 MDN 語料（33 檔，含 Classes 頁）：無 <code>try</code>／<code>catch</code>／<code>finally</code>／<code>throw</code>、無函式內區域函式、類別欄位無初始化式，補不了；改以探測程式補成情境（P12–P16），多被叫端串接改自 MDN <code>Person</code></td><td>Clarifications（2026-11-17）；探測結果</td></tr>
+<tr><td>Q-a</td><td>返回後呼叫敘述不再拋錯；呼叫之前仍算（帶呼叫前定義）；運算式中與決策節點前的呼叫維持現況（007）</td><td>Session 2026-11-17；FR-006</td></tr>
+<tr><td>Q-b（擴大）</td><td><code>finally</code> 整族一起修，函式內與頁面層一致</td><td>Session 2026-11-17；FR-013</td></tr>
+<tr><td>FR-014</td><td>例外路徑只帶拋錯節點執行前的定義，全面套用（中途選「前後聯集」，更正後改選 IN）</td><td>Session 2026-11-17；FR-014</td></tr>
+<tr><td>generator／async</td><td>摘要不做 must-KILL，只保留可能的 GEN；記入 known-issues</td><td>Session 2026-11-17；FR-001</td></tr>
+<tr><td>裁判定案</td><td>LOOP 不套 must-KILL；upward-exposed uses 看所有路徑；intra-procedural 呼叫維持不透明；不動點從「無正常返回」起算；<code>window.f</code> 誤連列為限制；駁回「US1-1 的『恰為』與表示法矛盾」</td><td>Session 2026-11-17</td></tr>
+<tr><td>MDN 控制流程頁</td><td>使用者再指定 MDN Guide「Control flow and error handling」：US3 情境 2、4 改用該頁範例的改寫版（P13、P14，原合成程式留在 probes/ 對照）；新增情境 6（P17，改自該頁 <code>finally</code> 覆寫範例）。該頁 <code>getMonthName</code> 的呼叫在運算式中，屬 007，未採用</td><td>Clarifications（使用者再指定）</td></tr>
+</table></div>
+
+<h3>驗收條件盤點</h3>
+<div class="box"><table>
+<tr><th>Story</th><th>情境</th><th>判定</th><th>說明</th></tr>
+<tr><td>US1 多處叫用</td><td>1、2、3、6、7、8</td><td class="ok">可驗證</td><td>皆有程式與具體 pair（3、6 為守門）；6 為多被叫端串接（<code>new Person</code>），改自 MDN；7 無正常返回（<code>c-noret.js</code>，analyze H1：須待 US2 的 D2 才能通過，改在 US2 phase 驗）；8 generator／async（<code>c-gen.js</code>、<code>c-asy.js</code>；新增 pair 的允許原因見判斷點 3）</td></tr>
+<tr><td>US1</td><td>4 外層區域變數不受內層影響</td><td class="ok">可驗證</td><td>判斷點 1 → A：改用加終止條件的 <code>c-cyc3-cond.js</code>（<code>t: L4 -> L8</code>）；原 cyc-3 驗「沒有以 L6 為 use 端的 pair、分析終止」</td></tr>
+<tr><td>US1</td><td>5 配對資訊</td><td class="ok">可驗證</td><td>以「每條 return 邊對應唯一 call 邊」驗，另驗 US3-3 程式 <code>s</code> 的例外只接 L9 <code>catch</code>；輸出格式由 plan 定（FR-010）</td></tr>
+<tr><td>US2 函式內叫用</td><td>1–7</td><td class="ok">可驗證</td><td>皆有程式與 pair；4、7 為守門；5、6 自身遞迴與具名運算式內部名稱；7 block 內函式宣告不在 block 外連結</td></tr>
+<tr><td>US3 例外離開</td><td>1–7</td><td class="ok">可驗證</td><td>2 明確斷言沒有 <code>state: L7 -> L13</code>（Q-a 已決）；3 有 <code>x: L1 -> L10</code>、沒有 <code>x: L5 -> L10</code>；4、7 守門；5 例外沿呼叫鏈進 LOOP；6 為 <code>catch</code> 重拋經 <code>finally</code>（P17，FR-013 修正後成立，現況不成立）</td></tr>
+<tr><td>US4 處理器配對</td><td>1、2、3</td><td class="ok">可驗證</td><td>有程式與 pair（2、3 為守門；3 驗 LOOP 不套 must-KILL）</td></tr>
+<tr><td>US6 try／finally</td><td>1–7</td><td class="ok">可驗證</td><td>皆有探測程式（<code>c-fin*.js</code> 等）與 pair；1、3、4、5、6、7 現況不成立（P18、P20–P24）；2 守門；其中 3 驗「L8 不可達」（沒有任何 pair，屬否定式斷言）；5 的「無 <code>r: L4 -> L11</code>」在 US6 phase 不成立（N2，隨判斷點 1）</td></tr>
+<tr><td>US5 entry 節點</td><td>1、2、3</td><td class="ok">可驗證</td><td>1 依 KI §18 程式；以節點 use 集合驗；2 原手推預期有誤（N4），改為 case 節點 pair（<code>x: L1 -> L7>L8:T</code>、<code>x: L1 -> L7>L10:F</code>），待 orchestrator 改 spec 後成立；實測 US5 會翻轉 14 檔 58 個測試（皆為刪除 use 端為 entry 的期望，N3）</td></tr>
+<tr><td>Edge Cases</td><td>無正常返回</td><td class="ok">可驗證</td><td>無條件遞迴由 US1-7、一定拋錯由 US6-1 涵蓋；多被叫端串接由 US1-6 涵蓋</td></tr>
+<tr><td>SC-004／005</td><td>MDN 33 個程式、2 倍時間</td><td class="no">部分缺</td><td>SC-005 的「能說明」靠人工歸類；「例外IN」新增 pair 無判準（判斷點 2）、generator／async 新增 pair 無允許類別（判斷點 3）</td></tr>
+</table></div>
+
+<h3>tech-standards 缺漏或變更</h3>
+<p>無偏離，無缺漏。規範以服務與前端為主，未涵蓋靜態分析的輸出格式與 golden 比對。spec 交 plan 決定的兩項已定：配對資訊另存 <code>*.matching.json</code>（<code>.dot</code> 不變）、摘要不單獨輸出成檔案而併入該檔。<small>（FR-010；plan 關鍵設計；contracts/matching-output.md）</small></p>
+
+<h3>CRITICAL／HIGH 衝突與影響</h3>
+<div class="box"><table>
+<tr><th>條款</th><th>衝突內容</th><th>受影響 story</th></tr>
+<tr><td>§CP-4 驗收可測（附件未標條款；HIGH）</td><td>N1／N2：Foundational 相容模式下例外邊外洩，破壞 must-KILL，既有 26 個測試翻轉；US6-5 否定斷言不成立</td><td>US1、US3、US6-5</td></tr>
+<tr><td>SC-005 可說明（HIGH）</td><td>F1／H2：新增 pair 歸不了類，golden 差異無法簽核</td><td>全部（golden 差異）</td></tr>
+<tr><td>phase 排序（HIGH）</td><td>H1：US1-7 相依 US2 的 D2</td><td>US1-7、US2</td></tr>
+</table></div>
+<p class="meta">plan 輪的兩項 HIGH（US1-4 與 FR-003 矛盾、FR-013 新節點型別）已於 plan review 採 A 解決。D4 修訂 003、D2 取代 004 FR-018 一句、D6 讓 003「golden 差異不得放行」不適用，皆已於 spec 明列。</p>
+
+<h3>本輪判斷點</h3>
+<p class="meta">plan 輪的判斷點 1、2 已決（皆採 A）。本輪 3 題如下，建議標 *。</p>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>方案（建議標 *）</th><th>影響</th><th>出處</th></tr>
+<tr><td>1</td><td>Foundational 的例外 IN 外洩（N1、N2）：相容模式下被呼叫端賦值的例外邊帶 IN 到 exit，怎麼處理？</td><td>*A：相容模式加一列「指向有 return 出邊之 exit 的例外邊仍帶 OUT，US1 移除」<br>B：維持現設計，T015 列約 26 筆暫改並在 US1／US3 還原；US6-5 否定斷言移到 US1<br>C：FR-014 延到 US1 才啟用，T011 與 US6-7 後移</td><td>A：Foundational golden 零差異、只翻轉 1 筆測試；B：大量暫改與還原；C：phase 重排，US6 不驗例外帶 IN</td><td>FR-014；tasks T011、T015；US6-5、US6-7</td></tr>
+<tr><td>2</td><td>「例外IN」新增 pair 的歸類判準（F1／H2）</td><td>*A：基準側攤平圖路徑判準（存在帶例外出邊的節點 n，def 可達 n、n 的例外目標可達 use），加每頁筆數釘選與使用者簽核<br>B：只用路徑判準<br>C：新增 pair 一律釘選簽核</td><td>A：可自動歸類且有人把關；B：無筆數把關；C：簽核量大、T019 易卡</td><td>SC-005；diff-check.md；tasks T019</td></tr>
+<tr><td>3</td><td>generator／async 新增 pair 要不要有允許類別（F2／M4）</td><td>*A：SC-005 與 diff-check 增列「保守摘要（FR-001）」為允許原因，觸發為頁面有對 generator／async 的呼叫敘述<br>B：不改，出現時停下裁決（目前 golden、MDN 都沒有）</td><td>A：先備好歸類，文字小改；B：不改文件，出現時才中斷</td><td>FR-001；SC-005；US1-8；diff-check.md</td></tr>
+</table></div>
+
+<h3>次要疑點（不佔判斷點）</h3>
+<div class="box"><table>
+<tr><th>疑點</th><th>出處</th></tr>
+<tr><td>N8：US4 可能新增 inter-page localStorage pair；出現即停下裁決</td><td>analyze N8；US4</td></tr>
+<tr><td>SC-005 的「每個消失／新增的 pair 都能說明」靠人工歸類；判斷點 2、3 定案後僅剩類別核對</td><td>SC-005</td></tr>
+<tr><td>Edge Cases「dead-code pair 增減列入 golden-diff」仍無量測方式；KI §22 (5) 其餘在 008</td><td>Edge Cases</td></tr>
+</table></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>

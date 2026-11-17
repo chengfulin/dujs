@@ -768,7 +768,6 @@ describe('Splitting conditional and short-circuit expressions', function () {
 			analyze.pairsOfModel(found.model).should.eql([
 				'a: L1 -> L2:TT',
 				'a: L1 -> L4',
-				'a: L1 -> entry',
 				'b: L1 -> L2:TF',
 				'c: L1 -> L2>L2:F',
 				'c: L1 -> L2>L2:T',

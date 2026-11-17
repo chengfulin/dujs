@@ -100,6 +100,24 @@ describe('Def', function () {
 			    }).throw();
 		    });
 	    });
+
+	    /// feature 005 US1: the sentinel definition of the summaries (data-model §2)
+	    describe('SENTINEL_TYPE', function () {
+		    it('should have correct value', function () {
+			    Def.SENTINEL_TYPE.should.eql('sentinel');
+		    });
+
+		    it('should be one of the TYPES', function () {
+			    Def.TYPES.should.containEql(Def.SENTINEL_TYPE);
+			    Def.isValidDefType(Def.SENTINEL_TYPE).should.be.true();
+		    });
+
+		    it('should not support to modify value', function () {
+			    should(function () {
+				    Def.SENTINEL_TYPE = 'type';
+			    }).throw();
+		    });
+	    });
     });
 
 	describe('static methods', function () {

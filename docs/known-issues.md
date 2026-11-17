@@ -40,6 +40,14 @@ parameter default values). It records the other findings, limits and
 decisions of the feature in §27–§34, and adds a note to §18 on the variables
 the entry node of a function reads.
 
+Feature `005-summary-analysis` (`specs/005-summary-analysis/`, stage 2 of
+the hierarchical model refactoring) computes the data flow through calls with
+summaries of the callees, fixes §18, relaxes the resolution of `f()` in a
+function (§22 (0)), corrects the premise of §22 (4), and fixes the control flow
+of `try`…`finally` (§35). It records its behavior changes, limits and findings
+in §35–§43. §16 and §22 (3) are planned for feature `007`; §22 (1), §22 (5) and
+§23 for feature `008`; §22 (4) for a separate feature on the storage model.
+
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
 
@@ -418,6 +426,11 @@ ambiguous (review #8).
 
 ### 16. The call of a decision node is inserted before it (partly fixed by `003-hierarchical-models`)
 
+**Planned for feature `007`** (decision D1 of feature `005-summary-analysis`),
+together with §22 (3): both need a statement node split into "before the
+call" and "after the return". Feature `005-summary-analysis` keeps the
+modeling of calls before a decision node unchanged (its FR-006).
+
 **Partly fixed** by feature `003-hierarchical-models` (US1): the
 inter-procedural model inserts the CALL and CALL RETURN nodes in its own copy
 of the graph, so the edges of the shared nodes seen through the
@@ -509,7 +522,42 @@ still has its own initialization node, as in US2 scenario 7.
 
 ## Found while refactoring (feature `002-small-refactors`)
 
-### 18. The entry node of a function uses the variables of statements in its body
+### 18. The entry node of a function uses the variables of statements in its body (fixed by `005-summary-analysis`)
+
+**Fixed** by feature `005-summary-analysis` (FR-008, US5): the entry node of a
+function has no use; the reads of default parameter values are at the
+synthesized parameter initialization nodes, and every read of the body is only
+at the node of its statement. The pairs ending at `entry` are gone (for
+example the golden and MDN `X: d -> entry` pairs, recorded in
+`specs/005-summary-analysis/golden-diff.md` and `mdn-diff.md`), and the
+programs that made the analysis throw (`Decision node entry of the p-use of
+variable a lacks its true target`, the program below with `f();` added, and
+US5 scenario 2 of the feature) are analyzed:
+
+```js
+var x = 1, a = 2, b = 3, o = {}, k;
+function f() {
+  switch (x) { case a: b; }
+  a;
+  for (k in o) { b; }
+}
+f();
+```
+
+The intra-page pairs are `f: entry -> L7`, `o: L1 -> L5`,
+`x: L1 -> L3>L3:T` and `x: L1 -> L3>L4:F` (the p-uses of `x` at the `case`
+node); there is no pair for `a` or `b` (see the correction below).
+
+**Correction** (found while accepting US5 of feature `005-summary-analysis`):
+the description below says that the uses taken by the entry node "are also
+found at the nodes of the statements themselves". That holds for `x` and `o`,
+but not for the test of a `case` (`a` of `case a:`) nor for an identifier used
+alone as a statement (`b;`, `a;`): dujs never takes them as reads, at any node
+(existing modeling, unchanged), so the entry node had pairs for them that no
+other node has. The last sentence below ("the handlers for nested
+`switch`/`for-in`/`for-of` stay in the walk of `findUSESet`") is out of date:
+feature `005-summary-analysis` removed those rules from `findUSESet` (task
+T102 (a)). The original description follows.
 
 **Note (feature `006-eslint-scope`)**: the entry node of a function only takes
 the variables visible from the function scope (decision Q3 of the feature). A
@@ -701,6 +749,21 @@ statements are included.
 
 ### 22. Strict resolution of `f()` and follow-up items (found by `004-fix-remaining-issues`; (2) fixed by `006-eslint-scope`)
 
+**Note (feature `005-summary-analysis`, D2, FR-005)**: in a function, `f();`
+with no definition of `f` reaching the call in the function is now connected
+when the binding of `f` has only one definition on the page and it is a
+function declaration (also in a block), a function expression bound by
+`const`/`let` (also an arrow function) or the inner name of a named function
+expression; self and mutual recursion are connected too. `new F()` in a
+function and the other cases keep the strict rule below. The decision H3 of
+feature `004-fix-remaining-issues` ("a function does not see the function
+definitions of outer code") is replaced by this rule. Known limits: P30
+(`window.f = …` is not a definition of `f`, so `f()` may be connected to the
+wrong function) and a parameter with the name of a function declaration
+(`function g(f) { function f() {} function h() { f(); } }`: the parameter is
+not counted, so the call is connected; the result is right, since the
+declaration overwrites the parameter), both in the README.
+
 (0) **Behavior change: `f();` uses the strict rule** (FR-018). A callee
 variable (of `f()`, `new F()`, `new A()`, `A.s()`, and the `A` of the
 `new A()` definitions of `o` in `o.m()`) is resolved only when it has at
@@ -733,7 +796,8 @@ was connected to the first function and the pair was `x: L3 -> L11`; now
 Follow-up items (not fixed):
 
 (1) **An assignment to a property `o.p = 1` is taken as a definition of `o`.**
-It should be a definition of `o.p` and a use of `o` (a separate feature). One
+It should be a definition of `o.p` and a use of `o` (planned for feature
+`008`, which must keep `localStorage.k = v` as a stored definition). One
 consequence is that `o.m()` after such an assignment is not connected, because
 the reaching definition of `o` is no longer `new A()`:
 
@@ -765,7 +829,8 @@ variable.** In `var B = class Q { static s = Q; };` there is no pair for `Q`;
 the same holds for the name of a named function expression used in its own
 body.
 
-(3) **Calls inside other expressions should also be call-sites.** Only call
+(3) **Calls inside other expressions should also be call-sites** (planned
+for feature `007`, with §16). Only call
 statements (`f();`, `new F();`, the method calls of §7, and the value of an
 instance field that is itself `this.m()` or `new B()`) are connected;
 `return f()`, `x = f()` and similar calls are not (decision U1 of the plan of
@@ -779,7 +844,20 @@ the MDN examples: only `localStorage.setItem` defines a stored item
 so removing an item does not kill the stored definition in the inter-page
 model.
 
-(5) **Pairs in the dead code after an unconditional recursion.** With a back
+**Correction** (feature `005-summary-analysis`, decision D1): the premise above
+is wrong. `localStorageSetterNames` is not referenced in `lib/`, so
+`localStorage.setItem(…)` makes no stored definition either; the only stored
+definition is `localStorage.k = v`, and it does not distinguish the keys
+(every key is one stored definition) and is never killed. The storage model
+(`setItem`, `getItem`, `removeItem`, `clear`, keys) is moved to a separate
+feature.
+
+(5) **Pairs in the dead code after an unconditional recursion** (planned for
+feature `008`). **Note (feature `005-summary-analysis`)**: the summary of a
+recursive callee starts from "no normal return" (FR-003), so a call that never
+returns normally has no normal successor in the data flow; the program below
+now gives only `A: L2 -> L8` (`x: L5 -> L9` is gone). Feature `008` checks the
+remaining dead-code pairs. With a back
 edge for recursion (§7), the nodes after an unconditional recursive call
 cannot be reached from the entry node:
 
@@ -795,11 +873,11 @@ new A().m();
 console.log(x);
 ```
 
-The intra-page pairs are `A: L2 -> L8` and `x: L5 -> L9`. The pairs
-`console: entry -> L9` and `x: L1 -> L9` disappear, since L5, L9 and the nodes
+Before feature 005, the intra-page pairs were `A: L2 -> L8` and `x: L5 -> L9`. The pairs
+`console: entry -> L9` and `x: L1 -> L9` disappeared, since L5, L9 and the nodes
 after them are not reachable from the entry node; but the worklist also
-processes the unreachable nodes, so the definition `x = 1` (L5) inside the
-unreachable cycle flows out to L9 and gives `x: L5 -> L9`
+processed the unreachable nodes, so the definition `x = 1` (L5) inside the
+unreachable cycle flowed out to L9 and gave `x: L5 -> L9`
 (`specs/004-fix-remaining-issues/research.md` P8,
 `specs/004-fix-remaining-issues/probes/cyc-uncond.js`).
 
@@ -814,6 +892,10 @@ regression; the other differences from the hand-derived pairs are the
 documented limits, except the two issues below.
 
 ### 23. `o.m()` in a function is not connected when `o` is defined outside the function
+
+**Planned for feature `008`** (decision D1 of feature `005-summary-analysis`).
+The relaxation D2 of feature `005-summary-analysis` covers only `f()`, not
+`o.m()`.
 
 ```js
 var x = 0;
@@ -1066,3 +1148,251 @@ m.get(`${n.name}`);  // template literal key
 
 No such lookup exists in `lib/` now. Status: not fixed (a limit of the check;
 code review covers it).
+
+## Found by feature `005-summary-analysis`
+
+The programs below are in `specs/005-summary-analysis/probes/` unless given
+inline; run them with `node specs/005-summary-analysis/probes/run.js <file>`.
+The results before the feature are those of `develop` (`9e324be`), recorded in
+the probe table of `specs/005-summary-analysis/spec.md`. The MDN examples were
+checked again with the feature (`specs/005-summary-analysis/mdn-diff.md`):
+every difference from `develop` is a pair of §18 that disappears or a change
+made by the relaxation D2 (§22 (0)), and no example throws.
+
+### 35. The control flow of `try`…`finally` (fixed by `005-summary-analysis`)
+
+**Fixed** by feature `005-summary-analysis` (FR-013, US6). Before the feature,
+the CFG skipped a non-empty `finally` block, or left it the wrong way, in
+these cases:
+
+- an exception thrown in `catch` left the function (or went to the event loop
+  on the page) without running `finally` (P17, P21);
+- a `finally` entered by an exception went on to the statement after the
+  `try`, as after a normal completion (P18, and P20, where that statement is
+  not reachable);
+- `return`, `break` and `continue` leaving a `try` skipped `finally` (P22,
+  P23).
+
+```js
+let r = 0;
+function f() {
+  try {
+    r = 1;
+    throw "bogus";
+  } catch (e) {
+    r = 2;
+    throw e;
+  } finally {
+    r = 3;
+  }
+}
+try {
+  f();
+} catch (e) {
+  console.log(r);
+}
+console.log(r);
+```
+
+`m3-mdn-finally-return.js` (from the MDN guide "Control flow and error
+handling"): before the feature `r = 3` (L10) had no pair; now
+`r: L10 -> L16` and `r: L10 -> L18` are found. `c-fin1.js` no longer has
+`r: L9 -> L14` nor `r: L9 -> L16`; `c-fin4.js` has no pair used at L8 (not
+reachable); `c-m4h.js` gives `r: L13 -> L3`; `c-fin2.js` gives only
+`r: L7 -> L11` (no `r: L4 -> L11`); `c-fin5-break.js` gives `r: L7 -> L10`
+and no `r: L4 -> L10`; `c-fin6-continue.js` gives `r: L9 -> L12` and no
+`r: L6 -> L12`.
+
+The graph has a new node type `finallyExit` at the end of a non-empty
+`finally` block that can be entered by an exception or a jump, and a new edge
+type `finally` (one edge per target of a jump through the block); see the
+README. An empty `finally` (`finally {}`, `finally { ; }`) has no node and is
+treated as no `finally`.
+
+### 36. Exception paths carry only the definitions before the throwing node (behavior change)
+
+**Behavior change** of feature `005-summary-analysis` (FR-014, US6 scenario 7):
+the exception edge of a node carries the definitions valid before the node
+(its IN set), not after it: a statement that throws is treated as not
+completed. This holds for every exception edge of every model and for the
+definitions an exception carries out of a callee (the fourth part of a
+summary). Before the feature, the exception edges carried the definitions
+after the node.
+
+```js
+var x = 0;
+var o = {};
+try {
+  x = o.p;
+} catch (e) {
+  console.log(x);
+}
+```
+
+`c-out3.js`: before the feature the only pair of `x` was `x: L4 -> L6`; now it
+is `x: L1 -> L6` (`o.p` throws before `x` is assigned). A call statement can
+throw only before the call (evaluating the callee and the arguments); once the
+callee returns normally, the statement does not throw (decision Q-a), and an
+exception the callee does not catch carries the definitions valid where it is
+thrown in the callee.
+
+### 37. Generators and async functions have a conservative summary
+
+A generator function runs only when it is iterated, and an async function
+returns to its caller at its first `await`, so a call does not tell which part
+of the body has run. Feature `005-summary-analysis` (FR-001, research R13)
+gives them a conservative summary: the call may return normally, kills no
+definition, and every definition the callee makes (on a normal or exceptional
+path) may flow out after the call.
+
+```js
+var x = 0;
+function* g() {
+  x = 1;
+}
+g();
+console.log(x);
+```
+
+`c-gen.js` gives `x: L1 -> L6` and `x: L3 -> L6` (before the feature only
+`x: L3 -> L6`, as if the body had run to the end); `c-asy.js` (an async
+function assigning `x` after `await p;`) gives `x: L1 -> L8` and
+`x: L5 -> L8`. The pairs inside the body are those of a normal function; the
+iteration protocol and the resumption after `await` are not modeled. Status:
+limit, not fixed.
+
+### 38. A `finally` entered in several ways continues to all of them
+
+When one `finally` block can be entered in more than one way (normally, by an
+exception, by `return`/`break`/`continue`), its `finallyExit` node has an edge
+for each way, and the data flow does not remember which way a path came in: a
+path entered normally may continue with the exception or to the jump target,
+and the other way around (research R6; a safe over-approximation). The
+scenarios of §35 each have one non-normal way and are exact. In the golden
+fixture (`parseSaved` in `tests/golden/fixtures/page0/app.js`) the `finally` is
+entered normally and by an exception of the `catch` block, which adds
+`parsed: 52 -> 60` (`specs/005-summary-analysis/golden-diff.md`). Status:
+limit, not fixed (copying the `finally` nodes per way, as compilers do, would
+break the one node per AST node of the CFG builder).
+
+### 39. A recursive run reading definitions of the outer run (research R14)
+
+Research R14 of feature `005-summary-analysis` lists a possible
+over-approximation kept from feature `004-fix-remaining-issues`: the entry of a
+recursive callee may not kill the definitions of the outer run of the same
+function, so an inner run could read, before its own definition, a definition
+made by the outer run. The feature does not change this. Checked after the
+feature with programs where an inner run reads a local variable or a
+parameter before defining it (for example
+`function f(n, y) { if (n > 1) { y = 5; f(n - 1); } else { console.log(y); } } f(2);`,
+one statement per line): the only pair is `y: entry -> L6`, so the
+over-approximation was not reproduced. Status: kept as a watch item; no
+program showing it is known.
+
+### 40. The analysis did not end with a handler in a linked recursion (fixed by `005-summary-analysis`)
+
+Found while finishing feature `005-summary-analysis` (task T103, FR-003): with
+the relaxation D2 (§22 (0)), a handler can call the function that registers
+it, so a handler is registered again in a chain of registrations:
+
+```js
+var x = 0;
+function k() {
+  function h() { x = 1; k(); }
+  document.addEventListener('click', h);
+  h();
+}
+k();
+```
+
+`k()` in `h` is linked to `k`, so `k -> h -> k`, and `h` is a handler
+registered in `k`. The search of the handlers in
+`ModelBuilder#buildIntraPageModel` (`lib/dujs/modelbuilder.js`) listed a
+handler again for every registration found and never ended; following each
+chain once still grew with the simple paths of the registrations (4, 15, 64,
+325, 1956, 13699 handlers for 2…7 handlers calling the registering function,
+not ending in minutes for 8).
+
+**Fixed**: when the registrations have a cycle, each handler is searched and
+listed once, in the order first found (the event loop already runs a
+registered handler any number of times, so the pairs are the same); without a
+cycle the list is as before (§41). The analysis of the program above ends
+with the handler list `["h"]` and no pair of `x` (`k` never returns
+normally). Regression tests in `tests/dujs/relaxedcallee.js` run the
+analysis in a child process killed after a timeout.
+
+### 41. The handler list grows exponentially with diamond registrations (pre-existing)
+
+When the registrations have no cycle, the search of the handlers keeps the
+order and the duplicates of the search as before feature
+`005-summary-analysis` (§40): each handler found is searched again, and it is
+listed once per chain of registrations reaching it. With layers of handlers
+that each register the two handlers of the next layer (a "diamond"), the list
+doubles with each layer:
+
+```js
+var x = 0;
+function a1() { x = 1; document.addEventListener("e", a2); document.addEventListener("e", b2); }
+function b1() { x = -1; document.addEventListener("e", a2); document.addEventListener("e", b2); }
+function a2() { x = 2; }
+function b2() { x = -2; }
+a1(); b1(); a2(); b2();
+document.addEventListener("e", a1);
+document.addEventListener("e", b1);
+```
+
+The intra-page model lists 8 handlers for this program (2 layers), and 22, 52,
+114, 240 for 3…6 layers built the same way; the pairs are the same as with
+each handler listed once, but the intra-page graph has an event edge and a
+copy of the handler for each item. Status: not fixed (found by the review of
+task T103; deduplicating also without a cycle would change the golden
+output).
+
+### 42. A handler registered by name in a function reached only from a handler is not found (pre-existing)
+
+Found by checking the MDN examples after feature `005-summary-analysis`:
+
+```js
+var x = 0;
+function h2() { console.log(x); }
+function h1() { x = 1; b.addEventListener('click', h2); }
+a.addEventListener('click', h1);
+```
+
+`h2` is not a handler of the intra-page model (only `h1` is), so `x` has no
+pair; `develop` gives the same result. The handler named at a registering call
+is looked up in the definitions reaching the call (research R8 of feature
+`005-summary-analysis`), taken from the inter-procedural model of the page when
+it contains the call; a call in a function reached only from a handler is in
+no such model, and the definitions of the function do not include the page
+function `h2`. A function expression (`b.addEventListener('click', function () {…})`)
+is found. In the MDN number guessing game, `setGameOver` (called from the
+handler `checkGuess`, linked by D2) registers the page function `resetGame`,
+which is therefore not a handler, and the pairs of `resetGame`
+(`resetButton: L48 -> L60`, `randomNumber: L66 -> …`, in the lines of the
+source file) are missing. Status:
+not fixed.
+
+### 43. A callee called from the page and from a handler lists its pairs twice
+
+Found by checking the MDN examples after feature `005-summary-analysis`:
+
+```js
+var x = 0;
+function f() {
+  console.log(x);
+}
+f();
+document.addEventListener("click", function () { x = 1; f(); });
+```
+
+The intra-page model contains a copy of the body of `f` under the page and one
+under the handler (the hierarchy concatenates the models, decision D4); the
+call edges of both calls enter the first copy, and both copies are listed with
+the same pairs, so the intra-page `.dupairs.dot` lists `x: L1 -> L3` and
+`x: L6 -> L3` twice each. Each pair is realizable (`x = 1` reaches `f` through
+the call in the handler), but per copy, the copy of the page cannot read
+`x = 1` and the copy of the handler cannot read `x = 0`. When both calls are on
+the page, the pairs are listed once. In the MDN allowance updater
+(`s10-allowance-updater`) the pairs of `shoppingDone` at L17 are listed twice
+for this reason. Status: presentation of the duplicated nodes, not fixed.

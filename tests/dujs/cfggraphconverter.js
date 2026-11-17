@@ -124,3 +124,71 @@ describe('Labels of call return nodes (FR-011)', function () {
 		});
 	});
 });
+
+/*
+ * Names of the nodes in the dot output (feature 005, research R9): the
+ * matching output names the nodes as the .graph.dot does
+ */
+describe('dotNodeIds (feature 005)', function () {
+	'use strict';
+
+	after(analyze.reset);
+
+	var code = 'var a = 1;\nfunction f() {\na = 2;\n}\nf();\nf();';
+
+	/**
+	 * Node names declared in a dot output, in order
+	 * @param {string} dot
+	 * @returns {Array}
+	 */
+	function declaredNames(dot) {
+		var names = [];
+		dot.split('\n').forEach(function (line) {
+			var matched = /^(n\d+) \[label=/.exec(line);
+			if (!!matched) {
+				names.push(matched[1]);
+			}
+		});
+		return names;
+	}
+
+	it('should name each node n<k> with k from the cfgId of the first node and its index', function () {
+		var model = interProceduralModelOf(code),
+			ids = converter.dotNodeIds(model),
+			first = model.graph[2][0].cfgId;
+		ids.size.should.eql(model.graph[2].length);
+		model.graph[2].forEach(function (node, index) {
+			ids.get(node).should.eql('n' + (first + index));
+		});
+		converter.dotNodeIds(model.graph).should.eql(ids);
+	});
+
+	it('should name the nodes as every toDot method does', function () {
+		var model = interProceduralModelOf(code),
+			ids = converter.dotNodeIds(model),
+			expected = model.graph[2].map(function (node) {
+				return ids.get(node);
+			});
+		['toDot', 'toDotWithLabelLoc', 'toDotWithLabelLine', 'toDotWithLabelId'].forEach(function (method) {
+			var dot = converter[method](model.graph);
+			declaredNames(dot).should.eql(expected, method);
+			/// the edges refer to the same names
+			model.graph[2].forEach(function (node) {
+				if (!!node.normal) {
+					dot.should.containEql(ids.get(node) + ' -> ' + ids.get(node.normal) + ' []');
+				}
+			});
+		});
+	});
+
+	it('should name a node listed twice by its first index (a handler listed twice)', function () {
+		var result = analyze('function h() {\n}\nwindow.addEventListener("x", h);\nwindow.addEventListener("y", h);'),
+			model = modelCtrl.collectionOfPageModels.get(result.scopeTree).intraPageModels[0],
+			ids = converter.dotNodeIds(model),
+			nodes = model.graph[2];
+		nodes.forEach(function (node, index) {
+			ids.get(node).should.eql('n' + (nodes[0].cfgId + nodes.indexOf(node)));
+			index.should.be.aboveOrEqual(nodes.indexOf(node));
+		});
+	});
+});

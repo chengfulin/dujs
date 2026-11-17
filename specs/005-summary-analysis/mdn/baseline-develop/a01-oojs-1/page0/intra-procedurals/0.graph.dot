@@ -1,0 +1,9 @@
+digraph CFG {
+node [shape="box"]
+label = "page"
+n3 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n4 [label="2"]
+n5 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n3 -> n4 []
+n4 -> n5 []
+}

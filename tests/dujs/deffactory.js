@@ -3,6 +3,7 @@
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
  */
 var factoryDef = require('../../lib/dujs/deffactory'),
+    Def = require('../../lib/dujs/def'),
     factoryFlowNode = require('../../lib/esgraph/flownodefactory');
 require('should');
 
@@ -67,6 +68,16 @@ describe('DefFactory', function () {
 				factoryDef.createHTMLDOMDef(node, [0,1])._testonly_._type.should.eql('htmlDom');
 				factoryDef.createObjectDef(node, [0,1])._testonly_._type.should.eql('object');
 				factoryDef.createLocalStorageDef(node, [0,1])._testonly_._type.should.eql('localStorage');
+			});
+		});
+
+		/// feature 005 US1: the sentinel definition at the entry of a summary graph (data-model §2)
+		describe('createSentinelDef', function () {
+			it('should create a sentinel type of Def at the node with the range [0, 0]', function () {
+				var def = factoryDef.createSentinelDef(node);
+				def.type.should.eql(Def.SENTINEL_TYPE);
+				(def.fromNode === node).should.be.true();
+				def.range.toArray().should.eql([0, 0]);
 			});
 		});
 	});

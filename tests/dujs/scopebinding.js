@@ -416,6 +416,46 @@ describe('PageBinding (scopebinding)', function () {
 		});
 	});
 
+	/// feature 005 US2 (D2, FR-005, research R8): the kinds of bindings a call in a function may be relaxed to
+	describe('isRelaxedCallee (feature 005 D2)', function () {
+		var code = [
+			'function fd() {}',
+			'{ function fb() {} }',
+			'let fl = function () {};',
+			'const fc = () => {};',
+			'var ne = function nf() {};',
+			'var fv = function () {};',
+			'function fp(p1) { try { p1(); } catch (ce) { ce(); } }',
+			'class C1 {}'
+		].join('\n');
+
+		it('should be true for function (also in a block), let, const and the name of a named function expression', function () {
+			var page = setUp(code);
+			['fd', 'fb', 'fl', 'fc', 'nf'].forEach(function (name) {
+				var defined = page.binding.defVarsOf(idOf(page.ast, name));
+				defined.length.should.eql(1);
+				page.binding.isRelaxedCallee(defined[0]).should.eql(true, name);
+			});
+		});
+
+		it('should be false for var, parameter, catch parameter and class', function () {
+			var page = setUp(code);
+			['ne', 'fv', 'p1', 'ce', 'C1'].forEach(function (name) {
+				var defined = page.binding.defVarsOf(idOf(page.ast, name));
+				defined.length.should.be.above(0);
+				defined.forEach(function (aVar) {
+					page.binding.isRelaxedCallee(aVar).should.eql(false, name);
+				});
+			});
+		});
+
+		it('should be false for a global and an implicit global', function () {
+			var page = setUp('ug = 1;\ngr();');
+			page.binding.isRelaxedCallee(page.binding.defVarsOf(idOf(page.ast, 'ug'))[0]).should.eql(false);
+			page.binding.isRelaxedCallee(page.binding.useVarsOf(idOf(page.ast, 'gr'))[0]).should.eql(false);
+		});
+	});
+
 	describe('built-in objects (research R9, F9)', function () {
 		it('should map an undeclared fixed-list name to the built-in Var', function () {
 			var page = setUp('console.log(1);');
@@ -512,34 +552,6 @@ describe('PageBinding (scopebinding)', function () {
 			var outer = page.binding.defVarsOf(idOf(page.ast, 'x', 0))[0],
 				f = dujsScopeNamed(page.tree, 'f');
 			page.binding.isVisible(outer, f).should.eql(page.binding.isVisible(outer, f));
-		});
-	});
-
-	describe('isOnFunctionChain (research R6a, Q3)', function () {
-		it('should keep Vars visible from the function scope and drop block and catch bindings', function () {
-			var page = setUp([
-				'var x = 0;',
-				'function f(p) {',
-				'  if (x) { let x = 1; console.log(x); }',
-				'  try {} catch (e) { e; }',
-				'  return p;',
-				'}',
-				'f();',
-				'u = 1;'
-			].join('\n'));
-			var f = dujsScopeNamed(page.tree, 'f');
-			var blockLet = page.binding.defVarsOf(idOf(page.ast, 'x', 1, 3))[0],
-				catchParameter = page.binding.defVarsOf(idOf(page.ast, 'e', 0))[0],
-				globalX = page.binding.defVarsOf(idOf(page.ast, 'x', 0, 1))[0],
-				p = page.binding.defVarsOf(idOf(page.ast, 'p', 0))[0],
-				u = page.binding.defVarsOf(idOf(page.ast, 'u', 0))[0];
-			page.binding.isOnFunctionChain(blockLet, f).should.eql(false);
-			page.binding.isOnFunctionChain(catchParameter, f).should.eql(false);
-			page.binding.isOnFunctionChain(globalX, f).should.eql(true);
-			page.binding.isOnFunctionChain(p, f).should.eql(true);
-			page.binding.isOnFunctionChain(page.binding.builtInVariableOf('console'), f).should.eql(true);
-			page.binding.isOnFunctionChain(u, f).should.eql(true);
-			page.binding.isOnFunctionChain(globalX, page.tree.root).should.eql(true);
 		});
 	});
 

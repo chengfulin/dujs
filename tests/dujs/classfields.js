@@ -227,14 +227,13 @@ describe('Class field initializers and static blocks', function () {
 		// US4 #3: the static block reads the class name defined at the class node
 		it('US4-3 should pair the class name with its use in a static block', function () {
 			var result = analyzeProbe('us4-3');
-			result.intraPage().should.eql(['Q: L1 -> L3', 'Q: L1 -> entry', 'console: entry -> L3',
-				'console: entry -> entry']);
+			result.intraPage().should.eql(['Q: L1 -> L3', 'console: entry -> L3']);
 		});
 
 		// US4 #4: a static field initializer reads the class name
 		it('US4-4 should pair the class name with its use in a static field', function () {
 			var result = analyzeProbe('us4-4');
-			result.intraPage().should.eql(['Q: L2 -> L3', 'Q: L2 -> L5', 'Q: L2 -> entry']);
+			result.intraPage().should.eql(['Q: L2 -> L3', 'Q: L2 -> L5']);
 		});
 
 		// edge case: the variable of a class expression is not defined yet when

@@ -1,0 +1,150 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interPage",
+  "mainScope": "$DOMAIN",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 9,
+      "callee": "$DOMAIN.$PAGE_0.addTo.scale",
+      "callNode": "n91",
+      "entry": "n92",
+      "exit": "n94",
+      "callReturn": "n95",
+      "exceptionalReturn": "n97",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 15,
+      "callee": "$DOMAIN.$PAGE_0.addTo",
+      "callNode": "n88",
+      "entry": "n89",
+      "exit": "n97",
+      "callReturn": "n98",
+      "exceptionalReturn": "n109",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 16,
+      "callee": "$DOMAIN.$PAGE_0.isReady",
+      "callNode": "n99",
+      "entry": "n100",
+      "exit": "n102",
+      "callReturn": "n103",
+      "exceptionalReturn": "n109",
+      "back": false,
+      "beforeDecision": true
+    },
+    {
+      "id": "c4",
+      "seq": 4,
+      "callSiteLine": 23,
+      "callee": "$DOMAIN.$PAGE_0.onClick.log",
+      "callNode": "n112",
+      "entry": "n113",
+      "exit": "n115",
+      "callReturn": "n116",
+      "exceptionalReturn": "n117",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [
+    {
+      "loop": "n109",
+      "loopReturn": "n118",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.onClick",
+          "entry": "n111",
+          "exit": "n117"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.onLoad",
+          "entry": "n119",
+          "exit": "n121"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.addTo": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "total@n90"
+      ],
+      "mustKill": [
+        "total"
+      ],
+      "upwardExposed": [
+        "total"
+      ],
+      "exceptional": [
+        "total@n90"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.addTo.scale": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "value"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.isReady": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "limit",
+        "total"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.onClick": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "console",
+        "total"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.onClick.log": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "console",
+        "total"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.onLoad": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "limit@n120"
+      ],
+      "mustKill": [
+        "limit"
+      ],
+      "upwardExposed": [],
+      "exceptional": []
+    }
+  }
+}
