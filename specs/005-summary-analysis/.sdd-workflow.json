@@ -85,11 +85,12 @@
       "polish": {
         "reviewed": true,
         "validated": true,
-        "signoff_pending": [
+        "signed_off": [
           "T099",
           "T100"
         ]
-      }
+      },
+      "done": true
     }
   },
   "brief": {
