@@ -75,6 +75,11 @@
           "validated": true,
           "reviewed": true,
           "committed": true
+        },
+        "US2": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
         }
       }
     }

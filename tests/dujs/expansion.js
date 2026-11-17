@@ -20,7 +20,11 @@
  * returning to the call of L5); a3 s: L3 -> L10, s: L6 -> L10 (exceptions of
  * outer and inner returning to the call of L9); r8 n: L1 -> L6 (h() of L4
  * must-KILLs n by reg()), n: L2 -> L6 (intra-page and inter-page: the handler h
- * returning to the call of L4). The probes n1, n1b and n1c are not asserted here
+ * returning to the call of L4). User Story 2 of feature 005 (D2: a call f() in
+ * a function is linked to the only definition of f on the page) added the
+ * inter-procedural models rooted at u of r6a and r6b (g() and k() in u), the
+ * callee g of f in r6c (g() of L8) and its pair a: L6 -> L3 (golden-diff.md
+ * US2 "unit test expectations"). The probes n1, n1b and n1c are not asserted here
  * (their pairs are recorded in specs/003-hierarchical-models/probes/n1-leak-baseline.md).
  */
 require('should');
@@ -359,6 +363,13 @@ describe('pre-refactor characterization (probes)', function () {
 						'onClick: entry -> L13',
 						'window: entry -> L13'
 					]
+				},
+				{
+					scopes: [
+						'$DOMAIN.$PAGE_0.u',
+						'$DOMAIN.$PAGE_0.g'
+					],
+					pairs: []
 				}
 			],
 			intraPage: [
@@ -389,6 +400,16 @@ describe('pre-refactor characterization (probes)', function () {
 						'g: entry -> L12',
 						'k: entry -> L14'
 					]
+				},
+				{
+					scopes: [
+						'$DOMAIN.$PAGE_0.u',
+						'$DOMAIN.$PAGE_0.g',
+						'$DOMAIN.$PAGE_0.k'
+					],
+					pairs: [
+						'a: L3 -> L6'
+					]
 				}
 			],
 			intraPage: [
@@ -412,9 +433,11 @@ describe('pre-refactor characterization (probes)', function () {
 				{
 					scopes: [
 						'$DOMAIN.$PAGE_0.f',
-						'$DOMAIN.$PAGE_0.f.h'
+						'$DOMAIN.$PAGE_0.f.h',
+						'$DOMAIN.$PAGE_0.g'
 					],
 					pairs: [
+						'a: L6 -> L3',
 						'h: entry -> L7'
 					]
 				},
@@ -427,6 +450,7 @@ describe('pre-refactor characterization (probes)', function () {
 					],
 					pairs: [
 						'a: L11 -> L3',
+						'a: L6 -> L3',
 						'f: entry -> L10',
 						'g: entry -> L12',
 						'g: entry -> L8',
@@ -436,6 +460,7 @@ describe('pre-refactor characterization (probes)', function () {
 			],
 			intraPage: [
 				'a: L11 -> L3',
+				'a: L6 -> L3',
 				'f: entry -> L10',
 				'g: entry -> L12',
 				'g: entry -> L8',
@@ -446,6 +471,7 @@ describe('pre-refactor characterization (probes)', function () {
 			],
 			interPage: [
 				'a: L11 -> L3',
+				'a: L6 -> L3',
 				'f: entry -> L10',
 				'g: entry -> L12',
 				'g: entry -> L8',

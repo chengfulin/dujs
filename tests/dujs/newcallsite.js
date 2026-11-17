@@ -10,7 +10,8 @@
  * is resolved when its definitions reaching the call-site are at least one
  * and all refer to the same function or class (strict rule, also for f());
  * when none reaches, a class (not a function) is resolved from the only
- * definition of the variable on the page (class relaxation). The expected
+ * definition of the variable on the page (class relaxation); since feature
+ * 005 (D2) a function too, for f() (not new F()) in a function. The expected
  * pairs are those of contracts/acceptance.md "US2", "FR-017／FR-018" and
  * "Edge cases" (intra-page pairs and inter-procedural models).
  */
@@ -451,7 +452,9 @@ describe('callResolver (research R2, FR-018)', function () {
 			calleesAt(result, PAGE + '.g', 5).should.eql([]);
 		});
 
-		it('should not relax for a function declaration (H3)', function () {
+		/// 004 H3 replaced by feature 005 D2 for F(): a call in a function is relaxed to the function declaration,
+		/// new F() is not (golden-diff.md of feature 005, US2 "unit test expectations")
+		it('should relax F() but not new F() for a function declaration (005 D2)', function () {
 			var result = analyze([
 				'function F() {}',
 				'function g() {',
@@ -460,7 +463,7 @@ describe('callResolver (research R2, FR-018)', function () {
 				'}'
 			].join('\n'));
 			calleesAt(result, PAGE + '.g', 3).should.eql([]);
-			calleesAt(result, PAGE + '.g', 4).should.eql([]);
+			calleesAt(result, PAGE + '.g', 4).should.eql([PAGE + '.F']);
 		});
 
 		it('should not relax when a definition of A reaches the call-site', function () {

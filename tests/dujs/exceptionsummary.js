@@ -5,7 +5,8 @@
  * the callee exceptionally (the fourth item of its summary, exceptional) go to
  * the exception target of the call (applyExceptional), along the chain of
  * calls. US3-5 needs the relaxed callees of User Story 2 (D2) and is added
- * with it (T085).
+ * with it (T085); it is asserted on the intra-page model only (the handler h
+ * is not called by the page).
  *
  * The programs are the probes of tests/dujs/cases/probes005/. The pairs are
  * asserted on the inter-procedural model of the page (when the page has one)
@@ -17,6 +18,8 @@ var fs = require('fs'),
 	path = require('path');
 require('should');
 var modelCtrl = require('../../lib/dujs/modelctrl'),
+	callResolver = require('../../lib/dujs/callresolver'),
+	FlowNode = require('../../lib/esgraph/flownode'),
 	analyze = require('../helpers/analyze');
 
 var PROBES = path.join(__dirname, 'cases', 'probes005');
@@ -87,6 +90,31 @@ describe('exceptions leaving a callee (feature 005 US3)', function () {
 	it('US3-4: a call in a finally block kills the definitions before it on both paths (m2-mdn-finally)', function () {
 		shouldHavePairs('m2-mdn-finally.js', ['opened: L3 -> L16', 'opened: L9 -> L22'],
 			['opened: L1 -> L16', 'opened: L1 -> L22']);
+	});
+
+	/// P15 (D2): s() in t is linked to s; x of L3 (L4 throwing) leaves s, then t, then the page without a try,
+	/// enters the LOOP and reaches the handler h; x of L9 by the normal return, x of L1 by the page throwing first
+	it('US3-5: an exception along the chain of calls enters the LOOP (g4-chain-loop)', function () {
+		var result = analyze(fs.readFileSync(path.join(PROBES, 'g4-chain-loop.js'), 'utf8')),
+			pageModels = modelCtrl.collectionOfPageModels.get(result.scopeTree),
+			callNode = null;
+		pageModels.intraProceduralModels.forEach(function (model) {
+			if (model.mainlyRelatedScope.name.split('.').pop() !== 't') {
+				return;
+			}
+			model.graph[2].forEach(function (node) {
+				if (node.type !== FlowNode.ENTRY_NODE_TYPE && node.type !== FlowNode.EXIT_NODE_TYPE && node.line === 8) {
+					callNode = callNode || node;
+				}
+			});
+		});
+		callResolver.calleeScopesOf(callNode, result.scopeTree).map(function (scope) {
+			return scope.name.split('.').pop();
+		}).should.eql(['s']);
+		var pairs = result.intraPage();
+		['x: L3 -> L12', 'x: L9 -> L12', 'x: L1 -> L12'].forEach(function (pair) {
+			pairs.should.containEql(pair, 'g4-chain-loop.js should have ' + pair);
+		});
 	});
 
 	/// P17: the rethrow of the catch body goes through the finally block before it leaves f

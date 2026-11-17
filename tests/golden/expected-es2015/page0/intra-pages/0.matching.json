@@ -2,7 +2,21 @@
   "format": "dujs-matching/1",
   "level": "intraPage",
   "mainScope": "$DOMAIN.$PAGE_0",
-  "calls": [],
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 40,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
+      "callNode": "n50",
+      "entry": "n51",
+      "exit": "n58",
+      "callReturn": "n59",
+      "exceptionalReturn": "n61",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
   "loops": [
     {
       "loop": "n37",
@@ -16,22 +30,47 @@
         {
           "scope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4",
           "entry": "n48",
-          "exit": "n52"
+          "exit": "n61"
         }
       ]
     }
   ],
   "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "state@n55"
+      ],
+      "mustKill": [],
+      "upwardExposed": [
+        "list",
+        "nextId",
+        "saveTodos",
+        "state"
+      ],
+      "exceptional": [
+        "state@n55"
+      ]
+    },
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4": {
       "normalReturn": true,
       "conservative": false,
-      "gen": [],
+      "gen": [
+        "state@n55"
+      ],
       "mustKill": [],
       "upwardExposed": [
         "addTodo",
-        "document"
+        "document",
+        "list",
+        "nextId",
+        "saveTodos",
+        "state"
       ],
-      "exceptional": []
+      "exceptional": [
+        "state@n55"
+      ]
     },
     "$DOMAIN.$PAGE_0.init": {
       "normalReturn": true,

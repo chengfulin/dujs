@@ -134,8 +134,9 @@ describe('Bypass rule of calls (FR-016)', function () {
 			]);
 		});
 
-		/// control: f() inside g is not connected (H3), the pairs are unchanged
-		it('byp-2 should not change the pairs when the call is not connected', function () {
+		/// f() inside g was not connected (004 H3); since feature 005 D2 it is connected to the only definition of f,
+		/// and the pairs are unchanged (x of f is not read after the call)
+		it('byp-2 should keep the pairs when f() in g is connected (005 D2)', function () {
 			analyzeProbe(PROBES, 'byp-2').intraPage().should.eql([
 				'f: entry -> L7',
 				'g: entry -> L10',

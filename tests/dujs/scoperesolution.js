@@ -3,7 +3,9 @@
  * User Story 2, D7, research R7, R8; contracts/acceptance.md US2-1...5): the
  * name of a named function or class expression is defined where the
  * expression is evaluated and only visible in the expression; a recursive
- * call through the name of a function expression is not connected; the inner
+ * call through the name of a function expression is connected since feature
+ * 005 (D2 replaces D7 of 006 for it: golden-diff.md of feature 005, US2
+ * "unit test expectations"); the inner
  * name of a class declaration is another binding than the outer one; a
  * parameter default reads the variable of the outer scope; shadowing
  * declarations keep the results of develop.
@@ -121,8 +123,9 @@ describe('Scope resolution (feature 006, US2)', function () {
 		checkPairs(result.intraPage(), ['P: L1 -> L2', 'Q: L1 -> L4'], []);
 	});
 
-	/// US2-2: a recursive call through the name of a function expression is not connected (D7)
-	it('should not connect the recursive call through the name of a function expression', function () {
+	/// US2-2: a recursive call through the name of a function expression; not connected by D7 of 006,
+	/// connected to the function itself by D2 of feature 005 (the name has one definition, at L1)
+	it('should connect the recursive call through the name of a function expression (005 D2)', function () {
 		var result = analyze([
 				'var h = function fact(n) {',
 				'  fact(n - 1);',
@@ -133,13 +136,16 @@ describe('Scope resolution (feature 006, US2)', function () {
 			models = interProceduralModelsOf(result);
 		/// lines: L1 var h = function fact(n) {, L2 fact(n - 1);, L3 return n;, L4 };, L5 h(1);
 		result.intraPage().should.containEql('fact: L1 -> L2');
-		models.length.should.be.above(0);
+		models.map(function (model) {
+			return model.relatedScopes.map(String);
+		}).should.eql([['$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0'], ['$DOMAIN.$PAGE_0', '$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0']]);
+		analyze.pairsOfModel(models[1]).should.containEql('fact: L1 -> L2');
 		models.forEach(function (model) {
-			analyze.pairsOfModel(model).should.containEql('fact: L1 -> L2');
-			model.relatedScopes.map(String).should.eql(['$DOMAIN.$PAGE_0', '$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0']);
 			model.graph[2].filter(function (node) {
-				return node.line === 2 && [].concat(node[FlowNode.CALL_CONNECTION_TYPE] || []).length > 0;
-			}).should.eql([]);
+				return node.line === 2 && [].concat(node[FlowNode.CALL_CONNECTION_TYPE] || []).some(function (target) {
+					return target.scope === models[0].mainlyRelatedScope;
+				});
+			}).length.should.be.above(0);
 		});
 	});
 
