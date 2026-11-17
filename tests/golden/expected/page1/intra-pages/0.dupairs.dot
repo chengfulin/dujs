@@ -17,6 +17,7 @@ struct1 [label=<
 <tr><td>count</td><td></td><td></td><td></td></tr>
 <tr><td>onLoad</td><td>(entry_a,15)</td><td></td><td></td></tr>
 <tr><td>onClear</td><td>(entry_a,16)</td><td></td><td></td></tr>
+<tr><td>JSON</td><td>(entry_a,entry_b)</td><td>(entry_a,6)</td><td></td></tr>
 </TABLE>
 >];
 }

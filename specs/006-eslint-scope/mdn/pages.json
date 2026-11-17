@@ -1,0 +1,165 @@
+{
+	"a01-oojs-1": [
+		[
+			"a01-oojs-1.js"
+		]
+	],
+	"a01b-oojs-1-solution": [
+		[
+			"a01b-oojs-1-solution.js"
+		]
+	],
+	"a02-oojs-2": [
+		[
+			"a02-oojs-2.js"
+		]
+	],
+	"a02b-oojs-2-solution": [
+		[
+			"a02b-oojs-2-solution.js"
+		]
+	],
+	"a03-bouncing-main": [
+		[
+			"a03-bouncing-main.js"
+		]
+	],
+	"a04-bouncing-main-finished": [
+		[
+			"a04-bouncing-main-finished.js"
+		]
+	],
+	"a05-assessment-main": [
+		[
+			"a05-assessment-main.js"
+		]
+	],
+	"a06-classes-snippets": [
+		[
+			"a06-classes-snippets.js"
+		]
+	],
+	"a07-prototypes-person": [
+		[
+			"a07-prototypes-person.js"
+		]
+	],
+	"a08-prototype-chain-dowhile": [
+		[
+			"a08-prototype-chain-dowhile.js"
+		]
+	],
+	"s01-math-3-finish": [
+		[
+			"s01-math-3-finish.js"
+		]
+	],
+	"s02-conditionals-3-finish": [
+		[
+			"s02-conditionals-3-finish.js"
+		]
+	],
+	"s03-loops-2-finish": [
+		[
+			"s03-loops-2-finish.js"
+		]
+	],
+	"s04a-while-loop-cats": [
+		[
+			"s04a-while-loop-cats.js"
+		]
+	],
+	"s04b-do-while-loop-cats": [
+		[
+			"s04b-do-while-loop-cats.js"
+		]
+	],
+	"s04c-for-loop-cats": [
+		[
+			"s04c-for-loop-cats.js"
+		]
+	],
+	"s05-switch-example": [
+		[
+			"s05-switch-example.js"
+		]
+	],
+	"s06a-exiting-loops-break": [
+		[
+			"s06a-exiting-loops-break.js"
+		]
+	],
+	"s06b-silly-story-finish": [
+		[
+			"s06b-silly-story-finish.js"
+		]
+	],
+	"s07-gallery-finish": [
+		[
+			"s07-gallery-finish.js"
+		]
+	],
+	"s08-number-guessing-game": [
+		[
+			"s08-number-guessing-game.js"
+		]
+	],
+	"s09": [
+		[
+			"s09-first.js"
+		],
+		[
+			"s09-second.js"
+		]
+	],
+	"s10-allowance-updater": [
+		[
+			"s10-allowance-updater.js"
+		]
+	],
+	"s11-calculating-squares": [
+		[
+			"s11-calculating-squares.js"
+		]
+	],
+	"s12-conditionals-2-finish": [
+		[
+			"s12-conditionals-2-finish.js"
+		]
+	],
+	"s13-functions-1-finish": [
+		[
+			"s13-functions-1-finish.js"
+		]
+	],
+	"s14-functions-3": [
+		[
+			"s14-functions-3.js"
+		]
+	],
+	"s15-math-1-finish": [
+		[
+			"s15-math-1-finish.js"
+		]
+	],
+	"s16-objects-2-finish": [
+		[
+			"s16-objects-2-finish.js"
+		]
+	],
+	"s17-string-methods-3": [
+		[
+			"s17-string-methods-3.js"
+		]
+	],
+	"s18-target-currenttarget": [
+		[
+			"s18-target-currenttarget.js"
+		]
+	],
+	"x01-bouncing-cycle": [
+		[
+			"x01-bouncing-cycle.js"
+		]
+	]
+}

@@ -1,0 +1,4 @@
+## scopes
+$DOMAIN.$PAGE_0
+## intra $DOMAIN.$PAGE_0
+## intra-page (nodes 5)

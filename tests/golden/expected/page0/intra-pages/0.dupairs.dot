@@ -24,6 +24,7 @@ struct1 [label=<
 <tr><td>onLoad</td><td>(entry_a,78)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>onAdd</td><td>(entry_a,79)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>onModeChange</td><td>(entry_a,80)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>JSON</td><td>(entry_a,entry_c)</td><td>(entry_a,71)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 </TABLE>
 >];
 }

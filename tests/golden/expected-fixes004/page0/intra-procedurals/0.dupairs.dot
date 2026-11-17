@@ -23,6 +23,7 @@ struct1 [label=<
 <tr><td>log</td><td>(entry,42:T)</td><td>(entry,42:F)</td><td></td><td></td></tr>
 <tr><td>h</td><td>(entry,51)</td><td></td><td></td><td></td></tr>
 <tr><td>Counter</td><td>(11,36)</td><td>(11,37)</td><td>(11,39)</td><td></td></tr>
+<tr><td>Counter</td><td></td><td></td><td></td><td></td></tr>
 </TABLE>
 >];
 }

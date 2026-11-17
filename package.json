@@ -21,6 +21,7 @@
     "doc": "jsdoc lib/namespace.js lib/dujs lib/esgraph/flownode.js lib/esgraph/flownodefactory.js lib/esgraph/branchlabel.js -d doc"
   },
   "dependencies": {
+    "eslint-scope": "^9.1.2",
     "espree": "^11.2.0",
     "walkes": "^0.2.1"
   },

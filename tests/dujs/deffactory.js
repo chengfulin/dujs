@@ -55,5 +55,19 @@ describe('DefFactory', function () {
 				def._testonly_._type.should.eql('localStorage');
 			});
 		});
+
+		/// feature 006 US3: the definition of a global read without declaration
+		describe('createGlobalDef', function () {
+			it('should support to create global type of Def', function () {
+				var def = factoryDef.createGlobalDef(node, [0,1]);
+				def._testonly_._type.should.eql('global');
+			});
+
+			it('should keep the types of the definitions of the fixed list and localStorage', function () {
+				factoryDef.createHTMLDOMDef(node, [0,1])._testonly_._type.should.eql('htmlDom');
+				factoryDef.createObjectDef(node, [0,1])._testonly_._type.should.eql('object');
+				factoryDef.createLocalStorageDef(node, [0,1])._testonly_._type.should.eql('localStorage');
+			});
+		});
 	});
 });

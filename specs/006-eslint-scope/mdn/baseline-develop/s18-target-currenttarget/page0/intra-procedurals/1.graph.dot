@@ -1,0 +1,16 @@
+digraph CFG {
+node [shape="box"]
+label = "function $DOMAIN.$PAGE_0.handleClick"
+n43 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n44 [label="4"]
+n45 [label="5"]
+n46 [label="6"]
+n47 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n43 -> n44 []
+n44 -> n45 []
+n44 -> n47 [color="red", label="exception"]
+n45 -> n46 []
+n45 -> n47 [color="red", label="exception"]
+n46 -> n47 []
+n46 -> n47 [color="red", label="exception"]
+}

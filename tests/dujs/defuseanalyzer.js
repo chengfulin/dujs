@@ -54,12 +54,8 @@ describe('DefUseAnalyzer', function () {
                     {name: 'bi_5', def: 'htmlDom'},
                     {name: 'bi_6', def: 'localStorage'}
                 ];
-                scope._testonly_._builtInObjectVars.set('bi_1', varFactory.create('bi_1'));
-                scope._testonly_._builtInObjectVars.set('bi_2', varFactory.create('bi_2'));
-                scope._testonly_._builtInObjectVars.set('bi_3', varFactory.create('bi_3'));
-                scope._testonly_._builtInObjectVars.set('bi_4', varFactory.create('bi_4'));
-                scope._testonly_._builtInObjectVars.set('bi_5', varFactory.create('bi_5'));
-                scope._testonly_._builtInObjectVars.set('bi_6', varFactory.create('bi_6'));
+                /// feature 006: the Vars of the built-in objects are created from the descriptors
+                scope.setBuiltInObjectVariables();
             });
 
             it('should set the GEN set of built-in object variables well', function () {
@@ -80,9 +76,9 @@ describe('DefUseAnalyzer', function () {
 
         describe('analyzeDefaultValueOfLocalVariables', function () {
             beforeEach(function () {
-                scope._testonly_._vars.set('loc_1', varFactory.create('loc_1'));
-                scope._testonly_._vars.set('loc_2', varFactory.create('loc_2'));
-                scope._testonly_._vars.set('loc_3', varFactory.create('loc_3'));
+                scope.addVariable(varFactory.create('loc_1'));
+                scope.addVariable(varFactory.create('loc_2'));
+                scope.addVariable(varFactory.create('loc_3'));
             });
 
             it('should set the GEN set of the default definition of local variables well', function () {
@@ -194,9 +190,9 @@ describe('DefUseAnalyzer', function () {
                 node2.scope = childScope1;
                 node3.scope = descendantScope;
 
-                rootScope._testonly_._vars.set('g', var1);
-                childScope1._testonly_._vars.set('a', var2);
-                descendantScope._testonly_._vars.set('c', var3);
+                rootScope.addVariable(var1);
+                childScope1.addVariable(var2);
+                descendantScope.addVariable(var3);
 
                 vardefs = new Set();
                 vardefs.add(vardefFactory.create(var1, defFactory.createLiteralDef(node1, [0,0])));

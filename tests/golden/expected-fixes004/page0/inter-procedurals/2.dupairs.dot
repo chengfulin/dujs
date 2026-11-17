@@ -23,7 +23,8 @@ struct1 [label=<
 <tr><td>log</td><td>(entry_a,call_k)</td><td>(entry_a,call_n)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>h</td><td>(entry_a,call_l)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>v</td><td>(entry_b,7)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Counter</td><td>(call_b,entry_c)</td><td>(call_b,12)</td><td>(call_b,entry_d)</td><td>(call_b,14)</td><td>(call_b,call_d)</td><td>(call_b,37)</td><td>(call_b,call_j)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Counter</td><td>(call_b,call_d)</td><td>(call_b,37)</td><td>(call_b,call_j)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Counter</td><td>(call_b,entry_c)</td><td>(call_b,12)</td><td>(call_b,entry_d)</td><td>(call_b,14)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>n</td><td>(entry_g,21)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>t</td><td>(21,23)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>value</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>

@@ -45,7 +45,7 @@ describe('DefUseAnalysisExecutor', function () {
                     scopeTree.scopes.forEach(function (scope, scopeIndex) {
                         scopeNames.push(scope.toString());
                         var scopeLocals = [];
-                        scope.vars.forEach(function (variable) {
+                        scope.variables.forEach(function (variable) {
                             scopeLocals.push(variable.toString());
                         });
                         scopeLocals.should.containDeep(expected[index].scopeLocalVars[scopeIndex]);

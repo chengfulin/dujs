@@ -249,14 +249,15 @@ describe('Class field initializers and static blocks', function () {
 			pairsOf(result.intraPage(), 'B').should.not.containEql('B: L1 -> entry');
 		});
 
-		// edge case: the inner name of a named class expression is not a variable (Fable A7)
-		it('should not pair the inner name of a named class expression in its static members', function () {
+		// edge case: the inner name of a named class expression is bound before its static members run
+		// (feature 006 US2-1, Clarifications Session 2026-11-17; was not a variable in 004, Fable A7)
+		it('should pair the inner name of a named class expression in its static members', function () {
 			var result = analyze([
 				'var B = class Q {',
 				'  static s = Q;',
 				'};'
 			].join('\n'));
-			pairsOf(result.intraPage(), 'Q').should.eql([]);
+			pairsOf(result.intraPage(), 'Q').should.containEql('Q: L1 -> L2');
 			pairsOf(result.intraPage(), 'B').should.eql([]);
 		});
 	});
