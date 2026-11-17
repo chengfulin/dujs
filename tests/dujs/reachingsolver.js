@@ -136,6 +136,35 @@ describe('reachingsolver', function () {
 			var solved = solver.solve(graphOf([entry, exit, p, h]), optionsOf(new Map([[entry, [d0]], [p, [d1, dy]]])));
 			shouldHaveExactly(solved.results.get(h).in, [d0, d1, dy]);
 		});
+
+		/// feature 005 US6 (FR-013, research R6): a finally edge leaves a finallyExit to a pending target
+		it('should carry OUT of the source by the finally edge', function () {
+			var solved = solveWithEdge(FlowNode.FINALLY_CONNECTION_TYPE);
+			shouldHaveExactly(solved.result.in, [solved.d1]);
+		});
+
+		/// a finallyExit has no GEN nor USE: what reaches it is the OUT of the end of the finally block,
+		/// which both its exception edge and its finally edges carry on
+		it('should carry the definitions of the end of the finally block by both edges of a finallyExit', function () {
+			var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
+				exit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
+				end = new FlowNode(),
+				finallyExit = new FlowNode(FlowNode.FINALLY_EXIT_NODE_TYPE),
+				handler = new FlowNode(),
+				target = new FlowNode(),
+				d0 = vardefOf(x, entry),
+				d1 = vardefOf(x, end);
+			entry.connect(end);
+			end.connect(finallyExit);
+			finallyExit.connect(handler, FlowNode.EXCEPTION_CONNECTION_TYPE);
+			finallyExit.connect(target, FlowNode.FINALLY_CONNECTION_TYPE);
+			handler.connect(exit);
+			target.connect(exit);
+			var solved = solver.solve(graphOf([entry, exit, end, finallyExit, handler, target]),
+				optionsOf(new Map([[entry, [d0]], [end, [d1]]])));
+			shouldHaveExactly(solved.results.get(handler).in, [d1]);
+			shouldHaveExactly(solved.results.get(target).in, [d1]);
+		});
 	});
 
 	describe('compatible mode (no calls nor loops)', function () {
@@ -435,6 +464,29 @@ describe('reachingsolver', function () {
 			shouldHaveExactly(solved.exitArrivals.exceptional, [d0]);
 			shouldHaveExactly(solved.exitArrivals.normal, [d1, d2]);
 			shouldHaveExactly(solved.results.get(exit).in, [d0, d1, d2]);
+		});
+
+		/// feature 005 US6 (data-model §6): the exception edge of a finallyExit to the exit is an
+		/// exceptional arrival, a finally edge (the continuation of a return) a normal one
+		it('should separate the arrivals of a finallyExit by the type of its edges to the exit', function () {
+			var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
+				exit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
+				thrower = new FlowNode(),
+				returner = new FlowNode(),
+				throwExit = new FlowNode(FlowNode.FINALLY_EXIT_NODE_TYPE),
+				returnExit = new FlowNode(FlowNode.FINALLY_EXIT_NODE_TYPE),
+				d1 = vardefOf(x, thrower),
+				d2 = vardefOf(y, returner);
+			entry.connect(thrower, FlowNode.TRUE_BRANCH_CONNECTION_TYPE);
+			entry.connect(returner, FlowNode.FALSE_BRANCH_CONNECTION_TYPE);
+			thrower.connect(throwExit);
+			throwExit.connect(exit, FlowNode.EXCEPTION_CONNECTION_TYPE);
+			returner.connect(returnExit);
+			returnExit.connect(exit, FlowNode.FINALLY_CONNECTION_TYPE);
+			var solved = solver.solve(graphOf([entry, exit, thrower, returner, throwExit, returnExit]),
+				optionsOf(new Map([[thrower, [d1]], [returner, [d2]]])));
+			shouldHaveExactly(solved.exitArrivals.exceptional, [d1]);
+			shouldHaveExactly(solved.exitArrivals.normal, [d2]);
 		});
 	});
 

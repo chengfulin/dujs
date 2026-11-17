@@ -1070,5 +1070,53 @@ describe('FlowNode', function () {
         it('should return an empty Map for no originals', function () {
             FlowNode.copyNodes([]).size.should.eql(0);
         });
+
+        /// feature 005 US6 (FR-013, data-model §7): finally is a multi-target connection type
+        it('should keep the finally edges to several targets', function () {
+            var finallyExit = new FlowNode(FlowNode.FINALLY_EXIT_NODE_TYPE);
+            finallyExit.connect(body, FlowNode.FINALLY_CONNECTION_TYPE);
+            finallyExit.connect(other, FlowNode.FINALLY_CONNECTION_TYPE);
+            finallyExit.connect(outside, FlowNode.FINALLY_CONNECTION_TYPE);
+            var map = FlowNode.copyNodes(originals.concat([finallyExit]));
+            var copy = map.get(finallyExit);
+            copy.type.should.eql('finallyExit');
+            sameNodes(copy.finally, [map.get(body), map.get(other)]);
+            sameNodes(finallyExit.finally, [body, other, outside]);
+        });
+    });
+
+    /// feature 005 US6 (FR-013, data-model §7)
+    describe('finallyExit node type and finally connection type', function () {
+        it('should define the finallyExit node type', function () {
+            FlowNode.FINALLY_EXIT_NODE_TYPE.should.eql('finallyExit');
+            FlowNode.TYPES.should.containEql('finallyExit');
+            FlowNode.isValidNodeType('finallyExit').should.eql(true);
+        });
+
+        it('should define the finally connection type as a multi-target connection type', function () {
+            FlowNode.FINALLY_CONNECTION_TYPE.should.eql('finally');
+            FlowNode.CONNECTION_TYPES.should.containEql('finally');
+            FlowNode.MULTI_CONNECTION_TYPE.should.containEql('finally');
+        });
+
+        it('should label a finallyExit node by its type and start without finally edges', function () {
+            var node = new FlowNode(FlowNode.FINALLY_EXIT_NODE_TYPE);
+            node.label.should.eql('finallyExit');
+            node.finally.should.eql([]);
+        });
+
+        it('should connect and disconnect finally edges', function () {
+            var node = new FlowNode(FlowNode.FINALLY_EXIT_NODE_TYPE),
+                first = new FlowNode(),
+                second = new FlowNode();
+            node.connect(first, FlowNode.FINALLY_CONNECTION_TYPE)
+                .connect(second, FlowNode.FINALLY_CONNECTION_TYPE);
+            node.finally.length.should.eql(2);
+            node.isConnectedTo(second).should.eql(true);
+            node.disconnect(first);
+            node.finally.length.should.eql(1);
+            node.finally[0].should.equal(second);
+            first.prev.length.should.eql(0);
+        });
     });
 });

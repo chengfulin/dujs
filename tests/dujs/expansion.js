@@ -1469,3 +1469,46 @@ describe('expansion by the builder', function () {
 		shouldChain(model, edges);
 	});
 });
+
+/// feature 005 US6 (FR-013, data-model §7): replayLoop redirects the finally edges to the exit of
+/// the page as well (a labeled break of the page jumping to the end of the program through a finally)
+describe('replayLoop with finally edges', function () {
+	'use strict';
+	after(analyze.reset);
+
+	var PROGRAM = [
+		'let r = 0;',
+		'function h() {',
+		'console.log(r);',
+		'}',
+		'document.addEventListener(\'click\', h);',
+		'out: try {',
+		'r = 1;',
+		'break out;',
+		'} finally {',
+		'r = 3;',
+		'}'
+	].join('\n');
+
+	it('should redirect the finally edge to the exit of the page to the LOOP NODE', function () {
+		var result = analyze(PROGRAM),
+			model = modelCtrl.collectionOfPageModels.get(result.scopeTree).intraPageModels[0],
+			graph = model.graph,
+			finallyExits = graph[2].filter(function (node) {
+				return node.type === FlowNode.FINALLY_EXIT_NODE_TYPE;
+			}),
+			loops = graph[2].filter(function (node) {
+				return node.type === FlowNode.LOOP_NODE_TYPE;
+			});
+		finallyExits.should.have.length(1);
+		loops.should.have.length(1);
+		finallyExits[0].finally.indexOf(loops[0]).should.not.eql(-1);
+		finallyExits[0].finally.indexOf(graph[1]).should.eql(-1);
+		graph[1].prev.indexOf(finallyExits[0]).should.eql(-1);
+	});
+
+	it('should reach the handler with the definition of the finally block', function () {
+		var pairs = analyze(PROGRAM).intraPage();
+		pairs.should.containEql('r: L10 -> L3');
+	});
+});
