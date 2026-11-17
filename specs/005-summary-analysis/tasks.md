@@ -211,19 +211,19 @@ description: "Task list for feature 005-summary-analysis"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T073 [P] [US4] 新增 `tests/dujs/loopmatching.js`（intra-page，讀 `probes005/`）：US4-1 `p5-loop-pair.js`（有 `x: L1 -> L6`、無 `x: L7 -> L6`；`model.loopRecords()` 與 CLI 的 `0.matching.json` `loops` 紀錄與 L5 的 call 紀錄分開，contracts/matching-output.md §4）；US4-2 `p6.js`（有 `x: L9 -> L11`、無 `x: L5 -> L11`；守門，US2 後須仍成立）；US4-3 `c-h12.js`（有 `x: L1 -> L6`、`x: L3 -> L6`）；處理器的 GEN 經 LOOP 流向自己（內嵌：處理器先讀後寫同一變數，斷言該處理器的寫入到下一次觸發時的讀取有 pair）；自我一致：每條處理器 exit → LOOP RETURN 邊對應 LoopRecord 的一個處理器
-- [ ] T074 [P] [US4] 在 `tests/dujs/reachingsolver.js` 加 LoopRecord 列：LOOP RETURN 得 `OUT(LOOP) ∪ ⋃_h (gen_h ∪ exceptional_h)`（不套 must-KILL）、處理器 exit → LOOP RETURN 不貢獻、無處理器時只有 `OUT(LOOP)`
-- [ ] T075 [P] [US4] 在 `tests/dujs/expansion.js`、`tests/dujs/model.js` 加 LoopRecord（`{loop, loopReturn, handlers: [{scope, entry, exit}], noHandler}`）與 `setLoopRecords`／`loopRecords`
-- [ ] T076 [US4] 執行 `npx mocha tests/dujs/loopmatching.js tests/dujs/reachingsolver.js` 確認失敗（red；US4-2、US4-3 守門可能已通過，列於回報）
+- [X] T073 [P] [US4] 新增 `tests/dujs/loopmatching.js`（intra-page，讀 `probes005/`）：US4-1 `p5-loop-pair.js`（有 `x: L1 -> L6`、無 `x: L7 -> L6`；`model.loopRecords()` 與 CLI 的 `0.matching.json` `loops` 紀錄與 L5 的 call 紀錄分開，contracts/matching-output.md §4）；US4-2 `p6.js`（有 `x: L9 -> L11`、無 `x: L5 -> L11`；守門，US2 後須仍成立）；US4-3 `c-h12.js`（有 `x: L1 -> L6`、`x: L3 -> L6`）；處理器的 GEN 經 LOOP 流向自己（內嵌：處理器先讀後寫同一變數，斷言該處理器的寫入到下一次觸發時的讀取有 pair）；自我一致：每條處理器 exit → LOOP RETURN 邊對應 LoopRecord 的一個處理器
+- [X] T074 [P] [US4] 在 `tests/dujs/reachingsolver.js` 加 LoopRecord 列：LOOP RETURN 得 `OUT(LOOP) ∪ ⋃_h (gen_h ∪ exceptional_h)`（不套 must-KILL）、處理器 exit → LOOP RETURN 不貢獻、無處理器時只有 `OUT(LOOP)`
+- [X] T075 [P] [US4] 在 `tests/dujs/expansion.js`、`tests/dujs/model.js` 加 LoopRecord（`{loop, loopReturn, handlers: [{scope, entry, exit}], noHandler}`）與 `setLoopRecords`／`loopRecords`
+- [X] T076 [US4] 執行 `npx mocha tests/dujs/loopmatching.js tests/dujs/reachingsolver.js` 確認失敗（red；US4-2、US4-3 守門可能已通過，列於回報）
 
 ### 實作
 
-- [ ] T077 [US4] `lib/dujs/expansion.js`：`expand` 依 `loop`／`loopReturn`／`event` 重播回傳 `loops`（LoopRecord）；`lib/dujs/model.js` 新增 `setLoopRecords`／`loopRecords`；`lib/dujs/modelbuilder.js` 的 `setFlatGraphFromHierarchy` 存 loops
-- [ ] T078 [US4] `lib/dujs/reachingsolver.js`：給 `options.loops` 時 LOOP RETURN 虛擬貢獻、處理器 exit → LOOP RETURN 不貢獻、LOOP 改變時 LOOP RETURN 重新入列；`lib/dujs/defuseanalyzer.js` 對 intra-page／inter-page 傳入 loops
-- [ ] T079 [US4] `lib/dujs/outputwriter.js`：`*.matching.json` 的 `loops` 依 LoopRecord 輸出（處理器 summaries 一併列入）
-- [ ] T080 [US4] `npx mocha tests/dujs/loopmatching.js tests/dujs/reachingsolver.js tests/dujs/expansion.js tests/dujs/matching.js` 全過；`run.js` 對 p5、p6、c-h12 符合 spec 預期
-- [ ] T081 [US4] Golden 更新（序列化，US4；依「全程規則」步驟 1–5）：預期 `摘要` 類（LOOP 不可實現路徑）與 `*.matching.json` 的 `loops` 變化；inter-page 的 pair 差異只允許已列類別，若出現 inter-page localStorage 的新增 pair，停下請使用者裁決；寫入 `golden-diff.md` US4 節；orchestrator 親自重跑 `--verify` 通過後才 commit
-- [ ] T082 [US4] US4 閘門：閘門全過、`diffcheck.js golden --verify` 結束碼 0；回報可提交
+- [X] T077 [US4] `lib/dujs/expansion.js`：`expand` 依 `loop`／`loopReturn`／`event` 重播回傳 `loops`（LoopRecord）；`lib/dujs/model.js` 新增 `setLoopRecords`／`loopRecords`；`lib/dujs/modelbuilder.js` 的 `setFlatGraphFromHierarchy` 存 loops
+- [X] T078 [US4] `lib/dujs/reachingsolver.js`：給 `options.loops` 時 LOOP RETURN 虛擬貢獻、處理器 exit → LOOP RETURN 不貢獻、LOOP 改變時 LOOP RETURN 重新入列；`lib/dujs/defuseanalyzer.js` 對 intra-page／inter-page 傳入 loops
+- [X] T079 [US4] `lib/dujs/outputwriter.js`：`*.matching.json` 的 `loops` 依 LoopRecord 輸出（處理器 summaries 一併列入）
+- [X] T080 [US4] `npx mocha tests/dujs/loopmatching.js tests/dujs/reachingsolver.js tests/dujs/expansion.js tests/dujs/matching.js` 全過；`run.js` 對 p5、p6、c-h12 符合 spec 預期
+- [X] T081 [US4] Golden 更新（序列化，US4；依「全程規則」步驟 1–5）：預期 `摘要` 類（LOOP 不可實現路徑）與 `*.matching.json` 的 `loops` 變化；inter-page 的 pair 差異只允許已列類別，若出現 inter-page localStorage 的新增 pair，停下請使用者裁決；寫入 `golden-diff.md` US4 節；orchestrator 親自重跑 `--verify` 通過後才 commit
+- [X] T082 [US4] US4 閘門：閘門全過、`diffcheck.js golden --verify` 結束碼 0；回報可提交
 
 **Checkpoint**: US4 獨立可驗（LOOP 進入只返回 LOOP、直接呼叫只返回呼叫點）。
 
@@ -268,7 +268,7 @@ description: "Task list for feature 005-summary-analysis"
 - [ ] T099 **Golden 使用者簽核閘門（orchestrator 執行，非 implementer）**：T098 後、PR 前，orchestrator 把 `golden-diff.md` 的「釘選與簽核」表（`摘要`、`連結`、`finally`、`保守摘要`、`例外IN` 新增 pair）交使用者簽核；同意後改簽核欄（簽核者、日期）、重跑 `diffcheck.js golden --verify` 結束碼 0 並 commit；不同意的列視為回歸，退回 implementer 修正
 - [ ] T100 **MDN 使用者簽核閘門（orchestrator 執行，非 implementer）**：T094、T098 後，orchestrator 把 `mdn-diff.md` 的「釘選與簽核」表交使用者簽核；同意後改簽核欄、重跑 `diffcheck.js mdn --verify` 結束碼 0 並 commit；不同意的列退回修正。完成後建立 PR（目標 `develop`）
 - [ ] T101 [P] 處理 Setup 審查延後的 diffcheck SHOULD-FIX（`specs/005-summary-analysis/tools/diffcheck.js`、`diffcheck.test.js`）：R3 graph `~` 不計入釘選表 ±；R4 消失 pair 的 例外IN `throwingLines` 以 `頁:行` 為鍵，不跨頁碰撞；R5 鏈式呼叫（`p.then(function () {…}).catch(g)`）的 callback 本體行不算呼叫點；各補自我測試。須在 T094（MDN 差異）與 T099（golden 簽核）之前完成
-- [ ] T102 [P] US5 收尾的延後項：(a) `lib/dujs/defuseanalyzer.js` `findUSESet` 中巢狀 ForIn／ForOf／SwitchCase 規則與 `useNestedLoopHead`（US5 後可能為死碼）：以覆蓋率或探針確認是否可達，不可達則移除、可達則補測試（US5 審查 R1）；(b) `docs/known-issues.md` §18：更正「這些 use 在各自敘述節點也讀得到」——`case` 的 test、單獨識別字敘述在任何節點都不算讀取（既有建模；US5 驗收發現），隨 T096 一併處理；(c) `tests/dujs/summary.js` 的 `should not hold a variable defined before the nested callee reads it` 呼叫頁面函式 `g()`，在 US2 D2 之前未連結而空泛通過——US2 後確認它確實驗到行為，否則改寫（US1 第 3 批回報）；(d) US1 審查 SHOULD-FIX：`lib/dujs/summary.js` 的 `pages` 只當「已算過」旗標，改 WeakSet（R1）；`reachingsolver.js` 的 `applySummary` 與 `summary.apply` 兩份實作，加註須同步並補兩者結果相等的測試（R2）；`tests/dujs/matching.js` 的「callNode 保有 exception 邊」斷言只套鏈首 call，排除 callNode 為另一筆 call 之 callReturn 者（R3）；`defuseanalyzer.js` 的 `bypassFilter` 已無 lib 呼叫端，刪除或改測 `isVisibleToCallee`（R4）；(e) US3 審查 SHOULD-FIX：可達性補洞補模型層端到端測試——`try { if (h()) {…} } catch (e) { use(x) }`（審查實測 `x: L2 -> L6` 成立）與鏈式呼叫 `a().b()` 例外抵達 catch／exit（R1）；`reachingsolver.js` 的 `applyExceptionalSummary` 與 `summary.applyExceptional` 互註「語意須同步」或抽到無循環的共用模組（R2，與 (d) R2 併處理）
+- [ ] T102 [P] US5 收尾的延後項：(a) `lib/dujs/defuseanalyzer.js` `findUSESet` 中巢狀 ForIn／ForOf／SwitchCase 規則與 `useNestedLoopHead`（US5 後可能為死碼）：以覆蓋率或探針確認是否可達，不可達則移除、可達則補測試（US5 審查 R1）；(b) `docs/known-issues.md` §18：更正「這些 use 在各自敘述節點也讀得到」——`case` 的 test、單獨識別字敘述在任何節點都不算讀取（既有建模；US5 驗收發現），隨 T096 一併處理；(c) `tests/dujs/summary.js` 的 `should not hold a variable defined before the nested callee reads it` 呼叫頁面函式 `g()`，在 US2 D2 之前未連結而空泛通過——US2 後確認它確實驗到行為，否則改寫（US1 第 3 批回報）；(d) US1 審查 SHOULD-FIX：`lib/dujs/summary.js` 的 `pages` 只當「已算過」旗標，改 WeakSet（R1）；`reachingsolver.js` 的 `applySummary` 與 `summary.apply` 兩份實作，加註須同步並補兩者結果相等的測試（R2）；`tests/dujs/matching.js` 的「callNode 保有 exception 邊」斷言只套鏈首 call，排除 callNode 為另一筆 call 之 callReturn 者（R3）；`defuseanalyzer.js` 的 `bypassFilter` 已無 lib 呼叫端，刪除或改測 `isVisibleToCallee`（R4）；(e) US3 審查 SHOULD-FIX：可達性補洞補模型層端到端測試——`try { if (h()) {…} } catch (e) { use(x) }`（審查實測 `x: L2 -> L6` 成立）與鏈式呼叫 `a().b()` 例外抵達 catch／exit（R1）；`reachingsolver.js` 的 `applyExceptionalSummary` 與 `summary.applyExceptional` 互註「語意須同步」或抽到無循環的共用模組（R2，與 (d) R2 併處理）；(f) US4 審查 SHOULD-FIX：`tests/dujs/loopmatching.js` 檔頭註明哪些案例是守門、哪些能分辨新舊（審查以 `git archive` 實測，US4 前已通過的有 US4-1／2／3、GEN 流向自己、區域變數不流出），並補一個「處理器 exit 不貢獻」的 pair 層案例（如處理器被直接呼叫時其區域定義不流入另一處理器）（R1）；open 處理器退回路徑（`isOpenHandler`）尚無整合測試，找到能觸發的 probe 時補上（R2）
 
 **Checkpoint**: oracle、MDN、效能、文件與最終驗證完成，golden 與 MDN 差異皆經使用者簽核；可建立 PR。
 

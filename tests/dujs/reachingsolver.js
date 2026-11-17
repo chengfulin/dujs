@@ -385,6 +385,140 @@ describe('reachingsolver', function () {
 		});
 	});
 
+	/// User Story 4 (T074, research R4, data-model §5): the LOOP RETURN NODE of a LoopRecord gets
+	/// OUT(LOOP) U the gen and exceptional of the summaries of the handlers (no must-KILL); the edge
+	/// from the exit of a handler to the LOOP RETURN NODE carries nothing
+	describe('loops mode (LoopRecord)', function () {
+		/// entry (d0 of x, dy of y) -> loop -onEvent-> hEntry -> hExit (d1 of x) -> loopReturn -return-> loop -> exit;
+		/// with options.direct the page calls the handler first: entry -> call -call-> hEntry, hExit -return-> callReturn -> loop
+		function solveWithLoop(summary, options) {
+			options = options || {};
+			var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
+				exit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
+				loop = new FlowNode(FlowNode.LOOP_NODE_TYPE),
+				loopReturn = new FlowNode(FlowNode.LOOP_RETURN_NODE_TYPE),
+				hEntry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
+				hExit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
+				call = new FlowNode(FlowNode.CALL_NODE_TYPE),
+				callReturn = new FlowNode(FlowNode.CALL_RETURN_NODE_TYPE),
+				d0 = vardefOf(x, entry),
+				dy = vardefOf(y, entry),
+				d1 = vardefOf(x, hExit),
+				dH = vardefOf(x, hEntry),
+				dE = vardefOf(y, hEntry),
+				scope = {},
+				nodes = [entry, exit, loop, loopReturn],
+				handlers = [];
+			if (options.direct) {
+				entry.connect(call);
+				call.connect(hEntry, FlowNode.CALL_CONNECTION_TYPE);
+				hExit.connect(callReturn, FlowNode.RETURN_CONNECTION_TYPE);
+				callReturn.connect(loop);
+				nodes.push(call, callReturn);
+			} else {
+				entry.connect(loop);
+			}
+			if (options.noHandler) {
+				loop.connect(loopReturn, FlowNode.ON_EVENT_CONNECTION_TYPE);
+			} else {
+				loop.connect(hEntry, FlowNode.ON_EVENT_CONNECTION_TYPE);
+				hEntry.connect(hExit);
+				hExit.connect(loopReturn);
+				nodes.push(hEntry, hExit);
+				handlers.push({scope: scope, entry: hEntry, exit: hExit});
+			}
+			loopReturn.connect(loop, FlowNode.RETURN_CONNECTION_TYPE);
+			loop.connect(exit);
+			var ofHandler = summary(dH, dE),
+				solveOptions = optionsOf(new Map([[entry, [d0, dy]], [hExit, [d1]]]), {
+					calls: options.direct ? [{callNode: call, callReturn: callReturn, calleeScope: scope,
+						exceptionalReturn: null}] : [],
+					loops: [{loop: loop, loopReturn: loopReturn, handlers: handlers, noHandler: !!options.noHandler}],
+					summaryOf: function (each) {
+						each.should.equal(scope);
+						return ofHandler;
+					}
+				});
+			['flatVarDefOf', 'openHandler'].forEach(function (key) {
+				if (!!options[key]) {
+					solveOptions[key] = options[key];
+				}
+			});
+			var solved = solver.solve(graphOf(nodes), solveOptions);
+			function inOf(node) {
+				return solved.results.has(node) ? solved.results.get(node).in : null;
+			}
+			return {
+				loopReturn: inOf(loopReturn), loop: inOf(loop), hEntry: inOf(hEntry), callReturn: inOf(callReturn),
+				d0: d0, dy: dy, d1: d1, dH: dH, dE: dE
+			};
+		}
+
+		function summaryWithKill(dH, dE) {
+			return {normalReturn: true, gen: new Set([dH]), mustKill: new Set([x, y]), exceptional: new Set([dE])};
+		}
+
+		it('should give OUT(LOOP) U gen U exceptional of the handlers to the LOOP RETURN, without must-KILL', function () {
+			var solved = solveWithLoop(summaryWithKill);
+			shouldHaveExactly(solved.loopReturn, [solved.d0, solved.dy, solved.dH, solved.dE]);
+		});
+
+		it('should not carry OUT of a handler exit to the LOOP RETURN', function () {
+			var solved = solveWithLoop(summaryWithKill);
+			solved.loopReturn.has(solved.d1).should.be.false();
+			/// the summary of the handler reaches the handler itself through the LOOP
+			shouldHaveExactly(solved.hEntry, [solved.d0, solved.dy, solved.dH, solved.dE]);
+		});
+
+		it('should give only OUT(LOOP) to the LOOP RETURN without a handler', function () {
+			var solved = solveWithLoop(summaryWithKill, {noHandler: true});
+			shouldHaveExactly(solved.loopReturn, [solved.d0, solved.dy]);
+			shouldHaveExactly(solved.loop, [solved.d0, solved.dy]);
+		});
+
+		/// the exit of a handler called directly has a return edge to the call return as well
+		it('should exclude the return edge of a direct call and the edge to the LOOP RETURN independently', function () {
+			var solved = solveWithLoop(summaryWithKill, {direct: true});
+			shouldHaveExactly(solved.callReturn, [solved.dH]);
+			shouldHaveExactly(solved.loopReturn, [solved.dH, solved.dE]);
+			solved.loopReturn.has(solved.d1).should.be.false();
+		});
+
+		it('should map the definitions of the summaries by flatVarDefOf and throw when one has no VarDef', function () {
+			var mapped = vardefOf(y, new FlowNode()),
+				solved = solveWithLoop(summaryWithKill, {flatVarDefOf: function (vardef) {
+					return vardef.variable === y ? mapped : vardef;
+				}});
+			solved.loopReturn.has(mapped).should.be.true();
+			solved.loopReturn.has(solved.dE).should.be.false();
+			should(function () {
+				solveWithLoop(summaryWithKill, {flatVarDefOf: function () {
+					return null;
+				}});
+			}).throw(/no VarDef in the graph/);
+		});
+
+		/// ruling 1 of the orchestrator: a handler with only an open model falls back to the compatible way
+		it('should carry OUT of the exit of an open handler whose summary has no VarDef in the graph', function () {
+			var solved = solveWithLoop(summaryWithKill, {
+				flatVarDefOf: function () {
+					return null;
+				},
+				openHandler: function () {
+					return true;
+				}
+			});
+			shouldHaveExactly(solved.loopReturn, [solved.d0, solved.dy, solved.d1]);
+		});
+
+		it('should throw when loops are given without summaryOf', function () {
+			should(function () {
+				solver.solve(graphOf([new FlowNode(FlowNode.ENTRY_NODE_TYPE), new FlowNode(FlowNode.EXIT_NODE_TYPE)]),
+					{loops: []});
+			}).throw(/options.loops needs options.summaryOf/);
+		});
+	});
+
 	describe('transfer', function () {
 		it('should compute OUT = (IN - KILL) U GEN and give GEN and KILL', function () {
 			var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),

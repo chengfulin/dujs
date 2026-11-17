@@ -1753,4 +1753,65 @@ describe('expansion of feature 005 (Q-a, CallSiteRecord, expandShallow)', functi
 			}).should.throw(/^expandShallow: not an inter-procedural model/);
 		});
 	});
+
+	/// User Story 4 (T075, data-model §5): expand replays the loop, loopReturn and event edges into
+	/// LoopRecords {loop, loopReturn, handlers: [{scope, entry, exit}], noHandler}; a handler
+	/// registered twice is one handler (its copies are the same nodes)
+	describe('LoopRecords of expand', function () {
+		var LOOP_FIELDS = ['loop', 'loopReturn', 'handlers', 'noHandler'];
+
+		it('should give one frozen LoopRecord per page, the handlers once each in their order', function () {
+			var built = buildCalls(),
+				modelOfG = built.page.modelOf('g'),
+				intraPage = hierarchy.createIntraPageModel(built.root, [modelOfG, built.modelOfF, modelOfG]),
+				expanded = expansion.expand(intraPage);
+			function copyOf(node) {
+				return expanded.flatNodeOf.get(node);
+			}
+			expanded.loops.should.have.length(1);
+			var record = expanded.loops[0];
+			Object.isFrozen(record).should.be.true();
+			Object.keys(record).sort().should.eql(LOOP_FIELDS.slice().sort());
+			(record.loop === copyOf(intraPage.hierarchy.loop)).should.be.true();
+			(record.loopReturn === copyOf(intraPage.hierarchy.loopReturn)).should.be.true();
+			record.loopReturn.type.should.eql(FlowNode.LOOP_RETURN_NODE_TYPE);
+			record.noHandler.should.be.false();
+			record.handlers.should.have.length(2);
+			(record.handlers[0].scope === built.page.scopeOf('g')).should.be.true();
+			(record.handlers[0].entry === copyOf(modelOfG.graph[0])).should.be.true();
+			(record.handlers[0].exit === copyOf(modelOfG.graph[1])).should.be.true();
+			(record.handlers[1].scope === built.page.scopeOf('f')).should.be.true();
+			(record.handlers[1].entry === copyOf(built.page.modelOf('f').graph[0])).should.be.true();
+			(record.handlers[1].exit === copyOf(built.page.modelOf('f').graph[1])).should.be.true();
+			record.handlers.forEach(function (handler) {
+				Object.keys(handler).sort().should.eql(['entry', 'exit', 'scope']);
+				(handler.exit.normal === record.loopReturn).should.be.true();
+			});
+		});
+
+		it('should give a LoopRecord without a handler', function () {
+			var built = buildCalls(),
+				expanded = expansion.expand(hierarchy.createIntraPageModel(built.root, []));
+			expanded.loops.should.have.length(1);
+			expanded.loops[0].noHandler.should.be.true();
+			expanded.loops[0].handlers.should.eql([]);
+		});
+
+		it('should give the LoopRecords of every page to the inter-page model and none to the others', function () {
+			var built = buildCalls(),
+				intraPage = hierarchy.createIntraPageModel(built.root, [built.page.modelOf('g')]);
+			expansion.expand(built.root).loops.should.eql([]);
+			expansion.expand(built.page.modelOf('g')).loops.should.eql([]);
+			var other = intraProceduralModelsOf('var y = 1;'),
+				otherPage = hierarchy.createIntraPageModel(other.modelOf(''), []);
+			expandInto(intraPage);
+			expandInto(otherPage);
+			var expanded = expansion.expand(hierarchy.createInterPageModel([intraPage, otherPage]));
+			expanded.loops.should.have.length(2);
+			expanded.loops[0].handlers.should.have.length(1);
+			expanded.loops[1].noHandler.should.be.true();
+			(expanded.loops[0].loop === expanded.flatNodeOf.get(intraPage.hierarchy.loop)).should.be.true();
+			(expanded.loops[1].loop === expanded.flatNodeOf.get(otherPage.hierarchy.loop)).should.be.true();
+		});
+	});
 });

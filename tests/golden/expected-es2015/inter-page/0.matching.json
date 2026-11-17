@@ -3,6 +3,54 @@
   "level": "interPage",
   "mainScope": "$DOMAIN",
   "calls": [],
-  "loops": [],
-  "summaries": {}
+  "loops": [
+    {
+      "loop": "n132",
+      "loopReturn": "n142",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.init",
+          "entry": "n134",
+          "exit": "n141"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4",
+          "entry": "n143",
+          "exit": "n147"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "addTodo",
+        "document"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.init": {
+      "normalReturn": true,
+      "conservative": true,
+      "gen": [
+        "nextId@n138",
+        "state@n139"
+      ],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math",
+        "list",
+        "loadTodos",
+        "nextId"
+      ],
+      "exceptional": [
+        "nextId@n138",
+        "state@n139"
+      ]
+    }
+  }
 }

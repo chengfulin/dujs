@@ -3,6 +3,84 @@
   "level": "intraPage",
   "mainScope": "$DOMAIN.$PAGE_0",
   "calls": [],
-  "loops": [],
-  "summaries": {}
+  "loops": [
+    {
+      "loop": "n32",
+      "loopReturn": "n38",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.onLoad",
+          "entry": "n34",
+          "exit": "n37"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.onAdd",
+          "entry": "n39",
+          "exit": "n43"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.onModeChange",
+          "entry": "n44",
+          "exit": "n46"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.onAdd": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "total@n41"
+      ],
+      "mustKill": [
+        "total"
+      ],
+      "upwardExposed": [
+        "JSON",
+        "countDown",
+        "items",
+        "localStorage",
+        "sumAll"
+      ],
+      "exceptional": [
+        "total@n41"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.onLoad": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "items@n35",
+        "total@n36"
+      ],
+      "mustKill": [
+        "items",
+        "total"
+      ],
+      "upwardExposed": [
+        "localStorage",
+        "parseSaved",
+        "sumAll"
+      ],
+      "exceptional": [
+        "items@n35"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.onModeChange": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "mode@n45"
+      ],
+      "mustKill": [
+        "mode"
+      ],
+      "upwardExposed": [
+        "describeMode",
+        "mode"
+      ],
+      "exceptional": []
+    }
+  }
 }

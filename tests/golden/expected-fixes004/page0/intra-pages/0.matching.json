@@ -186,7 +186,13 @@
       "beforeDecision": false
     }
   ],
-  "loops": [],
+  "loops": [
+    {
+      "loop": "n108",
+      "loopReturn": "n110",
+      "handlers": []
+    }
+  ],
   "summaries": {
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0": {
       "normalReturn": true,

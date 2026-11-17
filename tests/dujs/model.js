@@ -318,6 +318,31 @@ describe('Model', function () {
             new Model().callSiteRecords().should.eql([]);
         });
 
+        /// feature 005 data-model §5 (User Story 4): the LoopRecords of expand
+        it('should keep the LoopRecords of the model in their order, set only once', function () {
+            var loop = factoryFlowNode.createLoopNode(),
+                loopReturn = factoryFlowNode.createLoopReturnNode(),
+                first = Object.freeze({loop: loop, loopReturn: loopReturn,
+                    handlers: [{scope: null, entry: entry, exit: exit}], noHandler: false}),
+                second = Object.freeze({loop: loop, loopReturn: loopReturn, handlers: [], noHandler: true}),
+                list = [first, second];
+            new Model().loopRecords().should.eql([]);
+            model.setLoopRecords(list);
+            list.pop();
+            var records = model.loopRecords();
+            records.length.should.eql(2);
+            records[0].should.equal(first);
+            records[1].should.equal(second);
+            records.pop();
+            model.loopRecords().length.should.eql(2);
+            (function () {
+                model.setLoopRecords([]);
+            }).should.throw(/only once/);
+            (function () {
+                new Model().setLoopRecords(new Map());
+            }).should.throw(/should be an Array/);
+        });
+
         /// feature 005 research R1: original VarDef -> VarDef of the graph
         it('should map an original VarDef by setFlatVarDefOf and default to the identity', function () {
             var original = {name: 'original'},

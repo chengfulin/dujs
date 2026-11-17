@@ -367,17 +367,54 @@ cfgId 為全域計數器，其後建立的模型（page0 intra-procedurals 6–8
 
 ### 變化說明
 
-（待 T081 填寫）
+- LoopRecord（T077）：`expansion.expand` 依 `loop`／`loopReturn`／`event` 重播回傳 `loops`（每個 LOOP 節點〔每頁〕一筆 `{loop, loopReturn, handlers: [{scope, entry, exit}], noHandler}`，
+  凍結）；同一處理器重複註冊（`a2` 的 `h.reg`、`r8` 的 `g`）時依 scope 去重，與唯一一條 exit → LOOP RETURN 邊一對一（orchestrator 裁決 2）。`Model.setLoopRecords`／`loopRecords`，
+  `modelbuilder.setFlatGraphFromHierarchy` 存入；inter-procedural 模型為空陣列，inter-page 模型每頁一筆。
+- 求解器（T078）：`options.loops` 時 LOOP RETURN 的 IN 併入 `OUT(LOOP) ∪ ⋃_h flatVarDefOf(gen_h ∪ exceptional_h)`（不套 `apply` 的 `normalReturn` 與 must-KILL）；
+  處理器 exit → LOOP RETURN 的 NORMAL 邊不貢獻（以「source 為該紀錄某處理器的 exit、target 為其 loopReturn」判定，與 return 邊的排除各自獨立）；LOOP 改變時 LOOP RETURN 重新入列；
+  可達性：LOOP 可達即視 LOOP RETURN 可達。`defuseanalyzer.doAnalysis` 對 intra-page／inter-page 模型傳入 `loops`。
+- 裁決 1（摘要 VarDef 對不到攤平圖）：只在處理器的摘要有對不到的定義、且 `openHandler(scope)` 成立（該 scope 第一個建出的模型為 open hierarchy）時，該處理器退回相容做法
+  （其 exit → LOOP RETURN 邊照舊帶 OUT、摘要不貢獻）；其他情形仍拋錯。實測 `callcycles` 的 `cyc-handler` 的處理器 `h` 沒有呼叫，摘要全部對得到，**不觸發**退回；`npm test`、
+  golden 與 MDN 33 檔全程 `openHandler` 未被呼叫（builder 對每個有呼叫的 scope 都會登記 closed 模型）。退回行為以 `tests/dujs/reachingsolver.js` 單元測試固定，`cyc-handler` 在
+  `tests/dujs/loopmatching.js` 驗不拋錯且 `x = 5`（L3）經摘要抵達 LOOP RETURN。
+- 配對輸出（T079）：`*.matching.json` 的 `loops` 依 LoopRecord 輸出（`{loop, loopReturn, handlers: [{scope, entry, exit}]}`，handlers 依 entry 節點名排序；無處理器的頁為
+  `handlers: []`），`summaries` 併入處理器的摘要。
+- golden（T081）：所有 `.dot` 位元組不變，淨差異維持 114 筆（`--report` 逐列與既有表相同；類別欄 6 列的首選類別差異同 US1 節所述，沿用原類別），釘選表不變，
+  `tests/golden/manifest.json` 不需更新。變化只在 9 個 intra-page／inter-page `*.matching.json`：`loops` 由空陣列變為 LoopRecord，`summaries` 併入處理器：
+  - `expected`：page0 `onLoad`、`onAdd`、`onModeChange`；page1 `onLoad`、`onClear`（inter-page 兩筆 LOOP 紀錄）。
+  - `expected-es2015`：`init`、`$ANONYMOUS_FUN_4`。
+  - `expected-interprocedural`：`onClick`、`onLoad`。
+  - `expected-fixes004`：頁面沒有處理器，各一筆 `handlers: []` 的 LOOP 紀錄（noHandler）；`summaries` 不變。
+  - 未出現 inter-page localStorage 的新增 pair；golden、MDN（`diffcheck.js mdn --report` 與 US4 前逐字相同）與 probes（`probes/run.js` 對 probes005、probes004、probes）的 pair 皆無變化：
+    舊做法經處理器 exit 漏進 LOOP 的直接呼叫情境定義，在這些程式中另有頁面敘述的例外邊（帶 IN）抵達 LOOP，所以 pair 不變。可區分的情境（直接呼叫情境的區域變數經處理器 exit
+    進 LOOP，例：`k` 內 `var t = 1; … h(); t = 2;`，舊有 `t: L2 -> L4`）以 `tests/dujs/loopmatching.js` 內嵌程式固定。
 
 ### 雜湊變化表（舊→新 sha256 前 12 碼）
 
+`.dot` 無變化；下列為新增檔 `*.matching.json`（不在 manifest `baseline`）的雜湊變化，僅供核對。
+
 | case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
 |------|------|---------------------------|------|
+| expected | inter-page/0.matching.json | 3562c9935f4e → d4d85a4907b6 | `loops` 兩筆（page0 三個處理器、page1 兩個）；`summaries` 併入五個處理器 |
+| expected | page0/intra-pages/0.matching.json | c86354bbfdd7 → 07b55f534445 | `loops` 一筆（`onLoad`、`onAdd`、`onModeChange`）；`summaries` 併入 |
+| expected | page1/intra-pages/0.matching.json | e779e3d0a3aa → 4e7a1805682f | `loops` 一筆（`onLoad`、`onClear`）；`summaries` 併入 |
+| expected-es2015 | inter-page/0.matching.json | 3562c9935f4e → cb921174a022 | `loops` 一筆（`init`、`$ANONYMOUS_FUN_4`）；`summaries` 併入 |
+| expected-es2015 | page0/intra-pages/0.matching.json | c86354bbfdd7 → 4f4693fd7f87 | 同上 |
+| expected-interprocedural | inter-page/0.matching.json | 0fa2541b0f5e → 59bfbff61b05 | `loops` 一筆（`onClick`、`onLoad`）；`summaries` 併入 |
+| expected-interprocedural | page0/intra-pages/0.matching.json | ec8075b4634c → 9f28b0853ceb | 同上 |
+| expected-fixes004 | inter-page/0.matching.json | dc1328f5741b → 47e0ec647dc8 | `loops` 一筆 `handlers: []`（無處理器） |
+| expected-fixes004 | page0/intra-pages/0.matching.json | 25efed8683d5 → a9398d50fd37 | 同上 |
 
 ### 單元測試期望
 
+既有測試期望無翻轉（`modelbuilder.js` a2／r8、`es2015.js`、`callcycles.js` cyc-handler、`exceptionsummary.js`、`finallyflow.js`、`summaryanalysis.js`、`cli` 皆照舊通過）。
+
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/loopmatching.js` | 新增（T073）：US4-1…3、處理器 GEN 經 LOOP 流向自己、處理器區域變數不經 LOOP 流出、直接呼叫情境的定義不經處理器 exit 進 LOOP、LoopRecord 與 call 紀錄分開、無處理器、a2／r8 重複處理器去重與 exit 邊一對一、inter-page 每頁一筆、cyc-handler（裁決 1）、CLI `0.matching.json` 的 `loops` | FR-007、FR-010 |
+| `tests/dujs/reachingsolver.js` | 新增 `loops mode (LoopRecord)` 七案例（T074）：虛擬貢獻不套 must-KILL、處理器 exit 不貢獻、無處理器只有 `OUT(LOOP)`、與直接呼叫的 return 邊排除各自獨立、`flatVarDefOf` 對應與拋錯、open 處理器退回、缺 `summaryOf` 拋錯 | FR-007 |
+| `tests/dujs/expansion.js` | 新增 `LoopRecords of expand` 三案例（T075）：凍結、處理器依 scope 去重且依序、無處理器、inter-page 每頁一筆、其他模型為空 | FR-007 |
+| `tests/dujs/model.js` | 新增 `setLoopRecords`／`loopRecords` 一案例（T075） | FR-007 |
 
 ## US2
 

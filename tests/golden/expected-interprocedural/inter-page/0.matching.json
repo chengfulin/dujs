@@ -56,7 +56,24 @@
       "beforeDecision": false
     }
   ],
-  "loops": [],
+  "loops": [
+    {
+      "loop": "n109",
+      "loopReturn": "n118",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.onClick",
+          "entry": "n111",
+          "exit": "n117"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.onLoad",
+          "entry": "n119",
+          "exit": "n121"
+        }
+      ]
+    }
+  ],
   "summaries": {
     "$DOMAIN.$PAGE_0.addTo": {
       "normalReturn": true,
@@ -95,6 +112,17 @@
       ],
       "exceptional": []
     },
+    "$DOMAIN.$PAGE_0.onClick": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "console",
+        "total"
+      ],
+      "exceptional": []
+    },
     "$DOMAIN.$PAGE_0.onClick.log": {
       "normalReturn": true,
       "conservative": false,
@@ -104,6 +132,18 @@
         "console",
         "total"
       ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.onLoad": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "limit@n120"
+      ],
+      "mustKill": [
+        "limit"
+      ],
+      "upwardExposed": [],
       "exceptional": []
     }
   }
