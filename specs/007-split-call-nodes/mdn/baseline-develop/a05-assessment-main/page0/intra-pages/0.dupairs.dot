@@ -1,0 +1,40 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="5">Def-Use pairs</td></tr><tr><td>window</td><td>(entry_a,12)</td><td>(entry_a,13)</td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,6)</td><td>(entry_a,9)</td><td></td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>random</td><td>(entry_a,169)</td><td>(entry_a,170)</td><td>(entry_a,185)</td><td></td><td></td></tr>
+<tr><td>randomRGB</td><td>(entry_a,170)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>loop</td><td>(entry_a,call)</td><td>(entry_a,203)</td><td></td><td></td><td></td></tr>
+<tr><td>Math</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>requestAnimationFrame</td><td>(entry_a,203)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>para</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>count</td><td>(7,181)</td><td>(181,181)</td><td>(181,182)</td><td></td><td></td></tr>
+<tr><td>canvas</td><td>(9,10)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>ctx</td><td>(188,189)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>width</td><td>(12,170)</td><td>(12,185)</td><td>(12,189)</td><td></td><td></td></tr>
+<tr><td>height</td><td>(13,170)</td><td>(13,185)</td><td>(13,189)</td><td></td><td></td></tr>
+<tr><td>Shape</td><td>(28,39)</td><td>(28,94)</td><td></td><td></td><td></td></tr>
+<tr><td>Shape</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Ball</td><td>(39,170)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Ball</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>EvilCircle</td><td>(94,185)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>EvilCircle</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>balls</td><td>(166,(168,169))</td><td>(166,(168,185))</td><td>(166,180)</td><td>(166,191)</td><td></td></tr>
+<tr><td>size</td><td>(169,170)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>ball</td><td>(170,180)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>evilBall</td><td>(185,199)</td><td>(185,200)</td><td>(185,201)</td><td></td><td></td></tr>
+<tr><td>ball</td><td>(191,(192,193))</td><td>(191,(192,191))</td><td>(191,193)</td><td>(191,194)</td><td>(191,195)</td></tr>
+</TABLE>
+>];
+}

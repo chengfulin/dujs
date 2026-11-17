@@ -1,0 +1,35 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interPage",
+  "mainScope": "$DOMAIN",
+  "calls": [],
+  "loops": [
+    {
+      "loop": "n58",
+      "loopReturn": "n65",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.handleClick",
+          "entry": "n60",
+          "exit": "n64"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.handleClick": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "output@n63"
+      ],
+      "mustKill": [
+        "output"
+      ],
+      "upwardExposed": [
+        "output"
+      ],
+      "exceptional": []
+    }
+  }
+}

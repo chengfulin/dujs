@@ -1,0 +1,7 @@
+digraph Hierarchy {
+node [shape="box"]
+label = "inter-page"
+h0 [label="$DOMAIN", shape="doublecircle", style="filled", fillcolor="orange"]
+h1 [label="page0"]
+h0 -> h1 [style="dotted", label="loadStorage"]
+}

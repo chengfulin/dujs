@@ -1,0 +1,52 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interPage",
+  "mainScope": "$DOMAIN",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 21,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n44",
+      "entry": "n45",
+      "exit": "n47",
+      "callReturn": "n48",
+      "exceptionalReturn": "n52",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 24,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n50",
+      "entry": "n45",
+      "exit": "n47",
+      "callReturn": "n51",
+      "exceptionalReturn": "n52",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [
+    {
+      "loop": "n52",
+      "loopReturn": "n54",
+      "handlers": []
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "console"
+      ],
+      "exceptional": []
+    }
+  }
+}

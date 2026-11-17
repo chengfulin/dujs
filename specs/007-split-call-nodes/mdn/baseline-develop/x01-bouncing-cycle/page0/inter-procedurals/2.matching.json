@@ -1,0 +1,76 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 6,
+      "callSiteLine": 58,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
+      "callNode": "n185",
+      "entry": "n165",
+      "exit": "n189",
+      "callReturn": "n186",
+      "exceptionalReturn": "n187",
+      "back": true,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 7,
+      "callSiteLine": 73,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2",
+      "callNode": "n173",
+      "entry": "n174",
+      "exit": "n187",
+      "callReturn": "n188",
+      "exceptionalReturn": "n189",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2": {
+      "normalReturn": false,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [
+        "Math",
+        "balls",
+        "height",
+        "randomRGB",
+        "width"
+      ],
+      "upwardExposed": [
+        "Math",
+        "balls",
+        "height",
+        "randomRGB",
+        "width"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
+      "normalReturn": false,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [
+        "Math",
+        "balls",
+        "height",
+        "randomRGB",
+        "width"
+      ],
+      "upwardExposed": [
+        "Math",
+        "balls",
+        "height",
+        "randomRGB",
+        "width"
+      ],
+      "exceptional": []
+    }
+  }
+}

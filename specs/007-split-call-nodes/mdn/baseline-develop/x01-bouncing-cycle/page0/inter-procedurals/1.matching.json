@@ -1,0 +1,143 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 108,
+      "callee": "$DOMAIN.$PAGE_0.loop",
+      "callNode": "n51",
+      "entry": "n52",
+      "exit": "n60",
+      "callReturn": "n61",
+      "exceptionalReturn": "n98",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 109,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+      "callNode": "n62",
+      "entry": "n63",
+      "exit": "n70",
+      "callReturn": "n71",
+      "exceptionalReturn": "n98",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 73,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2",
+      "callNode": "n92",
+      "entry": "n72",
+      "exit": "n96",
+      "callReturn": "n93",
+      "exceptionalReturn": "n94",
+      "back": true,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 4,
+      "callSiteLine": 58,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
+      "callNode": "n83",
+      "entry": "n84",
+      "exit": "n94",
+      "callReturn": "n95",
+      "exceptionalReturn": "n96",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c5",
+      "seq": 5,
+      "callSiteLine": 109,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2",
+      "callNode": "n71",
+      "entry": "n72",
+      "exit": "n96",
+      "callReturn": "n97",
+      "exceptionalReturn": "n98",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2": {
+      "normalReturn": false,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [
+        "Math",
+        "balls",
+        "height",
+        "randomRGB",
+        "width"
+      ],
+      "upwardExposed": [
+        "Math",
+        "balls",
+        "height",
+        "randomRGB",
+        "width"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
+      "normalReturn": false,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [
+        "Math",
+        "balls",
+        "height",
+        "randomRGB",
+        "width"
+      ],
+      "upwardExposed": [
+        "Math",
+        "balls",
+        "height",
+        "randomRGB",
+        "width"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.loop": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "ctx@n53"
+      ],
+      "mustKill": [
+        "ctx"
+      ],
+      "upwardExposed": [
+        "balls",
+        "height",
+        "loop",
+        "requestAnimationFrame",
+        "width"
+      ],
+      "exceptional": [
+        "ctx@n53"
+      ]
+    }
+  }
+}

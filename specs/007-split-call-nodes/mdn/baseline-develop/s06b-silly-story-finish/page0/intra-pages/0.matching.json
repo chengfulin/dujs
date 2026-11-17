@@ -1,0 +1,40 @@
+{
+  "format": "dujs-matching/1",
+  "level": "intraPage",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [],
+  "loops": [
+    {
+      "loop": "n38",
+      "loopReturn": "n53",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.generateStory",
+          "entry": "n40",
+          "exit": "n52"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.generateStory": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "story@n50"
+      ],
+      "mustKill": [
+        "story"
+      ],
+      "upwardExposed": [
+        "Math",
+        "customName",
+        "document",
+        "returnRandomStoryString"
+      ],
+      "exceptional": [
+        "story@n50"
+      ]
+    }
+  }
+}

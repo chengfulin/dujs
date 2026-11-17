@@ -1,0 +1,22 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="14">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry,3)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>cats</td><td>(2,(7b,8))</td><td>(2,(7b,16))</td><td>(2,(8,10))</td><td>(2,(8,12))</td><td>(2,10)</td><td>(2,12)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>pElem</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>myFavoriteCats</td><td>(10,10)</td><td>(12,10)</td><td>(5,10)</td><td>(10,12)</td><td>(12,12)</td><td>(5,12)</td><td>(10,16)</td><td>(12,16)</td><td>(5,16)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>i</td><td>(7c,(7b,8))</td><td>(7c,(7b,16))</td><td>(7a,(7b,8))</td><td>(7a,(7b,16))</td><td>(7c,(8,10))</td><td>(7c,(8,12))</td><td>(7a,(8,10))</td><td>(7a,(8,12))</td><td>(7c,10)</td><td>(7a,10)</td><td>(7c,7c)</td><td>(7a,7c)</td><td>(7c,12)</td><td>(7a,12)</td></tr>
+</TABLE>
+>];
+}

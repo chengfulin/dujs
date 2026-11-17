@@ -1,0 +1,37 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0.$BLOCK_0.$BLOCK_1.$ANONYMOUS_FUN_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 41,
+      "callee": "$DOMAIN.$PAGE_0.updateDisplayedImage",
+      "callNode": "n69",
+      "entry": "n70",
+      "exit": "n73",
+      "callReturn": "n74",
+      "exceptionalReturn": "n75",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.updateDisplayedImage": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "displayedImage@n72"
+      ],
+      "mustKill": [
+        "displayedImage"
+      ],
+      "upwardExposed": [],
+      "exceptional": [
+        "displayedImage@n71"
+      ]
+    }
+  }
+}

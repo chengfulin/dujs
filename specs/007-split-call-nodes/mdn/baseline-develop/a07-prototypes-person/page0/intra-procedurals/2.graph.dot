@@ -1,0 +1,10 @@
+digraph CFG {
+node [shape="box"]
+label = "function $DOMAIN.$PAGE_0.Person"
+n37 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n38 [label="9"]
+n39 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n37 -> n38 []
+n38 -> n39 []
+n38 -> n39 [color="red", label="exception"]
+}

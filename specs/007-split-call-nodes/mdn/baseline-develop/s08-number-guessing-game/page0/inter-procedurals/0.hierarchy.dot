@@ -1,0 +1,8 @@
+digraph Hierarchy {
+node [shape="box"]
+label = "inter-procedural: $DOMAIN.$PAGE_0.checkGuess"
+h0 [label="$DOMAIN.$PAGE_0.checkGuess"]
+h1 [label="$DOMAIN.$PAGE_0.setGameOver"]
+h0 -> h1 [color="blue", label="call"]
+h1 -> h0 [color="blue", style="dashed", label="return"]
+}

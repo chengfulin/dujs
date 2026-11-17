@@ -1,0 +1,67 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.$BLOCK_0.$BLOCK_1.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.updateDisplayedImage
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+## intra $DOMAIN.$PAGE_0
+baseURL: L20 -> L28
+btn: L4 -> L55
+document: entry -> L1
+document: entry -> L2
+document: entry -> L26
+document: entry -> L4
+document: entry -> L5
+image: L24 -> L28
+image: L24 -> L29
+images: L9 -> L24
+newImage: L31 -> L33
+newImage: L31 -> L35
+newImage: L31 -> L38
+thumbBar: L2 -> L33
+updateDisplayedImage: entry -> L35
+## intra $DOMAIN.$PAGE_0.$BLOCK_0.$BLOCK_1.$ANONYMOUS_FUN_0
+e: entry -> L39>L40:T
+e: entry -> L39>exit:F
+e: entry -> L40
+## intra $DOMAIN.$PAGE_0.updateDisplayedImage
+e: entry -> L48
+e: entry -> L49
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+btn: L59 -> L68
+btn: L64 -> L68
+## inter[0] $DOMAIN.$PAGE_0.$BLOCK_0.$BLOCK_1.$ANONYMOUS_FUN_0 , $DOMAIN.$PAGE_0.updateDisplayedImage
+e: entry -> L39>L40:T
+e: entry -> L39>exit:F
+e: entry -> L40
+e: entry -> L48
+e: entry -> L49
+## intra-page (nodes 40)
+baseURL: L20 -> L28
+btn: L4 -> L55
+btn: L4 -> L58>L59:T
+btn: L4 -> L58>L64:F
+btn: L59 -> L58>L59:T
+btn: L59 -> L58>L64:F
+btn: L59 -> L68
+btn: L64 -> L58>L59:T
+btn: L64 -> L58>L64:F
+btn: L64 -> L68
+document: entry -> L1
+document: entry -> L2
+document: entry -> L26
+document: entry -> L4
+document: entry -> L5
+e: entry -> L39>L40:T
+e: entry -> L39>exit:F
+e: entry -> L40
+e: entry -> L48
+e: entry -> L49
+image: L24 -> L28
+image: L24 -> L29
+images: L9 -> L24
+newImage: L31 -> L33
+newImage: L31 -> L35
+newImage: L31 -> L38
+thumbBar: L2 -> L33
+updateDisplayedImage: entry -> L35
+updateDisplayedImage: entry -> L40

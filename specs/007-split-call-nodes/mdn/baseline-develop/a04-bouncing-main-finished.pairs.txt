@@ -1,0 +1,109 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.random
+$DOMAIN.$PAGE_0.randomRGB
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+$DOMAIN.$PAGE_0.loop
+## intra $DOMAIN.$PAGE_0
+Ball: L21 -> L78
+ball: L78 -> L89
+balls: L74 -> L76>L105:F
+balls: L74 -> L76>L77:T
+balls: L74 -> L89
+canvas: L3 -> L4
+document: entry -> L3
+height: L7 -> L78
+loop: entry -> L105
+random: entry -> L77
+random: entry -> L78
+randomRGB: entry -> L78
+size: L77 -> L78
+width: L6 -> L78
+window: entry -> L6
+window: entry -> L7
+## intra $DOMAIN.$PAGE_0.random
+max: entry -> L12
+min: entry -> L12
+## intra $DOMAIN.$PAGE_0.randomRGB
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+color: entry -> L27
+size: entry -> L28
+velX: entry -> L25
+velY: entry -> L26
+x: entry -> L23
+y: entry -> L24
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+ctx: L33 -> L34
+ctx: L33 -> L35
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+ball: L60 -> L61>L60:F
+ball: L60 -> L61>L62:T
+ball: L60 -> L62
+ball: L60 -> L63
+ball: L60 -> L66>L60:F
+ball: L60 -> L66>L67:T
+distance: L64 -> L66>L60:F
+distance: L64 -> L66>L67:T
+dx: L62 -> L64
+dy: L63 -> L64
+## intra $DOMAIN.$PAGE_0.loop
+ball: L96 -> L97
+ball: L96 -> L98
+ball: L96 -> L99
+ctx: L93 -> L94
+## inter[0] $DOMAIN.$PAGE_0 , $DOMAIN.$PAGE_0.loop
+Ball: L21 -> L78
+ball: L78 -> L89
+ball: L96 -> L97
+ball: L96 -> L98
+ball: L96 -> L99
+balls: L74 -> L76>L105:F
+balls: L74 -> L76>L77:T
+balls: L74 -> L89
+balls: L74 -> L96
+canvas: L3 -> L4
+ctx: L93 -> L94
+document: entry -> L3
+height: L7 -> L78
+height: L7 -> L94
+loop: entry -> L102
+loop: entry -> L105
+random: entry -> L77
+random: entry -> L78
+randomRGB: entry -> L78
+requestAnimationFrame: entry -> L102
+size: L77 -> L78
+width: L6 -> L78
+width: L6 -> L94
+window: entry -> L6
+window: entry -> L7
+## intra-page (nodes 25)
+Ball: L21 -> L78
+ball: L78 -> L89
+ball: L96 -> L97
+ball: L96 -> L98
+ball: L96 -> L99
+balls: L74 -> L76>L105:F
+balls: L74 -> L76>L77:T
+balls: L74 -> L89
+balls: L74 -> L96
+canvas: L3 -> L4
+ctx: L93 -> L94
+document: entry -> L3
+height: L7 -> L78
+height: L7 -> L94
+loop: entry -> L102
+loop: entry -> L105
+random: entry -> L77
+random: entry -> L78
+randomRGB: entry -> L78
+requestAnimationFrame: entry -> L102
+size: L77 -> L78
+width: L6 -> L78
+width: L6 -> L94
+window: entry -> L6
+window: entry -> L7
