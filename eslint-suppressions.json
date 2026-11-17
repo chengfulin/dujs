@@ -228,10 +228,5 @@
     "no-unused-vars": {
       "count": 1
     }
-  },
-  "tests/esgraph/test.js": {
-    "no-unused-vars": {
-      "count": 2
-    }
   }
 }

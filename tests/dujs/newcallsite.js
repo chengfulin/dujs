@@ -526,3 +526,67 @@ describe('callResolver (research R2, FR-018)', function () {
 		});
 	});
 });
+
+/**
+ * Names of the callee scopes of the first new expression of the node of a line
+ * whose source is the given text (feature 007 R7)
+ * @param {Object} result
+ * @param {string} source
+ * @param {number} line
+ * @param {string} text
+ * @returns {Array}
+ */
+function newCalleesAt(result, source, line, text) {
+	'use strict';
+	var node = nodeAt(result, PAGE, line), found = null;
+	require('walkes')(node.astNode, {
+		FunctionExpression: function () {},
+		ArrowFunctionExpression: function () {},
+		NewExpression: function (expression, recurse) {
+			if (!found && source.slice(expression.range[0], expression.range[1]) === text) {
+				found = expression;
+			}
+			require('walkes').checkProps(expression, recurse);
+		}
+	});
+	(!!found).should.eql(true, 'no expression ' + text);
+	return callResolver.calleeScopesOfExpression(node, found, result.scopeTree).map(String);
+}
+
+describe('callResolver.calleeScopesOfExpression of new (feature 007 R7)', function () {
+	'use strict';
+
+	after(analyze.reset);
+
+	it('should resolve new A() in an expression to the instance fields and then the constructor', function () {
+		var source = [
+			'class A {',
+			'  f = 1;',
+			'  static s = 2;',
+			'  g = 3;',
+			'  constructor() {}',
+			'}',
+			'var a = [new A()];'
+		].join('\n'), result = analyze(source);
+		newCalleesAt(result, source, 7, 'new A()').should.eql([ANONYMOUS + '0', ANONYMOUS + '2', ANONYMOUS + '3']);
+	});
+
+	it('should resolve new F() in an argument to the function F', function () {
+		var source = ['function F() {}', 'function h() {}', 'h(new F());'].join('\n'),
+			result = analyze(source);
+		newCalleesAt(result, source, 3, 'new F()').should.eql([PAGE + '.F']);
+	});
+
+	it('should resolve new F() of new F().m(x = 1) to F only', function () {
+		var source = ['function F() {}', 'var x;', 'new F().m(x = 1);'].join('\n'),
+			result = analyze(source);
+		newCalleesAt(result, source, 3, 'new F()').should.eql([PAGE + '.F']);
+	});
+
+	it('should resolve new ns.A() and an undeclared callee in an expression to none', function () {
+		var source = ['var ns = {};', 'var a = [new ns.A(), new Z()];'].join('\n'),
+			result = analyze(source);
+		newCalleesAt(result, source, 2, 'new ns.A()').should.eql([]);
+		newCalleesAt(result, source, 2, 'new Z()').should.eql([]);
+	});
+});

@@ -54,3 +54,24 @@ lib 與 `edc22d5` 相同（T001 以 `git diff --quiet edc22d5 -- lib` 確認）�
 | 檔案 | 測試名 | 舊期望 | 新期望 | FR |
 |------|--------|--------|--------|----|
 | （無） |  |  |  |  |
+
+## Foundational
+
+### 變化說明
+
+新增 `lib/dujs/callsplit.js`（SegmentPlan、後序、呼叫點列舉、歸段、拋錯判定）、`callresolver.calleeScopesOfExpression`、`findGENSet` 記 `generatedAt`、FlowNode 新屬性、esgraph 的 `discriminantThrowTarget` 屬性與 `throwTypes` 匯出、`branchsplitter.isInsideLoopBody` 匯出；
+皆未接到模型建構（`modelbuilder` 未呼叫 `callsplit`），esgraph 只記屬性、不連邊，golden 未更新；`diffcheck golden --verify` 零差異，重複列數兩側相同。
+
+### 雜湊變化表（舊→新 sha256 前 12 碼）
+
+| case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
+|------|------|---------------------------|------|
+| （全部） | （無） | 不變 | Foundational 行為不變，不改 golden |
+
+### 單元測試期望
+
+| 檔案 | 測試名 | 舊期望 | 新期望 | FR |
+|------|--------|--------|--------|----|
+| （無） |  |  |  |  |
+
+（本階段只新增測試，未改動既有測試的期望；`tests/dujs/methodcalls.js` 新增「should keep calleeScopesOf of new A().m() unchanged in this phase」釘住 T037 之前的 `calleeScopesOf` 行為。）

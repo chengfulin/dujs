@@ -437,3 +437,106 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 		result.interProceduralScopes().should.eql([]);
 	});
 });
+
+/**
+ * The call or new expression of a node whose source is the given text (not in
+ * nested functions)
+ * @param {FlowNode} node
+ * @param {string} source
+ * @param {string} text
+ * @returns {Object} CallExpression or NewExpression
+ */
+function expressionIn(node, source, text) {
+	'use strict';
+	var found = null;
+	function check(expression, recurse) {
+		if (!found && source.slice(expression.range[0], expression.range[1]) === text) {
+			found = expression;
+		}
+		require('walkes').checkProps(expression, recurse);
+	}
+	require('walkes')(node.astNode, {
+		FunctionExpression: function () {},
+		ArrowFunctionExpression: function () {},
+		CallExpression: check,
+		NewExpression: check
+	});
+	(!!found).should.eql(true, 'no expression ' + text);
+	return found;
+}
+
+/**
+ * Names of the callee scopes of one call or new expression of the node of a line
+ * @param {Object} result
+ * @param {string} source
+ * @param {string} scopeName
+ * @param {number} line
+ * @param {string} text Source of the expression
+ * @returns {Array}
+ */
+function expressionCalleesAt(result, source, scopeName, line, text) {
+	'use strict';
+	var node = nodeAt(result, scopeName, line);
+	return callResolver.calleeScopesOfExpression(node, expressionIn(node, source, text), result.scopeTree).map(String);
+}
+
+describe('callResolver.calleeScopesOfExpression (feature 007 R7)', function () {
+	'use strict';
+
+	after(analyze.reset);
+
+	it('should resolve f() in an expression to the function f', function () {
+		var source = ['function f() {}', 'var y = f() + 1;'].join('\n'),
+			result = analyze(source);
+		expressionCalleesAt(result, source, PAGE, 2, 'f()').should.eql([PAGE + '.f']);
+	});
+
+	it('should resolve o.m() in an argument to the method m only', function () {
+		var source = [
+			'class A {',
+			'  constructor() {}',
+			'  m() {}',
+			'}',
+			'var o = new A();',
+			'console.log(o.m());'
+		].join('\n'), result = analyze(source);
+		expressionCalleesAt(result, source, PAGE, 6, 'o.m()').should.eql([ANONYMOUS + '1']);
+		/// console.log is not resolved
+		expressionCalleesAt(result, source, PAGE, 6, 'console.log(o.m())').should.eql([]);
+	});
+
+	it('should resolve this.m() in an expression of a method to the method m', function () {
+		var source = [
+			'class A {',
+			'  m() {}',
+			'  n() {',
+			'    var y = !this.m();',
+			'  }',
+			'}'
+		].join('\n'), result = analyze(source);
+		expressionCalleesAt(result, source, ANONYMOUS + '1', 4, 'this.m()').should.eql([ANONYMOUS + '0']);
+	});
+
+	it('should resolve A.s() in an expression to the static method s', function () {
+		var source = [
+			'class A {',
+			'  static s() {}',
+			'}',
+			'var y = [A.s()];'
+		].join('\n'), result = analyze(source);
+		expressionCalleesAt(result, source, PAGE, 4, 'A.s()').should.eql([ANONYMOUS + '0']);
+	});
+
+	it('should resolve what calleeScopesOf resolves for the call of a call statement', function () {
+		var source = ['function f() {}', 'f();', 'z();', 'o?.m();'].join('\n'),
+			result = analyze(source);
+		expressionCalleesAt(result, source, PAGE, 2, 'f()').should.eql(calleesAt(result, PAGE, 2));
+		expressionCalleesAt(result, source, PAGE, 3, 'z()').should.eql([]);
+		expressionCalleesAt(result, source, PAGE, 4, 'o?.m()').should.eql([]);
+	});
+
+	it('should keep calleeScopesOf of new A().m() unchanged in this phase', function () {
+		var result = analyze(['class A {', '  constructor() {}', '  m() {}', '}', 'new A().m();'].join('\n'));
+		calleesAt(result, PAGE, 5).should.eql([ANONYMOUS + '0', ANONYMOUS + '1']);
+	});
+});

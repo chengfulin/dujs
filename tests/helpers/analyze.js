@@ -41,6 +41,7 @@ var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	cfgBuilder = require('../../lib/dujs/cfgbuilder'),
 	executor = require('../../lib/dujs/defuseanalysisexecutor'),
 	summary = require('../../lib/dujs/summary'),
+	callsplit = require('../../lib/dujs/callsplit'),
 	Pair = require('../../lib/dujs/pair'),
 	FlowNode = require('../../lib/esgraph/flownode'),
 	branchLabel = require('../../lib/esgraph/branchlabel');
@@ -273,8 +274,9 @@ function buildModels(pages) {
 }
 
 /**
- * Clear the global analysis state (scopes, models and node counter) kept by
- * the singleton controllers; call it after tests to isolate other suites
+ * Clear the global analysis state (scopes, models, node counter, summaries and
+ * segment plans) kept by the singleton controllers; call it after tests to
+ * isolate other suites
  */
 function reset() {
 	'use strict';
@@ -282,6 +284,7 @@ function reset() {
 	modelCtrl.clear();
 	cfgBuilder.resetGraphNodeCounter();
 	summary.reset();
+	callsplit.reset();
 }
 
 /**
