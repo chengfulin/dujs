@@ -1,0 +1,30 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="5">Def-Use pairs</td></tr><tr><td>window</td><td>(entry_a,7)</td><td>(entry_a,8)</td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,4)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>random</td><td>(entry_a,78)</td><td>(entry_a,79)</td><td></td><td></td><td></td></tr>
+<tr><td>randomRGB</td><td>(entry_a,79)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>loop</td><td>(entry_a,call)</td><td>(entry_a,entry_b)</td><td>(entry_a,103)</td><td></td><td></td></tr>
+<tr><td>canvas</td><td>(4,5)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>ctx</td><td>(5,entry_b)</td><td>(94,95)</td><td></td><td></td><td></td></tr>
+<tr><td>width</td><td>(7,79)</td><td>(7,entry_b)</td><td>(7,95)</td><td></td><td></td></tr>
+<tr><td>height</td><td>(8,79)</td><td>(8,entry_b)</td><td>(8,95)</td><td></td><td></td></tr>
+<tr><td>Ball</td><td>(22,79)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>balls</td><td>(75,(77,78))</td><td>(75,(77,call))</td><td>(75,90)</td><td>(75,entry_b)</td><td>(75,97)</td></tr>
+<tr><td>size</td><td>(78,79)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>ball</td><td>(79,90)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>ball</td><td>(97,98)</td><td>(97,99)</td><td>(97,100)</td><td></td><td></td></tr>
+</TABLE>
+>];
+}

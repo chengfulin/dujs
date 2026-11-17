@@ -1,0 +1,14 @@
+digraph CFG {
+node [shape="box"]
+label = "page"
+n3 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n4 [label="2"]
+n5 [label="loop", shape="ellipse", style="filled", fillcolor="yellow"]
+n6 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n7 [label="loopReturn", shape="ellipse", style="filled", fillcolor="yellow"]
+n3 -> n4 []
+n4 -> n5 []
+n5 -> n6 []
+n5 -> n7 [color="green", label = "onEvent"]
+n7 -> n5 [color="blue", label="return"]
+}

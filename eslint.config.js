@@ -35,6 +35,9 @@ module.exports = [
 			'specs/**/probes/**',
 			'tests/dujs/cases/probes/**',
 			'tests/dujs/cases/probes004/**',
+			// feature 006: probe copies and MDN corpus are browser scripts analyzed as input
+			'tests/dujs/cases/probes006/**',
+			'specs/006-eslint-scope/mdn/**',
 			// research helper scripts (not part of dujs)
 			'docs/research/**'
 		]

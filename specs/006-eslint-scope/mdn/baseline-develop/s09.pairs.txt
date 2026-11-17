@@ -1,0 +1,14 @@
+# page0 (s09-first.js)
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.greeting
+## intra $DOMAIN.$PAGE_0
+## intra $DOMAIN.$PAGE_0.greeting
+## intra-page (nodes 5)
+# page1 (s09-second.js)
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.greeting
+## intra $DOMAIN.$PAGE_0
+## intra $DOMAIN.$PAGE_0.greeting
+## intra-page (nodes 5)

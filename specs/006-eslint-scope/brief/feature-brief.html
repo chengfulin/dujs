@@ -1,0 +1,262 @@
+<title>eslint-scope 整合</title>
+<style>
+:root{
+  --bg:#FFFBF2; --card:#FFFFFF; --ink:#1F2937; --sub:#5B6470; --line:#E6E0D2; --th:#F4EFE3;
+  --blue:#2B59C3; --blue-soft:#DCE6FA;
+  --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
+  --coral:#E4573D; --coral-soft:#FBDDD6;
+  --green:#3A9D6B; --green-soft:#D8F0E3;
+  --grey:#AEB6C0;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+    --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+  --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding-block:32px 72px;padding-inline:20px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:900;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
+.meta{color:var(--sub);font-size:.9rem}
+.note{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:8px 12px;margin:10px 0;font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin:16px 0;display:grid;gap:12px}
+.panel h3{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;line-height:1.2;margin:0;text-wrap:balance}
+.num{display:inline-block;font-weight:900;font-size:.75rem;letter-spacing:.15em;color:var(--blue);background:var(--blue-soft);padding:2px 10px;border-radius:999px;width:max-content}
+.pic{overflow-x:auto}
+.pic svg{display:block;width:100%;min-width:640px;height:auto}
+.cap{font-size:1.05rem;font-weight:500;max-width:52ch;margin:0}
+.cap b{font-weight:900}
+.cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
+text{font-family:var(--sans)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+.mermaid{min-width:560px;text-align:center}
+ul{margin:6px 0;padding-left:20px}
+li small{color:var(--sub)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--th)}
+.ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
+code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 100 110"><circle cx="50" cy="28" r="20" fill="currentColor"/><path d="M12 108 a38 38 0 0 1 76 0 z" fill="currentColor"/></symbol>
+    <symbol id="doc" viewBox="0 0 100 120"><path d="M14 6 h50 l22 22 v86 h-72 z" fill="currentColor"/><path d="M64 6 v22 h22" fill="none" stroke="#FFFFFF" stroke-width="4"/><g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"><path d="M28 50 h44 M28 68 h44 M28 86 h30"/></g></symbol>
+    <symbol id="term" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="8" fill="currentColor"/><rect x="4" y="4" width="112" height="18" rx="8" fill="#FFFFFF" opacity=".35"/><path d="M22 44 l16 12 l-16 12" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M48 68 h30" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/></symbol>
+    <symbol id="bot" viewBox="0 0 100 110"><rect x="44" y="4" width="12" height="14" rx="3" fill="currentColor"/><circle cx="50" cy="4" r="5" fill="currentColor"/><rect x="10" y="18" width="80" height="62" rx="16" fill="currentColor"/><rect x="22" y="32" width="56" height="30" rx="10" fill="#FFFFFF"/><circle cx="38" cy="47" r="6" fill="#1F2937"/><circle cx="62" cy="47" r="6" fill="#1F2937"/><rect x="26" y="84" width="48" height="22" rx="8" fill="currentColor"/></symbol>
+    <symbol id="warn" viewBox="0 0 100 100"><path d="M50 8 L96 90 H4 Z" fill="currentColor"/><path d="M50 36 v26" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="76" r="5" fill="#FFFFFF"/></symbol>
+    <symbol id="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="currentColor"/><path d="M28 52 l15 15 l30 -34" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grey)"/></marker>
+  </defs>
+</svg>
+
+<main>
+<h1>改用 eslint-scope 判定變數的宣告與參照</h1>
+<div class="meta">feature 006-eslint-scope · analyze · 第 1 輪 · 2026-11-17</div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。範圍決策 D1–D7、clarify 與 plan review 使用者已決的各題，本頁不再重問。analyze 發現表已經 Fable 仲裁，嚴重度與修正方案以仲裁後為準；修正尚未套用。</div>
+
+<h2>看懂它</h2>
+
+<section class="panel">
+  <span class="num">01 · 背景</span>
+  <h3>研究者用工具追蹤網頁程式的資料流</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="研究者把一段有同名 e 的網頁程式交給分析工具，得到各變數的使用關係">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">研究者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">交出</text>
+    <rect x="260" y="20" width="320" height="180" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="52" font-size="17" font-weight="900" fill="var(--ink)">var e = 1;</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="84">try { e = 2; }</text><text x="280" y="116" fill="var(--coral)">catch (e) { log(e); }</text><text x="280" y="148">log(e);</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">一段網頁程式（catch-b）</text>
+    <use href="#term" x="650" y="55" width="150" height="125" color="var(--ink)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">分析工具</text>
+  </svg></div>
+  <p class="cap">使用者是<b>分析網頁程式資料流的研究者</b>與維護這個工具的開發者。<small>來源：User Scenarios &amp; Testing 開頭</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">02 · 要解決的問題</span>
+  <h3>工具把兩個同名的 e 當成同一個</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="舊結果把錯誤處理段落裡的 e 和外面的 e 連在一起，並漏掉 Math 等常用物件">
+    <use href="#doc" x="60" y="40" width="100" height="120" color="var(--blue)"/>
+    <text x="110" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">兩個同名 e</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <rect x="260" y="20" width="320" height="180" rx="12" fill="var(--card)" stroke="var(--coral)" stroke-width="3"/>
+    <text x="280" y="52" font-size="18" font-weight="900" fill="var(--coral)">舊結果（錯）</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="88">e：L3 → L5　混在一起</text><text x="280" y="120">e：L3 → L4　混在一起</text><text x="280" y="152">Math、JSON　漏掉不算</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">連錯線、也漏了線</text>
+    <use href="#warn" x="660" y="55" width="130" height="125" color="var(--coral)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">結果不可信</text>
+  </svg></div>
+  <p class="cap">同名但不同的變數被<b>混為一談</b>，常用的內建物件也常被漏掉。<small>來源：User Story 1、3 的 Why this priority；探測結果</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">03 · 目的</span>
+  <h3>把「名字對到哪個變數」交給成熟工具</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="維護者把判斷名字屬於哪個變數的工作交給現成工具，其餘判斷維持原樣">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">維護者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">改為交給</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--blue)">現成的判定工具負責</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">1. 每一層有哪些變數</text><text x="280" y="134">2. 每個名字指哪一個</text><text x="280" y="170" font-size="15" fill="var(--sub)">其餘判斷與輸出維持原樣</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">只有這一個資料來源</text>
+    <use href="#bot" x="650" y="50" width="120" height="132" color="var(--green)"/>
+    <text x="710" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">成熟的套件</text>
+  </svg></div>
+  <p class="cap">宣告與名字解析<b>只認一個來源</b>，也為後續的摘要分析（005）鋪路。<small>來源：範圍決策 D1；User Story 4</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">04 · 預期結果</span>
+  <h3>同名分開了，其餘結果幾乎不變</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="新結果把兩個 e 分開，並與舊結果只差事先列出的幾類">
+    <use href="#doc" x="60" y="40" width="100" height="120" color="var(--blue)"/>
+    <text x="110" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">同一段程式</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <rect x="260" y="20" width="320" height="180" rx="12" fill="var(--card)" stroke="var(--green)" stroke-width="3"/>
+    <text x="280" y="52" font-size="18" font-weight="900" fill="var(--green)">新結果</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="88">有　e：L4 → L5（內層）</text><text x="280" y="120">有　e：L3 → L7（外層）</text><text x="280" y="152" fill="var(--coral)">沒有　e：L3 → L5</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">兩個 e 各走各的</text>
+    <use href="#check" x="660" y="55" width="130" height="125" color="var(--green)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">只差預期的幾類</text>
+  </svg></div>
+  <p class="cap">與舊結果相比，<b>只允許 D2 列出的 5 類差異</b>，由腳本逐筆判定並寫入 golden-diff。<small>來源：Success Criteria SC-002、SC-004；範圍決策 D2；FR-012</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">流程</span>
+  <h3>一條主線，找不到宣告時走兩條支線</h3>
+  <div class="pic"><svg viewBox="0 0 860 350" role="img" aria-label="解析整頁程式、建立宣告表、識別字對到宣告、dujs 判定 def 與 use、輸出 pair；找不到宣告與動態情形各有一條支線">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">解析整頁</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">多檔串接後</text><text x="94" y="132" font-size="14" font-weight="400" fill="var(--sub)">一次分析</text>
+      <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">eslint-scope</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">列出每層的</text><text x="264" y="132" font-size="14" font-weight="400" fill="var(--sub)">宣告與種類</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">名字對宣告</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">同名分開</text><text x="434" y="132" font-size="14" font-weight="400" fill="var(--sub)">呼叫對象同理</text>
+      <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">dujs 判定</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">def／use 規則</text><text x="604" y="132" font-size="14" font-weight="400" fill="var(--sub)">維持現行</text>
+      <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">輸出 pair</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">格式不變</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M168 100 h14"/><path d="M338 100 h14"/><path d="M508 100 h14"/><path d="M678 100 h14"/></g>
+    <g stroke="var(--coral)" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arr)"><path d="M390 150 v50"/><path d="M480 150 v50"/></g>
+    <rect x="170" y="210" width="240" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="290" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">找不到宣告</text>
+    <text x="290" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">視為該頁 entry 定義的全域</text>
+    <text x="290" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">新種類 global（D3）</text>
+    <rect x="430" y="210" width="290" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="575" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">eval／with 造成動態</text>
+    <text x="575" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">以名稱沿 scope 往外找</text>
+    <text x="575" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">找不到才當全域（D6）</text>
+    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">scope 命名、CFG、worklist 與輸出格式皆不變（D1）；呼叫連結改依宣告判定（FR-013）</text>
+  </svg></div>
+  <p class="cap">eslint-scope 只決定<b>有哪些宣告、名字指向誰</b>；def／use 分類仍由 dujs 決定。<small>來源：範圍決策 D1、D3、D6；FR-001、FR-002、FR-008、FR-013</small></p>
+  <ul><li>block 內的函式宣告依 eslint-scope 只在該 block 可見，外部呼叫不再連結（D5；Annex B）；此類與 FR-013 的連結增減同列 D2 第 5 類。</li>
+  <li>具名函式運算式的自我遞迴呼叫不連結，留給 005（D7；004 FR-018）。</li></ul>
+</section>
+
+<h3>架構圖：新增一個模組，其餘只換查詢方式</h3>
+<div class="box"><div class="mermaid">
+flowchart TD
+  P["jsparser.js 解析整頁 AST"] --> SB
+  ES(["eslint-scope ^9.1.2 新 runtime 依賴"]) --> SB
+  SB["scopebinding.js 新 每頁分析一次 建身分表"]
+  SB -->|"宣告與 Var"| VA["variableanalyzer 登記變數"]
+  SB -->|"識別字對 Var"| DU["defuseanalyzer GEN USE KILL"]
+  SB -->|"呼叫對象與可見性"| CR["callresolver 呼叫連結"]
+  SB -->|"handler 與 localStorage"| MB["modelbuilder 與 hierarchy"]
+  SC["scopectrl 與 scopetree 建 dujs scope 樹 命名不變"] --> VA
+  VA --> DU
+  DU --> OUT["CFG 與 worklist 不變 輸出 pair 格式不變"]
+  CR --> OUT
+</div></div>
+<ul>
+<li>所有「以名稱查變數」的路徑改為經 <code>scopebinding.js</code> 的身分查詢；<code>lib/esgraph/**</code>、<code>lib/analyses/**</code>、輸出格式明確不動。<small>來源：plan「變更影響範圍」、contracts/scope-binding-api.md §2</small></li>
+<li>catch／class 內層名稱／具名運算式名稱不新增 dujs scope，Var 登記在外層最近的 dujs scope。<small>來源：plan「1. 對應」；FR-009</small></li>
+<li>外部依賴只有 eslint-scope（選項 <code>optimistic: true</code>）；espree 沿用。<small>來源：plan Technical Context；research R2</small></li>
+</ul>
+
+<h2>本輪變更（analyze：發現表）</h2>
+<p class="meta">來源：speckit-analyze（K／F）、sdd-spec-clarifier（M／I）、Fable 仲裁新發現（N）。本輪無 CRITICAL；HIGH 2 筆、MEDIUM 9 筆、LOW／INFO 10 筆。</p>
+
+<h3>HIGH（全列）</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>說明</th><th>建議處置（仲裁後）</th></tr>
+<tr><td>N1</td><td class="no">HIGH</td><td>tasks Phase 2 Foundational</td><td>Foundational 一次派遣做完不可行（新增模組、API 全面切換、golden 三種性質混在一起）</td><td>明訂三批：2a 純新增、2b API 一次切換、2c golden；批間設檢查點</td></tr>
+<tr><td>N2</td><td class="no">HIGH</td><td>tasks T063、T065；diff-check 簽核</td><td>人工簽核會被 implementer 自己簽掉，失去把關意義</td><td>implementer 只草擬「待簽核」表，不得自簽；簽核時點見判斷點 2</td></tr>
+</table></div>
+
+<h3>MEDIUM（仲裁後修正方案）</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>位置</th><th>說明</th><th>建議處置</th></tr>
+<tr><td>K3</td><td>T013、T015、T016</td><td>diffcheck 比對基準不固定</td><td>基準固定 <code>584e17d</code>：T015 檔頭寫死、T013 未填即 exit 2、T016 驗 golden 與 suppressions 未變</td></tr>
+<tr><td>K5</td><td>T063</td><td>US4 golden 差異可能被當成預期差異放行</td><td>一律先當 T061 回歸，修到零差異才過</td></tr>
+<tr><td>F1</td><td>tasks 相依／並行</td><td>US1 與 US2 並行會同改 golden</td><td>刪 US1‖US2 並行；US2 在 US1 commit 後，T047 不用 <code>UPDATE_GOLDEN</code></td></tr>
+<tr><td>F2</td><td>contracts S5 允許表</td><td>契約與測試檔可能不同步</td><td>S5 允許表以測試檔為準；implementer 不改 contracts，回報後由 orchestrator 改</td></tr>
+<tr><td>M1</td><td>T029、T034</td><td>catch 的 GEN 歸屬不清</td><td>catch GEN 不走本體、歸 US1；T029 只加參數定義，T034 預期只列 catch 參數列</td></tr>
+<tr><td>M2</td><td>spec D6、FR-005、FR-008、FR-012 (1)</td><td>spec 未定義 D6 以 optimistic 達成；參數預設值＋直接 <code>eval</code> 時 FR-005 與 FR-008 互相牴觸；FR-012 (1) 的 D6 白名單無對應函式</td><td>spec 補 Clarification（見判斷點 1）</td></tr>
+<tr><td>M4</td><td>T035、靜態測試 S5</td><td>掃描範圍不足</td><td>S5 掃描擴到 <code>lib/dujs</code> 全部</td></tr>
+<tr><td>M6</td><td>Edge Cases 測試</td><td>缺測試：非參照識別字、for-of／for-in／解構宣告、串接後 module、<code>$</code>／非 ASCII 的 CLI 與 dot 輸出</td><td>補上述測試並指名到任務</td></tr>
+<tr><td>N3</td><td>T066</td><td><code>git worktree add</code> 違反 implementer 只准查詢類 git</td><td>改 <code>git archive</code>，或由 orchestrator 建立</td></tr>
+</table></div>
+
+<h3>LOW／INFO（彙總）</h3>
+<p>K1 plan 修改清單補 <code>eslint.config.js</code>；K2 US4-9 的 global 斷言於 US3 T050 補並註明；K4 acceptance 指名 <code>developpairs.json</code>；K6 不搬靜態測試、T035 加 grep 檢查；F3 quickstart 暫存路徑統一；M3 diffcheck 不進 <code>npm test</code>、每個 golden 閘門由 orchestrator 親跑 <code>--verify</code> 後才 commit、列入 PR 檢查清單；M5（LOW–MEDIUM）測試檔「修改限 Constraints 檔、新增案例依任務指名」、lib 檔數 14→17；I1 suppressions 閘門改「不得新增或增加 count」、必要時 <code>--prune-suppressions</code>；I2 MDN 暫存來源 Setup 先做 T008；N4 T016 先有雞才有蛋，隨 K3 消失。</p>
+<p class="meta">已決事項（不再問）：plan 階段使用者 7 題（U1–U4、Q1–Q3）與前輪 2 個判斷點皆採 A，見 plan「已裁決事項」。</p>
+
+<h2>工程師要決定的事</h2>
+
+<h3>驗收條件盤點</h3>
+<div class="box"><table>
+<tr><th>Story</th><th>驗收條件</th><th>判定</th><th>說明（spec 小節）</th></tr>
+<tr><td>US1</td><td>情境 1–6（catch-a／b／c、catchloop、catchinner、catch-edge）</td><td class="ok">可驗證</td><td>pair 有／沒有均逐條列出（Acceptance Scenarios）；plan 以 <code>catchclause.js</code> 對應</td></tr>
+<tr><td>US2</td><td>情境 1–5（named-expr、自我遞迴、classdecl、pdef、shadow-*）</td><td class="ok">可驗證</td><td>情境 5 以凍結的 develop 輸出為基準（FR-012）</td></tr>
+<tr><td>US3</td><td>情境 1–8（全域 pair、跨頁、arguments／this、typeof、globalThis、本地 undefined）</td><td class="ok">可驗證</td><td>plan 以 <code>globals.js</code>（plan-u1、plan-u4）對應</td></tr>
+<tr><td>US4</td><td>情境 2–5、8（scope 數量、annexb、with／evalouter、op、mod）</td><td class="ok">可驗證</td><td>Foundational 以 <code>scopeguards.js</code> 守門</td></tr>
+<tr><td>US4</td><td>情境 1、7（差異皆屬 D2 類別）</td><td class="ok">可驗證</td><td>FR-012 (2) 腳本判定；解析類移除與呼叫連結需人工簽核並釘住筆數（K3 基準 <code>584e17d</code>、K5 差異先當回歸、N2 不得自簽）</td></tr>
+<tr><td>US4</td><td>情境 6（無名稱查找路徑）</td><td class="ok">可驗證</td><td>靜態測試；禁止清單 S1–S6、白名單 W1–W4 已由 plan 明列（contracts/static-check.md）；M4 掃描擴到 <code>lib/dujs</code> 全部、K6 於 T035 加 grep 檢查</td></tr>
+<tr><td>US4</td><td>情境 9（宣告介面）、10（link-*）、11（link-bypass）</td><td class="ok">可驗證</td><td>情境 11 於 Foundational 只驗 <code>e: L6 -&gt; L8</code>，其餘到 US1；情境 9 的 global 斷言於 US3 T050 補（K2）</td></tr>
+<tr><td>Edge Cases</td><td>非參照識別字、for-of／for-in／解構宣告、串接後 module、<code>$</code>／非 ASCII 的 CLI 與 dot 輸出</td><td class="no">缺</td><td>目前無對應測試任務（M6）；修正套用後轉為可驗證</td></tr>
+<tr><td>FR-005／FR-008</td><td>參數預設值＋直接 <code>eval</code> 時的解析結果</td><td class="no">不可驗證</td><td>兩條 FR 互相牴觸，spec 未定義優先順序（M2；判斷點 1）</td></tr>
+<tr><td>SC</td><td>SC-003 時間不超過 develop 的 1.5 倍</td><td class="ok">可驗證（人工）</td><td>3 次取中位數，以獨立腳本量測；不在自動測試中（Success Criteria）</td></tr>
+</table></div>
+
+<h3>tech-standards 缺漏或變更</h3>
+<p>無缺漏、無偏離（規範以服務部署為主，不涵蓋 library 依賴）。新增的 runtime 依賴屬已確認的技術選型。</p>
+
+<h3>CRITICAL／HIGH 衝突與影響</h3>
+<p>無 CRITICAL。HIGH 2 筆（N1、N2）為執行流程風險，附件未標註對應憲章條款；受影響 story：N1＝Foundational 之後的全部 story（US1–US4），N2＝US4 的 golden 差異簽核（T063、T065）。憲章 §CP-1／§CP-4／§CP-6 於 plan 階段逐條 PASS。</p>
+
+<h3>本輪判斷點：2 個（已決：皆採 A；修正方案同意套用，2026-11-17；見 spec Clarifications「analyze」）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>方案（建議標 *）</th><th>影響</th><th>出處</th></tr>
+<tr><td>1</td><td>spec 是否補 Clarification：「D6 以 eslint-scope 的 <code>optimistic</code> 達成；參數預設值＋直接 <code>eval</code> 時 FR-005 優先於 D6／FR-008；FR-012 (1) 的 D6 白名單無對應函式」？</td>
+<td>A* 補上<br>B 堅持 spec 字面（D6 自寫回退）、需 replan</td>
+<td>A：只補 spec 一段，兩條 FR 的優先順序與白名單空項一併釐清；B：改自寫回退，需 replan</td>
+<td>spec D6、FR-005、FR-008、FR-012 (1)；Clarifications</td></tr>
+<tr><td>2</td><td>解析類移除與呼叫連結衍生差異的人工簽核，由誰、何時做？</td>
+<td>A* implementer 草擬「待簽核」表，使用者在 US4 T063 後、PR 前對累積表簽一次；MDN 在 T065 後一併簽<br>B 每個改 golden 的 phase 都停下來簽<br>C orchestrator 或 validator 代簽</td>
+<td>A：簽核一次、仍由人把關；B：最嚴但會中斷流程多次；C：省人力但失去「人工」簽核意義</td>
+<td>spec FR-012 (2)；tasks T063、T065；plan「diff-check 簽核」</td></tr>
+</table></div>
+
+<h3>次要疑點</h3>
+<div class="box"><table>
+<tr><th>疑點</th><th>出處</th></tr>
+<tr><td>eslint-scope 自身拋錯時原樣拋出、CLI 以 exit 1 結束，spec 未明確定義此行為（plan 依 004 FR-009 處理）</td><td>Assumptions；contracts/scope-binding-api.md</td></tr>
+<tr><td>class field／static block 的 scope 對應已在 plan 設計，但 spec 仍無對應驗收情境</td><td>Edge Cases</td></tr>
+</table></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>

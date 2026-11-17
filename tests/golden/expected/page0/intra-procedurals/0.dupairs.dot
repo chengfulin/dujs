@@ -24,6 +24,7 @@ struct1 [label=<
 <tr><td>onLoad</td><td>(entry,78)</td><td></td></tr>
 <tr><td>onAdd</td><td>(entry,79)</td><td></td></tr>
 <tr><td>onModeChange</td><td>(entry,80)</td><td></td></tr>
+<tr><td>JSON</td><td></td><td></td></tr>
 </TABLE>
 >];
 }

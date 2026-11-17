@@ -27,6 +27,26 @@ var PROBES = path.join(__dirname, 'cases', 'probes004'),
 	PAGE = '$DOMAIN.$PAGE_0';
 
 /**
+ * The Var with the name registered in a scope or else in its nearest ancestor
+ * (the scope name API getVariable was removed by feature 006)
+ * @param {Scope} scope
+ * @param {string} name
+ * @returns {Var|null}
+ */
+function variableNamed(scope, name) {
+	'use strict';
+	for (var current = scope; !!current; current = current.parent) {
+		var found = current.variables.filter(function (variable) {
+			return variable.name === name;
+		})[0];
+		if (!!found) {
+			return found;
+		}
+	}
+	return null;
+}
+
+/**
  * Analyze a probe program
  * @param {string} directory
  * @param {string} name File name without extension
@@ -146,17 +166,19 @@ describe('Bypass rule of calls (FR-016)', function () {
 					return String(scope) === PAGE + '.f';
 				})[0],
 				blockScope = calleeScope.children.filter(function (child) {
-					return child.getVariable('w') !== null && child.hasLocalVariable('w');
+					return child.variables.some(function (variable) {
+						return variable.name === 'w';
+					});
 				})[0],
 				node = modelCtrl.collectionOfPageModels.get(result.scopeTree).intraProceduralModels[0].graph[0];
 			function vardefOf(variable) {
 				return factoryVarDef.create(variable, factoryDef.createLiteralDef(node, [0, 1]));
 			}
-			var outerX = vardefOf(root.getVariable('x')),
-				outerY = vardefOf(root.getVariable('y')),
-				ownY = vardefOf(calleeScope.getVariable('y')),
-				ownZ = vardefOf(calleeScope.getVariable('z')),
-				blockW = vardefOf(blockScope.getVariable('w')),
+			var outerX = vardefOf(variableNamed(root, 'x')),
+				outerY = vardefOf(variableNamed(root, 'y')),
+				ownY = vardefOf(variableNamed(calleeScope, 'y')),
+				ownZ = vardefOf(variableNamed(calleeScope, 'z')),
+				blockW = vardefOf(variableNamed(blockScope, 'w')),
 				filtered = bypassFilter(new Set([outerX, outerY, ownY, ownZ, blockW]), calleeScope);
 			(filtered instanceof Set).should.be.true();
 			filtered.size.should.eql(4);

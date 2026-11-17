@@ -28,8 +28,17 @@ of the callee has the same name). It also changes how a call `f();` is
 resolved (strict rule) and records follow-up items; both are in §22, after
 §21. Not fixed yet: §16 (the call of a decision node is still modeled before
 the decision node) and §18, both left to stage 2 of the hierarchical model
-refactoring, the follow-up items of §22, and §23–§24, found by checking the
-MDN examples after the feature.
+refactoring, the follow-up items of §22 (except (2), fixed by
+`006-eslint-scope`), and §23, found by checking the MDN examples after the
+feature (§24 is fixed by `006-eslint-scope`).
+
+Feature `006-eslint-scope` (`specs/006-eslint-scope/`) takes the declarations
+of every scope and the resolution of every identifier from `eslint-scope`. It
+fixes §22 (2) and §24, and two issues of the scope rules that it records as
+§25 (catch parameters and the reads of the catch node) and §26 (identifiers in
+parameter default values). It records the other findings, limits and
+decisions of the feature in §27–§34, and adds a note to §18 on the variables
+the entry node of a function reads.
 
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
@@ -502,6 +511,29 @@ still has its own initialization node, as in US2 scenario 7.
 
 ### 18. The entry node of a function uses the variables of statements in its body
 
+**Note (feature `006-eslint-scope`)**: the entry node of a function only takes
+the variables visible from the function scope (decision Q3 of the feature). A
+read in the body that resolves to a `let`/`const` of a nested block, which
+shadows a variable of the function or of an outer scope, no longer gives a
+pair at the entry node:
+
+```js
+var x = 0;
+function f() {
+  if (x) {
+    let x = 1;
+    console.log(x);
+  }
+}
+f();
+```
+
+The entry node of `f` gives `x: L1 -> entry` (the `x` of `if (x)`) and no pair
+for the `let x` read at L5 (`x: L4 -> L5` stays at the node of L5). The rest
+of this section is unchanged and left to feature 005 (stage 2 of the
+hierarchical model refactoring). Pairs ending at `entry`, such as
+`Q: L1 -> entry` in §32, come from this issue.
+
 **Moved to stage 2** of the hierarchical model refactoring (decision D4 of
 feature `003-hierarchical-models`): the fix changes the golden output, which
 feature `003-hierarchical-models` must keep unchanged.
@@ -667,7 +699,7 @@ statements are included.
 
 ## Found by feature `004-fix-remaining-issues`
 
-### 22. Strict resolution of `f()` and follow-up items (found by `004-fix-remaining-issues`)
+### 22. Strict resolution of `f()` and follow-up items (found by `004-fix-remaining-issues`; (2) fixed by `006-eslint-scope`)
 
 (0) **Behavior change: `f();` uses the strict rule** (FR-018). A callee
 variable (of `f()`, `new F()`, `new A()`, `A.s()`, and the `A` of the
@@ -722,7 +754,13 @@ The intra-page pairs are `A: L2 -> L7`, `console: entry -> L10`,
 `o: L8 -> L9` and `x: L1 -> L10`; without `o.p = 1;` the call is connected and
 the pair is `x: L4 -> L9`.
 
-(2) **The inner name of a named class or function expression is not a
+(2) **Fixed** by feature `006-eslint-scope` (FR-004, US2): the inner name of a
+named class or function expression, and the inner binding of a class
+declaration, are variables visible only in the class or function, defined at
+the expression or declaration node; `specs/006-eslint-scope/probes/named-expr.js`
+gives `Q: L1 -> L2` and `fact: L4 -> L5`. See also §32. The original
+description follows.
+**The inner name of a named class or function expression is not a
 variable.** In `var B = class Q { static s = Q; };` there is no pair for `Q`;
 the same holds for the name of a named function expression used in its own
 body.
@@ -803,7 +841,16 @@ In the MDN "Object building practice" assessment, `evilBall.draw()`,
 not connected for this reason. A fix could relax the rule like FR-018 (connect
 when `o` has only one definition on the page and it is `new A(...)`).
 
-### 24. Only a fixed list of global objects is defined (pre-existing)
+### 24. Only a fixed list of global objects is defined (pre-existing; fixed by `006-eslint-scope`)
+
+**Fixed** by feature `006-eslint-scope` (FR-006, US3): an identifier read
+without a declaration is a global of its page, defined at the entry node of
+the page with the new definition kind `global` (`console.log(Math.PI);` now
+gives `Math: entry -> L1`). The names of one page share one variable, and two
+pages do not share it. `undefined`, `NaN`, `Infinity` (when not declared) and
+`arguments` are excluded; the fixed list, `localStorage` and implicit globals
+(assigned without a declaration) behave as before. See also §31 for `eval`.
+The original description follows.
 
 ```js
 console.log(Math.PI);
@@ -816,3 +863,206 @@ scope defines only the built-in objects listed in `lib/dujs/pagescope.js`
 `localStorage`. Other globals, such as `Math`, `Object`, `JSON`, `Promise`,
 `alert` and `requestAnimationFrame`, are not defined, so their uses have no
 pairs.
+
+## Found by feature `006-eslint-scope`
+
+The programs below are in `specs/006-eslint-scope/probes/`; run them with
+`node specs/004-fix-remaining-issues/probes/run.js specs/006-eslint-scope/probes/<file>`.
+The results before the fix are those of `develop` (`584e17d`), recorded in
+`specs/006-eslint-scope/probes/develop.txt`. The MDN examples of §23 were
+checked again with the feature (`specs/006-eslint-scope/mdn-diff.md`): every
+difference from `develop` is a new global (§24) or a new inner binding of a
+class declaration, and no example throws.
+
+### 25. A catch parameter is not a variable, and the catch node reads the catch block (fixed by `006-eslint-scope`)
+
+**Fixed** by feature `006-eslint-scope` (FR-003, decision D4): the catch
+parameter (also a destructured one) is a variable of the catch clause, defined
+at the catch node and visible only in the catch block; the catch node reads
+only the expressions evaluated by the parameter (the defaults of a pattern),
+and defines only the parameter. The description below is the behavior before
+the fix.
+
+```js
+var e = 1;
+try {
+  e = 2;
+} catch (e) {
+  console.log(e);
+}
+console.log(e);
+```
+
+`catch-b.js`: the catch parameter was not a definition, so `console.log(e)` in
+the catch block got the outer `e` (`e: L3 -> L5`); the catch node walked the
+whole catch block and read `e` and `console` (`e: L3 -> L4`,
+`console: entry -> L4`). Now the pairs are `e: L4 -> L5` and `e: L3 -> L7`.
+
+The same problem in the other programs:
+
+- `catch-a.js`: `e = 3;` in the catch block was a definition of the outer `e`
+  (`e: L5 -> L8`).
+- `catch-c.js`: neither `catch ({message})` nor `catch (err)` defined its
+  parameter (no `message` or `err` pair; now `message: L4 -> L5`,
+  `err: L7 -> L7`).
+- `catchloop.js`: with no outer `e`, `e = 3;` in the catch block became an
+  implicit global of the page and leaked into another function and catch
+  clause (`e: entry -> L5`, `e: L6 -> L5`, `e: L6 -> L11`, `e: L6 -> entry`,
+  `e: entry -> entry`).
+- `catchinner.js`: a function in the catch block could not read the
+  parameter (no `e` pair), and the catch node read `g` (`g: entry -> L5`).
+- `catch-edge.js`: a catch clause without a parameter also read its block
+  (`e: L3 -> L4`, `console: entry -> L4`); in `catch (e) { var e = 4; }` the
+  initial value was taken as a definition of the outer `e` (`e: L10 -> L13`)
+  instead of the catch parameter (Annex B.3.5; now `e: L10 -> L11`).
+- `plan-u3.js`: the catch node also defined the variables assigned in its
+  block (`if (c) { y = 1; }` gave `y: L4 -> L7`, and the catch node read `c`,
+  `c: L1 -> L4`).
+- `plan-catch1.js`: the only `e` of the page is a catch parameter; it was an
+  implicit global (`e: entry -> L4`) and the catch node read `console`
+  (`console: entry -> L4`).
+
+### 26. Identifiers in parameter default values resolve to the body (fixed by `006-eslint-scope`)
+
+**Fixed** by feature `006-eslint-scope` (FR-005): identifiers in parameter
+default values are resolved by `eslint-scope`, which does not let them see the
+`var` declarations of the function body. The description below is the
+behavior before the fix.
+
+```js
+var x = 1;
+function f(a = x) {
+  var x = 2;
+  return a;
+}
+f();
+```
+
+`pdef.js`: the `x` of the default value resolved to the `var x` of the body,
+so the pair was `x: entry -> L2` (its undefined initial value). Now the pair
+is `x: L1 -> L2`.
+
+### 27. A variable may have the name of a reserved scope name
+
+To analyze programs that read `$` or non-ASCII names (`$('#x')`, `été`), which
+are globals since §24 is fixed, a variable name is any ES IdentifierName
+(decision U1 of feature `006-eslint-scope`; `develop` threw
+`Invalid value for a Var` on `var $a = 1;`). A variable can now have the same
+name as a reserved scope name (`$DOMAIN`, `$PAGE_n`, `$ANONYMOUS_FUN_n`,
+`$BLOCK_n`):
+
+```js
+var $ANONYMOUS_FUN_0 = 1;
+var f = function () { return $ANONYMOUS_FUN_0; };
+f();
+```
+
+The analysis is correct (`$ANONYMOUS_FUN_0: L1 -> L2`; the variable and the
+scope `$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0` are not confused, because nothing
+looks up a scope by the name of a variable), but the output is hard to read.
+Status: not fixed (output readability only).
+
+### 28. A function name starting with `$` makes the analysis throw (pre-existing)
+
+```js
+function $(s) { return s; }
+$(1);
+```
+
+The analysis throws `Invalid value for a FunctionScope`; `function $a() {}`
+does the same. The name of a function scope still follows the old rule for
+names, and `develop` behaves the same way. Status: not fixed; the naming of
+scopes is out of the scope of feature `006-eslint-scope` (FR-009).
+
+### 29. `optimistic` resolution differs from the literal fallback of D6 in one case
+
+Feature `006-eslint-scope` resolves the references made dynamic by a direct
+`eval` or `with` with the `optimistic` option of `eslint-scope`, instead of
+looking names up along the scope chain (decision D6). The only known
+difference from that literal rule is a function with both a parameter default
+value and a direct `eval`:
+
+```js
+var x = 1;
+function f(a = x) { var x = 2; eval(""); return a; }
+f();
+```
+
+The `x` of the default value resolves to the global `x` (`x: L1 -> L2`), as
+required by §26; the literal fallback would have found the `var x` of the
+body first. Status: intended (research R2 of the feature).
+
+### 30. Pairs of `with` and `eval` programs are those of `develop`
+
+With `optimistic` resolution, programs with `with` or a direct `eval` give the
+pairs of `develop` (`with.js`, `evalouter.js`), plus the pairs of the new
+global `eval` (§31). Status: unchanged behavior, guarded by
+`tests/dujs/scopeguards.js`.
+
+### 31. `eval` is a global of the page (decision)
+
+`eval` is not declared, so since §24 is fixed it is a global of its page like
+any other undeclared name read (decision "implement US3" of feature
+`006-eslint-scope`; the excluded names stay `undefined`, `NaN`, `Infinity`
+and `arguments`):
+
+```js
+function outer(p) {
+  var a = 1;
+  function k() { eval("x"); return a; }
+  k();
+  return a + p;
+}
+outer(2);
+```
+
+`evalouter.js` keeps the pairs of `develop` (`a: L2 -> L3`, `a: L2 -> L5`,
+`p: entry -> L5`) and also gives `eval: entry -> L3` and `eval: entry -> entry`.
+Status: intended.
+
+### 32. The inner name of a named class expression in its static members (fixed by `006-eslint-scope`)
+
+**Fixed** by feature `006-eslint-scope` (decision "implement US2", task T073).
+When the static members of a class are connected as a call, the definitions
+of the node of the class were all moved to the CALL RETURN node, after the
+static members; only a class declaration kept its name at the call node. So
+the inner name of a named class expression had no definition in its static
+members:
+
+```js
+var B = class Q {
+  static s = Q;
+};
+```
+
+Before the fix there was no pair for `Q` (004 had a test asserting it). Now
+the definition of the inner name stays at the call node (`replayCall` in
+`lib/dujs/expansion.js`), the other definitions (`B`) still move to CALL
+RETURN, and the pair is `Q: L1 -> L2`. The result also has `Q: L1 -> entry`,
+the use at the entry node of the static member function of §18 (not fixed;
+left to feature 005).
+
+### 33. `BindingPattern#getBoundNames` has no caller
+
+`getBoundNames` in `lib/dujs/bindingpattern.js` is not called by `lib/` or
+`tests/` (it looks like dead code). It reads `target.name`, so feature
+`006-eslint-scope` only lists it in the S5 allow list of the static test
+`tests/dujs/scopesource.js`. Status: not fixed; deleting the method (and its
+allow list entry) is suggested for a later change.
+
+### 34. Lookups by name that the static test does not catch
+
+The static test `tests/dujs/scopesource.js` (FR-012 (1) of feature
+`006-eslint-scope`) checks that `lib/` does not look variables up by name. In
+`lib/dujs/scopebinding.js`, rule S6 only flags `Map#get`/`Map#has`/`Map#set`
+and `Set#has` whose key is `<x>.name`, an identifier named `name` or a string
+literal, outside the whitelisted functions. These forms are not caught:
+
+```js
+var k = n.name;
+m.get(k);            // the name is stored in a variable first
+m.get(`${n.name}`);  // template literal key
+```
+
+No such lookup exists in `lib/` now. Status: not fixed (a limit of the check;
+code review covers it).
