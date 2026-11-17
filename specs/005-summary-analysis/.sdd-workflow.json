@@ -50,7 +50,13 @@
         ],
         "plan_file": "specs/005-summary-analysis/parallel-plan.json"
       },
-      "stories": {}
+      "stories": {
+        "US5": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      }
     }
   },
   "brief": {

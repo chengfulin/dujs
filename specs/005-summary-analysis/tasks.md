@@ -95,18 +95,18 @@ description: "Task list for feature 005-summary-analysis"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T021 [P] [US5] 新增 `tests/dujs/entryuse.js`：US5-1（`probes005/p8.js`：`f` 的 entry 節點 `cuse`、`puse` 皆空；`x`、`a`、`o`、`b` 的讀取在各自敘述節點）；US5-2（`p9.js`：分析不拋錯；p-use 在 L7 的 `case` 節點：有 `x: L1 -> L7>L8:T`、`x: L1 -> L7>L10:F`〔analyze Q4〕；無以 `entry` 為 use 端的 `x` pair）；US5-3（`p2.js`：無 `x: L3 -> entry`、`x: L11 -> entry`；`probes004/cyc-3.js`：無 `t: L4 -> entry`、`p: entry -> entry`）；另斷言參數預設值的讀取仍在合成的參數初始化節點、不在 entry
-- [ ] T022 [P] [US5] 改既有測試：US5 會翻轉約 14 檔 58 個既有測試（`tests/dujs/` 的 branchsplit、bypass、callcycles、classfields、expansion、hierarchy、methodcalls、modelbuilder、newcallsite、paramdefaults、paramsandnew、reviewfixes、scopeguards、usedexpressions），清單以實跑失敗為準；**只允許刪除 use 端為 entry 的期望**（`usedexpressions.js` 的 ENTRY／EXIT used expressions 改為 `[]` 屬之），其他改動停下回報；移除 `tests/dujs/scopebinding.js` 的 `isOnFunctionChain` 測試。以檔為單位記入 `golden-diff.md` US5「單元測試期望」
-- [ ] T023 [US5] 執行 `npx mocha tests/dujs/entryuse.js tests/dujs/usedexpressions.js` 確認失敗（red）
+- [X] T021 [P] [US5] 新增 `tests/dujs/entryuse.js`：US5-1（`probes005/p8.js`：`f` 的 entry 節點 `cuse`、`puse` 皆空；`x`、`a`、`o`、`b` 的讀取在各自敘述節點）；US5-2（`p9.js`：分析不拋錯；p-use 在 L7 的 `case` 節點：有 `x: L1 -> L7>L8:T`、`x: L1 -> L7>L10:F`〔analyze Q4〕；無以 `entry` 為 use 端的 `x` pair）；US5-3（`p2.js`：無 `x: L3 -> entry`、`x: L11 -> entry`；`probes004/cyc-3.js`：無 `t: L4 -> entry`、`p: entry -> entry`）；另斷言參數預設值的讀取仍在合成的參數初始化節點、不在 entry
+- [X] T022 [P] [US5] 改既有測試：US5 會翻轉約 14 檔 58 個既有測試（`tests/dujs/` 的 branchsplit、bypass、callcycles、classfields、expansion、hierarchy、methodcalls、modelbuilder、newcallsite、paramdefaults、paramsandnew、reviewfixes、scopeguards、usedexpressions），清單以實跑失敗為準；**只允許刪除 use 端為 entry 的期望**（`usedexpressions.js` 的 ENTRY／EXIT used expressions 改為 `[]` 屬之），其他改動停下回報；移除 `tests/dujs/scopebinding.js` 的 `isOnFunctionChain` 測試。以檔為單位記入 `golden-diff.md` US5「單元測試期望」
+- [X] T023 [US5] 執行 `npx mocha tests/dujs/entryuse.js tests/dujs/usedexpressions.js` 確認失敗（red）
 
 ### 實作
 
-- [ ] T024 [US5] `lib/dujs/usedexpressions.js`：`usedExpressionsOf` 對 ENTRY／EXIT 節點回傳 `[]`（與 `modelbuilder.expressionsEvaluatedAtNode` 一致）
-- [ ] T025 [US5] `lib/dujs/defuseanalyzer.js`：`findUSESet` 移除 `isEntryNode` 分支與 `binding.isOnFunctionChain` 的使用
-- [ ] T026 [US5] `lib/dujs/scopebinding.js`：移除 `isOnFunctionChain`；`tests/dujs/scopesource.js` 白名單若列有它則同步移除並記入「單元測試期望」；`grep -rn isOnFunctionChain lib tests` 無輸出
-- [ ] T027 [US5] `npx mocha tests/dujs/entryuse.js tests/dujs/usedexpressions.js tests/dujs/scopebinding.js` 全過；`run.js` 對 p8、p9 不拋錯
-- [ ] T028 [US5] Golden 更新（序列化，US5；依「全程規則」步驟 1–5）：預期 `§18` 類（use 端為 `entry` 的 pair 消失）；寫入 `golden-diff.md` US5 節與 `tests/golden/manifest.json`；orchestrator 親自重跑 `--verify` 通過後才 commit
-- [ ] T029 [US5] US5 閘門：閘門全過、`diffcheck.js golden --verify` 結束碼 0；回報可提交
+- [X] T024 [US5] `lib/dujs/usedexpressions.js`：`usedExpressionsOf` 對 ENTRY／EXIT 節點回傳 `[]`（與 `modelbuilder.expressionsEvaluatedAtNode` 一致）
+- [X] T025 [US5] `lib/dujs/defuseanalyzer.js`：`findUSESet` 移除 `isEntryNode` 分支與 `binding.isOnFunctionChain` 的使用
+- [X] T026 [US5] `lib/dujs/scopebinding.js`：移除 `isOnFunctionChain`；`tests/dujs/scopesource.js` 白名單若列有它則同步移除並記入「單元測試期望」；`grep -rn isOnFunctionChain lib tests` 無輸出
+- [X] T027 [US5] `npx mocha tests/dujs/entryuse.js tests/dujs/usedexpressions.js tests/dujs/scopebinding.js` 全過；`run.js` 對 p8、p9 不拋錯
+- [X] T028 [US5] Golden 更新（序列化，US5；依「全程規則」步驟 1–5）：預期 `§18` 類（use 端為 `entry` 的 pair 消失）；寫入 `golden-diff.md` US5 節與 `tests/golden/manifest.json`；orchestrator 親自重跑 `--verify` 通過後才 commit
+- [X] T029 [US5] US5 閘門：閘門全過、`diffcheck.js golden --verify` 結束碼 0；回報可提交
 
 **Checkpoint**: US5 獨立可驗（entry 不讀本體、P8／P9 不拋錯）。
 
@@ -268,6 +268,7 @@ description: "Task list for feature 005-summary-analysis"
 - [ ] T099 **Golden 使用者簽核閘門（orchestrator 執行，非 implementer）**：T098 後、PR 前，orchestrator 把 `golden-diff.md` 的「釘選與簽核」表（`摘要`、`連結`、`finally`、`保守摘要`、`例外IN` 新增 pair）交使用者簽核；同意後改簽核欄（簽核者、日期）、重跑 `diffcheck.js golden --verify` 結束碼 0 並 commit；不同意的列視為回歸，退回 implementer 修正
 - [ ] T100 **MDN 使用者簽核閘門（orchestrator 執行，非 implementer）**：T094、T098 後，orchestrator 把 `mdn-diff.md` 的「釘選與簽核」表交使用者簽核；同意後改簽核欄、重跑 `diffcheck.js mdn --verify` 結束碼 0 並 commit；不同意的列退回修正。完成後建立 PR（目標 `develop`）
 - [ ] T101 [P] 處理 Setup 審查延後的 diffcheck SHOULD-FIX（`specs/005-summary-analysis/tools/diffcheck.js`、`diffcheck.test.js`）：R3 graph `~` 不計入釘選表 ±；R4 消失 pair 的 例外IN `throwingLines` 以 `頁:行` 為鍵，不跨頁碰撞；R5 鏈式呼叫（`p.then(function () {…}).catch(g)`）的 callback 本體行不算呼叫點；各補自我測試。須在 T094（MDN 差異）與 T099（golden 簽核）之前完成
+- [ ] T102 [P] US5 收尾的延後項：(a) `lib/dujs/defuseanalyzer.js` `findUSESet` 中巢狀 ForIn／ForOf／SwitchCase 規則與 `useNestedLoopHead`（US5 後可能為死碼）：以覆蓋率或探針確認是否可達，不可達則移除、可達則補測試（US5 審查 R1）；(b) `docs/known-issues.md` §18：更正「這些 use 在各自敘述節點也讀得到」——`case` 的 test、單獨識別字敘述在任何節點都不算讀取（既有建模；US5 驗收發現），隨 T096 一併處理
 
 **Checkpoint**: oracle、MDN、效能、文件與最終驗證完成，golden 與 MDN 差異皆經使用者簽核；可建立 PR。
 

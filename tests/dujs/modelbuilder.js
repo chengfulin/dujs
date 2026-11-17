@@ -716,11 +716,11 @@ describe('ModelBuilder upper models as hierarchies', function () {
 			handlersOf(result).should.eql(expected);
 			onEventOf(result).should.eql(expected);
 			result.intraPage().should.eql([
-				'h: entry -> L5', 'h: entry -> L6', 'h: entry -> L7', 'h: entry -> L8', 'h: entry -> entry',
-				'init: entry -> L3', 'init: entry -> entry',
+				'h: entry -> L5', 'h: entry -> L6', 'h: entry -> L7', 'h: entry -> L8',
+				'init: entry -> L3',
 				'n: L3 -> L10', 'n: L3 -> L9', 'n: L4 -> L10', 'n: L4 -> L9', 'n: L8 -> L10', 'n: L8 -> L9',
-				'reg: entry -> L4', 'reg: entry -> entry',
-				'window: entry -> L4', 'window: entry -> L6', 'window: entry -> L7', 'window: entry -> L8', 'window: entry -> entry'
+				'reg: entry -> L4',
+				'window: entry -> L4', 'window: entry -> L6', 'window: entry -> L7', 'window: entry -> L8'
 			]);
 		});
 
@@ -785,9 +785,9 @@ describe('ModelBuilder upper models as hierarchies', function () {
 			handlersOf(result).should.eql(['$DOMAIN.$PAGE_0.g', '$DOMAIN.$PAGE_0.h', '$DOMAIN.$PAGE_0.g']);
 			onEventOf(result).should.eql(['$DOMAIN.$PAGE_0.g', '$DOMAIN.$PAGE_0.h', '$DOMAIN.$PAGE_0.g']);
 			result.intraPage().should.eql([
-				'g: entry -> L3', 'g: entry -> entry', 'h: entry -> L4', 'h: entry -> L5',
+				'g: entry -> L3', 'h: entry -> L4', 'h: entry -> L5',
 				'n: L1 -> L6', 'n: L2 -> L6', 'n: L3 -> L6',
-				'reg: entry -> L3', 'window: entry -> L3', 'window: entry -> L5', 'window: entry -> entry'
+				'reg: entry -> L3', 'window: entry -> L3', 'window: entry -> L5'
 			]);
 		});
 	});

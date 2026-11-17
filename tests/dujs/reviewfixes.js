@@ -237,8 +237,9 @@ describe('Defects found by the code review of PR #3', function () {
 			'}'
 		].join('\n'));
 		var pairs = pairsOf(result.intraPage(), 'v');
-		/// the static member defines v before f is entered
-		pairs.should.containDeep(['v: L6 -> entry', 'v: L3 -> L4', 'v: L3 -> L7']);
+		/// the static member defines v before f is entered: the definition of L6 does not reach the body of f
+		/// (the entry node no longer reads the body, feature 005 US5)
+		pairs.should.containDeep(['v: L3 -> L4', 'v: L3 -> L7']);
 		pairs.should.not.containEql('v: L1 -> L7');
 		pairs.should.not.containEql('v: L6 -> L7');
 		result.intraProcedural();

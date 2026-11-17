@@ -59,7 +59,7 @@ var CODE = {
 		'var x, a, b;',
 		'x = a + b;'
 	].join('\n'),
-	/// scenario 5: a function body walked at the entry node of the function
+	/// scenario 5: the entry node of a function does not read its body (feature 005 FR-008)
 	'nested': [
 		'var x, a, b, k, o;',
 		'function f() {',
@@ -253,9 +253,9 @@ describe('findUSESet characterization', function () {
 			usesOf(nodeAt(nodes.general, 2, '', 'AssignmentExpression')).should.eql({cuse: ['a', 'b'], puse: []});
 		});
 
-		/// the entry node of a function walks the function body: a nested case is not read and turns the
-		/// rest of the walk into p-uses, a nested loop only reads its head
-		it('should walk the body of a function at its entry node by the nested rules', function () {
+		/// feature 005 FR-008 (KI §18, research R7): the entry node of a function reads nothing (it walked the
+		/// function body: was {cuse: ['x'], puse: ['a', 'o']})
+		it('should not read the body of a function at its entry node', function () {
 			var result = analyze(CODE.nested),
 				entries = [];
 			modelCtrl.collectionOfPageModels.get(result.scopeTree).intraProceduralModels.forEach(function (model) {
@@ -265,7 +265,7 @@ describe('findUSESet characterization', function () {
 			});
 			entries.length.should.eql(1);
 			entries[0].astNode.type.should.eql('BlockStatement');
-			usesOf(entries[0]).should.eql({cuse: ['x'], puse: ['a', 'o']});
+			usesOf(entries[0]).should.eql({cuse: [], puse: []});
 		});
 	});
 

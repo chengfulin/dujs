@@ -117,7 +117,7 @@ describe('new statements as call-sites (FR-002, FR-003)', function () {
 	it('US2-2 should connect new A(); to the field initializer and then the constructor', function () {
 		var result = analyzeProbe('us2-2');
 		/// x: L1 -> entry is the §18 residue of the entry of the field
-		result.intraPage().should.eql(['A: L2 -> L8', 'x: L1 -> L3', 'x: L1 -> entry', 'x: L5 -> L9']);
+		result.intraPage().should.eql(['A: L2 -> L8', 'x: L1 -> L3', 'x: L5 -> L9']);
 		result.interProceduralScopes().should.eql([[PAGE, ANONYMOUS + '0', ANONYMOUS + '1']]);
 	});
 
@@ -127,7 +127,7 @@ describe('new statements as call-sites (FR-002, FR-003)', function () {
 		/// x: L1 -> L15: super(); is not connected and its exception edge goes to the exit of B's constructor
 		result.intraPage().should.eql([
 			'A: L2 -> L7', 'B: L7 -> L14',
-			'x: L1 -> L15', 'x: L1 -> L8', 'x: L1 -> entry', 'x: L11 -> L15'
+			'x: L1 -> L15', 'x: L1 -> L8', 'x: L11 -> L15'
 		]);
 		result.interProceduralScopes().should.eql([[PAGE, ANONYMOUS + '1', ANONYMOUS + '2']]);
 	});
@@ -151,7 +151,7 @@ describe('new statements as call-sites (FR-002, FR-003)', function () {
 		var result = analyzeProbe('fn-new');
 		/// A: L2 -> entry is the §18 residue of the entry of g
 		result.intraPage().should.eql([
-			'A: L2 -> L8', 'A: L2 -> entry', 'console: entry -> L11', 'g: entry -> L10', 'x: L4 -> L11'
+			'A: L2 -> L8', 'console: entry -> L11', 'g: entry -> L10', 'x: L4 -> L11'
 		]);
 		result.interProceduralScopes().should.eql([
 			[PAGE + '.g', ANONYMOUS + '0'],
@@ -180,7 +180,7 @@ describe('new statements as call-sites (FR-002, FR-003)', function () {
 		var result = analyzeProbe('field-new');
 		/// B: L2 -> entry is the §18 residue of the entry of the field
 		result.intraPage().should.eql([
-			'A: L7 -> L10', 'B: L2 -> L8', 'B: L2 -> entry', 'console: entry -> L11', 'x: L4 -> L11'
+			'A: L7 -> L10', 'B: L2 -> L8', 'console: entry -> L11', 'x: L4 -> L11'
 		]);
 		result.interProceduralScopes().should.eql([
 			[ANONYMOUS + '1', ANONYMOUS + '0'],

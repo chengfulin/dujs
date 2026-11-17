@@ -138,7 +138,6 @@ describe('Bypass rule of calls (FR-016)', function () {
 		it('byp-2 should not change the pairs when the call is not connected', function () {
 			analyzeProbe(PROBES, 'byp-2').intraPage().should.eql([
 				'f: entry -> L7',
-				'f: entry -> entry',
 				'g: entry -> L10',
 				'p: entry -> L8',
 				't: L6 -> L8'

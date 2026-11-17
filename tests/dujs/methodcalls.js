@@ -142,7 +142,7 @@ describe('class method calls (User Story 3)', function () {
 		/// x: L9 -> entry is the §18 residue of the entries of the constructor and n
 		result.intraPage().should.eql([
 			'A: L2 -> L16', 'console: entry -> L17',
-			'x: L9 -> L13', 'x: L9 -> L17', 'x: L9 -> L6', 'x: L9 -> entry'
+			'x: L9 -> L13', 'x: L9 -> L17', 'x: L9 -> L6'
 		]);
 		/// in the order the models are registered
 		result.interProceduralScopes().should.eql([
@@ -169,7 +169,7 @@ describe('class method calls (User Story 3)', function () {
 		var result = analyzeProbe('us3-7');
 		var expected = [
 			'A: L2 -> L12', 'console: entry -> L13',
-			'x: L1 -> L3', 'x: L1 -> entry', 'x: L5 -> L13', 'x: L5 -> L8', 'x: L5 -> entry', 'x: L9 -> L13'
+			'x: L1 -> L3', 'x: L5 -> L13', 'x: L5 -> L8', 'x: L9 -> L13'
 		];
 		result.intraPage().should.eql(expected);
 		result.interProceduralScopes().should.eql([[PAGE, ANONYMOUS + '0', ANONYMOUS + '1', ANONYMOUS + '2']]);
@@ -191,9 +191,9 @@ describe('class method calls (User Story 3)', function () {
 		var result = analyzeProbe('handler-new');
 		/// the entry items are §18 residues (the handler is reentered by its LOOP)
 		result.intraPage().should.eql([
-			'A: L2 -> L11', 'A: L2 -> L12', 'A: L2 -> entry', 'console: entry -> L16',
+			'A: L2 -> L11', 'A: L2 -> L12', 'console: entry -> L16',
 			'onClick: entry -> L15', 'window: entry -> L15',
-			'x: L1 -> L16', 'x: L1 -> entry', 'x: L4 -> entry', 'x: L7 -> L13', 'x: L7 -> entry'
+			'x: L1 -> L16', 'x: L7 -> L13'
 		]);
 		result.intraPage().should.not.containEql('x: L1 -> L13');
 		result.interProceduralScopes().should.eql([[PAGE + '.onClick', ANONYMOUS + '0', ANONYMOUS + '1']]);

@@ -33,7 +33,6 @@
 		"intraPage": [
 			"A: L1 -> L3",
 			"A: L1 -> L7",
-			"A: L1 -> entry",
 			"g: entry -> L10",
 			"o: L7 -> L8"
 		],
@@ -44,7 +43,6 @@
 			[
 				"A: L1 -> L3",
 				"A: L1 -> L7",
-				"A: L1 -> entry",
 				"g: entry -> L10",
 				"o: L7 -> L8"
 			]
@@ -73,14 +71,12 @@
 	"classdecl.js": {
 		"intraPage": [
 			"A: L1 -> L2",
-			"A: L1 -> entry",
 			"A: L5 -> L6",
 			"o: L6 -> L7"
 		],
 		"interProcedural": [
 			[
 				"A: L1 -> L2",
-				"A: L1 -> entry",
 				"A: L5 -> L6",
 				"o: L6 -> L7"
 			]
@@ -92,8 +88,7 @@
 			"k: entry -> L5",
 			"o: L1 -> L2",
 			"p: L2 -> L2",
-			"q: L3 -> L4",
-			"q: L3 -> entry"
+			"q: L3 -> L4"
 		],
 		"interProcedural": [
 			[
@@ -101,8 +96,7 @@
 				"k: entry -> L5",
 				"o: L1 -> L2",
 				"p: L2 -> L2",
-				"q: L3 -> L4",
-				"q: L3 -> entry"
+				"q: L3 -> L4"
 			]
 		]
 	},
@@ -110,7 +104,6 @@
 		"intraPage": [
 			"a: L2 -> L3",
 			"a: L2 -> L5",
-			"a: L2 -> entry",
 			"k: entry -> L4",
 			"outer: entry -> L7",
 			"p: entry -> L5"
@@ -119,14 +112,12 @@
 			[
 				"a: L2 -> L3",
 				"a: L2 -> L5",
-				"a: L2 -> entry",
 				"k: entry -> L4",
 				"p: entry -> L5"
 			],
 			[
 				"a: L2 -> L3",
 				"a: L2 -> L5",
-				"a: L2 -> entry",
 				"k: entry -> L4",
 				"outer: entry -> L7",
 				"p: entry -> L5"
@@ -159,9 +150,7 @@
 			"fn: entry -> L4",
 			"fn: entry -> L7",
 			"m: L1 -> L3",
-			"m: L1 -> entry",
 			"t: L2 -> L3",
-			"t: L2 -> entry",
 			"w: L5 -> L6"
 		],
 		"interProcedural": [
@@ -170,9 +159,7 @@
 				"fn: entry -> L4",
 				"fn: entry -> L7",
 				"m: L1 -> L3",
-				"m: L1 -> entry",
 				"t: L2 -> L3",
-				"t: L2 -> entry",
 				"w: L5 -> L6"
 			]
 		]
@@ -180,14 +167,12 @@
 	"link-n5.js": {
 		"intraPage": [
 			"A: L1 -> L3",
-			"A: L1 -> L5",
-			"A: L1 -> entry"
+			"A: L1 -> L5"
 		],
 		"interProcedural": [
 			[
 				"A: L1 -> L3",
-				"A: L1 -> L5",
-				"A: L1 -> entry"
+				"A: L1 -> L5"
 			]
 		]
 	},
@@ -195,12 +180,10 @@
 		"code": "var x = 0; function f() { if (x) { let x = 1; console.log(x); } } f();",
 		"intraPage": [
 			"console: entry -> L1",
-			"console: entry -> entry",
 			"f: entry -> L1",
 			"x: L1 -> L1",
 			"x: L1 -> L1>L1:T",
-			"x: L1 -> L1>exit:F",
-			"x: L1 -> entry"
+			"x: L1 -> L1>exit:F"
 		]
 	}
 }

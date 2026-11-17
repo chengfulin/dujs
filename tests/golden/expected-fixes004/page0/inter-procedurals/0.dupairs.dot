@@ -2,11 +2,11 @@ digraph structs {
 node [shape="plaintext"]
 struct1 [label=<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-<tr><td>Variable</td><td COLSPAN="3">Def-Use pairs</td></tr><tr><td>c</td><td>(27,entry_b)</td><td>(27,(26,27))</td><td>(27,(26,30))</td></tr>
-<tr><td>n</td><td>(entry_a,21)</td><td></td><td></td></tr>
-<tr><td>t</td><td>(21,23)</td><td></td><td></td></tr>
-<tr><td>y</td><td></td><td></td><td></td></tr>
-<tr><td>x</td><td></td><td></td><td></td></tr>
+<tr><td>Variable</td><td COLSPAN="2">Def-Use pairs</td></tr><tr><td>c</td><td>(27,(26,27))</td><td>(27,(26,30))</td></tr>
+<tr><td>n</td><td>(entry_a,21)</td><td></td></tr>
+<tr><td>t</td><td>(21,23)</td><td></td></tr>
+<tr><td>y</td><td></td><td></td></tr>
+<tr><td>x</td><td></td><td></td></tr>
 </TABLE>
 >];
 }

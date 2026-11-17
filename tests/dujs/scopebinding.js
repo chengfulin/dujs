@@ -515,34 +515,6 @@ describe('PageBinding (scopebinding)', function () {
 		});
 	});
 
-	describe('isOnFunctionChain (research R6a, Q3)', function () {
-		it('should keep Vars visible from the function scope and drop block and catch bindings', function () {
-			var page = setUp([
-				'var x = 0;',
-				'function f(p) {',
-				'  if (x) { let x = 1; console.log(x); }',
-				'  try {} catch (e) { e; }',
-				'  return p;',
-				'}',
-				'f();',
-				'u = 1;'
-			].join('\n'));
-			var f = dujsScopeNamed(page.tree, 'f');
-			var blockLet = page.binding.defVarsOf(idOf(page.ast, 'x', 1, 3))[0],
-				catchParameter = page.binding.defVarsOf(idOf(page.ast, 'e', 0))[0],
-				globalX = page.binding.defVarsOf(idOf(page.ast, 'x', 0, 1))[0],
-				p = page.binding.defVarsOf(idOf(page.ast, 'p', 0))[0],
-				u = page.binding.defVarsOf(idOf(page.ast, 'u', 0))[0];
-			page.binding.isOnFunctionChain(blockLet, f).should.eql(false);
-			page.binding.isOnFunctionChain(catchParameter, f).should.eql(false);
-			page.binding.isOnFunctionChain(globalX, f).should.eql(true);
-			page.binding.isOnFunctionChain(p, f).should.eql(true);
-			page.binding.isOnFunctionChain(page.binding.builtInVariableOf('console'), f).should.eql(true);
-			page.binding.isOnFunctionChain(u, f).should.eql(true);
-			page.binding.isOnFunctionChain(globalX, page.tree.root).should.eql(true);
-		});
-	});
-
 	describe('classBindingGroupOf (research R7)', function () {
 		it('should group the outer and the inner Var of a class declaration', function () {
 			var page = setUp('class A {}\nvar z;');

@@ -108,7 +108,7 @@ describe('Parameter default values (004 US4)', function () {
 			var result = analyzeProbe('us4-1b'),
 				arrow = PAGE + '.f.$ANONYMOUS_FUN_0';
 			result.scopeNames().should.eql([PAGE, PAGE + '.f', arrow]);
-			result.intraPage().should.eql(['d: L1 -> L3', 'd: L1 -> entry', 'f: entry -> L6', 'g: L2 -> L4']);
+			result.intraPage().should.eql(['d: L1 -> L3', 'f: entry -> L6', 'g: L2 -> L4']);
 			result.interProceduralScopes().should.eql([
 				[PAGE + '.f', arrow],
 				[PAGE, PAGE + '.f', arrow]
@@ -139,7 +139,7 @@ describe('Parameter default values (004 US4)', function () {
 		// US4 #5: the outer default is evaluated once, the inner names are defined once
 		it('US4-5 should evaluate the outer default then initialize the nested defaults', function () {
 			var result = analyzeProbe('us4-5b');
-			result.intraPage().should.eql(['d: L1 -> L3', 'd: L1 -> entry', 'h: entry -> L7', 'x: L3 -> L4']);
+			result.intraPage().should.eql(['d: L1 -> L3', 'h: entry -> L7', 'x: L3 -> L4']);
 			var nodes = intraModelOf(result, PAGE + '.h').graph[2];
 			nodes.map(analyze.nodeLabel).should.eql(['entry', 'L5', 'L3', 'L4', 'exit']);
 			nodes.slice(1).map(definedNames).should.eql([[], ['x'], ['y'], []]);
@@ -163,7 +163,7 @@ describe('Parameter default values (004 US4)', function () {
 		// US4 #6: without an outer default value nothing changes
 		it('US4-6 should keep a pattern without an outer default unchanged', function () {
 			var result = analyzeProbe('us4-6b');
-			result.intraPage().should.eql(['d: L1 -> L3', 'd: L1 -> entry', 'h: entry -> L7', 'x: L3 -> L4']);
+			result.intraPage().should.eql(['d: L1 -> L3', 'h: entry -> L7', 'x: L3 -> L4']);
 			var nodes = intraModelOf(result, PAGE + '.h').graph[2];
 			nodes.map(analyze.nodeLabel).should.eql(['entry', 'L3', 'L4', 'exit']);
 			nodes.slice(1).map(definedNames).should.eql([['x'], ['y'], []]);

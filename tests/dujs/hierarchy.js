@@ -584,8 +584,7 @@ describe('US1 acceptance (specs/003-hierarchical-models quickstart §3)', functi
 		analyze.pairsOfModel(inter).should.eql([
 			'f: entry -> L5>L6:T',
 			'f: entry -> L5>exit:F',
-			'x: L1 -> L3',
-			'x: L1 -> entry'
+			'x: L1 -> L3'
 		]);
 	});
 
@@ -743,7 +742,7 @@ describe('N1 not reproduced (specs/003-hierarchical-models/probes/n1-leak-baseli
 		shouldNotLeak(models[0].pairs, ['a: L7 -> L3', 'a: L7 -> entry']);
 		models[0].pairs.should.eql(['h: entry -> L4']);
 		/// the page model still has them
-		models[1].pairs.should.containDeep(['a: L7 -> L3', 'a: L7 -> entry']);
+		models[1].pairs.should.containDeep(['a: L7 -> L3']);
 	});
 
 	it('n1b should not pair a = 2 of the page in the models of r -> c and p -> r -> c', function () {
@@ -755,7 +754,7 @@ describe('N1 not reproduced (specs/003-hierarchical-models/probes/n1-leak-baseli
 		shouldNotLeak(models[1].pairs, ['a: L10 -> L4', 'a: L10 -> entry']);
 		models[0].pairs.should.eql(['c: entry -> L5']);
 		models[1].pairs.should.eql(['c: entry -> L5', 'r: entry -> L7']);
-		models[2].pairs.should.containDeep(['a: L10 -> L4', 'a: L10 -> entry']);
+		models[2].pairs.should.containDeep(['a: L10 -> L4']);
 	});
 
 	it('n1c should not pair a = 3 of p in the model of r -> c', function () {
@@ -765,7 +764,7 @@ describe('N1 not reproduced (specs/003-hierarchical-models/probes/n1-leak-baseli
 		shouldNotLeak(models[0].pairs, ['a: L8 -> L4', 'a: L8 -> entry']);
 		models[0].pairs.should.eql(['c: entry -> L5']);
 		/// a = 3 is in p: the model of p -> r -> c keeps the pairs
-		models[1].pairs.should.eql(['a: L8 -> L4', 'a: L8 -> entry', 'c: entry -> L5', 'r: entry -> L7', 'r: entry -> L9']);
+		models[1].pairs.should.eql(['a: L8 -> L4', 'c: entry -> L5', 'r: entry -> L7', 'r: entry -> L9']);
 	});
 });
 

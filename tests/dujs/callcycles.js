@@ -145,8 +145,8 @@ describe('call cycles (FR-015)', function () {
 		var result = analyzeProbe('cyc-1'),
 			models = pageModelsOf(result).interProceduralModels,
 			intraPage = [
-				'A: L2 -> L11', 'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F', 'c: L1 -> entry',
-				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry',
+				'A: L2 -> L11', 'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F',
+				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F',
 				'console: entry -> L12', 'x: L1 -> L12', 'x: L8 -> L12'
 			];
 		result.intraPage().should.eql(intraPage);
@@ -155,7 +155,7 @@ describe('call cycles (FR-015)', function () {
 		summaryOf(models[0]).should.eql({
 			scopes: ['P.$A0'],
 			nodes: 7,
-			pairs: ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry']
+			pairs: ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F']
 		});
 		callEdgesOf(models[0]).should.eql(['P.$A0 L6 => P.$A0 (back)']);
 		summaryOf(models[1]).should.eql({scopes: ['P', 'P.$A0'], nodes: 14, pairs: intraPage});
@@ -168,10 +168,10 @@ describe('call cycles (FR-015)', function () {
 	it('cyc-2 should analyze mutually recursive methods with a model per scope', function () {
 		var result = analyzeProbe('cyc-2'),
 			models = pageModelsOf(result).interProceduralModels,
-			methodPairs = ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry'],
+			methodPairs = ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F'],
 			intraPage = [
-				'A: L2 -> L15', 'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F', 'c: L1 -> entry',
-				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry',
+				'A: L2 -> L15', 'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F',
+				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F',
 				'console: entry -> L16', 'x: L1 -> L16', 'x: L12 -> L16', 'x: L8 -> L16'
 			];
 		result.intraPage().should.eql(intraPage);
@@ -197,7 +197,7 @@ describe('call cycles (FR-015)', function () {
 	it('cyc-3 should keep t: L4 -> L6 over a recursive call', function () {
 		var result = analyzeProbe('cyc-3'),
 			models = pageModelsOf(result).interProceduralModels,
-			methodPairs = ['p: entry -> L4', 'p: entry -> entry', 't: L4 -> L6', 't: L4 -> entry'];
+			methodPairs = ['p: entry -> L4', 't: L4 -> L6'];
 		result.intraPage().should.eql(['A: L2 -> L9'].concat(methodPairs));
 		models.length.should.eql(2);
 		summaryOf(models[0]).should.eql({scopes: ['P.$A0'], nodes: 6, pairs: methodPairs});
@@ -211,9 +211,9 @@ describe('call cycles (FR-015)', function () {
 		var result = analyzeProbe('ctor-cycle'),
 			models = pageModelsOf(result).interProceduralModels,
 			intraPage = [
-				'A: L2 -> L11', 'A: L2 -> L6', 'A: L2 -> entry',
-				'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F', 'c: L1 -> entry',
-				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry',
+				'A: L2 -> L11', 'A: L2 -> L6',
+				'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F',
+				'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F',
 				'console: entry -> L12', 'x: L1 -> L12', 'x: L8 -> L12'
 			];
 		result.intraPage().should.eql(intraPage);
@@ -222,7 +222,7 @@ describe('call cycles (FR-015)', function () {
 		summaryOf(models[0]).should.eql({
 			scopes: ['P.$A0'],
 			nodes: 7,
-			pairs: ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry']
+			pairs: ['c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F']
 		});
 		callEdgesOf(models[0]).should.eql(['P.$A0 L6 => P.$A0 (back)']);
 		summaryOf(models[1]).should.eql({scopes: ['P', 'P.$A0'], nodes: 14, pairs: intraPage});
@@ -310,8 +310,8 @@ describe('call cycles (FR-015)', function () {
 		models[1].graph[2].length.should.eql(22);
 		result.intraPage().should.eql([
 			'A: L2 -> L15', 'a: L15 -> L16', 'a: L15 -> L17',
-			'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F', 'c: L1 -> entry',
-			'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F', 'c: L5 -> entry',
+			'c: L1 -> L4>L5:T', 'c: L1 -> L4>L8:F',
+			'c: L5 -> L4>L5:T', 'c: L5 -> L4>L8:F',
 			'console: entry -> L18', 'x: L1 -> L18', 'x: L12 -> L18', 'x: L8 -> L18'
 		]);
 	});
@@ -340,13 +340,13 @@ describe('call cycles (FR-015)', function () {
 			'A: L2 -> L10', 'a: L10 -> L12', 'console: entry -> L15',
 			'i: L1 -> L11>L12:T', 'i: L1 -> L11>L15:F', 'i: L1 -> L13',
 			'i: L13 -> L11>L12:T', 'i: L13 -> L11>L15:F', 'i: L13 -> L13',
-			'x: L1 -> L15', 'x: L1 -> L4>L5:T', 'x: L1 -> L4>exit:F', 'x: L1 -> L5', 'x: L1 -> entry',
-			'x: L5 -> L15', 'x: L5 -> L4>L5:T', 'x: L5 -> L4>exit:F', 'x: L5 -> L5', 'x: L5 -> entry'
+			'x: L1 -> L15', 'x: L1 -> L4>L5:T', 'x: L1 -> L4>exit:F', 'x: L1 -> L5',
+			'x: L5 -> L15', 'x: L5 -> L4>L5:T', 'x: L5 -> L4>exit:F', 'x: L5 -> L5'
 		]);
 		summaryOf(pageModelsOf(result).interProceduralModels[0]).should.eql({
 			scopes: ['P.$A0'],
 			nodes: 6,
-			pairs: ['x: L5 -> L4>L5:T', 'x: L5 -> L4>exit:F', 'x: L5 -> L5', 'x: L5 -> entry']
+			pairs: ['x: L5 -> L4>L5:T', 'x: L5 -> L4>exit:F', 'x: L5 -> L5']
 		});
 	});
 });
@@ -372,11 +372,11 @@ describe('event handlers registered in a call cycle (FR-015, plan U3)', function
 	it('cyc-handler should connect the handler h registered in n', function () {
 		var result = analyzeProbe('cyc-handler'),
 			models = pageModelsOf(result).interProceduralModels,
-			methodPairs = ['c: L8 -> L7>L11:F', 'c: L8 -> L7>L8:T', 'c: L8 -> entry'],
+			methodPairs = ['c: L8 -> L7>L11:F', 'c: L8 -> L7>L8:T'],
 			intraPage = [
-				'A: L5 -> L19', 'c: L1 -> L7>L11:F', 'c: L1 -> L7>L8:T', 'c: L1 -> entry',
-				'c: L8 -> L7>L11:F', 'c: L8 -> L7>L8:T', 'c: L8 -> entry',
-				'document: entry -> L14', 'document: entry -> entry', 'h: entry -> L14', 'h: entry -> entry'
+				'A: L5 -> L19', 'c: L1 -> L7>L11:F', 'c: L1 -> L7>L8:T',
+				'c: L8 -> L7>L11:F', 'c: L8 -> L7>L8:T',
+				'document: entry -> L14', 'h: entry -> L14'
 			];
 		result.intraPage().should.eql(intraPage);
 		pageModelsOf(result).intraPageModels[0].graph[2].length.should.eql(24);
@@ -396,8 +396,8 @@ describe('event handlers registered in a call cycle (FR-015, plan U3)', function
 		var result = analyzeProbe('cyc-handler-nocyc'),
 			models = pageModelsOf(result).interProceduralModels,
 			intraPage = [
-				'A: L5 -> L19', 'c: L1 -> L7>L11:F', 'c: L1 -> L7>L8:T', 'c: L1 -> entry',
-				'document: entry -> L14', 'document: entry -> entry', 'h: entry -> L14', 'h: entry -> entry'
+				'A: L5 -> L19', 'c: L1 -> L7>L11:F', 'c: L1 -> L7>L8:T',
+				'document: entry -> L14', 'h: entry -> L14'
 			];
 		result.intraPage().should.eql(intraPage);
 		pageModelsOf(result).intraPageModels[0].graph[2].length.should.eql(23);

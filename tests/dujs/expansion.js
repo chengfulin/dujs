@@ -97,16 +97,12 @@ describe('pre-refactor characterization (probes)', function () {
 						'v: entry -> L2',
 						'x: L4 -> L3',
 						'x: L4 -> L6',
-						'x: L4 -> entry',
 						'x: L5 -> L3',
 						'x: L5 -> L6',
-						'x: L5 -> entry',
 						'x: L6 -> L3',
 						'x: L6 -> L6',
-						'x: L6 -> entry',
 						'x: L7 -> L3',
-						'x: L7 -> L6',
-						'x: L7 -> entry'
+						'x: L7 -> L6'
 					]
 				}
 			],
@@ -124,16 +120,12 @@ describe('pre-refactor characterization (probes)', function () {
 				'v: entry -> L2',
 				'x: L4 -> L3',
 				'x: L4 -> L6',
-				'x: L4 -> entry',
 				'x: L5 -> L3',
 				'x: L5 -> L6',
-				'x: L5 -> entry',
 				'x: L6 -> L3',
 				'x: L6 -> L6',
-				'x: L6 -> entry',
 				'x: L7 -> L3',
-				'x: L7 -> L6',
-				'x: L7 -> entry'
+				'x: L7 -> L6'
 			],
 			onEvent: [
 				'$DOMAIN.$PAGE_0'
@@ -152,16 +144,12 @@ describe('pre-refactor characterization (probes)', function () {
 				'v: entry -> L2',
 				'x: L4 -> L3',
 				'x: L4 -> L6',
-				'x: L4 -> entry',
 				'x: L5 -> L3',
 				'x: L5 -> L6',
-				'x: L5 -> entry',
 				'x: L6 -> L3',
 				'x: L6 -> L6',
-				'x: L6 -> entry',
 				'x: L7 -> L3',
-				'x: L7 -> L6',
-				'x: L7 -> entry'
+				'x: L7 -> L6'
 			]
 		},
 		a2: {
@@ -189,7 +177,6 @@ describe('pre-refactor characterization (probes)', function () {
 						'h: entry -> L6',
 						'h: entry -> L7',
 						'init: entry -> L3',
-						'init: entry -> entry',
 						'n: L3 -> L10',
 						'n: L3 -> L9',
 						'n: L4 -> L10',
@@ -198,8 +185,7 @@ describe('pre-refactor characterization (probes)', function () {
 						'window: entry -> L4',
 						'window: entry -> L6',
 						'window: entry -> L7',
-						'window: entry -> L8',
-						'window: entry -> entry'
+						'window: entry -> L8'
 					]
 				}
 			],
@@ -208,9 +194,7 @@ describe('pre-refactor characterization (probes)', function () {
 				'h: entry -> L6',
 				'h: entry -> L7',
 				'h: entry -> L8',
-				'h: entry -> entry',
 				'init: entry -> L3',
-				'init: entry -> entry',
 				'n: L3 -> L10',
 				'n: L3 -> L9',
 				'n: L4 -> L10',
@@ -218,12 +202,10 @@ describe('pre-refactor characterization (probes)', function () {
 				'n: L8 -> L10',
 				'n: L8 -> L9',
 				'reg: entry -> L4',
-				'reg: entry -> entry',
 				'window: entry -> L4',
 				'window: entry -> L6',
 				'window: entry -> L7',
-				'window: entry -> L8',
-				'window: entry -> entry'
+				'window: entry -> L8'
 			],
 			onEvent: [
 				'$DOMAIN.$PAGE_0.h.reg',
@@ -236,9 +218,7 @@ describe('pre-refactor characterization (probes)', function () {
 				'h: entry -> L6',
 				'h: entry -> L7',
 				'h: entry -> L8',
-				'h: entry -> entry',
 				'init: entry -> L3',
-				'init: entry -> entry',
 				'n: L3 -> L10',
 				'n: L3 -> L9',
 				'n: L4 -> L10',
@@ -246,12 +226,10 @@ describe('pre-refactor characterization (probes)', function () {
 				'n: L8 -> L10',
 				'n: L8 -> L9',
 				'reg: entry -> L4',
-				'reg: entry -> entry',
 				'window: entry -> L4',
 				'window: entry -> L6',
 				'window: entry -> L7',
-				'window: entry -> L8',
-				'window: entry -> entry'
+				'window: entry -> L8'
 			]
 		},
 		a3: {
@@ -279,7 +257,6 @@ describe('pre-refactor characterization (probes)', function () {
 						'inner: L3 -> L4',
 						'outer: entry -> L9',
 						's: L1 -> L3',
-						's: L1 -> entry',
 						's: L3 -> L10>L10:F',
 						's: L3 -> L10>L10:T',
 						's: L3 -> L5>L5:T',
@@ -297,7 +274,6 @@ describe('pre-refactor characterization (probes)', function () {
 				'inner: L3 -> L4',
 				'outer: entry -> L9',
 				's: L1 -> L3',
-				's: L1 -> entry',
 				's: L3 -> L10>L10:F',
 				's: L3 -> L10>L10:T',
 				's: L3 -> L5>L5:T',
@@ -316,7 +292,6 @@ describe('pre-refactor characterization (probes)', function () {
 				'inner: L3 -> L4',
 				'outer: entry -> L9',
 				's: L1 -> L3',
-				's: L1 -> entry',
 				's: L3 -> L10>L10:F',
 				's: L3 -> L10>L10:T',
 				's: L3 -> L5>L5:T',
@@ -349,20 +324,16 @@ describe('pre-refactor characterization (probes)', function () {
 				'q: L1 -> L2',
 				'q: L1 -> L2>L2:T',
 				'q: L1 -> L2>exit:F',
-				'q: L1 -> entry',
 				'q: L2 -> L2',
 				'q: L2 -> L2>L2:T',
 				'q: L2 -> L2>exit:F',
-				'q: L2 -> entry',
 				'q: L3 -> L2',
 				'q: L3 -> L2>L2:T',
 				'q: L3 -> L2>exit:F',
-				'q: L3 -> entry',
 				'q: L7 -> L2',
 				'q: L7 -> L2>L2:T',
 				'q: L7 -> L2>exit:F',
 				'q: L7 -> L8',
-				'q: L7 -> entry',
 				'window: entry -> L4',
 				'window: entry -> L5',
 				'window: entry -> L6'
@@ -380,20 +351,16 @@ describe('pre-refactor characterization (probes)', function () {
 				'q: L1 -> L2',
 				'q: L1 -> L2>L2:T',
 				'q: L1 -> L2>exit:F',
-				'q: L1 -> entry',
 				'q: L2 -> L2',
 				'q: L2 -> L2>L2:T',
 				'q: L2 -> L2>exit:F',
-				'q: L2 -> entry',
 				'q: L3 -> L2',
 				'q: L3 -> L2>L2:T',
 				'q: L3 -> L2>exit:F',
-				'q: L3 -> entry',
 				'q: L7 -> L2',
 				'q: L7 -> L2>L2:T',
 				'q: L7 -> L2>exit:F',
 				'q: L7 -> L8',
-				'q: L7 -> entry',
 				'window: entry -> L4',
 				'window: entry -> L5',
 				'window: entry -> L6'
@@ -437,9 +404,7 @@ describe('pre-refactor characterization (probes)', function () {
 					],
 					pairs: [
 						'a: L1 -> L3',
-						'a: L1 -> entry',
 						'a: L13 -> L6',
-						'a: L13 -> entry',
 						'g: entry -> L12',
 						'k: entry -> L14'
 					]
@@ -447,9 +412,7 @@ describe('pre-refactor characterization (probes)', function () {
 			],
 			intraPage: [
 				'a: L1 -> L3',
-				'a: L1 -> entry',
 				'a: L13 -> L6',
-				'a: L13 -> entry',
 				'g: entry -> L12',
 				'k: entry -> L14'
 			],
@@ -458,9 +421,7 @@ describe('pre-refactor characterization (probes)', function () {
 			],
 			interPage: [
 				'a: L1 -> L3',
-				'a: L1 -> entry',
 				'a: L13 -> L6',
-				'a: L13 -> entry',
 				'g: entry -> L12',
 				'k: entry -> L14'
 			]
@@ -485,22 +446,18 @@ describe('pre-refactor characterization (probes)', function () {
 					],
 					pairs: [
 						'a: L11 -> L3',
-						'a: L11 -> entry',
 						'f: entry -> L10',
 						'g: entry -> L12',
 						'g: entry -> L8',
-						'g: entry -> entry',
 						'h: entry -> L7'
 					]
 				}
 			],
 			intraPage: [
 				'a: L11 -> L3',
-				'a: L11 -> entry',
 				'f: entry -> L10',
 				'g: entry -> L12',
 				'g: entry -> L8',
-				'g: entry -> entry',
 				'h: entry -> L7'
 			],
 			onEvent: [
@@ -508,11 +465,9 @@ describe('pre-refactor characterization (probes)', function () {
 			],
 			interPage: [
 				'a: L11 -> L3',
-				'a: L11 -> entry',
 				'f: entry -> L10',
 				'g: entry -> L12',
 				'g: entry -> L8',
-				'g: entry -> entry',
 				'h: entry -> L7'
 			]
 		},
@@ -535,21 +490,18 @@ describe('pre-refactor characterization (probes)', function () {
 					],
 					pairs: [
 						'g: entry -> L3',
-						'g: entry -> entry',
 						'h: entry -> L4',
 						'h: entry -> L5',
 						'n: L1 -> L6',
 						'n: L3 -> L6',
 						'reg: entry -> L3',
 						'window: entry -> L3',
-						'window: entry -> L5',
-						'window: entry -> entry'
+						'window: entry -> L5'
 					]
 				}
 			],
 			intraPage: [
 				'g: entry -> L3',
-				'g: entry -> entry',
 				'h: entry -> L4',
 				'h: entry -> L5',
 				'n: L1 -> L6',
@@ -557,8 +509,7 @@ describe('pre-refactor characterization (probes)', function () {
 				'n: L3 -> L6',
 				'reg: entry -> L3',
 				'window: entry -> L3',
-				'window: entry -> L5',
-				'window: entry -> entry'
+				'window: entry -> L5'
 			],
 			onEvent: [
 				'$DOMAIN.$PAGE_0.g',
@@ -567,7 +518,6 @@ describe('pre-refactor characterization (probes)', function () {
 			],
 			interPage: [
 				'g: entry -> L3',
-				'g: entry -> entry',
 				'h: entry -> L4',
 				'h: entry -> L5',
 				'n: L1 -> L6',
@@ -575,8 +525,7 @@ describe('pre-refactor characterization (probes)', function () {
 				'n: L3 -> L6',
 				'reg: entry -> L3',
 				'window: entry -> L3',
-				'window: entry -> L5',
-				'window: entry -> entry'
+				'window: entry -> L5'
 			]
 		}
 	};

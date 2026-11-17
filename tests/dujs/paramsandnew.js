@@ -79,7 +79,7 @@ describe('Arguments of new and parameters with default values', function () {
 			var pairs = result.intraPage();
 			pairsOf(pairs, 'b').should.eql(['b: L2 -> L3']);
 			/// d: L1 -> entry comes from the existing modeling of the call site, not from FR-005
-			pairsOf(pairs, 'd').should.eql(['d: L1 -> L2', 'd: L1 -> entry']);
+			pairsOf(pairs, 'd').should.eql(['d: L1 -> L2']);
 			result.intraProcedural(PAGE + '.f').should.not.containEql('b: entry -> L3');
 		});
 
