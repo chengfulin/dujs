@@ -32,6 +32,13 @@
           "reviewed": true,
           "committed": true
         }
+      },
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
       }
     }
   },

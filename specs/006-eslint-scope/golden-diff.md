@@ -77,17 +77,27 @@ eslint-scope 成為宣告與解析來源（T016–T033）後，golden 共 8 筆�
 
 ### 變化說明
 
-（待 US1 階段填寫）
+catch 子句節點只讀參數中的求值運算式、GEN 只含參數綁定、`definingLocalStorageNodes` 不走進 catch 本體（T039、T040、T072；D4、U3）後，
+`UPDATE_GOLDEN=1 npm test` 重建的 `expected*` 與 Foundational commit（607c01d）**逐位元組相同**；`diffcheck.js golden --report` 重新產生的
+淨差異表與 Foundational 相同（8 筆，整表未變），`--verify` 結束碼 0。`tests/golden/manifest.json` 無鍵需更新。
+
+- 唯一含 catch 的 fixture 是 `expected` page0 `parseSaved`（app.js L54 `catch (e) { parsed = []; }`）：develop 的 catch 節點把本體的 `parsed = []` 也當定義，
+  但本體節點（L55）緊接著重新定義 `parsed`，catch 節點的那筆定義到不了任何使用；本體也沒有讀取（`[]` 為字面值）。因此 D4／U3 的修正
+  在 golden 上沒有可見差異，預期的 catch 類 (a)／(d) 移除在 golden 不出現（只在 probes catch-*、plan-u3、plan-catch1 出現，由 `tests/dujs/catchclause.js` 驗收）。
 
 ### 雜湊變化表（舊→新 sha256 前 12 碼）
 
 | case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
 |------|------|---------------------------|------|
 
+（無變化）
+
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+
+（無既有測試修改；只新增案例：`tests/dujs/catchclause.js`（新檔）與 `tests/dujs/usedexpressions.js` 的 scenario 6）
 
 ## US3
 

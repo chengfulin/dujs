@@ -67,6 +67,16 @@ var CODE = {
 		'  a;',
 		'  for (k in o) { b; }',
 		'}'
+	].join('\n'),
+	/// scenario 6: a catch clause node only reads the evaluated expressions of its parameter (feature 006 D4, R10)
+	'catch': [
+		'var a, b, d, x;',
+		'try { x = 1; }',
+		'catch ({p = d, [a]: q}) { b; }',
+		'try { x = 2; }',
+		'catch { b; }',
+		'try { x = 3; }',
+		'catch (e) { b; }'
 	].join('\n')
 };
 
@@ -258,6 +268,20 @@ describe('findUSESet characterization', function () {
 			usesOf(entries[0]).should.eql({cuse: ['x'], puse: ['a', 'o']});
 		});
 	});
+
+	describe('scenario 6: catch clause node (feature 006, D4)', function () {
+		it('should read the default and the computed key of the parameter, not the body', function () {
+			usesOf(nodeAt(nodes['catch'], 3, '', 'CatchClause')).should.eql({cuse: ['d', 'a'], puse: []});
+		});
+
+		it('should read nothing at a catch without parameter', function () {
+			usesOf(nodeAt(nodes['catch'], 5, '', 'CatchClause')).should.eql({cuse: [], puse: []});
+		});
+
+		it('should read nothing at a catch with an identifier parameter', function () {
+			usesOf(nodeAt(nodes['catch'], 7, '', 'CatchClause')).should.eql({cuse: [], puse: []});
+		});
+	});
 });
 
 describe('usedExpressionsOf', function () {
@@ -360,6 +384,20 @@ describe('usedExpressionsOf', function () {
 	describe('scenario 5: other nodes', function () {
 		it('should walk the astNode of x = a + b', function () {
 			itemsOf('general', nodeAt(nodes.general, 2, '', 'AssignmentExpression')).should.eql([['x = a + b', 'walk']]);
+		});
+	});
+
+	describe('scenario 6: catch clause node (feature 006, D4)', function () {
+		it('should walk the default and the computed key of the parameter only', function () {
+			itemsOf('catch', nodeAt(nodes['catch'], 3, '', 'CatchClause')).should.eql([['d', 'walk'], ['a', 'walk']]);
+		});
+
+		it('should read nothing at a catch without parameter', function () {
+			itemsOf('catch', nodeAt(nodes['catch'], 5, '', 'CatchClause')).should.eql([]);
+		});
+
+		it('should read nothing at a catch with an identifier parameter', function () {
+			itemsOf('catch', nodeAt(nodes['catch'], 7, '', 'CatchClause')).should.eql([]);
 		});
 	});
 });

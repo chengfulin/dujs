@@ -118,18 +118,19 @@ description: "Task list for feature 006-eslint-scope"
 
 ### 測試（先寫，須先失敗）
 
-- [ ] T036 [P] [US1] 新增 `tests/dujs/catchclause.js`（acceptance US1-1…6、U3、Q2）：讀 `tests/dujs/cases/probes006/` 的 catch-b、catch-a、catch-c、catchloop、catchinner、catch-edge（頁面 intra-procedural、intra-page；US1-5 另驗 inter-procedural），斷言 spec 的有／無 pair；plan-u3（無 `y: L4 -> L7`；有 `y: L1 -> L7`、`y: L5 -> L7`）；plan-catch1（無 `e: entry -> L4`、`console: entry -> L4`；有 `e: L5 -> L6`、`h: entry -> L3`、`k: entry -> L9`）
-- [ ] T037 [P] [US1] 在 `tests/dujs/usedexpressions.js` 加 CatchClause items 測試：有參數時只含參數中的求值運算式（解構預設值、計算鍵，read `'walk'`）；無參數 `catch {}` 不讀任何東西；不含本體讀取
-- [ ] T038 [US1] 執行 `npx mocha tests/dujs/catchclause.js tests/dujs/usedexpressions.js` 確認新測試失敗（red；Foundational 已使部分成立者於回報中列出）
+- [X] T036 [P] [US1] 新增 `tests/dujs/catchclause.js`（acceptance US1-1…6、U3、Q2）：讀 `tests/dujs/cases/probes006/` 的 catch-b、catch-a、catch-c、catchloop、catchinner、catch-edge（頁面 intra-procedural、intra-page；US1-5 另驗 inter-procedural），斷言 spec 的有／無 pair；plan-u3（無 `y: L4 -> L7`；有 `y: L1 -> L7`、`y: L5 -> L7`）；plan-catch1（無 `e: entry -> L4`、`console: entry -> L4`；有 `e: L5 -> L6`、`h: entry -> L3`、`k: entry -> L9`）
+- [X] T037 [P] [US1] 在 `tests/dujs/usedexpressions.js` 加 CatchClause items 測試：有參數時只含參數中的求值運算式（解構預設值、計算鍵，read `'walk'`）；無參數 `catch {}` 不讀任何東西；不含本體讀取
+- [X] T038 [US1] 執行 `npx mocha tests/dujs/catchclause.js tests/dujs/usedexpressions.js` 確認新測試失敗（red；Foundational 已使部分成立者於回報中列出）
 
 ### 實作
 
-- [ ] T039 [US1] `lib/dujs/usedexpressions.js`：`astNodeItems` 的 CatchClause 只回傳 `bindingPattern.getEvaluatedExpressions(param)`，無參數時為空
-- [ ] T040 [US1] `lib/dujs/defuseanalyzer.js`：CatchClause 節點的 GEN 只含 T029 的參數綁定，不再走訪 catch 本體（移除 T029 保留的區塊內賦值定義，U3）；`findUSESet` 於 CatchClause 只用 T039 的 items
-- [ ] T041 [US1] `npx mocha tests/dujs/catchclause.js tests/dujs/usedexpressions.js tests/dujs/scopeguards.js` 全過；run.js 對 catch-*、catchloop、catchinner、plan-u3、plan-catch1 的輸出與 spec「探測結果」修正後預期相符
-- [ ] T042 [US1] 確認無既有測試需改；若有，依「全程規則」只改允許範圍並記入 `golden-diff.md` US1「單元測試期望」
-- [ ] T043 [US1] Golden 更新（序列化，US1；**更新 golden → 跑 diffcheck → 更新 manifest 與 golden-diff**，依「全程規則」步驟 1–5）：預期 catch 類 (a)–(e)（如 `expected/` page0 `parseSaved` 的 catch 參數 `e` 列）；淨差異表整表重新產生；結果寫入 `specs/006-eslint-scope/golden-diff.md` US1 節與 `tests/golden/manifest.json`；簽核欄只填「草擬，待簽核」；orchestrator 親自重跑 `--verify` 通過後才 commit
-- [ ] T044 [US1] US1 閘門：閘門全過、`diffcheck.js golden --verify` 結束碼 0；回報可提交
+- [X] T039 [US1] `lib/dujs/usedexpressions.js`：`astNodeItems` 的 CatchClause 只回傳 `bindingPattern.getEvaluatedExpressions(param)`，無參數時為空
+- [X] T040 [US1] `lib/dujs/defuseanalyzer.js`：CatchClause 節點的 GEN 只含 T029 的參數綁定，不再走訪 catch 本體（移除 T029 保留的區塊內賦值定義，U3）；`findUSESet` 於 CatchClause 只用 T039 的 items
+- [X] T072 [US1] `lib/dujs/hierarchy.js` 的 `definingLocalStorageNodes`：對 CatchClause 節點只走訪參數中的求值運算式（同 T039），不走進本體，使 catch 本體內的 `localStorage.k = v` 只算在本體自己的節點（D4、FR-003 一致性；US1 影響邊界分析發現）；在 `tests/dujs/catchclause.js` 加案例（`try { f2(); } catch (e) { localStorage.k = e; }`：catch 節點不是定義 localStorage 的節點，本體節點是）
+- [X] T041 [US1] `npx mocha tests/dujs/catchclause.js tests/dujs/usedexpressions.js tests/dujs/scopeguards.js` 全過；run.js 對 catch-*、catchloop、catchinner、plan-u3、plan-catch1 的輸出與 spec「探測結果」修正後預期相符
+- [X] T042 [US1] 確認無既有測試需改；若有，依「全程規則」只改允許範圍並記入 `golden-diff.md` US1「單元測試期望」
+- [X] T043 [US1] Golden 更新（序列化，US1；**更新 golden → 跑 diffcheck → 更新 manifest 與 golden-diff**，依「全程規則」步驟 1–5）：預期 catch 類 (a)–(e)（如 `expected/` page0 `parseSaved` 的 catch 參數 `e` 列）；淨差異表整表重新產生；結果寫入 `specs/006-eslint-scope/golden-diff.md` US1 節與 `tests/golden/manifest.json`；簽核欄只填「草擬，待簽核」；orchestrator 親自重跑 `--verify` 通過後才 commit
+- [X] T044 [US1] US1 閘門：閘門全過、`diffcheck.js golden --verify` 結束碼 0；回報可提交
 
 **Checkpoint**: US1 獨立可驗（catch 參數只在 catch 子句內定義與使用）。
 
