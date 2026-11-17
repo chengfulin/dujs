@@ -21,7 +21,7 @@ node specs/006-eslint-scope/tools/diffcheck.js mdn --report
 node specs/006-eslint-scope/tools/diffcheck.js mdn --verify specs/006-eslint-scope/mdn-diff.md
 ```
 
-`--verify` 結束碼：0＝全部通過；1＝有差異未記錄、記錄與實際不符、類別判準不成立、釘選筆數不符（逐項列出）；2＝golden 模式無法取得基準（`golden-diff.md` 檔頭未填且無 `--base`），
+`--verify` 結束碼：0＝全部通過；1＝有差異未記錄、記錄與實際不符、類別判準不成立、釘選筆數不符、mdn 模式中任一 id 的 CLI exit code 與 `exitcodes.json` 不同（逐項列出）；2＝golden 模式無法取得基準（`golden-diff.md` 檔頭未填且無 `--base`），
 不回退 `HEAD` 或其他 commit。diffcheck 不進 `npm test`；每個改 golden 或 MDN 紀錄的階段由 orchestrator 親自重跑 `--verify` 通過後才 commit。
 
 ## 2. 差異單位（每頁、每個模型層級）
@@ -101,5 +101,6 @@ CatchClause 的（所在行、行範圍、參數綁定名）；`nonCatchDecl(N)`
    `mdn/README.md` 記錄來源 commit、授權（CC0）與 sha256 全碼。
 4. 以 develop 的 lib（本 branch 在 Setup 時與 develop 相同；或 `git archive 584e17d | tar -x -C <scratchpad>/develop` 後 `npm ci`）對每個 id 執行 CLI，只保存 `.dot` 檔到
    `mdn/baseline-develop/<id>/`（不存 `.png`、`report.html`），並以 `docs/research/mdn-baseline/tools/run-pairs.js` 輸出 `mdn/baseline-develop/<id>.pairs.txt` 供人工閱讀。
+   每個 id 的 CLI exit code 記入 `mdn/baseline-develop/exitcodes.json`（`{"<id>": 0, …}`）。（Setup 審查 R4 補記）
 5. 以 `tools/perf.js` 量 develop 的分析時間（research R15），寫入 `perf.md`。
 6. 同一個 commit 提交 corpus、快照與 perf 基準；此 commit 為 MDN 的「修正前」。golden 的「修正前」不取此 commit，固定為 `584e17d`（Setup 不改 `tests/golden`）。

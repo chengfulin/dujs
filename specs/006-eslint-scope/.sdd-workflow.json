@@ -23,7 +23,12 @@
         "mode": "sequential",
         "mode_reason": "plan 規定改 golden 的階段（Foundational、US1、US3、US4）須序列化，熱點檔跨幾乎所有 story；Foundational 依 tasks 分 2a/2b/2c 三批；略過並行規劃"
       },
-      "phases": {}
+      "phases": {
+        "Setup": {
+          "reviewed": true,
+          "committed": true
+        }
+      }
     }
   },
   "brief": {

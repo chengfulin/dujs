@@ -1,0 +1,10 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="2">Def-Use pairs</td></tr><tr><td>guessField</td><td></td><td></td></tr>
+<tr><td>guessSubmit</td><td></td><td></td></tr>
+<tr><td>resetButton</td><td>(49,50)</td><td>(49,51)</td></tr>
+</TABLE>
+>];
+}

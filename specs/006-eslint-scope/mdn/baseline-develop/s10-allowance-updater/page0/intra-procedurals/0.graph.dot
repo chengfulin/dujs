@@ -1,0 +1,21 @@
+digraph CFG {
+node [shape="box"]
+label = "page"
+n17 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n18 [label="2"]
+n19 [label="3"]
+n20 [label="4"]
+n21 [label="6"]
+n22 [label="26"]
+n23 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n17 -> n18 []
+n18 -> n19 []
+n18 -> n23 [color="red", label="exception"]
+n19 -> n20 []
+n19 -> n23 [color="red", label="exception"]
+n20 -> n21 []
+n21 -> n22 []
+n21 -> n23 [color="red", label="exception"]
+n22 -> n23 []
+n22 -> n23 [color="red", label="exception"]
+}

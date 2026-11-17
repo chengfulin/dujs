@@ -1,0 +1,25 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="3">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry,18)</td><td>(entry,19)</td><td>(entry,20)</td></tr>
+<tr><td>String</td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td></tr>
+<tr><td>machineActive</td><td>(2,(8,9))</td><td>(2,(8,15))</td><td></td></tr>
+<tr><td>pwd</td><td>(3,(10,10:T))</td><td>(3,(10,10:F))</td><td></td></tr>
+<tr><td>machineResult</td><td>(15,21)</td><td>(9,21)</td><td></td></tr>
+<tr><td>pwdResult</td><td>(6,22)</td><td>(10:T,22)</td><td>(10:F,22)</td></tr>
+<tr><td>section</td><td>(18,23)</td><td>(18,24)</td><td></td></tr>
+<tr><td>para1</td><td>(21,23)</td><td></td><td></td></tr>
+<tr><td>para2</td><td>(22,24)</td><td></td><td></td></tr>
+</TABLE>
+>];
+}

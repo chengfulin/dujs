@@ -1,0 +1,10 @@
+digraph CFG {
+node [shape="box"]
+label = "anonymousFunction[ $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4 ]"
+n82 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n83 [label="34"]
+n84 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n82 -> n83 []
+n83 -> n84 []
+n83 -> n84 [color="red", label="exception"]
+}

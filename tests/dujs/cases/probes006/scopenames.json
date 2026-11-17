@@ -1,0 +1,406 @@
+{
+	"annexb.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.f",
+			"$DOMAIN.$PAGE_0.g2"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"args.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+			"$DOMAIN.$PAGE_0.b"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"catch-a.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0"
+		],
+		"models": {
+			"intraProcedural": 1,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"catch-b.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0"
+		],
+		"models": {
+			"intraProcedural": 1,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"catch-c.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0"
+		],
+		"models": {
+			"intraProcedural": 1,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"catch-edge.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0"
+		],
+		"models": {
+			"intraProcedural": 1,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"catchinner.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.f",
+			"$DOMAIN.$PAGE_0.f.$ANONYMOUS_FUN_0"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 2,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"catchloop.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.f",
+			"$DOMAIN.$PAGE_0.f.inner"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 2,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"classdecl.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"evalouter.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.outer",
+			"$DOMAIN.$PAGE_0.outer.k"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 2,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"globals.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0"
+		],
+		"models": {
+			"intraProcedural": 1,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"link-bypass.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.g"
+		],
+		"models": {
+			"intraProcedural": 2,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"link-n10.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.e"
+		],
+		"models": {
+			"intraProcedural": 2,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"link-n4.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+			"$DOMAIN.$PAGE_0.f"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"link-n5.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"link-n8a.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+			"$DOMAIN.$PAGE_0.f",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1"
+		],
+		"models": {
+			"intraProcedural": 4,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"link-n9.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"mod.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.fn"
+		],
+		"models": {
+			"intraProcedural": 2,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"named-expr.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"op.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.f"
+		],
+		"models": {
+			"intraProcedural": 2,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"pdef.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.f"
+		],
+		"models": {
+			"intraProcedural": 2,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"plan-bi.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.Map"
+		],
+		"models": {
+			"intraProcedural": 2,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"plan-catch1.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.h",
+			"$DOMAIN.$PAGE_0.k"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"plan-pf.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.f",
+			"$DOMAIN.$PAGE_0.f.a"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"plan-u1.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0"
+		],
+		"models": {
+			"intraProcedural": 1,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"plan-u3.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.f"
+		],
+		"models": {
+			"intraProcedural": 2,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"plan-u4.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0"
+		],
+		"models": {
+			"intraProcedural": 1,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"shadow-block.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0"
+		],
+		"models": {
+			"intraProcedural": 1,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"shadow-loop.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0"
+		],
+		"models": {
+			"intraProcedural": 1,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"shadow-param.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 0,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"tyof.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.k",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"vis3.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+			"$DOMAIN.$PAGE_0.g"
+		],
+		"models": {
+			"intraProcedural": 3,
+			"interProcedural": 2,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	},
+	"with.js": {
+		"scopes": [
+			"$DOMAIN.$PAGE_0",
+			"$DOMAIN.$PAGE_0.k"
+		],
+		"models": {
+			"intraProcedural": 2,
+			"interProcedural": 1,
+			"intraPage": 1,
+			"interPage": 1
+		}
+	}
+}
