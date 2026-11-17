@@ -22,6 +22,22 @@
  *   LOOP RETURN NODE) is fixed by tests/dujs/reachingsolver.js, since the
  *   builder registers a closed model for every scope with calls.
  *
+ *
+ * Guards and discriminating cases (checked by running this file on the tree
+ * before User Story 4, commit 6e53fa8, extracted with git archive):
+ * - guards, passing before User Story 4 as well: US4-1, US4-2, US4-3 (pairs),
+ *   "the definition of a handler reaches its own next run" and "a local
+ *   variable of a handler does not leave it through the LOOP";
+ * - discriminating, failing before User Story 4: "a definition reaching a
+ *   direct call of a handler does not go into the LOOP" and "the LOOP gets the
+ *   summary of a directly called handler, not what reaches its exit" (the exit
+ *   of a handler contributes nothing), and every test of the LoopRecords and
+ *   of 0.matching.json (model.loopRecords, the loops of the CLI output).
+ * - Not covered: the fallback of a handler with only an open model
+ *   (isOpenHandler of lib/dujs/defuseanalyzer.js) has no integration test, since
+ *   no probe found builds such a handler (see ruling 1 above); the solver part
+ *   is tested in tests/dujs/reachingsolver.js.
+ *
  * The CLI analyzes the page with a header line (src.js), so the lines in its
  * output are one more than the lines of the probe.
  *
@@ -207,6 +223,30 @@ describe('LOOP matching (feature 005, User Story 4)', function () {
 			].join('\n')).intraPage();
 			pairs.should.containEql('h: entry -> L7');
 			pairs.should.not.containEql('t: L2 -> L4');
+		});
+
+		/// the exit of a handler contributes nothing to the LOOP RETURN NODE, the summary of the handler
+		/// does (research R4; US4 review R1): h is called directly at L7 and registered; t of L2 reaches
+		/// the exit of h only through that direct call, so it does not reach g by the LOOP, while the
+		/// definition h makes itself (L3, in the gen of its summary) does
+		it('should give the LOOP the summary of a directly called handler, not what reaches its exit', function () {
+			var pairs = analyze([
+				'function k() {',
+				'  var t = 1;',
+				'  function h() { var u = t; t = u; }',
+				'  function g() { console.log(t); }',
+				'  document.addEventListener(\'click\', h);',
+				'  document.addEventListener(\'keyup\', g);',
+				'  h();',
+				'}',
+				'k();'
+			].join('\n')).intraPage();
+			pairs.should.containEql('t: L3 -> L4');
+			pairs.should.not.containEql('t: L2 -> L4');
+			/// the local u of h stays in h
+			pairs.filter(function (pair) {
+				return pair.indexOf('u: ') === 0;
+			}).should.eql(['u: L3 -> L3']);
 		});
 
 		/// the local variables of a handler do not leave it through the LOOP

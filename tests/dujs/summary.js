@@ -516,6 +516,47 @@ describe('summary (feature 005, User Story 1)', function () {
 			valuesOf(input).should.eql(before);
 		});
 
+		/// summary.apply/applyExceptional and the solver's applySummary/applyExceptionalSummary are one
+		/// implementation (T102 (d) R2, (e) R2): the solver maps the definitions of the summary to the
+		/// VarDefs of its graph, the summaries use them as they are; the results must stay equal
+		it('should give the same results as the solver applying the summary, in the same order', function () {
+			var reachingSolver = require('../../lib/dujs/reachingsolver'),
+				result = analyzeAndSummarize(PROGRAM),
+				summary = summaryOf(result, 'f'),
+				input = definitionsOfX(result, summary),
+				same = function (vardef) {
+					return vardef;
+				},
+				/// the same VarDef objects in the same order (should.eql would take equal copies as the same)
+				identical = function (one, another) {
+					return one.length === another.length && one.every(function (vardef, index) {
+						return vardef === another[index];
+					});
+				};
+			identical(valuesOf(summaryModule().apply(summary, input)),
+				valuesOf(reachingSolver.applySummary(summary, input, same))).should.be.true();
+			identical(valuesOf(summaryModule().applyExceptional(summary, input)),
+				valuesOf(reachingSolver.applyExceptionalSummary(summary, input, same))).should.be.true();
+			/// a mapping replaces each definition of the summary by its VarDef of the graph, and only those
+			var copies = new Map(),
+				mapped = function (vardef) {
+					if (!copies.has(vardef)) {
+						copies.set(vardef, factoryVarDef.create(vardef.variable, vardef.definition));
+					}
+					return copies.get(vardef);
+				},
+				expected = valuesOf(summaryModule().apply(summary, input)).map(function (vardef) {
+					return summary.gen.has(vardef) ? mapped(vardef) : vardef;
+				});
+			summary.gen.size.should.be.above(0);
+			identical(valuesOf(reachingSolver.applySummary(summary, input, mapped)), expected).should.be.true();
+			(function () {
+				reachingSolver.applySummary(summary, input, function () {
+					return null;
+				});
+			}).should.throw(/no VarDef in the graph/);
+		});
+
 		/// probes004/cyc-3.js: m never returns normally, so nothing reaches after a call of it
 		it('should apply to the empty set without a normal return', function () {
 			var result = analyzeAndSummarize(fs.readFileSync(path.join(PROBES004, 'cyc-3.js'), 'utf8')),

@@ -37,6 +37,13 @@
  *   function (declaration or variable initialized with such a function).
  * - graph 共通 (category "共通"): a graph difference of a page with any call
  *   expression, a finalizer or a 連結 trigger.
+ * - 例外IN of a removed pair: the def line throws in the base graphs of the
+ *   same page (lines keyed by page); at the inter-page level, of a page whose
+ *   source line of the def mentions the variable.
+ * - Call lines (Q-a): from the start of the call to the end of the callee,
+ *   less the lines inside a function of the callee (the callback body of a
+ *   chained call), except the line of the last property of the callee.
+ * - Pin table: a changed file ("~") is listed but counted in neither + nor −.
  * - *.matching.json files are new files: each is checked for JSON with
  *   format "dujs-matching/1" and a sibling *.graph.dot; they are not
  *   differences of the net table.
@@ -168,11 +175,25 @@ function listFiles(dir, pattern) {
 }
 
 /**
+ * Key of a throwing line: the page and the line ("page0:12"), so that the
+ * lines of different pages do not collide when the facts of the pages are
+ * merged for the inter-page level
+ * @param {string} page
+ * @param {number} line
+ * @returns {string}
+ */
+function lineKey(page, line) {
+	'use strict';
+	return page + ':' + line;
+}
+
+/**
  * Facts of the base output of a page directory (or of inter-page/)
  * @param {string} dir
- * @returns {Object} {calls: [{from, to}], handlers, throwingLines: Set}
+ * @param {string} page page key of the throwing lines ("page0", "inter-page")
+ * @returns {Object} {calls: [{from, to}], handlers, throwingLines: Set of lineKey}
  */
-function baseFactsOf(dir) {
+function baseFactsOf(dir, page) {
 	'use strict';
 	var facts = {calls: [], handlers: false, throwingLines: new Set()};
 	listFiles(dir, /\.hierarchy\.dot$/).forEach(function (file) {
@@ -191,7 +212,7 @@ function baseFactsOf(dir) {
 		graph.edges.forEach(function (edge) {
 			var line = edge.type === 'exception' ? base006.lineOf(graph.labels.get(edge.from) || '') : null;
 			if (line !== null) {
-				facts.throwingLines.add(line);
+				facts.throwingLines.add(lineKey(page, line));
 			}
 		});
 	});
@@ -267,6 +288,41 @@ function exceptionalPath(graph, defLabel, useLabel) {
 
 /* ---------- §2 facts of a page source ---------- */
 
+/**
+ * Outermost functions within a node (the node itself when it is one)
+ * @param {Object} node
+ * @returns {Array}
+ */
+function functionsIn(node) {
+	'use strict';
+	var found = [];
+	(function visit(current) {
+		if (!current || typeof current.type !== 'string') {
+			return;
+		}
+		if (/^(FunctionDeclaration|FunctionExpression|ArrowFunctionExpression)$/.test(current.type)) {
+			found.push(current);
+			return;
+		}
+		(espree.VisitorKeys[current.type] || []).forEach(function (key) {
+			[].concat(current[key] || []).forEach(visit);
+		});
+	}(node));
+	return found;
+}
+
+/**
+ * Predicate: whether a function holds a line after its first one
+ * @param {number} line
+ * @returns {Function}
+ */
+function insideOf(line) {
+	'use strict';
+	return function (fn) {
+		return line > fn.loc.start.line && line <= fn.loc.end.line;
+	};
+}
+
 function emptySourceFacts() {
 	'use strict';
 	return {tries: [], callLines: new Set(), hasCall: false, d2Sites: [], conservativeCalls: [], error: null};
@@ -333,9 +389,16 @@ function sourceFactsOf(source) {
 			facts.hasCall = true;
 			// Only the lines from the start of the call to the end of the callee are
 			// call points: the bodies of IIFEs and of callbacks in the arguments are not.
-			var lastLine = /Function/.test(node.callee.type) ? node.loc.start.line : node.callee.loc.end.line;
+			// Nor are the lines inside a function of the callee (the callback body of
+			// a chained call p.then(function () {…}).catch(g)), except the line of the
+			// last property of the callee.
+			var lastLine = /Function/.test(node.callee.type) ? node.loc.start.line : node.callee.loc.end.line,
+				inner = functionsIn(node.callee),
+				propertyLine = node.callee.type === 'MemberExpression' ? node.callee.property.loc.start.line : null;
 			for (var line = node.loc.start.line; line <= lastLine; ++line) {
-				facts.callLines.add(line);
+				if (line === propertyLine || !inner.some(insideOf(line))) {
+					facts.callLines.add(line);
+				}
 			}
 			recordCall(node, functionStack[functionStack.length - 1] || null);
 		}
@@ -472,7 +535,7 @@ function categoriesOf(diff, page) {
 		})) {
 			found.add('finally');
 		}
-		if (diff.sign === '-' && parts.defLine !== null && page.base.throwingLines.has(parts.defLine)) {
+		if (diff.sign === '-' && parts.defLine !== null && page.throwsAt(labels.name, parts.defLine)) {
 			found.add('例外IN');
 		}
 		if (diff.sign === '+' && page.graphsOf(diff).some(function (graph) {
@@ -569,8 +632,32 @@ function compareCase(spec) {
 		}
 	});
 	var pageBases = sources.map(function (facts, index) {
-		return baseFactsOf(path.join(spec.baseDir, 'page' + index));
-	});
+			return baseFactsOf(path.join(spec.baseDir, 'page' + index), 'page' + index);
+		}),
+		sourceLines = spec.pageSources.map(function (source) {
+			return String(source).split('\n');
+		});
+	/*
+	 * Whether the node of a def line throws in the base graphs: on the page
+	 * itself for a page; for the inter-page level (whose pair lines carry no
+	 * page), on a page whose source line mentions the variable.
+	 * The inter-page branch is a heuristic: when two pages have a throwing node
+	 * on the same line number and both lines mention a variable of the same
+	 * name, a pair of the page that does not throw may be put in 例外IN by
+	 * mistake; the 例外IN rows of inter-page are checked by hand at the
+	 * sign-off of T099 (golden-diff.md, header)
+	 */
+	function throwsAt(key, throwingLines) {
+		return function (name, line) {
+			if (key !== 'inter-page') {
+				return throwingLines.has(lineKey(key, line));
+			}
+			var word = new RegExp('(^|[^\\w$])' + String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '([^\\w$]|$)');
+			return sourceLines.some(function (lines, index) {
+				return throwingLines.has(lineKey('page' + index, line)) && word.test(lines[line - 1] || '');
+			});
+		};
+	}
 	function graphsOf(dir, diff) {
 		var files = /\*\.dupairs\.dot$/.test(diff.file) ?
 			listFiles(path.join(dir, path.dirname(diff.file)), /\.graph\.dot$/).map(function (file) {
@@ -590,6 +677,7 @@ function compareCase(spec) {
 		pages[key] = {
 			source: source,
 			base: baseFacts,
+			throwsAt: throwsAt(key, baseFacts.throwingLines),
 			triggers: triggersOf(source, baseFacts),
 			graphsOf: function (diff) {
 				return graphsOf(dir, diff);
@@ -601,7 +689,7 @@ function compareCase(spec) {
 		pageOf('page' + index, facts, pageBases[index], path.join(spec.baseDir, 'page' + index));
 	});
 	pageOf('inter-page', unionSourceFacts(sources),
-		mergeBaseFacts(pageBases.concat([baseFactsOf(path.join(spec.baseDir, 'inter-page'))])),
+		mergeBaseFacts(pageBases.concat([baseFactsOf(path.join(spec.baseDir, 'inter-page'), 'inter-page')])),
 		path.join(spec.baseDir, 'inter-page'));
 	compared.diffs.forEach(function (diff) {
 		diff.categories = pages[diff.page] ? categoriesOf(diff, pages[diff.page]) : [];
@@ -615,6 +703,22 @@ function compareCase(spec) {
 function pinKey(caseName, page, category) {
 	'use strict';
 	return [caseName, page, category].join('\u0000');
+}
+
+/**
+ * Count a pinned difference in the +/− columns of its pin row: a changed
+ * file ("~", a graph difference) is listed by its row number but counted in
+ * neither column
+ * @param {Object} entry {plus, minus}
+ * @param {string} sign
+ */
+function countSign(entry, sign) {
+	'use strict';
+	if (sign === '+') {
+		entry.plus++;
+	} else if (sign === '-') {
+		entry.minus++;
+	}
 }
 
 function matchingLine(results) {
@@ -650,7 +754,7 @@ function buildReport(results) {
 		if (isPinned(category, diff.sign)) {
 			var key = pinKey(diff.caseName, diff.page, category),
 				entry = pins.get(key) || {plus: 0, minus: 0, numbers: []};
-			entry[diff.sign === '+' ? 'plus' : 'minus']++;
+			countSign(entry, diff.sign);
 			entry.numbers.push(index + 1);
 			pins.set(key, entry);
 		}
@@ -724,7 +828,7 @@ function verifyRecord(results, text) {
 			}
 			var pin = pinKey(diff.caseName, diff.page, category),
 				entry = pins.get(pin) || {plus: 0, minus: 0};
-			entry[diff.sign === '+' ? 'plus' : 'minus']++;
+			countSign(entry, diff.sign);
 			pins.set(pin, entry);
 		}
 	});

@@ -6,6 +6,8 @@
 「淨差異」與「釘選與簽核」為機器區塊（`node specs/005-summary-analysis/tools/diffcheck.js golden --verify specs/005-summary-analysis/golden-diff.md` 核對），
 每個改 golden 的階段（T019、T028、T042、T062、T071、T081、T090）以 `--report` 重新產生整表（相對 develop 的累積結果）後補「說明」；
 `摘要`、`連結`、`finally`、`保守摘要` 與 `例外IN` 的新增 pair 為釘選類別（說明必填），簽核欄 implementer 只填「草擬，待簽核」，使用者於 T099 簽核。
+inter-page 層級的 pair 不帶頁別，`例外IN` 以「某頁同行號的節點會拋錯且該行提到同名變數」啟發式判定（兩頁同行號且都提到同名變數時可能誤歸）；T099 簽核時對 inter-page 的「例外IN」列（含「亦符」中的例外IN）人工核對（T103 審查 R3）。
+釘選表的 +／− 只計 pair、列、模型的新增與消失；graph 的檔案變更（`~`）列入簽核欄的列號，但不計入 +／−（T101，Setup 審查 R3）。
 `*.matching.json` 為新增檔，不列入淨差異（diffcheck 只核其 JSON 與 `format`），登記於 `tests/golden/manifest.json` 各 case 的 `added`。
 
 ## 淨差異（相對 develop）
@@ -179,9 +181,9 @@
 
 | case | 頁 | 類別 | 觸發 | + | − | 說明 | 簽核 |
 |------|----|------|------|---|---|------|------|
-| expected | page0 | finally | L53–L59 `try`／`catch`／`finally`（parseSaved 內；fixture L52–L58） | 1 | 1 | `.graph.dot`：parseSaved 的 catch 本體拋錯改經 finally，新增 `finallyExit` 節點（#2）；pair：finally 由正常與例外進入，續行取聯集而新增 `parsed: 52 -> 60`（#37，過度近似，research R6） | 草擬，待簽核（#2、#37） |
-| expected-es2015 | inter-page | 連結 | L40 `addTodo()`（函式運算式 內）：基準未連結 | 15 | 3 | US2：L40 `addTodo(input?.value)`（click 處理器內）依 D2 連到 addTodo（`const` 箭頭函式、全頁唯一定義）：callee 與引數的讀取由 L40 敘述節點移到 callNode（`addTodo`／`input: … -> 40` 改為 `-> call`）；addTodo 本體進模型，新增參數 `title`、`state`、`nextId`、`saveTodos`、`list` 的讀取（經 LOOP 進處理器再進 addTodo）；`.graph.dot` 插入本體與 call／return 邊；新增 `title` 變數列 | 草擬，待簽核（#41、#46、#47、#48、#51、#52、#53、#56、#57、#58、#59、#60、#61、#62、#64、#66、#67、#68） |
-| expected-es2015 | page0 | 連結 | L40 `addTodo()`（函式運算式 內）：基準未連結 | 27 | 3 | 同 inter-page（intra-pages 0），另新增處理器 `$ANONYMOUS_FUN_4` 的 inter-procedural 模型 0（`.dupairs`／`.graph`／`.hierarchy.dot`，新增 `input`、`state`、`title` 列與其 6 筆 pair） | 草擬，待簽核（#42、#43、#44、#45、#69、#70、#71、#72、#73、#74、#75、#76、#77、#78、#79、#80、#83、#84、#85、#88、#89、#90、#91、#92、#93、#94、#96、#98、#99、#100） |
+| expected | page0 | finally | L53–L59 `try`／`catch`／`finally`（parseSaved 內；fixture L52–L58） | 1 | 0 | `.graph.dot`：parseSaved 的 catch 本體拋錯改經 finally，新增 `finallyExit` 節點（#2）；pair：finally 由正常與例外進入，續行取聯集而新增 `parsed: 52 -> 60`（#37，過度近似，research R6） | 草擬，待簽核（#2、#37） |
+| expected-es2015 | inter-page | 連結 | L40 `addTodo()`（函式運算式 內）：基準未連結 | 15 | 2 | US2：L40 `addTodo(input?.value)`（click 處理器內）依 D2 連到 addTodo（`const` 箭頭函式、全頁唯一定義）：callee 與引數的讀取由 L40 敘述節點移到 callNode（`addTodo`／`input: … -> 40` 改為 `-> call`）；addTodo 本體進模型，新增參數 `title`、`state`、`nextId`、`saveTodos`、`list` 的讀取（經 LOOP 進處理器再進 addTodo）；`.graph.dot` 插入本體與 call／return 邊；新增 `title` 變數列 | 草擬，待簽核（#41、#46、#47、#48、#51、#52、#53、#56、#57、#58、#59、#60、#61、#62、#64、#66、#67、#68） |
+| expected-es2015 | page0 | 連結 | L40 `addTodo()`（函式運算式 內）：基準未連結 | 27 | 2 | 同 inter-page（intra-pages 0），另新增處理器 `$ANONYMOUS_FUN_4` 的 inter-procedural 模型 0（`.dupairs`／`.graph`／`.hierarchy.dot`，新增 `input`、`state`、`title` 列與其 6 筆 pair） | 草擬，待簽核（#42、#43、#44、#45、#69、#70、#71、#72、#73、#74、#75、#76、#77、#78、#79、#80、#83、#84、#85、#88、#89、#90、#91、#92、#93、#94、#96、#98、#99、#100） |
 | expected-interprocedural | inter-page | 例外IN | L15 `addTo(1)` 的 callNode 例外邊（Q-a） | 1 | 0 | Q-a：L15 `addTo(1)` 的 callNode 例外邊帶 IN（FR-014），`total: 2 -> 21` 經頁面 exit 與 LOOP 到 onClick 的 log | 草擬，待簽核（#109） |
 | expected-interprocedural | page0 | 例外IN | L15 `addTo(1)` 的 callNode 例外邊（Q-a） | 1 | 0 | Q-a：L15 `addTo(1)` 的 callNode 例外邊帶 IN（FR-014），`total: 2 -> 21` 經頁面 exit 與 LOOP 到 onClick 的 log | 草擬，待簽核（#122） |
 | expected-fixes004 | inter-page | 摘要 | 基準有 call 邊 | 0 | 1 | L36 `new Counter().add(2)` 套用 add 的摘要（mustKill `y`），`y: 14 -> 52` 消失（不可實現的例外經 exit 回 callReturn 路徑不再存在；US3 不還原） | 草擬，待簽核（#141） |
@@ -518,4 +520,10 @@ cfgId 為全域計數器，其後建立的模型（page0 intra-procedurals 6–8
 
 ## 驗收預期更正
 
-無
+T093（SC-002）以 `node specs/005-summary-analysis/probes/run.js` 逐一核對 P1–P11 與 KI §18 程式（P8 為 KI §18 程式加 `f();`）對 spec 驗收情境的預期：
+P1（US1-1）、P2（US1-2）、P3（US2-1）、P4（US3-1）、P5（US4-1，intra-page）、P6（US4-2）、P7（US2-3）、P9（US5-2）、P10（US2-5）、P11（US2-6）
+的 pair 皆與預期相符（inter-procedural 與 intra-page 兩層；P7 分析終止）。以下一筆為推導更正（不是實作偏差）：
+
+| 情境 | spec 字面 | 實測 | 更正說明 |
+|------|-----------|------|----------|
+| US5-1（KI §18 程式；P8） | `f` 的 entry 節點 c-use、p-use 皆空；「`x`、`a`、`o`、`b` 的讀取只在各自敘述的節點」 | entry 的 c-use、p-use 皆空（成立）。`x` 為 L2 `case a:` 節點的 p-use（discriminant）、`o` 為 L4 for-in 節點的 c-use；`a`（`case a` 的 test 與 L3 `a;`）與 `b`（`b;`）不在任何節點被讀取 | 既有建模（002 起）：`case` 的 test 不算讀取，單獨識別字敘述（`a;`、`b;`）在非決策、非分割節點也不算讀取（`lib/dujs/usedexpressions.js` `astNodeItems`）；KI §18 原文「these uses are also found at the nodes of the statements themselves」只對 `x`、`o` 成立。驗收以「entry 為空、`x`／`o` 在各自節點、`a`／`b` 不在 entry」核對；`docs/known-issues.md` §18 的對應更正隨 T096（T102 (b)） |

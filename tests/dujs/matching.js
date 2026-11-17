@@ -268,14 +268,33 @@ describe('call matching (feature 005, User Story 1 scenario 5)', function () {
 		});
 
 		/// the .dot differs from develop only by the exception edges moved by Q-a:
-		/// no exception edge leaves a call return, the call nodes keep theirs
+		/// no exception edge leaves a call return, the call nodes keep theirs. Only the head of a chain of
+		/// calls is checked: in a().b() the call node of b() is the call return of a(), so that node is
+		/// both (T102 (d) R3)
 		it('should keep the exception edges of the calls at the call nodes in the .graph.dot', function () {
 			var matching = JSON.parse(read(path.join('page0', 'intra-pages', '0.matching.json'))),
-				dot = read(path.join('page0', 'intra-pages', '0.graph.dot'));
+				dot = read(path.join('page0', 'intra-pages', '0.graph.dot')),
+				isCallNode = function (name) {
+					return matching.calls.some(function (other) {
+						return other.callNode === name;
+					});
+				},
+				isCallReturn = function (name) {
+					return matching.calls.some(function (other) {
+						return other.callReturn === name;
+					});
+				},
+				checked = 0;
 			matching.calls.forEach(function (call) {
-				dot.should.not.match(new RegExp('^' + call.callReturn + ' -> n\\d+ \\[color="red", label="exception"\\]$', 'm'));
-				dot.should.match(new RegExp('^' + call.callNode + ' -> n\\d+ \\[color="red", label="exception"\\]$', 'm'));
+				if (!isCallNode(call.callReturn)) {
+					dot.should.not.match(new RegExp('^' + call.callReturn + ' -> n\\d+ \\[color="red", label="exception"\\]$', 'm'));
+				}
+				if (!isCallReturn(call.callNode)) {
+					checked += 1;
+					dot.should.match(new RegExp('^' + call.callNode + ' -> n\\d+ \\[color="red", label="exception"\\]$', 'm'));
+				}
 			});
+			checked.should.be.above(0);
 		});
 	});
 });

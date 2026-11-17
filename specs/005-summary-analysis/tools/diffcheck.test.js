@@ -574,6 +574,75 @@ test('golden mode exits 2 without a base line and without --base', function () {
 	assert.strictEqual(diffcheck.baseOf('基準：`9e324be`（develop）\n'), '9e324be');
 });
 
+/* ---------- Setup review SHOULD-FIX (T101) ---------- */
+
+test('R3: a changed graph (~) is listed in its pin row but counted in neither + nor −', function () {
+	'use strict';
+	var source = 'var x = 1;\ntry {\nx = 2;\n} finally {\nx = 3;\n}\nx;\n',
+		result = compare(source, {
+			'page0/intra-procedurals/0.graph.dot': graphDot([['n1', '2']], []),
+			'page0/intra-procedurals/0.dupairs.dot': [['x', []]]
+		}, {
+			'page0/intra-procedurals/0.graph.dot': graphDot([['n1', '2'], ['n2', 'finallyExit']], []),
+			'page0/intra-procedurals/0.dupairs.dot': [['x', ['(3,7)']]]
+		}),
+		graph = diffOf(result, 'intra-procedurals/0.graph.dot', '~');
+	assert.strictEqual(graph.categories[0], 'finally');
+	assert.strictEqual(diffOf(result, 'x: 3 -> 7', '+').categories[0], 'finally');
+	var record = filled(diffcheck.buildReport([result])).replace('| （亦符：共通） |', '| 說明（亦符：共通） |');
+	assert.ok(/\| c \| page0 \| finally \|[^\n]*\| 1 \| 0 \|[^\n]*（#1、#2）/.test(record), record);
+	assert.deepStrictEqual(diffcheck.verifyRecord([result], record), []);
+	var counted = record.replace(/(\| c \| page0 \| finally \|[^\n]*?)\| 1 \| 0 \|/, '$1| 1 | 1 |');
+	assert.ok(diffcheck.verifyRecord([result], counted).some(function (problem) {
+		return /釘選 \+1／−1，實際 \+1／−0/.test(problem);
+	}), 'the old count (~ as −) fails');
+});
+
+test('R4: throwing lines of a removed pair are keyed by page, not shared across pages', function () {
+	'use strict';
+	var quiet = 'var x = 0;\nvar o = {};\nvar y = 0;\nx = 1;\ny = 2;\nconsole.log(x, y);\n',
+		throwing = PREFIX + 'var y = 0;\nvar o = {};\ntry {\ny = o.p;\n} catch (e) {\nconsole.log(y);\n}\n',
+		throwingGraph = graphDot([['n1', '5'], ['n2', '7']], [['n1', 'n2', 'exception']]),
+		result = diffcheck.compareCase({
+			name: 'c',
+			pageSources: [PREFIX + quiet, throwing],
+			baseDir: outputDir({
+				'page0/intra-pages/0.dupairs.dot': [['x', ['(5,7)']]],
+				'page1/intra-procedurals/0.graph.dot': throwingGraph,
+				'page1/intra-pages/0.dupairs.dot': [['y', ['(5,7)']]],
+				'inter-page/0.dupairs.dot': [['x', ['(5,7)']], ['y', ['(5,7)']]]
+			}),
+			newDir: outputDir({
+				'page0/intra-pages/0.dupairs.dot': [['x', []]],
+				'page1/intra-pages/0.dupairs.dot': [['y', []]],
+				'inter-page/0.dupairs.dot': [['x', []], ['y', []]]
+			})
+		});
+	function removed(page, content) {
+		var found = result.diffs.filter(function (diff) {
+			return diff.page === page && diff.content === content && diff.sign === '-';
+		});
+		assert.strictEqual(found.length, 1, page + ' ' + content);
+		return found[0];
+	}
+	assert.ok(!has(removed('page0', 'x: 5 -> 7'), '例外IN'), 'L5 of page1 throws, not L5 of page0');
+	assert.ok(has(removed('page1', 'y: 5 -> 7'), '例外IN'));
+	assert.ok(has(removed('inter-page', 'y: 5 -> 7'), '例外IN'), 'page1 L5 assigns y and throws');
+	assert.ok(!has(removed('inter-page', 'x: 5 -> 7'), '例外IN'), 'page1 L5 does not mention x; page0 L5 does not throw');
+});
+
+test('R5: the callback body of a chained call is not a call point', function () {
+	'use strict';
+	var facts = diffcheck.sourceFactsOf('p.then(function () {\nvar a = 1;\nvar b = a;\n}).catch(g);\n' +
+		'q.then(() => {\nvar c = 1;\n}).\nfinally(h);\n');
+	[1, 4, 5, 8].forEach(function (line) {
+		assert.ok(facts.callLines.has(line), 'line ' + line + ' starts a call or holds the last property of the callee');
+	});
+	[2, 3, 6, 7].forEach(function (line) {
+		assert.ok(!facts.callLines.has(line), 'line ' + line + ' is inside the callback body');
+	});
+});
+
 /* ---------- run ---------- */
 
 var failed = 0;

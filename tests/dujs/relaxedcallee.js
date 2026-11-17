@@ -24,7 +24,8 @@
  * Original dujs code, MIT License (see LICENSE).
  */
 var fs = require('fs'),
-	path = require('path');
+	path = require('path'),
+	childProcess = require('child_process');
 require('should');
 var modelCtrl = require('../../lib/dujs/modelctrl'),
 	callResolver = require('../../lib/dujs/callresolver'),
@@ -199,6 +200,32 @@ describe('relaxed callees in functions (feature 005 US2, D2)', function () {
 		shouldHavePairs(result, ['x: L6 -> L8'], ['x: L3 -> L8']);
 	});
 
+	/// negative cases of the US2 review (R1, T102 (g)): the binding of the callee is not a function of the
+	/// page with one definition. The inner name K of a class expression is bound to the class
+	it('does not link the inner name of a class expression', function () {
+		var result = analyzeProgram(['var x = 0;', 'var C = class K {', '  m() {', '    x = 1;', '    K();',
+			'    console.log(x);', '  }', '};', 'new C().m();']);
+		calleesAt(result, '$ANONYMOUS_FUN_0', 5).should.eql([]);
+		shouldHavePairs(result, ['x: L4 -> L6'], []);
+	});
+
+	/// the loop variable of for (var f of ...) is another definition of the var f of function f
+	it('does not link f() when for (var f of ...) also defines f', function () {
+		var result = analyzeProgram(['var x = 0;', 'function f() {', '  x = 7;', '}', 'function a() {', '  x = 1;', '  f();',
+			'  console.log(x);', '}', 'for (var f of []) {}', 'a();']);
+		calleesAt(result, 'a', 7).should.eql([]);
+		shouldHavePairs(result, ['x: L6 -> L8'], ['x: L3 -> L8']);
+	});
+
+	/// f = ... in another function is another definition of f (the page-level f = g is the two
+	/// definitions case above)
+	it('does not link f() when another function assigns f', function () {
+		var result = analyzeProgram(['var x = 0;', 'function f() {', '  x = 7;', '}', 'function a() {', '  x = 1;', '  f();',
+			'  console.log(x);', '}', 'function b() {', '  f = function () {};', '}', 'a();']);
+		calleesAt(result, 'a', 7).should.eql([]);
+		shouldHavePairs(result, ['x: L6 -> L8'], ['x: L3 -> L8']);
+	});
+
 	/// the call is in a block of the page (a dujs block scope, by let y), not in a function
 	it('does not relax a call in a block of the page', function () {
 		var result = analyzeProgram(['var x = 0, c = 1;', 'if (c) {', 'let y = 2;', 'f();', 'console.log(x, y);', '}',
@@ -265,5 +292,192 @@ describe('relaxed callees in functions (feature 005 US2, D2)', function () {
 		var result = analyzeProgram('c-win.js');
 		calleesAt(result, 'a', 8).map(lastPartOf).should.eql(['f']);
 		shouldHavePairs(result, ['x: L3 -> L9'], ['x: L7 -> L9']);
+	});
+});
+
+/*
+ * T103 (FR-003): the relaxed callees of D2 make chains of registrations where
+ * a handler is registered again by itself or by a handler it registers
+ * (handler -> linked recursion -> registration of the handler); the search of
+ * handlers never ended, and following each chain once still grew with the
+ * simple paths of the registrations (factorial). When the registrations have
+ * such a cycle, each handler is searched and listed once in the order first
+ * found (the event loop already runs a registered handler any number of
+ * times, so the pairs are the same); without a cycle the list keeps the order
+ * and the duplicates of the search as before feature 005.
+ *
+ * Whether the analysis ends is asserted in a child process killed after a
+ * timeout (tests/helpers/eventhandlers.js): the timeout of mocha cannot stop a
+ * synchronous endless loop, so a regression would hang npm test.
+ */
+describe('handlers registered again in a linked recursion (feature 005 T103, FR-003)', function () {
+	'use strict';
+	this.timeout(30000);
+
+	var HELPER = path.join(__dirname, '..', 'helpers', 'eventhandlers.js');
+	var CHILD_TIMEOUT = 20000;
+
+	/**
+	 * Analyze a program in a child process killed after CHILD_TIMEOUT ms
+	 * @param {Array} lines lines of the program
+	 * @returns {Object} handlers (last parts of the scope names of the handlers
+	 * of the event edges of the intra-page model) and pairsOfX (pairs of x of
+	 * the intra-page model)
+	 */
+	function analyzeInChild(lines) {
+		var child = childProcess.spawnSync(process.execPath, [HELPER], {
+			input: lines.join('\n'),
+			encoding: 'utf8',
+			timeout: CHILD_TIMEOUT
+		});
+		(child.error === undefined && child.signal === null).should.eql(true,
+			'the analysis did not end in ' + CHILD_TIMEOUT + ' ms (' + (child.error || child.signal) + ')');
+		child.status.should.eql(0, child.stderr);
+		return JSON.parse(child.stdout);
+	}
+
+	/**
+	 * A function k registering n handlers h0...h(n-1), each calling k (linked by D2)
+	 * @param {number} n
+	 * @returns {Array} lines of the program
+	 */
+	function handlersCallingTheRegisteringFunction(n) {
+		var lines = ['var x = 0;', 'function k() {'], index;
+		for (index = 0; index < n; ++index) {
+			lines.push('function h' + index + '() { x = x + 1; k(); }');
+		}
+		for (index = 0; index < n; ++index) {
+			lines.push('document.addEventListener(\'e' + index + '\', h' + index + ');');
+		}
+		lines.push('}', 'k();', 'var y = x;');
+		return lines;
+	}
+
+	/// k -> h -> k (k() in h linked by D2) and h is a handler registered in k;
+	/// k never returns normally, so x of L3 has no use
+	it('terminates when the handler h in a function k calls k (k -> h -> k)', function () {
+		var result = analyzeInChild([
+			'var x = 0;',
+			'function k() {',
+			'function h() { x = 1; k(); }',
+			'document.addEventListener(\'click\', h);',
+			'h();',
+			'}',
+			'k();'
+		]);
+		result.handlers.should.eql(['h']);
+		result.pairsOfX.should.eql([]);
+	});
+
+	it('terminates when the handler in the linked recursion may stop calling', function () {
+		var program = [
+			'var x = 0;',
+			'function k() {',
+			'function h() {',
+			'x = x + 1;',
+			'k();',
+			'}',
+			'document.addEventListener(\'click\', h);',
+			'if (x < 5) {',
+			'h();',
+			'}',
+			'}',
+			'k();',
+			'var y = x;'
+		];
+		var result = analyzeInChild(program);
+		result.handlers.should.eql(['h']);
+		result.pairsOfX.should.eql([
+			'x: L1 -> L13', 'x: L1 -> L4', 'x: L1 -> L8>L9:T', 'x: L1 -> L8>exit:F',
+			'x: L4 -> L13', 'x: L4 -> L4', 'x: L4 -> L8>L9:T', 'x: L4 -> L8>exit:F'
+		]);
+		/// the analysis ends (asserted above), so it is safe in this process
+		calleesAt(analyzeProgram(program), 'h', 5).map(lastPartOf).should.eql(['k']);
+	});
+
+	/// a registers b, the handler b calls a (linked by D2): b registers itself through a
+	it('terminates with mutually recursive functions, one of them a handler', function () {
+		var program = [
+			'var x = 0;',
+			'function a() {',
+			'document.addEventListener(\'click\', b);',
+			'}',
+			'function b() {',
+			'x = x + 1;',
+			'a();',
+			'}',
+			'a();',
+			'var y = x;'
+		];
+		var result = analyzeInChild(program);
+		result.handlers.should.eql(['b']);
+		result.pairsOfX.should.eql(['x: L1 -> L10', 'x: L1 -> L6', 'x: L6 -> L6']);
+		calleesAt(analyzeProgram(program), 'b', 7).map(lastPartOf).should.eql(['a']);
+	});
+
+	/// h and g are handlers of k and each calls the other or k: each registers
+	/// both handlers. Each handler is listed once (it was listed once per chain
+	/// of registrations, ['h', 'g', 'g', 'h']); the pairs are the same as with
+	/// the list per chain
+	it('terminates with two handlers in a function registering each other', function () {
+		var result = analyzeInChild([
+			'var x = 0;',
+			'function k() {',
+			'function h() {',
+			'x = x + 1;',
+			'g();',
+			'}',
+			'function g() {',
+			'x = x * 2;',
+			'k();',
+			'}',
+			'document.addEventListener(\'click\', h);',
+			'document.addEventListener(\'keyup\', g);',
+			'}',
+			'k();',
+			'var y = x;'
+		]);
+		result.handlers.should.eql(['h', 'g']);
+		result.pairsOfX.should.eql([
+			'x: L1 -> L15', 'x: L1 -> L4', 'x: L1 -> L8',
+			'x: L4 -> L4', 'x: L4 -> L8', 'x: L8 -> L4', 'x: L8 -> L8'
+		]);
+	});
+
+	/// a handler of the page registering itself
+	it('terminates with a handler of the page registering itself', function () {
+		var result = analyzeInChild([
+			'var x = 0;',
+			'function h() {',
+			'x = x + 1;',
+			'document.addEventListener(\'click\', h);',
+			'}',
+			'document.addEventListener(\'click\', h);',
+			'var y = x;'
+		]);
+		result.handlers.should.eql(['h']);
+		result.pairsOfX.should.eql(['x: L1 -> L3', 'x: L1 -> L7', 'x: L3 -> L3']);
+	});
+
+	/// review R1: following each chain of registrations once listed 4, 15, 64,
+	/// 325, 1956, 13699 handlers for n = 2...7 and did not end in minutes for
+	/// n = 8; each handler is now listed once
+	[3, 8, 12].forEach(function (n) {
+		it('ends quickly with ' + n + ' handlers each calling the function registering them', function () {
+			var result = analyzeInChild(handlersCallingTheRegisteringFunction(n));
+			result.handlers.should.eql(Array.from({length: n}, function (ignored, index) {
+				return 'h' + index;
+			}));
+			/// x of L1 reaches each handler (L3...L(n+2)) and var y = x of
+			/// L(2n+5); x of each handler reaches each handler
+			var expected = ['x: L1 -> L' + (2 * n + 5)], def, use;
+			for (def = 3; def <= n + 2; ++def) {
+				expected.push('x: L1 -> L' + def);
+				for (use = 3; use <= n + 2; ++use) {
+					expected.push('x: L' + def + ' -> L' + use);
+				}
+			}
+			result.pairsOfX.slice().sort().should.eql(expected.sort());
+		});
 	});
 });

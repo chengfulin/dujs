@@ -20,7 +20,6 @@ var fs = require('fs'),
 	factoryDef = require('../../lib/dujs/deffactory'),
 	factoryVarDef = require('../../lib/dujs/vardeffactory'),
 	FlowNode = require('../../lib/esgraph/flownode');
-var Set = require('../../lib/analyses/set');
 
 var PROBES = path.join(__dirname, 'cases', 'probes004'),
 	PROBES003 = path.join(__dirname, 'cases', 'probes'),
@@ -146,10 +145,14 @@ describe('Bypass rule of calls (FR-016)', function () {
 		});
 	});
 
-	describe('bypassFilter', function () {
-		var bypassFilter = defuseAnalyzer._testonly_._bypassFilter;
+	/// The bypass of FR-016 is, since feature 005, the visibility filter of the summaries: a definition
+	/// of a variable out of the summaries of the callee passes the call (summary.apply keeps what is not
+	/// must-killed). bypassFilter had no caller left in lib and was removed (T102 (d) R4); the same
+	/// cases now check isVisibleToCallee.
+	describe('isVisibleToCallee (the bypass of FR-016)', function () {
+		var isVisibleToCallee = defuseAnalyzer.isVisibleToCallee;
 
-		it('should keep the definitions unseen by the callee or of its own variables', function () {
+		it('should leave out of the summaries the variables unseen by the callee or of its own', function () {
 			var result = analyze([
 				'var x = 0, y = 0;',
 				'function f(y) {',
@@ -178,18 +181,15 @@ describe('Bypass rule of calls (FR-016)', function () {
 				outerY = vardefOf(variableNamed(root, 'y')),
 				ownY = vardefOf(variableNamed(calleeScope, 'y')),
 				ownZ = vardefOf(variableNamed(calleeScope, 'z')),
-				blockW = vardefOf(variableNamed(blockScope, 'w')),
-				filtered = bypassFilter(new Set([outerX, outerY, ownY, ownZ, blockW]), calleeScope);
-			(filtered instanceof Set).should.be.true();
-			filtered.size.should.eql(4);
+				blockW = vardefOf(variableNamed(blockScope, 'w'));
 			/// x is seen and not shadowed by f: the callee may change it
-			filtered.has(outerX).should.be.false();
+			isVisibleToCallee(outerX.variable, calleeScope).should.be.true();
 			/// y of the page is shadowed by the parameter y
-			filtered.has(outerY).should.be.true();
+			isVisibleToCallee(outerY.variable, calleeScope).should.be.false();
 			/// variables of f and of its block scopes (another activation record)
-			filtered.has(ownY).should.be.true();
-			filtered.has(ownZ).should.be.true();
-			filtered.has(blockW).should.be.true();
+			isVisibleToCallee(ownY.variable, calleeScope).should.be.false();
+			isVisibleToCallee(ownZ.variable, calleeScope).should.be.false();
+			isVisibleToCallee(blockW.variable, calleeScope).should.be.false();
 		});
 	});
 
