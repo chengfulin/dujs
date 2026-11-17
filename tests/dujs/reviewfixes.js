@@ -220,7 +220,10 @@ describe('Defects found by the code review of PR #3', function () {
 		(decision[0].call === null).should.eql(true, 'the decision node is not the CALL node');
 		var callers = callersOf(page, fEntry);
 		callers.length.should.eql(1);
-		callers[0].next.should.eql([fEntry]);
+		(callers[0].call === fEntry).should.be.true();
+		/// feature 007 US1: the CALL node before the decision (segment 0) has the exception edge of the decision
+		(callers[0].exception === decision[0].exception).should.be.true();
+		callers[0].next.length.should.eql(2);
 		fEntry.prev.indexOf(callers[0]).should.not.eql(-1);
 	});
 

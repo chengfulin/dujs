@@ -33,7 +33,7 @@
 | `§37`、`§38`、`§41`、`§43`… | ± pair | 對應 KI 節次的觸發（generator／async 呼叫、多入口 finally、diamond 註冊、page＋handler 共用被呼叫端）；說明欄註明節次 | — |
 | `§44`／`§46`（class static 行為變更） | ± pair／row、model、graph | 基準側 `.hierarchy.dot` 在某行有 call 邊連到 class 的 static 成員 scope（static 欄位初始化式或 static block），007 側同頁同行沒有；該行的 class 位於 `case` test（§44）、for-in/of 左側、`?.` 之後或解構預設值（含 catch 參數）（§46）。pair 的 def 或 use 位於該 static scope 的行範圍，或位於該行之後可達處 | FR-001 例外（DECISION 005 Q3、DECISION 006 Q4 必修 3） |
 | `標記` | graph、row | 依 §1 以基準側 matching 改寫 develop 標記後相同（R9，DECISION 005 Q1 A） | FR-007 |
-| `共通` | graph、matching | 去除節點編號（`n<k>`、cfgId）後相同；或頁面有任一新呼叫點而 `.graph.dot`／`*.matching.json` 的結構改變（CALL／CALL RETURN 增加、邊改向） | — |
+| `共通` | graph、matching | 去除節點編號（`n<k>`、cfgId）後相同；或頁面有任一新呼叫點而 `.graph.dot`／`*.matching.json` 的結構改變（CALL／CALL RETURN 增加、邊改向）；或（子標 `段0例外`，DECISION 008）同時滿足：(a) 同一模型的 `.dupairs.dot` 沒有 pair／row 差異，`*.matching.json` 在此條件涉及的 record 上相同；(b) 兩側 `.graph.dot` 的節點集合與標記（經 §1 改寫後）相同，007 側沒有刪除或改向任何邊；(c) 007 側新增的每一條邊都是 `label="exception"`，來源是該模型 matching 中某筆 `beforeDecision: true` record 的 `callNode`，目標等於該 record 的 `exceptionalReturn`，且基準側該 record 的 `callReturn` 的 normal 後繼（原決策節點）已有連到同一目標的 exception 邊；(d) 每筆這樣的 record 至多新增一條。任一新增邊不符 (c)，或與其他結構變化並存而無法逐邊歸因時，本條件不成立（只涵蓋 decision 形狀，不放寬成任何 CALL；被呼叫端有 mustKill 而帶出 + pair 者不歸 `共通`，落入一般分類）。`--report` 在說明欄自動列出「callNode → 目標（record id）」，不需釘選 | — |
 
 - **新增或消失的 pair** 只能歸 `連結`、`求值順序`、`返回後例外` 或 KI 類（SC-004）；歸不進即失敗（exit 1），須先在 `docs/known-issues.md` 記為新已知問題，再以該 KI 類記錄。
 - intra-procedural 層級（`intra-procedurals/*`）的 pair 差異一律失敗（FR-006）；只允許 `共通`（cfgId 重新編號）。

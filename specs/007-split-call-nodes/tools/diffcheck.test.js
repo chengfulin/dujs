@@ -470,6 +470,83 @@ describe('diffcheck 007', function () {
 		});
 	});
 
+	describe('(e2) 共通（段0例外）, DECISION 008', function () {
+		// base: CALL n2 -> CALL RETURN n3 -> decision n4 (true n5, false n6),
+		// the decision with an exception edge to n7; 007 adds the exception
+		// edge of the CALL (segment 0) n2 -> n7
+		var nodes = [['n1', 'entry'], ['n2', 'call'], ['n3', 'callReturn'], ['n4', '3'], ['n5', '4'], ['n6', '5'],
+				['n7', 'catch'], ['n8', 'exit']],
+			baseEdges = [['n1', 'n2', ''], ['n2', 'n3', ''], ['n3', 'n4', ''], ['n4', 'n5', 'true'], ['n4', 'n6', 'false'],
+				['n4', 'n7', 'exception'], ['n5', 'n8', ''], ['n6', 'n8', ''], ['n7', 'n8', '']],
+			pairs = dupairsDot([['x', ['(1,4)']]]);
+		function matching(beforeDecision) {
+			return JSON.stringify({format: 'dujs-matching/1', level: 'intraPage', mainScope: '$DOMAIN.$PAGE_0', calls: [{
+				id: 'c1', seq: 1, callSiteLine: 3, callee: '$DOMAIN.$PAGE_0.f', callNode: 'n2', entry: 'n90', exit: 'n91',
+				callReturn: 'n3', exceptionalReturn: 'n7', back: false, beforeDecision: beforeDecision
+			}], loops: [], summaries: {}}, null, 2);
+		}
+		function run(options) {
+			var base = {
+					'intra-pages/0.graph.dot': graphDot(nodes, options.baseEdges || baseEdges),
+					'intra-pages/0.matching.json': matching(true),
+					'intra-pages/0.dupairs.dot': pairs
+				},
+				next = {
+					'intra-pages/0.graph.dot': graphDot(nodes, options.newEdges),
+					'intra-pages/0.matching.json': matching(options.beforeDecision !== false),
+					'intra-pages/0.dupairs.dot': options.newPairs || pairs
+				};
+			if (options.beforeDecision === false) {
+				base['intra-pages/0.matching.json'] = matching(false);
+			}
+			return comparePage('var x = 1;\nfunction f() {}\nif (f()) {\n  x;\n} else {}\n', base, next);
+		}
+		function categories(result) {
+			return find(result, 'graph', '~', 'intra-pages/0.graph.dot').categories;
+		}
+		var added = baseEdges.concat([['n2', 'n7', 'exception']]);
+		it('holds for the exception edge of the CALL before a decision, and lists it in the report', function () {
+			var result = run({newEdges: added}),
+				results = [result],
+				report = diffcheck.buildReport(results);
+			assert.deepStrictEqual(categories(result), ['共通（段0例外）', '共通']);
+			assert.ok(/\| 共通（段0例外） \| — \| 段0例外：n2 → n7（c1） \|/.test(report), report);
+			assert.deepStrictEqual(diffcheck.verifyRecord(results, fillNotes(report)), []);
+		});
+		it('does not hold for a new edge that is not an exception edge', function () {
+			assert.deepStrictEqual(categories(run({newEdges: baseEdges.concat([['n2', 'n7', '']])})), []);
+		});
+		it('does not hold when the source is not the CALL of a beforeDecision record', function () {
+			assert.deepStrictEqual(categories(run({newEdges: added, beforeDecision: false})), []);
+			assert.deepStrictEqual(categories(run({newEdges: baseEdges.concat([['n1', 'n7', 'exception']])})), []);
+		});
+		it('does not hold when the target is not the exceptionalReturn', function () {
+			assert.deepStrictEqual(categories(run({newEdges: baseEdges.concat([['n2', 'n6', 'exception']])})), []);
+		});
+		it('does not hold when the decision of the base has no exception edge to the target', function () {
+			var without = baseEdges.filter(function (edge) {
+				return edge[2] !== 'exception';
+			});
+			assert.deepStrictEqual(categories(run({baseEdges: without, newEdges: without.concat([['n2', 'n7', 'exception']])})), []);
+		});
+		it('does not hold for two new edges of the same record', function () {
+			assert.deepStrictEqual(categories(run({newEdges: added.concat([['n2', 'n7', 'exception']])})), []);
+		});
+		it('does not hold together with a pair difference', function () {
+			var result = run({newEdges: added, newPairs: dupairsDot([['x', ['(1,4)', '(1,5)']]])});
+			assert.deepStrictEqual(categories(result), []);
+			assert.ok(find(result, 'pair', '+', 'x: 1 -> 5'));
+		});
+		it('does not hold together with a removed or redirected edge', function () {
+			var removed = added.filter(function (edge) {
+					return !(edge[0] === 'n7' && edge[1] === 'n8');
+				}),
+				redirected = removed.concat([['n7', 'n6', '']]);
+			assert.deepStrictEqual(categories(run({newEdges: removed})), []);
+			assert.deepStrictEqual(categories(run({newEdges: redirected})), []);
+		});
+	});
+
 	describe('(f) failures of the classification', function () {
 		it('a pair of no category fails, and a pair of an intra-procedural model always fails', function () {
 			var empty = graphDot([['n1', 'entry'], ['n2', 'exit']]),

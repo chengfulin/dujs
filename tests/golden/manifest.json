@@ -76,15 +76,15 @@
 	"expected-interprocedural": {
 		"baseline": {
 			"inter-page/0.dupairs.dot": "98da3f06a99f23e0148925171bfb01cf0a9329661dff916184dcfd9d6b3f64a2",
-			"inter-page/0.graph.dot": "37ee3d700c980d47d8be58736d5f3d65f3a8e69fcfd27b444ce7c4e204628c70",
+			"inter-page/0.graph.dot": "d9d073172a9ce1b6189e5a549f9f15a7a5c0e3bb8435e8cf17786051509a42af",
 			"page0/inter-procedurals/0.dupairs.dot": "627d2003cd9e15baa7198b1e38f18def72a37817f14ee531881ef0779f23e05e",
 			"page0/inter-procedurals/0.graph.dot": "c0dc33fb5f88f4452d0aa16bf10b956319b25b2dc4d15f1f00b05d8dd2accf01",
 			"page0/inter-procedurals/1.dupairs.dot": "1f434e0b7bebb6db66f9cd65f8f1397ad797f7e6e4cfdb5f21ad02a2709d144e",
-			"page0/inter-procedurals/1.graph.dot": "1de49a9e02eefb5854e767fb45d509678961713a93f6d37b0b1a1940c5c44e5e",
+			"page0/inter-procedurals/1.graph.dot": "603fa7e33f5b8c95a4ef92321b2b4f2b71615307a99a948e916038115b1ff7ee",
 			"page0/inter-procedurals/2.dupairs.dot": "f06d85cef8160bf764159e04056b2eff9bbbc0d0a241f38dc60a27281492c473",
 			"page0/inter-procedurals/2.graph.dot": "52ee22d5a537b953e234152e578a3bb2b55ba75f64bb6850e3e9aa59a7a56946",
 			"page0/intra-pages/0.dupairs.dot": "9965cedd14871f989abc3aa94ca22986be44a5d2c0a1ea53db2f0e84bbbf274b",
-			"page0/intra-pages/0.graph.dot": "2a92a0d7a9988f807cb1f11bc9cde89cc918a75e94ab6fec81a53eaa4c3d3e5d",
+			"page0/intra-pages/0.graph.dot": "4d548c20d8e1e80ad5dcc045dbcda4adb8328b1f944b25b29d9a0ef0cf0ebc38",
 			"page0/intra-procedurals/0.dupairs.dot": "084268a9dca740f87e6318d6c7c5611056f0fa42c478c2a5dcd15374df762228",
 			"page0/intra-procedurals/0.graph.dot": "970a539b0769073f326047b38f0ed5ef63616ef7aea0fd47a4b9a95d9f365d55",
 			"page0/intra-procedurals/1.dupairs.dot": "06f0d87cf7606c2e3216f29a8b6f1ad16bff87fd70dea2acdc563dd583fb6573",

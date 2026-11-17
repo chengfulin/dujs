@@ -20,7 +20,7 @@ reset()                                          // 清快取（tests/helpers/an
   US2（T038）只保留「`once-*` 一律不留」；US3（T048）刪除 `stagedCallSite` 與本參數的使用。由 `modelbuilder` 以參數傳入；下游（`hierarchy`、`expansion`、`defuseanalyzer`）只用 `edge.plan`／`segment.plan`，不自行呼叫 `planOf`。
 - 只讀原節點（`astNode`、`split`、`true`／`false`、`exception`、`discriminantThrowTarget`、`parent`、`reachIns`、`generatedAt`），不修改任何節點。
 - entry／exit 節點、沒有 `astNode` 的節點回傳 `callSites` 為空的 plan。
-- 呼叫點列舉排除 data-model §5「不列為呼叫點」的位置：`?.` 之後的部分、解構樣式內的預設值（參數本身的預設值除外；catch 參數的預設值同屬此類）、for-in/of 左側、`case` test（這些位置中 class 的 static 成員也不列入——相對 develop 的行為變更，data-model §5）；
+- 呼叫點列舉排除 data-model §5「不列為呼叫點」的位置：`?.` 之後的部分、解構樣式內的預設值（參數本身的預設值除外；catch 參數的預設值同屬此類）、for-in/of 左側、留在 `case` 節點內的 test（未拆分者或拆分後的末端運算元；拆出的非末端運算元照常列入，DECISION 007）（這些位置中 class 的 static 成員也不列入——相對 develop 的行為變更，data-model §5）；
   並套用防護——callee／receiver 識別字在同一節點中有後序位置早於其讀取的定義（`generatedAt`）時不列為呼叫點（R2 步驟 3、R13 L3）。排除的位置不影響讀取與定義的歸段。
 - `once-loop` 的迴圈變數定義：`segmentOfVarDef` 回傳 null（不屬段，留在 N 副本）。
 - 前提：intra-procedural 分析已完成（`reachIns` 供解析、`generatedAt` 供歸段）；`modelbuilder` 在 `buildInterProceduralModels` 時呼叫，順序與現行 `calleeScopesOf` 相同。

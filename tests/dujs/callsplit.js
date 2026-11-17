@@ -494,6 +494,29 @@ describe('callsplit (feature 007)', function () {
 			noSite(lines, 8, {pick: ofType('SwitchCase')});
 		});
 
+		/// DECISION 007: only the operand left in the case node is not modeled; the operands split from a
+		/// case test are decision nodes evaluating their expressions
+		it('should list the calls of the operands split from a case test, not of the last operand', function () {
+			var lines = ['var d = 1, a = 1;', 'switch (d) {', 'case g() && 1:', '  break;', 'case a && g():', '  break;',
+				'case [class {', '  static y = 1;', '}][0] && 1:', '  break;', '}'];
+			var split = planAt(lines, 6, {pick: ofType('CallExpression')});
+			split.node.split.origin.type.should.eql('SwitchCase');
+			split.plan.shape.should.eql('decision');
+			callsplit.evaluatedExpressionsOf(split.node).map(split.text).should.eql(['g()']);
+			split.sites().should.eql(['g():call']);
+			/// the case nodes left by splitting (their last operand) evaluate nothing
+			[6, 8].forEach(function (line) {
+				var left = planAt(lines, line, {pick: ofType('SwitchCase')});
+				(!!left.node.split).should.eql(true);
+				callsplit.evaluatedExpressionsOf(left.node).should.eql([]);
+				left.sites().should.eql([]);
+			});
+			var operand = planAt(lines, 8, {pick: ofType('Identifier')});
+			operand.plan.expressions.map(operand.text).should.eql(['a']);
+			var withClass = planAt(lines, 10, {pick: ofType('MemberExpression')});
+			withClass.sites().should.eql(['class {\n  static y = 1;\n}:class-static']);
+		});
+
 		/// class static members in these positions are not class-static call sites (DECISION 006 Q4 must-fix 3)
 		it('should not list the class static members in defaults, after ?., in the left of for-of and in catch', function () {
 			noSite(['var c = [];', 'var [z = class {', '  static y = g();', '}] = c;'], 5);

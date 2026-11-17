@@ -224,7 +224,143 @@ describe('splitting the nodes with calls (feature 007)', function () {
 			shouldHavePairsInModels(result, null, ['x: L1 -> L6'], []);
 		});
 	});
+
+	/// User Story 1 (T020): the definitions and reads evaluated before a call take effect before the callee runs
+	describe('US1: the part before a call takes effect before the callee', function () {
+		var F = [PAGE, PAGE + '.f'];
+
+		it('US1-1 should give x: L5 -> L3 and not x: L1 -> L3 (p1, if (f(x = 1)))', function () {
+			shouldHavePairsInModels(analyzeProbe('p1-ki16'), F, ['x: L5 -> L3'], ['x: L1 -> L3']);
+		});
+
+		it('US1-2 should give x: L5 -> L3 and x: L5 -> L6, not x: L1 -> L3 (p12, f(x = 1);)', function () {
+			shouldHavePairsInModels(analyzeProbe('p12-stmt-arg'), F, ['x: L5 -> L3', 'x: L5 -> L6'], ['x: L1 -> L3']);
+		});
+
+		/// guard: the bypass of 004 FR-016 still holds
+		it('US1-3 should give a: L2 -> L3 and a: L2 -> L6 (p2, if (check(a) || b))', function () {
+			shouldHavePairsInModels(analyzeProbe('p2-ki16-shadow'), [PAGE, PAGE + '.check'],
+				['a: L2 -> L3', 'a: L2 -> L6'], []);
+		});
+
+		/// guard: the read of the callee is still a p-use of the decision node (deferred to its branches)
+		it('US1-4 should give x: L3 -> L7 and the p-use f: entry -> L6>L7:T (p21, if (f()))', function () {
+			var result = analyzeProbe('p21-callee-in-if-stmt');
+			shouldHavePairsInModels(result, F, ['x: L3 -> L7', 'f: entry -> L6>L7:T'], ['f: entry -> L6']);
+			interPairsOf(result, F).should.containEql('f: entry -> L6>exit:F');
+			result.intraPage().should.containEql('f: entry -> L6>Lnull:F');
+		});
+	});
+
+	/// DECISION 007: a case test left in the case node (not split, or the last operand of a split test) is not
+	/// modeled; the operands split from a test are decision nodes whose reads and calls are modeled (as develop)
+	describe('US1: case tests split into decision nodes (DECISION 007)', function () {
+		var G = [PAGE, PAGE + '.g'];
+
+		it('should connect g() of case g() && 1: (x: L3 -> L8, not x: L1 -> L8)', function () {
+			var result = analyze([
+				'var x = 0, d = 1;',
+				'function g() {',
+				'  x = 1;',
+				'  return 1;',
+				'}',
+				'switch (d) {',
+				'case g() && 1:',
+				'  console.log(x);',
+				'}'
+			].join('\n'));
+			shouldHavePairsInModels(result, G, ['x: L3 -> L8', 'g: entry -> L7>L7:T', 'g: entry -> L7>L7:F'],
+				['x: L1 -> L8']);
+			callEdgesOf(interModelOf(result, G)).should.eql([PAGE + ' L7 -> ' + PAGE + '.g']);
+		});
+
+		it('should not connect g() of case a && g(): (the last operand stays in the case node)', function () {
+			var result = analyze([
+				'var x = 0, d = 1, a = 1;',
+				'function g() {',
+				'  x = 1;',
+				'  return 1;',
+				'}',
+				'switch (d) {',
+				'case a && g():',
+				'  console.log(x);',
+				'}'
+			].join('\n'));
+			allCallEdgesOf(result).should.eql([]);
+			shouldHavePairs(result.intraPage(), ['x: L1 -> L8', 'a: L1 -> L7>L7:T'], ['x: L3 -> L8']);
+		});
+
+		it('should connect the class static members in an operand split from a case test', function () {
+			var result = analyze([
+				'var x = 0, d = 1;',
+				'switch (d) {',
+				'case [class {',
+				'  static y = (x = 1);',
+				'}][0] && 1:',
+				'  console.log(x);',
+				'}'
+			].join('\n'));
+			allCallEdgesOf(result).should.eql([PAGE + ' L3 -> ' + PAGE + '.$ANONYMOUS_FUN_0']);
+			shouldHavePairsInModels(result, [PAGE, PAGE + '.$ANONYMOUS_FUN_0'], ['x: L4 -> L6'], ['x: L1 -> L6']);
+		});
+	});
+
+	/// T066 (DECISION 005 Q3 A, DECISION 006 Q4 must-fix 3, research R13 L2, L2'): the static members of a class
+	/// in a position not listed as a call site are no longer connected. These are behavior changes relative to
+	/// develop (edc22d5), which connected them through modelbuilder.expressionsEvaluatedAtNode:
+	/// the case test is KI §44, the other positions are KI §46.
+	describe('US1: class static members in the positions not listed as call sites (behavior change)', function () {
+		/**
+		 * Assert the static scope and g are not connected: no call edge in any inter-procedural model
+		 * @param {Array} lines
+		 */
+		function shouldNotConnect(lines) {
+			var result = analyze(lines.join('\n'));
+			allCallEdgesOf(result).should.eql([]);
+			return result;
+		}
+		var G = ['var x = 0, c = [], o = {}, v = 1;', 'function g() {', '  x = 1;', '}'];
+
+		it('should not connect a class in a case test (behavior change relative to develop, KI §44)', function () {
+			shouldNotConnect(G.concat(['switch (v) {', 'case class {', '  static y = g();', '}:', '  console.log(x);', '}']));
+		});
+
+		it('should not connect a class in a default of a destructuring pattern (behavior change relative to develop, KI §46)', function () {
+			shouldNotConnect(G.concat(['var [z = class {', '  static y = g();', '}] = c;', 'console.log(x);']));
+		});
+
+		it('should not connect a class after ?. (behavior change relative to develop, KI §46)', function () {
+			shouldNotConnect(G.concat(['c?.m(class {', '  static y = g();', '});', 'console.log(x);']));
+		});
+
+		it('should not connect a class in the left side of for-of (behavior change relative to develop, KI §46)', function () {
+			shouldNotConnect(G.concat(['for (o[class {', '  static y = g();', '}] of c) {', '}', 'console.log(x);']));
+		});
+
+		it('should not connect a class in a default of a catch parameter (behavior change relative to develop, KI §46)', function () {
+			shouldNotConnect(G.concat(['try {', '  x = 2;', '} catch ({a = class {', '  static y = g();', '}}) {',
+				'  console.log(x);', '}']));
+		});
+	});
 });
+
+/**
+ * Call edges of every inter-procedural model of the page of an analyzed program (see callEdgesOf)
+ * @param {Object} result
+ * @returns {Array}
+ */
+function allCallEdgesOf(result) {
+	'use strict';
+	var edges = [];
+	pageModelsOf(result).interProceduralModels.forEach(function (model) {
+		callEdgesOf(model).forEach(function (edge) {
+			if (edges.indexOf(edge) === -1) {
+				edges.push(edge);
+			}
+		});
+	});
+	return edges;
+}
 
 module.exports = {
 	PAGE: PAGE,

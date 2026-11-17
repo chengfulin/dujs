@@ -16,7 +16,9 @@
  * Original dujs code, MIT License (see LICENSE).
  */
 var fs = require('fs'),
-	path = require('path');
+	os = require('os'),
+	path = require('path'),
+	childProcess = require('child_process');
 var should = require('should');
 var modelCtrl = require('../../lib/dujs/modelctrl'),
 	Def = require('../../lib/dujs/def'),
@@ -25,7 +27,8 @@ var modelCtrl = require('../../lib/dujs/modelctrl'),
 	analyze = require('../helpers/analyze');
 var Set = require('../../lib/analyses/set');
 
-var PROBES005 = path.join(__dirname, 'cases', 'probes005'),
+var PAGE = '$DOMAIN.$PAGE_0',
+	PROBES005 = path.join(__dirname, 'cases', 'probes005'),
 	PROBES004 = path.join(__dirname, 'cases', 'probes004');
 
 /**
@@ -243,6 +246,54 @@ describe('summary (feature 005, User Story 1)', function () {
 				'f();'
 			].join('\n'));
 			namesOf(summaryOf(result, 'f').upwardExposed).should.not.containEql('y');
+		});
+
+		/// feature 007 T021 (research R8): in the callee k, the read of the callee f of if (f(x)) is a p-use of
+		/// the decision deferred from the CALL NODE inserted before it (segment 0), and the argument x is a
+		/// c-use of that CALL NODE; both are upward-exposed uses of k (summaryGraphOf merges deferredPuse)
+		it('should hold the deferred p-use of the callee and the argument of if (f(x)) (007 T021)', function () {
+			this.timeout(60000);
+			var code = [
+				'var x = 0;',
+				'function f(v) {',
+				'  return 1;',
+				'}',
+				'function k() {',
+				'  if (f(x)) {',
+				'  }',
+				'}',
+				'k();'
+			].join('\n');
+			var result = analyzeAndSummarize(code),
+				exposed = namesOf(summaryOf(result, 'k').upwardExposed);
+			exposed.should.containEql('f');
+			exposed.should.containEql('x');
+			/// the summaries of *.matching.json list them as well
+			var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dujs-summary-')),
+				input = path.join(dir, 'k.js');
+			try {
+				fs.writeFileSync(input, code, 'utf8');
+				var run = childProcess.spawnSync(process.execPath,
+					[path.join(__dirname, '..', '..', 'bin', 'dujs.js'), '-js', input], {cwd: dir, encoding: 'utf8'});
+				run.status.should.eql(0, run.stderr);
+				var out = fs.readdirSync(dir).filter(function (name) {
+					return name.indexOf('out-') === 0;
+				})[0];
+				var interDir = path.join(dir, out, 'page0', 'inter-procedurals'),
+					ofK = null;
+				/// the matching of the model of the page (the caller of k)
+				fs.readdirSync(interDir).filter(function (name) {
+					return /\.matching\.json$/.test(name);
+				}).forEach(function (name) {
+					var summaries = JSON.parse(fs.readFileSync(path.join(interDir, name), 'utf8')).summaries;
+					ofK = ofK || summaries[PAGE + '.k'] || null;
+				});
+				(!!ofK).should.eql(true, 'no summary of k');
+				ofK.upwardExposed.should.containEql('f');
+				ofK.upwardExposed.should.containEql('x');
+			} finally {
+				fs.rmSync(dir, {recursive: true, force: true});
+			}
 		});
 	});
 

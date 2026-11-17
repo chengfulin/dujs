@@ -107,8 +107,8 @@ describe('pre-refactor characterization (probes)', function () {
 						'i: L7 -> L7',
 						'k: entry -> L2',
 						'v: entry -> L2',
-						'x: L4 -> L3',
-						'x: L4 -> L6',
+						'x: L2 -> L3', /// 007 US1: x = 1 of f(x = 1) is defined before f calls k (x = 4)
+						'x: L2 -> L6',
 						'x: L5 -> L3',
 						'x: L5 -> L6',
 						'x: L6 -> L3',
@@ -128,8 +128,8 @@ describe('pre-refactor characterization (probes)', function () {
 				'i: L7 -> L7',
 				'k: entry -> L2',
 				'v: entry -> L2',
-				'x: L4 -> L3',
-				'x: L4 -> L6',
+				'x: L2 -> L3', /// 007 US1: x = 1 of f(x = 1) is defined before f calls k (x = 4)
+				'x: L2 -> L6',
 				'x: L5 -> L3',
 				'x: L5 -> L6',
 				'x: L6 -> L3',
@@ -150,8 +150,8 @@ describe('pre-refactor characterization (probes)', function () {
 				'i: L7 -> L7',
 				'k: entry -> L2',
 				'v: entry -> L2',
-				'x: L4 -> L3',
-				'x: L4 -> L6',
+				'x: L2 -> L3', /// 007 US1: x = 1 of f(x = 1) is defined before f calls k (x = 4)
+				'x: L2 -> L6',
 				'x: L5 -> L3',
 				'x: L5 -> L6',
 				'x: L6 -> L3',
@@ -954,33 +954,8 @@ describe('expansion', function () {
 			(originalDefinitionOfX.definition.fromNode === callSite).should.be.true();
 		});
 
-		// 004 contracts/model-api.md §2: keepGenerateAtCallSite (FR-007)
-		it('should keep the GEN at the call-site with keepGenerateAtCallSite', function () {
-			var page = intraProceduralModelsOf(['function f(v) {}', 'var x;', 'f(x = 1);'].join('\n'));
-			var root = hierarchy.createCallHierarchyModel(page.modelOf('')),
-				callSite = nodeAt(page.modelOf(''), 3, 'f');
-			var edge = hierarchy.addCallEdge(root, {
-				callSite: callSite,
-				calleeModel: page.modelOf('f'),
-				keepGenerateAtCallSite: true
-			});
-			var expanded = expandInto(root);
-			shouldRebuildEveryGEN(expanded);
-			var callNode = expanded.flatNodeOf.get(callSite),
-				callReturn = expanded.flatNodeOf.get(edge.callReturn);
-			callNode.type.should.eql(FlowNode.CALL_NODE_TYPE);
-			(callNode.call === expanded.flatNodeOf.get(page.modelOf('f').graph[0])).should.be.true();
-			var definitionsOfX = callNode.generate.values().filter(function (vardef) {
-				return vardef.variable.name === 'x';
-			});
-			definitionsOfX.should.have.length(1);
-			(definitionsOfX[0].definition.fromNode === callNode).should.be.true();
-			callReturn.generate.size.should.eql(0);
-			callReturn.kill.size.should.eql(0);
-			/// the outgoing edges still move to the CALL RETURN NODE
-			(callNode.normal === null).should.be.true();
-			(callReturn.normal === expanded.flatNodeOf.get(callSite.normal)).should.be.true();
-		});
+		/// feature 007: keepGenerateAtCallSite is removed (004 FR-007 is kept by the segments of the class
+		/// name, data-model §2; tests/dujs/classfields.js T023), see 'segments of the nodes with calls'
 
 		it('should rebuild the GEN of every copy with copies (probe a1)', function () {
 			var page = intraProceduralModelsOf(fs.readFileSync(path.join(PROBES, 'a1.js'), 'utf8'));
@@ -1401,16 +1376,17 @@ describe('expansion by the builder', function () {
 			var edge = callEdgesAt(model, line)[0];
 			(model.flatNodeOf(edge.callReturn).normal === model.flatNodeOf(edge.callSite)).should.be.true();
 		});
-		/// the GEN of the CALL RETURN NODE of f(x = 1) defines x at the copy of the call-site
+		/// feature 007 US1: x = 1 of f(x = 1) is in segment 0, so the GEN of the copy of the call-site
+		/// (the CALL NODE) defines it, and the CALL RETURN NODE defines nothing
 		var callOfF = callEdgesAt(model, 4)[0],
 			callSite = model.flatNodeOf(callOfF.callSite),
-			definitionsOfX = model.flatNodeOf(callOfF.callReturn).generate.values().filter(function (vardef) {
+			definitionsOfX = callSite.generate.values().filter(function (vardef) {
 				return vardef.variable.name === 'x';
 			});
 		definitionsOfX.should.have.length(1);
 		(definitionsOfX[0].definition.fromNode === callSite).should.be.true();
 		(callSite.original === callOfF.callSite).should.be.true();
-		callSite.generate.size.should.eql(0);
+		model.flatNodeOf(callOfF.callReturn).generate.size.should.eql(0);
 		/// the original keeps its own definition of x
 		callOfF.callSite.generate.values().filter(function (vardef) {
 			return vardef.variable.name === 'x' && vardef.definition.fromNode === callOfF.callSite;
@@ -1839,5 +1815,138 @@ describe('expansion of feature 005 (Q-a, CallSiteRecord, expandShallow)', functi
 			(expanded.loops[0].loop === expanded.flatNodeOf.get(intraPage.hierarchy.loop)).should.be.true();
 			(expanded.loops[1].loop === expanded.flatNodeOf.get(otherPage.hierarchy.loop)).should.be.true();
 		});
+	});
+});
+
+/// feature 007 T022 (data-model §4, contracts/lib-api.md §5, §6): the segments of a node with call sites in
+/// the flat graph built by the builder (US1: the call sites of develop, by the phase predicate)
+describe('segments of the nodes with calls (feature 007 US1)', function () {
+	'use strict';
+	var defUseAnalyzer = require('../../lib/dujs/defuseanalyzer');
+	after(analyze.reset);
+
+	/**
+	 * The inter-procedural model of the page and its call edges by line
+	 * @param {Array} lines
+	 * @returns {Object} {model, edgesAt(line)}
+	 */
+	function pageModelOf(lines) {
+		var result = analyze(lines.join('\n')),
+			models = modelCtrl.collectionOfPageModels.get(result.scopeTree).interProceduralModels.filter(function (model) {
+				return model.mainlyRelatedScope === result.scopeTree.root;
+			});
+		models.should.have.length(1);
+		return {
+			model: models[0],
+			edgesAt: function (line) {
+				return models[0].hierarchy.edges.filter(function (edge) {
+					return edge.kind === 'call' && edge.plan.node.line === line;
+				});
+			}
+		};
+	}
+
+	function namesOf(vars) {
+		return (!!vars ? vars.values() : []).map(function (aVar) {
+			return aVar.name;
+		}).sort();
+	}
+
+	function definedNamesOf(node) {
+		return node.generate.values().map(function (vardef) {
+			return vardef.variable.name;
+		}).sort();
+	}
+
+	it('(a) should define x of f(x = 1); in segment 0 and the variables of a class expression after it', function () {
+		var built = pageModelOf(['function f(v) {}', 'var x;', 'f(x = 1);', 'var a = class {', '  static s = (x = 2);',
+				'}, b = x;']),
+			model = built.model;
+		var callOfF = built.edgesAt(3)[0],
+			callSite = model.flatNodeOf(callOfF.callSite),
+			callReturn = model.flatNodeOf(callOfF.callReturn);
+		callSite.type.should.eql(FlowNode.CALL_NODE_TYPE);
+		callSite.segment.index.should.eql(0);
+		definedNamesOf(callSite).should.eql(['x']);
+		(callSite.generate.values()[0].definition.fromNode === callSite).should.be.true();
+		callReturn.segment.index.should.eql(1);
+		definedNamesOf(callReturn).should.eql([]);
+		/// the class expression (a class-static call site): a and b are defined after its static member runs
+		var ofClass = built.edgesAt(4)[0],
+			classSite = model.flatNodeOf(ofClass.callSite),
+			classReturn = model.flatNodeOf(ofClass.callReturn);
+		ofClass.plan.callSites[0].kind.should.eql('class-static');
+		definedNamesOf(classSite).should.eql([]);
+		definedNamesOf(classReturn).should.eql(['a', 'b']);
+		namesOf(classReturn.cuse).should.eql(['x']);
+		namesOf(classSite.cuse).should.eql([]);
+	});
+
+	it('(b) should defer the p-use of the callee f of if (f(x)) from the CALL NODE to the decision', function () {
+		var built = pageModelOf(['var x = 0;', 'function f(v) {', '  return 1;', '}', 'if (f(x)) {', '  x = 2;', '}']),
+			model = built.model,
+			edge = built.edgesAt(5)[0],
+			decision = model.flatNodeOf(edge.callSite),
+			callNode = model.flatNodeOf(edge.callNode),
+			callReturn = model.flatNodeOf(edge.callReturn);
+		edge.beforeDecision.should.be.true();
+		callNode.segment.index.should.eql(0);
+		namesOf(callNode.deferredPuse).should.eql(['f']);
+		namesOf(callNode.cuse).should.eql(['x']);
+		namesOf(callNode.puse).should.eql([]);
+		callNode.puseOwners.should.have.length(1);
+		(callNode.puseOwners[0] === decision).should.be.true();
+		/// the decision node is the last segment and the owner; it reads nothing after the call
+		decision.segment.index.should.eql(1);
+		decision.puseOwners.should.eql([]);
+		namesOf(decision.puse).should.eql([]);
+		namesOf(decision.deferredPuse).should.eql([]);
+		/// the CALL RETURN NODE of the only call site of a decision is not a segment
+		(callReturn.segment === null).should.be.true();
+		analyze.pairsOfModel(model).should.containEql('f: entry -> L5>L6:T');
+		analyze.pairsOfModel(model).should.containEql('f: entry -> L5>exit:F');
+		analyze.pairsOfModel(model).should.not.containEql('f: entry -> L5');
+		/// a deferred p-use already paired for (definition, owner, branch) is not added again
+		function countOfF() {
+			var count = 0;
+			model.dupairs.forEach(function (pairs, variable) {
+				if (variable.name === 'f') {
+					count += pairs.size;
+				}
+			});
+			return count;
+		}
+		countOfF().should.eql(2);
+		var fVar = callNode.deferredPuse.values()[0];
+		callReturn.deferredPuse = new (require('../../lib/analyses/set'))([fVar]);
+		callReturn.puseOwners = [decision];
+		callReturn.reachIns = callNode.reachIns;
+		defUseAnalyzer.findDUPairs(model);
+		countOfF().should.eql(2);
+	});
+
+	it('(c) (d) should connect the CALL NODE before a decision in try to the copy of the catch node', function () {
+		var built = pageModelOf(['function f() {', '  return 1;', '}', 'try {', '  if (f()) {', '  }', '} catch (e) {', '}']),
+			model = built.model,
+			edge = built.edgesAt(5)[0],
+			callNode = model.flatNodeOf(edge.callNode),
+			decision = model.flatNodeOf(edge.callSite),
+			catchNode = model.flatNodeOf(edge.callSite.exception);
+		edge.callSite.exception.astNode.type.should.eql('CatchClause');
+		(callNode.exception === catchNode).should.be.true();
+		/// the decision keeps its exception edge (develop position until US4); the CALL RETURN NODE has none
+		(decision.exception === catchNode).should.be.true();
+		(model.flatNodeOf(edge.callReturn).exception === null).should.be.true();
+	});
+
+	it('(e) should give the segment nodes {source, index, plan}', function () {
+		var built = pageModelOf(['function f(v) {}', 'var x;', 'f(x = 1);']),
+			edge = built.edgesAt(3)[0],
+			segment = built.model.flatNodeOf(edge.callSite).segment;
+		Object.keys(segment).sort().should.eql(['index', 'plan', 'source']);
+		(segment.source === edge.callSite).should.be.true();
+		(segment.plan === edge.plan).should.be.true();
+		edge.callIndex.should.eql(0);
+		edge.lastOfCallSite.should.be.true();
 	});
 });

@@ -48,7 +48,18 @@
           "T064"
         ],
         "plan_file": "specs/007-split-call-nodes/parallel-plan.json"
-      }
+      },
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      },
+      "decisions": [
+        "DECISION 007",
+        "DECISION 008"
+      ]
     }
   },
   "brief": {

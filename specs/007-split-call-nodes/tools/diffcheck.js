@@ -56,6 +56,11 @@
  *   missing in this branch, on the lines of a class with static members whose
  *   position is a case test (§44), the left of for-in/of, after "?.", a
  *   destructuring default or a catch parameter (§46).
+ * - 共通（段0例外） (DECISION 008): per *.graph.dot "~" difference; the
+ *   records are those of the *.matching.json of the same model, compared by
+ *   id with their keys sorted; the decision node is a normal successor of the
+ *   CALL RETURN of the base with a "true"/"false" out-edge. The report lists
+ *   "callNode → target（record id）" in the note column.
  * - The pin table counts + and − of pairs, rows and models; "~" is listed by
  *   its row number only (005 rule). 標記 and 共通 are not pinned.
  *
@@ -75,7 +80,7 @@ var ROOT = path.resolve(__dirname, '..', '..', '..'),
 	MDN_CORPUS = path.join(ROOT, 'specs', '006-eslint-scope', 'mdn'),
 	MDN_BASE = path.join(FEATURE, 'mdn', 'baseline-develop'),
 	ORDER = ['連結', '求值順序（判別式）', '求值順序（可迭代）', '求值順序', '返回後例外（決策返回不拋錯）', '返回後例外',
-		'§37', '§38', '§41', '§43', '§44', '§46', '標記', '共通'],
+		'§37', '§38', '§41', '§43', '§44', '§46', '標記', '共通（段0例外）', '共通'],
 	FR_OF = {
 		'連結': 'FR-001', '求值順序': 'FR-002–FR-004', '返回後例外': 'FR-005', '§44': 'FR-001 例外', '§46': 'FR-001 例外',
 		'標記': 'FR-007', '共通': '—'
@@ -805,6 +810,10 @@ function categoriesOf(diff, info) {
 		if (diff.labelOnly) {
 			found.add('標記');
 		}
+		if (diff.segment0) {
+			found.add('共通（段0例外）');
+			found.add('共通');
+		}
 		if (diff.sameShape || info.newCallSite) {
 			found.add('共通');
 		}
@@ -812,6 +821,158 @@ function categoriesOf(diff, info) {
 	return ORDER.filter(function (category) {
 		return found.has(category);
 	});
+}
+
+/* ---------- §2 共通（段0例外） ---------- */
+
+/**
+ * Edge lines and other lines of a *.graph.dot text
+ * @param {string} text
+ * @returns {Object} {edges: [{from, to, attrs, type, key}], rest: string}
+ */
+function splitGraphLines(text) {
+	'use strict';
+	var edges = [], rest = [];
+	text.split('\n').forEach(function (line) {
+		var edge = /^\s*(\w+) -> (\w+) \[(.*)\]\s*$/.exec(line);
+		if (edge) {
+			var type = /label\s*=\s*"([^"]*)"/.exec(edge[3]);
+			edges.push({from: edge[1], to: edge[2], attrs: edge[3], type: type ? type[1] : '',
+				key: edge[1] + ' -> ' + edge[2] + ' [' + edge[3] + ']'});
+		} else {
+			rest.push(line);
+		}
+	});
+	return {edges: edges, rest: rest.join('\n')};
+}
+
+/**
+ * A JSON value with its object keys sorted (for comparing records)
+ * @param {*} value
+ * @returns {string}
+ */
+function canonical(value) {
+	'use strict';
+	if (Array.isArray(value)) {
+		return '[' + value.map(canonical).join(',') + ']';
+	}
+	if (value && typeof value === 'object') {
+		return '{' + Object.keys(value).sort().map(function (key) {
+			return JSON.stringify(key) + ':' + canonical(value[key]);
+		}).join(',') + '}';
+	}
+	return JSON.stringify(value);
+}
+
+function recordsById(text) {
+	'use strict';
+	var map = new Map();
+	if (text === null) {
+		return null;
+	}
+	((JSON.parse(text).calls) || []).forEach(function (record) {
+		map.set(record.id, record);
+	});
+	return map;
+}
+
+/**
+ * Condition 共通（段0例外） of §2 (DECISION 008): the only change of a
+ * *.graph.dot is new exception edges from the CALL (segment 0) of a record
+ * with beforeDecision true to its exceptionalReturn, the base already having
+ * an exception edge to the same target from the decision node after its CALL
+ * RETURN.
+ * @param {Object} input {baseGraph, newGraph (texts, the base rewritten by §1),
+ *   baseDupairs, newDupairs (texts or null, the base rewritten by §1),
+ *   baseMatching, newMatching (texts or null)}
+ * @returns {Array|null} [{callNode, target, id}] of the new edges, or null
+ *   when the condition does not hold
+ */
+function segment0Exceptions(input) {
+	'use strict';
+	// (a) no pair or row difference in the .dupairs.dot of the model
+	if ((input.baseDupairs === null) !== (input.newDupairs === null)) {
+		return null;
+	}
+	if (input.baseDupairs !== null) {
+		var before = base006.parseDupairs(input.baseDupairs),
+			after = base006.parseDupairs(input.newDupairs),
+			names = function (rows) {
+				return rows.map(function (row) {
+					return row.name;
+				});
+			},
+			pairs = function (rows) {
+				return unique([].concat.apply([], rows.map(function (row) {
+					return row.pairs;
+				})));
+			};
+		if (base006.multisetDiff(names(before), names(after)).length > 0 ||
+			base006.multisetDiff(pairs(before), pairs(after)).length > 0) {
+			return null;
+		}
+	}
+	var baseRecords = recordsById(input.baseMatching),
+		newRecords = recordsById(input.newMatching);
+	if (baseRecords === null || newRecords === null) {
+		return null;
+	}
+	// (b) same nodes and labels; no edge removed or redirected
+	var base = splitGraphLines(input.baseGraph),
+		next = splitGraphLines(input.newGraph);
+	if (base.rest !== next.rest) {
+		return null;
+	}
+	var edgeDiff = base006.multisetDiff(base.edges.map(function (edge) {
+		return edge.key;
+	}), next.edges.map(function (edge) {
+		return edge.key;
+	}));
+	if (edgeDiff.length === 0 || edgeDiff.some(function (item) {
+		return item.sign !== '+';
+	})) {
+		return null;
+	}
+	var parsed = splitGraphLines(edgeDiff.map(function (item) {
+			return item.content;
+		}).join('\n')).edges,
+		used = new Set(),
+		result = [];
+	// (c) every new edge attributed to exactly one record; (d) once per record
+	for (var i = 0; i < parsed.length; ++i) {
+		var edge = parsed[i];
+		if (edge.type !== 'exception') {
+			return null;
+		}
+		var candidates = Array.from(newRecords.values()).filter(function (record) {
+			return record.beforeDecision === true && record.callNode === edge.from && record.exceptionalReturn === edge.to;
+		});
+		if (candidates.length !== 1) {
+			return null;
+		}
+		var record = candidates[0],
+			baseRecord = baseRecords.get(record.id);
+		if (used.has(record.id) || !baseRecord || canonical(baseRecord) !== canonical(record)) {
+			return null;
+		}
+		var decided = base.edges.some(function (out) {
+			if (out.from !== baseRecord.callReturn || out.type !== '') {
+				return false;
+			}
+			var successor = out.to;
+			return base.edges.some(function (item) {
+				return item.from === successor && (item.type === 'true' || item.type === 'false');
+			}) && base.edges.some(function (item) {
+				return item.from === successor && item.to === edge.to && item.type === 'exception';
+			});
+		});
+		if (!decided) {
+			return null;
+		}
+		used.add(record.id);
+		result.push({callNode: edge.from, target: edge.to, id: record.id});
+	}
+	return result;
 }
 
 /* ---------- §1 comparison ---------- */
@@ -932,10 +1093,24 @@ function compareCase(spec) {
 			push(located, unit, '~', located.file, null, {marker: true});
 			return;
 		}
-		push(located, unit, '~', located.file, null, {
+		var extra = {
 			labelOnly: rewritten !== raw && stripIds(rewritten) === stripIds(next),
 			sameShape: stripIds(raw) === stripIds(next) || stripIds(rewritten) === stripIds(next)
-		});
+		};
+		if (/\.graph\.dot$/.test(file)) {
+			var modelKey = file.replace(/\.graph\.dot$/, ''),
+				dupairs = modelKey + '.dupairs.dot',
+				matching = modelKey + '.matching.json';
+			extra.segment0 = segment0Exceptions({
+				baseGraph: rewritten,
+				newGraph: next,
+				baseDupairs: readText(spec.baseDir, dupairs) === null ? null : baseTextOf(dupairs),
+				newDupairs: readText(spec.newDir, dupairs),
+				baseMatching: readText(spec.baseDir, matching),
+				newMatching: readText(spec.newDir, matching)
+			});
+		}
+		push(located, unit, '~', located.file, null, extra);
 	});
 	function rowsOf(files, rewrite) {
 		var rows = [];
@@ -1127,6 +1302,14 @@ function buildReport(results) {
 	diffs.forEach(function (diff, index) {
 		var category = diff.categories[0] || '（無成立類別）',
 			note = diff.categories.length > 1 ? '（亦符：' + diff.categories.slice(1).join('、') + '）' : '';
+		if (mainCategory(category) === '共通' && diff.segment0) {
+			var others = diff.categories.slice(1).filter(function (item) {
+				return item !== '共通';
+			});
+			note = '段0例外：' + diff.segment0.map(function (item) {
+				return item.callNode + ' → ' + item.target + '（' + item.id + '）';
+			}).join('；') + (others.length > 0 ? '（亦符：' + others.join('、') + '）' : '');
+		}
 		lines.push('| ' + [index + 1, diff.caseName, diff.page, diff.file, diff.unit, diff.sign, '`' + diff.content + '`',
 			category, FR_OF[mainCategory(category)] || '', note].join(' | ') + ' |');
 		if (diff.categories.length > 0 && isPinned(category)) {
