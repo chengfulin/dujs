@@ -1,7 +1,16 @@
 {
   "feature": "005-summary-analysis",
   "steps": {
-    "specify": {"done": true}
+    "specify": {
+      "done": true
+    },
+    "clarify": {
+      "done": true,
+      "clarifier_findings": 15,
+      "fable_judge": true
+    }
   },
-  "brief": {"artifact_url": "https://claude.ai/artifact/5CEK9Duh171CtV4GYs1gRt"}
+  "brief": {
+    "artifact_url": "https://claude.ai/artifact/5CEK9Duh171CtV4GYs1gRt"
+  }
 }

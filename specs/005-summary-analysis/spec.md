@@ -1,4 +1,4 @@
-# Feature Specification: 階層模型 stage 2——以摘要做 context-sensitive 分析，並修正函式 entry 節點的讀取（§18）
+# Feature Specification: 階層模型 stage 2——以摘要做 context-sensitive 分析，並修正函式 entry 節點的讀取（§18）與 try／finally、例外路徑的控制流程
 
 **Feature Branch**: `005-summary-analysis`
 
@@ -23,16 +23,17 @@
 
 | User Story | 來源 |
 |------------|------|
-| US1 | HD D3、範圍外；PRB P1、P2、P16；USR D1、D4 |
-| US2 | USR D2、R2-3；D004 H3、FR-018；D006；PRB P3、P7、P10、P11、P12 |
-| US3 | USR D3、R2-2；PRB P4、P13–P15、P17 |
-| US4 | HD 層級定義；USR N1；PRB P5、P6 |
+| US1 | HD D3、範圍外；PRB P1、P2、P16、P27、P28；USR D1、D4 |
+| US2 | USR D2、R2-3；D004 H3、FR-018；D006；PRB P3、P7、P10–P12、P29 |
+| US3 | USR D3、R2-2；PRB P4、P13–P15、P17、P25；Session 2026-11-17 |
+| US6 | PRB P17–P24；USR Q-b；Session 2026-11-17 |
+| US4 | HD 層級定義；USR N1；PRB P5、P6、P26 |
 | US5 | KI §18；PRB P8、P9 |
 
 ### 範圍決策（USR）
 
 - **D1**（spec review，Fable A10、A1）：原需求拆成三輪，本 feature（005）只做第一輪：
-  - **005**：stage 2 摘要分析（context-sensitive）＋KI §18。
+  - **005**：stage 2 摘要分析（context-sensitive）＋KI §18；spec review 與 clarify 再納入 `finally` 整族缺陷（FR-013）與例外路徑只帶執行前定義（FR-014）。
   - **007**（後續）：KI §16（呼叫與決策節點、引數的求值順序）＋KI §22 (3)（運算式中的呼叫是 call-site）；兩者共用「把敘述節點拆成
     呼叫前／返回後」的建模。
   - **008**（後續）：KI §22 (1)（`o.p = v` 不再定義 `o`；須保留 `localStorage.k = v` 為儲存定義，Fable A2）、§22 (5)、§23。
@@ -47,15 +48,20 @@
   都算定義），且該定義為下列之一，則連到該函式：函式宣告（含 block 內的函式宣告）、以 `const`／`let` 綁定的函式運算式（含箭頭函式）、
   具名函式運算式的內部名稱（006 起它是只在該函式內可見、定義在運算式節點的變數）。函式宣告與具名函式運算式的**自身遞迴**因此也連結
   （006 時兩者皆不連結）。不看執行順序。函式內的 `new F()` 本輪不放寬；其他情形維持 004 FR-018 的嚴格規則。取代 004 Clarifications H3
-  中「函式內看不到外層函式定義就不連結」的部分。[SRC USR D2、R2-3；D004 H3、FR-018；D006]
+  中「函式內看不到外層函式定義就不連結」的部分。block 內函式宣告的 binding 只在該 block 內（006 D5），block 外的同名呼叫不連結。
+  [SRC USR D2、R2-3；D004 H3、FR-018；D006]
 - **D3**（spec review，Fable A4；第二輪 R2-2）：摘要的 GEN／must-KILL／upward-exposed uses 只看**正常返回**的路徑：被呼叫端中未被捕捉的
   例外離開，不回到呼叫之後的節點。摘要另有第四項「例外離開時可能有效的定義」（被呼叫端中可能拋錯節點處有效的定義聯集，不做 KILL），
   流向呼叫端的 `catch`／`finally`；呼叫端沒有 `try` 時沿呼叫鏈往外，到頁面層或事件處理器層時進 LOOP。因此現有「呼叫前或被呼叫端中途的
-  定義經例外到達 `catch` 內或 LOOP 之後」這類 pair 保留。[SRC USR D3、R2-2]
+  定義經例外到達 `catch` 內或 LOOP 之後」這類 pair 保留。可能拋錯的節點以**展開前** intra-procedural CFG 的例外邊判定；呼叫敘述只在
+  呼叫之前可能拋錯（Clarifications 2026-11-17 Q-a）；例外路徑帶拋錯節點**執行前**的定義（FR-014）。[SRC USR D3、R2-2；Session 2026-11-17]
 - **D4**（spec review，Fable A5；第二輪 R2-1）：攤平的敘述層級圖不為每個呼叫點複製被呼叫端（現況因模型串接而出現的重複節點照舊），
   pair 由摘要計算；另外輸出 call 邊與 return 邊的配對資訊，供測試路徑產生器過濾不可實現的路徑。「只看正常返回」也以配對資訊表示
   （被呼叫端的例外邊經 exit 之後只能接到呼叫端的例外後繼），`.dot` 的圖結構不為此改變。**修訂** 003 spec「範圍外」中「每個呼叫點各自
-  展開一份屬於 stage 2 的範圍」。[SRC USR D4、R2-1；HD 範圍外]
+  展開一份屬於 stage 2 的範圍」，以及 003 Edge Cases 中「各呼叫點接同一份（context-insensitive）」的說法。[SRC USR D4、R2-1；HD 範圍外]
+- **D6**（clarify）：本 feature 對前幾輪的修訂一覽：003 spec「golden 差異不得更新放行」不適用於本 feature（golden 依 FR-011 記錄後更新，
+  含 003 鎖定的 ES5 baseline，例如 `tests/golden/expected/page0/intra-procedurals/5.graph.dot` 的例外邊）；004 FR-018 中「函式不適用此放寬
+  （H3）」一句由 D2 取代；004 FR-015 的遞迴回邊仍保留在圖上，摘要在其上以不動點計算（FR-003）。[SRC HD；D004；Session 2026-11-17]
 - **D5**：golden 差異紀錄放在 `specs/005-summary-analysis/golden-diff.md`，每處差異對應到 FR 或 KI 節次。[SRC USR D1]
 
 ### 探測結果（PRB，`develop` 9e324be，含 `006-eslint-scope`）
@@ -82,6 +88,19 @@ spec review 時（584e17d）的結果與下表相同，除 P5（改用新程式�
 | P15 | US3 情境 5（`g4-chain-loop.js`） | `t()` 內的 `s();` 不連結；intra-page 有 `x: L1 -> L12`、`x: L9 -> L12`，沒有 `x: L3 -> L12` | 例外沿呼叫鏈進 LOOP 需 D2 連結 |
 | P16 | US1 情境 6（`g5-mdn-person-field.js`） | 有 `count: L1 -> L3`、`count: L1 -> L5`、`count: L5 -> L10`，沒有 `count: L1 -> L10` | 守門（改自 MDN） |
 | P17 | US3 情境 6（`m3-mdn-finally-return.js`） | 有 `r: L7 -> L16`、`r: L7 -> L18`；L10 的 `r = 3` 沒有任何 pair（同程式不包在函式中時 `finally` 正確，見 `m4`、`m5`、`m6`） | 既有 CFG 缺陷：函式內 `catch` 重拋的例外略過 `finally` 直接離開函式（Q-b：本 feature 修正，FR-013） |
+| P18 | US6 情境 1（`c-fin1.js`） | 有 `r: L9 -> L14`、`r: L9 -> L16`（因例外進入的 `finally` 做完後接到正常後繼） | FR-013 |
+| P19 | US6 情境 2（`c-fin3.js`） | 有 `r: L7 -> L16`、`r: L7 -> L18` | 守門（現況碰巧成立） |
+| P20 | US6 情境 3（`c-fin4.js`） | 有 `r: L6 -> L8`（L8 實際不可達） | FR-013 |
+| P21 | US6 情境 4（`c-m4h.js`） | intra-page 有 `r: L10 -> L3`，沒有 `r: L13 -> L3` | 頁面層 `catch` 重拋略過 `finally` |
+| P22 | US6 情境 5（`c-fin2.js`） | 有 `r: L4 -> L11` | `return` 略過 `finally` |
+| P23 | US6 情境 6（`c-fin5-break.js`、`c-fin6-continue.js`） | 有 `r: L4 -> L10`；`r: L6 -> L12` | `break`／`continue` 略過 `finally` |
+| P24 | US6 情境 7（`c-out3.js`） | 只有 `x: L4 -> L6` | 例外邊帶執行後的定義，漏 `x: L1 -> L6`（FR-014） |
+| P25 | US3 情境 7（`c-nt.js`） | 有 `x: L6 -> L9` | 守門：呼叫前拋錯 |
+| P26 | US4 情境 3（`c-h12.js`） | 有 `x: L1 -> L6`、`x: L3 -> L6` | 守門：LOOP 不套 must-KILL |
+| P27 | US1 情境 7（`c-noret.js`） | 有 `x: L3 -> L7` | 無正常返回時 L7 不可達 |
+| P28 | US1 情境 8（`c-gen.js`、`c-asy.js`） | 只有 `x: L3 -> L6`；只有 `x: L5 -> L8` | generator／async 被當成執行完畢 |
+| P29 | US2 情境 7（`c-blk.js`） | `f();` 不連結，有 `x: L8 -> L10` | 守門 |
+| P30 | 限制（`c-win.js`） | `f();` 不連結，有 `x: L7 -> L9` | D2 後會誤連（`window.f` 不是 `f` 的定義），寫入 README 限制 |
 
 ## Clarifications
 
@@ -114,10 +133,23 @@ spec review 時（584e17d）的結果與下表相同，除 P5（改用新程式�
 - **Q-b → A**：P17 的既有 CFG 缺陷（函式內 `catch` 重拋的例外略過 `finally` 直接離開函式）納入本 feature 修正（FR-013），摘要第四項建立在
   這些例外邊上；golden 差異列入 golden-diff。若 plan 發現牽動面遠超預期，回到使用者改為記錄成已知問題。
 
-### 待 clarify
+### Session 2026-11-17
 
-- **Q-a**：被呼叫端正常返回後，呼叫端 `try` 內已沒有其他可能拋錯的節點時，被呼叫端的定義是否仍可經例外到達 `catch`（P13 的
-  `state: L7 -> L13`、`probes/g2-try-catch.js` 的 `x: L4 -> L9`、`probes/us3-3.js` 的 `x: L5 -> L10`）——即呼叫敘述本身在返回後是否算可能拋錯的節點。
+clarify 由 sdd-spec-clarifier（15 項發現，HIGH 5）與全新 context 的 Fable 裁判（逐項以探測驗證，另找出 N1–N7）把關；探測程式見
+`probes/c-*.js`（複製自兩者的暫存探測）。
+
+- Q: `finally` 的缺陷要修到多大範圍？（Fable 實測：頁面層的 `catch` 重拋同樣略過 `finally`；因例外進入的 `finally` 做完後一律接到
+  正常後繼；`return`／`break`／`continue` 穿過 `finally` 時也略過它）→ A: 整族一起修（FR-013、US6）。
+- Q: 被呼叫端正常返回之後，呼叫敘述本身還算可能拋錯嗎？→ A: 不算；呼叫之前（求 callee、引數）仍算，帶呼叫前的定義。運算式
+  中與決策節點前的呼叫維持現況，007 處理（FR-006、US3 情境 2、3、7）。
+- Q: 例外路徑帶拋錯敘述執行前還是執行後的定義？→ A: 只帶執行前（IN）：拋錯的敘述視為沒有完成，全面套用於所有例外邊
+  （FR-014、US6 情境 7）。（中途曾選「前後聯集」，經更正聯集會保留「執行後」而抵銷 Q-a 後改選 IN。）
+- Q: generator／async 函式的摘要如何處理？→ A: 不做 must-KILL，只保留可能的 GEN；記入 known-issues（FR-001、US1 情境 8）。
+- 依裁判定案、不另問（明顯正確或文件完整性）：LOOP 不套 must-KILL、處理器的 GEN 經 LOOP 流向所有處理器（FR-007、US4 情境 3）；
+  upward-exposed uses 對所有路徑計算（FR-001）；intra-procedural 模型的呼叫維持不透明（FR-009）；不動點從「無正常返回」起算、無正常返回
+  的情境（FR-003、US1 情境 7）；例外 return 配對情境（US1 情境 5）；block 內函式宣告依 006 D5 不在 block 外連結（US2 情境 7）；
+  `window.f = …` 不視為 `f` 的定義而可能誤連，寫入 README 限制（FR-012）；SC-005 的理由補齊；對 003／004 的修訂明列（D2、D4、D6）。
+  駁回：US1 情境 1「恰為」與表示法不矛盾。
 
 ## 表示法
 
@@ -158,11 +190,17 @@ def-use pair，並以 pair 與攤平圖產生測試需求與測試路徑。多�
    **When** 分析，**Then** 仍有 `t: L4 -> L6`：遞迴呼叫返回後，外層那次執行的區域變數不被內層那次的定義汙染或殺掉；分析會終止。
    [SRC D004 FR-015、FR-016]
 5. **Given** 上述程式，**When** 輸出攤平圖，**Then** 另有 call 邊與 return 邊的配對資訊：每條 return 邊都能對應到唯一的 call 邊（呼叫點），
-   且 US1 情境 1 中 `f` 的 exit 到 L4 與到 L7 呼叫點的返回節點（callReturn）的兩條 return 邊，分別對應 L4 與 L7 的 call 邊。[SRC USR D4]
+   且 US1 情境 1 中 `f` 的 exit 到 L4 與到 L7 呼叫點的返回節點（callReturn）的兩條 return 邊，分別對應 L4 與 L7 的 call 邊。US3 情境 3 程式的配對資訊中，`s` 的例外經 exit 之後只接到 L8 呼叫所屬 `try` 的
+   `catch`（L9），不接到 L8 的返回節點。[SRC USR D4]
 6. **Given**（改自 MDN「Classes in JavaScript」的 `Person`）`let count = 0;` L1 / `class Person {` L2 / `name = count;` L3 /
    `constructor(name) {` L4 / `count = count + 1;` L5 / `this.name = name;` L6 / `}` L7 / `}` L8 / `new Person("Giles");` L9 /
    `console.log(count);` L10，**When** 分析，**Then** 一個呼叫點依序串接欄位初始化式與 constructor 的摘要：有 `count: L1 -> L3`、
    `count: L1 -> L5`、`count: L5 -> L10`，沒有 `count: L1 -> L10`。守門：現況已成立。[SRC PRB P16；D004 FR-018]
+7. **Given** `var x = 0;` L1 / `function f() {` L2 / `x = 1;` L3 / `f();` L4 / `}` L5 / `f();` L6 / `console.log(x);` L7（無條件遞迴，`f`
+   沒有正常返回），**When** 分析，**Then** 沒有任何以 L7 為 use 端的 `x` pair（不動點從「無正常返回」起算）。[SRC PRB P27；KI §22 (5)]
+8. **Given** `var x = 0;` L1 / `function* g() {` L2 / `x = 1;` L3 / `}` L4 / `g();` L5 / `console.log(x);` L6，**When** 分析，**Then** 有
+   `x: L1 -> L6` 與 `x: L3 -> L6`（generator／async 被呼叫端的摘要不做 must-KILL）；`c-asy.js`（`async function g() { await p; x = 1; }`）
+   同理有 `x: L1 -> L8` 與 `x: L5 -> L8`。[SRC PRB P28；Session 2026-11-17]
 
 ---
 
@@ -195,6 +233,9 @@ def-use pair，並以 pair 與攤平圖產生測試需求與測試路徑。多�
 6. **Given** `var n = 3;` L1 / `var g = function fact() {` L2 / `if (n) {` L3 / `n = n - 1;` L4 / `fact();` L5 / `}` L6 / `};` L7 / `g();` L8 /
    `console.log(n);` L9，**When** 分析，**Then** L5 的 `fact();` 連到該函式；有 `n: L4 -> L3>L4:T`、`n: L1 -> L9`、`n: L4 -> L9`。
    [SRC PRB P11；USR D2；D006]
+7. **Given** `var x = 0;` L1 / `{` L2 / `function f() {` L3 / `x = 7;` L4 / `}` L5 / `}` L6 / `function a() {` L7 / `x = 1;` L8 / `f();` L9 /
+   `console.log(x);` L10 / `}` L11 / `a();` L12，**When** 分析，**Then** L9 的 `f();` 不連結（block 內函式宣告的 binding 只在 block 內，
+   006 D5）；有 `x: L8 -> L10`。守門：現況已成立。[SRC PRB P29；D006]
 
 ---
 
@@ -215,10 +256,12 @@ def-use pair，並以 pair 與攤平圖產生測試需求與測試路徑。多�
    `doSomethingToGetAJavaScriptError();` L6 / `state = "done";` L7 / `}` L8 / `try {` L9 / `doSomethingErrorProne();` L10 / `} catch (e) {` L11 /
    `console.error(e.name);` L12 / `console.error(state);` L13 / `}` L14 / `console.log(state);` L15，**When** 分析，**Then** 有 `state: L1 -> L13`
    （被呼叫端 L4 或 L6 拋錯時呼叫前的定義經例外到達 `catch`）、`state: L1 -> L15`（經 `catch` 之後）、`state: L7 -> L15`（正常返回）、
-   `e: L11 -> L12`。`state: L7 -> L13` 依 Q-a 的決定。[SRC USR D3；PRB P13]
+   `e: L11 -> L12`；沒有 `state: L7 -> L13`（被呼叫端正常返回後呼叫敘述不再拋錯，L7 的賦值拋錯時帶的是執行前的定義）。
+   [SRC USR D3；PRB P13；Session 2026-11-17]
 3. **Given** `var x = 0;` L1 / `function s() {` L2 / `x = 1;` L3 / `console.log(1);` L4 / `x = 2;` L5 / `}` L6 / `try {` L7 / `s();` L8 /
    `} catch (e) {` L9 / `console.log(x);` L10 / `}` L11，**When** 分析，**Then** 有 `x: L3 -> L10`（L4 拋錯時有效的定義經摘要第四項到達
-   呼叫端的 `catch`）。守門：現況已成立（`probes/us3-3.js`）。[SRC USR R2-2]
+   呼叫端的 `catch`）與 `x: L1 -> L10`（L3 的賦值拋錯時帶執行前的定義，FR-014）；沒有 `x: L5 -> L10`（Q-a、FR-014）。
+   [SRC USR R2-2；PRB `us3-3.js`；Session 2026-11-17]
 4. **Given**（改自同頁「The finally block」第一個範例，補上各函式本體與觀察變數 `opened`）`let opened = false;` L1 / `function openMyFile() {` L2 /
    `opened = true;` L3 / `}` L4 / `function writeMyFile(data) {` L5 / `console.log(data);` L6 / `}` L7 / `function closeMyFile() {` L8 /
    `opened = false;` L9 / `}` L10 / `function handleError(e) {` L11 / `console.error(e);` L12 / `}` L13 / `openMyFile();` L14 / `try {` L15 /
@@ -232,8 +275,11 @@ def-use pair，並以 pair 與攤平圖產生測試需求與測試路徑。多�
 6. **Given**（改自同頁「The finally block」第三個範例，`finally` 改為賦值、外層 `console.log(f())` 改為呼叫敘述）`let r = 0;` L1 /
    `function f() {` L2 / `try {` L3 / `r = 1;` L4 / `throw "bogus";` L5 / `} catch (e) {` L6 / `r = 2;` L7 / `throw e;` L8 / `} finally {` L9 /
    `r = 3;` L10 / `}` L11 / `}` L12 / `try {` L13 / `f();` L14 / `} catch (e) {` L15 / `console.log(r);` L16 / `}` L17 / `console.log(r);` L18，
-   **When** 分析，**Then** 有 `r: L10 -> L16`、`r: L10 -> L18`，沒有 `r: L7 -> L16`、`r: L7 -> L18`（`catch` 內重拋的例外先經 `finally` 才離開
-   被呼叫端）。[SRC PRB P17；USR Q-b]
+   **When** 分析，**Then** 有 `r: L10 -> L16`、`r: L10 -> L18`（`catch` 內重拋的例外先經 `finally` 才離開被呼叫端）。（`r: L7 -> L16` 仍可能
+   經 L10 賦值自己的例外邊出現，不在檢查範圍。）[SRC PRB P17；USR Q-b]
+7. **Given** `var x = 0;` L1 / `function s() {` L2 / `var q;` L3 / `}` L4 / `try {` L5 / `x = 1;` L6 / `s();` L7 / `} catch (e) {` L8 /
+   `console.log(x);` L9 / `}` L10，**When** 分析，**Then** 有 `x: L6 -> L9`（L7 在呼叫之前可能拋錯，帶呼叫前的定義）。守門：現況已成立。
+   [SRC PRB P25；Session 2026-11-17]
 
 ---
 
@@ -254,6 +300,10 @@ intra-page 中，事件處理器由 LOOP 節點進入時，其返回只回到 LO
    `function h2() {` L8 / `x = 2;` L9 / `f();` L10 / `console.log(x);` L11 / `}` L12 / `document.addEventListener('click', h1);` L13 /
    `document.addEventListener('keyup', h2);` L14，**When** 分析 intra-page，**Then** 有 `x: L9 -> L11`，沒有 `x: L5 -> L11`
    （從 h1 的呼叫進入 `f`、返回 h2 的呼叫之後是不可實現路徑）。守門：現況因 `f()` 不連結而成立，套用 D2 後須仍成立。[SRC PRB P6；USR D2]
+3. **Given** `var x = 0;` L1 / `function h1() {` L2 / `x = 1;` L3 / `}` L4 / `function h2() {` L5 / `console.log(x);` L6 / `}` L7 /
+   `document.addEventListener('click', h1);` L8 / `document.addEventListener('keyup', h2);` L9，**When** 分析 intra-page，**Then** 有
+   `x: L1 -> L6` 與 `x: L3 -> L6`（LOOP 處不套 must-KILL：處理器可能不被觸發；h1 的 GEN 經 LOOP 流到 h2）。守門：現況已成立。
+   [SRC PRB P26；Session 2026-11-17]
 
 ---
 
@@ -277,17 +327,51 @@ intra-page 中，事件處理器由 LOOP 節點進入時，其返回只回到 LO
 
 ---
 
+### User Story 6 - `try`／`finally` 與例外路徑的控制流程正確 (Priority: P2)
+
+`catch` 內拋錯、`return`／`break`／`continue` 穿過 `finally` 時都先執行 `finally`；因例外進入的 `finally` 做完後繼續往外拋；
+例外路徑只帶拋錯敘述執行前的定義。函式內與頁面層一致。
+
+**Why this priority**: 摘要第四項與 FR-006 建立在例外邊上；這些既有缺陷會讓摘要多報不可實現、漏報可實現的 pair（Fable N1、N4）。
+
+**Independent Test**: 分析下列程式（皆在 `probes/`）。
+
+**Acceptance Scenarios**:
+
+1. **Given** `let r = 0;` L1 / `function f() {` L2 / `try {` L3 / `r = 1;` L4 / `throw "bogus";` L5 / `} finally {` L6 / `;` L7 / `}` L8 /
+   `r = 5;` L9 / `}` L10 / `try {` L11 / `f();` L12 / `} catch (e) {` L13 / `console.log(r);` L14 / `}` L15 / `console.log(r);` L16，
+   **When** 分析，**Then** 有 `r: L4 -> L14`、`r: L4 -> L16`，沒有 `r: L9 -> L14`、`r: L9 -> L16`（因例外進入的 `finally` 做完後繼續往外拋）。
+   [SRC PRB P18]
+2. **Given** US3 情境 6 但 L10 的 `r = 3;` 改為 `;`（`c-fin3.js`），**When** 分析，**Then** 有 `r: L7 -> L16`、`r: L7 -> L18`（重拋經 `finally` 後
+   仍是例外離開，不被當成正常返回）。[SRC PRB P19]
+3. **Given** `let r = 0;` L1 / `try {` L2 / `r = 1;` L3 / `throw "bogus";` L4 / `} finally {` L5 / `r = 3;` L6 / `}` L7 / `console.log(r);` L8，
+   **When** 分析，**Then** 沒有任何以 L8 為 use 端的 `r` pair（L8 不可達）。[SRC PRB P20]
+4. **Given** `let r = 0;` L1 / `function h() {` L2 / `console.log(r);` L3 / `}` L4 / `document.addEventListener('click', h);` L5 / `try {` L6 /
+   `r = 1;` L7 / `throw "bogus";` L8 / `} catch (e) {` L9 / `r = 2;` L10 / `throw e;` L11 / `} finally {` L12 / `r = 3;` L13 / `}` L14，
+   **When** 分析 intra-page，**Then** 有 `r: L13 -> L3`（頁面層 `catch` 重拋先經 `finally`，再經 LOOP 到處理器）。[SRC PRB P21]
+5. **Given** `let r = 0;` L1 / `function f() {` L2 / `try {` L3 / `r = 1;` L4 / `return;` L5 / `} finally {` L6 / `r = 3;` L7 / `}` L8 / `}` L9 /
+   `f();` L10 / `console.log(r);` L11，**When** 分析，**Then** 有 `r: L7 -> L11`，沒有 `r: L4 -> L11`。[SRC PRB P22]
+6. **Given** `let r = 0;` L1 / `while (r < 9) {` L2 / `try {` L3 / `r = 1;` L4 / `break;` L5 / `} finally {` L6 / `r = 3;` L7 / `}` L8 / `}` L9 /
+   `console.log(r);` L10，**When** 分析，**Then** 有 `r: L7 -> L10`，沒有 `r: L4 -> L10`；`continue` 版（`c-fin6-continue.js`）有 `r: L9 -> L12`，
+   沒有 `r: L6 -> L12`。[SRC PRB P23]
+7. **Given** `var x = 0;` L1 / `var o = {};` L2 / `try {` L3 / `x = o.p;` L4 / `} catch (e) {` L5 / `console.log(x);` L6 / `}` L7，**When** 分析，
+   **Then** 有 `x: L1 -> L6`，沒有 `x: L4 -> L6`（`o.p` 拋錯時 `x` 尚未賦值）。[SRC PRB P24；Session 2026-11-17]
+
+---
+
 ### Edge Cases
 
-- 遞迴與互相遞迴：摘要以不動點求得，分析必定終止；無條件遞迴使函式沒有正常返回時，呼叫之後的節點不可達（KI §22 (5) 的 dead-code pair
-  在 008 處理，本 feature 不得讓它變多）。
+- 遞迴與互相遞迴：摘要以不動點求得（從「無正常返回」起算），分析必定終止；無條件遞迴使函式沒有正常返回時，呼叫之後的節點不可達
+  （US1 情境 7）。KI §22 (5) 其餘 dead-code pair 在 008 處理；本 feature 造成的 dead-code pair 增減列入 golden-diff。
 - 變數身分以宣告（binding，006 的 `scopebinding`）判定，不以名稱判定：被呼叫端中與呼叫端同名的區域變數或參數，不屬於摘要中呼叫端的變數。
 - 未宣告就讀取的全域（006：頁面 entry 的全域定義）在摘要中與其他頁面層變數相同。
 - 被呼叫端自己的區域變數與參數不出現在對呼叫端的摘要中（GEN／must-KILL 只含呼叫端可見的變數）。
 - 004 FR-016 的繞過（呼叫端的區域變數、參數、block `let`／`const` 不被被呼叫端殺掉）在摘要下仍成立。
 - 一個呼叫點連到多個被呼叫端（004 的 `new A()`：欄位初始化式再 constructor；class static 成員）時，依序串接各自的摘要（US1 情境 6）。
 - 呼叫解析失敗（callee 不可判定）時維持不連結、不報錯。
-- 被呼叫端沒有任何正常返回路徑（例如一定拋錯）：呼叫之後的節點只經呼叫端自己的例外處理可達。
+- 被呼叫端沒有任何正常返回路徑（例如一定拋錯）：呼叫之後的節點只經呼叫端自己的例外處理可達（US1 情境 7、US6 情境 1）。
+- generator 與 async 函式：呼叫時本體不（或不完全）執行，摘要只保留可能的 GEN、不做 must-KILL（US1 情境 8）。
+- 以 `window.f = …` 等屬性賦值改變的函式不算 `f` 的定義，D2 可能連到舊的 `f`（`probes/c-win.js`）；寫入 README 限制。
 - inter-page：頁面之間以 localStorage 傳遞的定義不受呼叫摘要影響（頁面不是被呼叫端）。
 
 ## Requirements *(mandatory)*
@@ -295,34 +379,43 @@ intra-page 中，事件處理器由 LOOP 節點進入時，其返回只回到 LO
 ### Functional Requirements
 
 - **FR-001**: 每個被呼叫端（函式、方法、constructor、欄位初始化式、事件處理器）MUST 有摘要（GEN at exit、must-KILL、upward-exposed uses，
-  皆只沿正常返回路徑；另含例外離開時可能有效的定義；全部只含呼叫端可見的變數），呼叫端的分析 MUST 以摘要計算經過呼叫的資料流程。
-  可觀察的結果是 US1–US4 的 pair。[SRC HD D3；USR D3、R2-2]
+  GEN 與 must-KILL 只沿正常返回路徑，upward-exposed uses 對所有路徑計算；另含例外離開時可能有效的定義；全部只含呼叫端可見的變數），
+  呼叫端的分析 MUST 以摘要計算經過呼叫的資料流程。generator 與 async 函式的摘要 MUST 不做 must-KILL。可觀察的結果是 US1–US4 的 pair。
+  [SRC HD D3；USR D3、R2-2；Session 2026-11-17]
 - **FR-002**: 被呼叫端內部的 use MUST 只得到「從某個實際呼叫點進入時可實現」的定義；呼叫端在呼叫之後的 use MUST 只得到「該呼叫點進入前、
   未被 must-KILL 的定義」與「被呼叫端的 GEN」。[SRC HD D3；PRB P1、P2]
-- **FR-003**: 遞迴與互相遞迴 MUST 以不動點計算摘要，分析必定終止；遞迴返回後，外層那次執行的區域變數與參數 MUST 不受內層定義影響。
+- **FR-003**: 遞迴與互相遞迴 MUST 以不動點計算摘要（從「無正常返回」起算），分析必定終止；遞迴返回後，外層那次執行的區域變數與參數 MUST 不受內層定義影響。
   [SRC D004 FR-015、FR-016]
 - **FR-004**: 004 FR-016 的繞過 MUST 維持；呼叫端與被呼叫端的同名變數 MUST 以宣告（binding）區分。[SRC D004 FR-016；D006]
 - **FR-005**: 函式內的 `f()` 在所在模型沒有 `f` 的到達定義時，若 `f` 的 binding 在全頁只有一筆定義，且為函式宣告、`const`／`let` 綁定的
   函式運算式或具名函式運算式的內部名稱，MUST 連到該函式（含自身遞迴）；函式內的 `new F()` 與其他情形依 004 FR-018。[SRC USR D2、R2-3；D006]
 - **FR-006**: 被呼叫端中未被捕捉的例外 MUST 不回到呼叫之後的節點；例外離開時可能有效的定義 MUST 流向呼叫端的 `catch`／`finally`，呼叫端
-  沒有 `try` 時沿呼叫鏈往外，到頁面層或事件處理器層時進 LOOP。[SRC USR D3、R2-2]
-- **FR-007**: intra-page 中，事件處理器由 LOOP 進入時 MUST 只返回 LOOP；同一函式被直接呼叫時 MUST 只返回該呼叫點。[SRC PRB P5、P6]
-- **FR-008**: 函式的 entry 節點 MUST 不含本體敘述的 use；本體中 `switch`、`for-in`、`for-of` 等的讀取只記在各自節點。[SRC KI §18；PRB P8、P9]
+  沒有 `try` 時沿呼叫鏈往外，到頁面層或事件處理器層時進 LOOP。呼叫敘述 MUST 只在呼叫之前（求 callee、引數）算可能拋錯，被呼叫端正常返回
+  之後不再拋錯（運算式中與決策節點前的呼叫維持現況，007 處理）。[SRC USR D3、R2-2；Session 2026-11-17]
+- **FR-007**: intra-page 中，事件處理器由 LOOP 進入時 MUST 只返回 LOOP；同一函式被直接呼叫時 MUST 只返回該呼叫點。LOOP 處 MUST 不套
+  must-KILL（處理器可能不被觸發），各處理器的 GEN MUST 經 LOOP 流向所有處理器（含自己）。[SRC PRB P5、P6、P26]
+- **FR-008**: 函式的 entry 節點 MUST 不含本體任何敘述的 use（只保留參數預設值等屬於進入函式本身的讀取）；本體敘述的讀取只記在各自節點。[SRC KI §18；PRB P8、P9]
 - **FR-009**: 攤平的敘述層級圖與階層圖 MUST 繼續輸出；MUST 不為每個呼叫點複製被呼叫端（現況因模型串接產生的重複節點照舊）；pair 以摘要
-  分析的結果為權威，各層模型與攤平圖附帶的 pair 一致。[SRC USR D4、R2-1；HD 雙輸出]
+  分析的結果為權威，inter-procedural、intra-page 模型與攤平圖附帶的 pair 一致；intra-procedural 模型中的呼叫 MUST 維持不透明，只受 FR-008、
+  FR-013、FR-014 影響。[SRC USR D4、R2-1；HD 雙輸出、D3]
 - **FR-010**: 攤平圖的輸出 MUST 附帶 call 邊與 return 邊的配對資訊（每條 return 邊對應唯一的呼叫點，LOOP 的進入與返回亦同；被呼叫端的
-  例外邊經 exit 之後只接到呼叫端的例外後繼），供測試路徑產生器只取呼叫與返回相配的路徑。輸出格式由 plan 決定；配對資訊的輸出方式 MUST
-  不改動 `.dot`；D2／FR-005 造成的邊變化列入 golden-diff。[SRC USR D4、R2-1]
+  例外邊經 exit 之後只接到呼叫端的例外後繼；正常到達 exit 的路徑不得接到呼叫端的例外後繼），供測試路徑產生器只取呼叫與返回相配的路徑。
+  輸出格式由 plan 決定；配對資訊的輸出方式 MUST 不改動 `.dot`；D2／FR-005、FR-013、FR-014 與 Q-a 造成的邊變化列入 golden-diff。
+  [SRC USR D4、R2-1；Session 2026-11-17]
 - **FR-011**: golden 的每一處差異 MUST 記錄於 `golden-diff.md` 並對應到 FR 或 KI 節次；`tests/golden/manifest.json` 隨之明確更新。[SRC USR D5]
 - **FR-012**: `docs/known-issues.md` MUST：§18 標為已修正；§22 (0) 註明函式內 `f()` 的放寬；§22 (4) 更正前提（`setItem` 目前不產生定義、
   localStorage 不分 key）並註明移到另開的儲存模型 feature；§16、§22 (3) 註明排入 007，§22 (1)、(5)、§23 排入 008；本輪新發現的問題新增章節。README 的限制說明隨之更新（含 D2 的放寬與
-  D3 的例外語意）。[SRC USR D1]
-- **FR-013**: 函式內 `catch` 中拋出的例外 MUST 先經同一 `try` 的 `finally` 才離開函式（與不在函式中時的行為一致）；`docs/known-issues.md` 新增此
-  問題的章節並標為已修正。[SRC PRB P17；USR Q-b]
+  D3 的例外語意、generator／async 的保守摘要、`window.f` 誤連的限制）。[SRC USR D1；Session 2026-11-17]
+- **FR-013**: `try` 有 `finally` 時，函式內與頁面層都 MUST：`catch` 中拋出的例外先經 `finally` 才往外；`return`／`break`／`continue` 穿過
+  `finally` 時先執行 `finally` 再到原目標；因例外進入的 `finally` 做完後繼續往外拋（到外層 handler 或例外離開），不接到正常後繼。
+  `docs/known-issues.md` 新增此問題的章節並標為已修正。[SRC PRB P17–P23；USR Q-b；Session 2026-11-17]
+- **FR-014**: 例外路徑 MUST 只帶拋錯節點**執行前**的定義（拋錯的敘述視為沒有完成），適用於所有模型的例外邊與摘要第四項；
+  `docs/known-issues.md` 記錄此行為變更。[SRC PRB P24；Session 2026-11-17]
 
 ### Key Entities
 
-- **摘要（Summary）**：被呼叫端對呼叫端的效果（GEN at exit、must-KILL、upward-exposed uses），只看正常返回，遞迴時由不動點求得。
+- **摘要（Summary）**：被呼叫端對呼叫端的效果（GEN at exit、must-KILL 只看正常返回；upward-exposed uses 看所有路徑；例外離開時可能有效的
+  定義），遞迴時由不動點求得。
 - **呼叫配對（call/return matching）**：攤平圖中每條 return 邊所屬的呼叫點（或 LOOP），供路徑產生器使用。
 - **Golden 差異紀錄**：每處 golden 變化及其對應的 FR 或 KI 節次。
 
@@ -334,8 +427,8 @@ intra-page 中，事件處理器由 LOOP 節點進入時，其返回只回到 LO
 - **SC-002**: PRB P1–P11 全部得到預期結果；KI §18 的重現程式符合 US5 情境 1。
 - **SC-003**: 既有測試全部通過（編碼舊行為的測試更新並列入 golden-diff）；golden 差異 100% 有對應記錄。
 - **SC-004**: 現有 golden fixture 與 004 研究所用的 MDN 範例集（33 個程式）全部能完成分析、不拋錯；總分析時間不超過 `develop` 的 2 倍。
-- **SC-005**: MDN 範例集中，每一個相對 `develop` 消失的 pair 都能以「不可實現路徑」「例外不返回」「呼叫無正常返回」或 §18 說明；每一個新增的 pair 都對應到 FR-005
-  的放寬或 FR-008。
+- **SC-005**: MDN 範例集中，每一個相對 `develop` 消失的 pair 都能以「不可實現路徑」「例外不返回」「呼叫無正常返回」「FR-005 新連結的呼叫殺掉
+  定義」「FR-013／FR-014 的例外路徑修正」或 §18（FR-008）說明；每一個新增的 pair 都對應到 FR-005 的放寬、FR-013 或 FR-014。
 
 ## Assumptions
 

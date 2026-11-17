@@ -61,7 +61,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>摘要式分析：同一個小程序被多處叫用時只報走得到的配對</h1>
-<p class="meta">005-summary-analysis · spec · 第 3 輪（複核：US3 改用 MDN「Control flow and error handling」、新增情境 6）· 2026-11-17</p>
+<p class="meta">005-summary-analysis · clarify · 第 4 輪（Session 2026-11-17：4 個使用者答案＋裁判定案項目，新增 US6、FR-013 整族、FR-014）· 2026-11-17</p>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -137,7 +137,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <use href="#check" x="650" y="55" width="120" height="120" color="var(--green)"/>
     <text x="710" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">每筆都走得到</text>
   </svg></div>
-  <p class="cap">成功＝US1–US5 的驗收配對全成立，且<b>舊的誤報有記錄地消失</b>。<small>來源：SC-001、SC-002、SC-005</small></p>
+  <p class="cap">成功＝US1–US6 的驗收配對全成立，且<b>舊的誤報有記錄地消失</b>。<small>來源：SC-001、SC-002、SC-005</small></p>
 </section>
 
 <section class="panel">
@@ -157,17 +157,37 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
     <text x="254" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">判不出叫用對象</text>
     <text x="254" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">維持不連結、不報錯</text>
     <text x="254" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">不確定時寧可保守</text>
-    <rect x="374" y="210" width="300" height="90" rx="10" fill="var(--coral-soft)"/>
+    <rect x="374" y="210" width="300" height="115" rx="10" fill="var(--coral-soft)"/>
     <text x="524" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">小程序中途出錯</text>
     <text x="524" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">不回到叫用之後的那一行</text>
     <text x="524" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">改走 catch；沒人接住就進 LOOP</text>
+    <text x="524" y="308" text-anchor="middle" font-size="13" fill="var(--sub)">只帶出錯行「執行前」的值；finally 先做</text>
   </svg></div>
   <p class="cap">叫用與返回<b>一對一配對</b>，出錯另走自己的路。<small>來源：D3、D4、FR-006、FR-010、Edge Cases</small></p>
   <ul>
     <li>圖不為每個叫用複製小程序；配對資訊另外輸出，<code>.dot</code> 圖結構不變。<small>（D4、FR-009）</small></li>
     <li>函式的 entry 節點不再讀取本體變數，否則分析會拋錯。<small>（US5、FR-008）</small></li>
+    <li>try／finally 整族修正：catch 重拋、return／break／continue 都先過 finally；例外進入的 finally 做完繼續往外拋。<small>（US6、FR-013）</small></li>
   </ul>
 </section>
+
+<h2>本輪變更（clarify · Session 2026-11-17）</h2>
+<div class="box"><table>
+<tr><th>小節</th><th>變更前</th><th>變更後</th><th>影響 story</th></tr>
+<tr><td>D1、標題</td><td>範圍＝摘要分析＋§18</td><td>再納入 <code>finally</code> 整族缺陷（FR-013）與例外路徑只帶執行前定義（FR-014）</td><td>新增 US6；US3</td></tr>
+<tr><td>D3、FR-006、Q-a</td><td>Q-a 待定：返回後呼叫敘述是否仍可拋錯</td><td>不算；只有呼叫之前（求 callee、引數）可拋錯並帶呼叫前定義；運算式中與決策節點前的呼叫維持現況（007）。可能拋錯節點以展開前 CFG 例外邊判定</td><td>US3-2、3、7</td></tr>
+<tr><td>FR-014（新）、D3</td><td>例外邊帶拋錯節點執行後的定義（P24：漏 <code>x: L1 -> L6</code>）</td><td>所有例外邊與摘要第四項只帶拋錯節點<b>執行前</b>（IN）的定義</td><td>US3-2、3；US6-7</td></tr>
+<tr><td>FR-013、US3-6</td><td>只修函式內 <code>catch</code> 重拋略過 <code>finally</code>（Q-b）</td><td>整族：頁面層同修；<code>return</code>／<code>break</code>／<code>continue</code> 穿過 <code>finally</code> 先執行它；例外進入的 <code>finally</code> 做完往外拋，不接正常後繼</td><td>US3-6；US6-1～6</td></tr>
+<tr><td>FR-001、US1-8</td><td>未區分 generator／async</td><td>摘要不做 must-KILL，只保留可能的 GEN；記入 known-issues。upward-exposed uses 對所有路徑計算</td><td>US1-8</td></tr>
+<tr><td>FR-003、US1-7</td><td>遞迴不動點起點未明</td><td>從「無正常返回」起算；無條件遞迴後的節點不可達</td><td>US1-7</td></tr>
+<tr><td>FR-007、US4-3</td><td>LOOP 處理未明</td><td>LOOP 不套 must-KILL；各處理器 GEN 經 LOOP 流向所有處理器（含自己）</td><td>US4-3</td></tr>
+<tr><td>D2、US2-5～7</td><td>自身遞迴與 block 內函式宣告未列驗收</td><td>具名運算式內部名稱納入；block 內函式宣告 binding 只在該 block（006 D5），block 外不連結</td><td>US2-5、6、7</td></tr>
+<tr><td>FR-010、US1-5</td><td>配對資訊只說 call／return 對應</td><td>加：例外經 exit 只接呼叫端例外後繼，正常到達 exit 不得接例外後繼；LOOP 進出亦配對</td><td>US1-5；US4</td></tr>
+<tr><td>FR-009</td><td>intra-procedural 的呼叫處理未明</td><td>維持不透明，只受 FR-008、FR-013、FR-014 影響</td><td>全部</td></tr>
+<tr><td>FR-012、SC-005</td><td>未列 <code>window.f</code>、generator 限制；消失理由缺「無正常返回」</td><td>README 加 <code>window.f = …</code> 可能誤連、generator／async 保守摘要；SC-005 補理由與 FR-013／FR-014 例外路徑修正</td><td>文件、SC-005</td></tr>
+<tr><td>D6（新）</td><td>003：golden 差異不得放行；004 FR-018：函式不適用放寬</td><td>修訂一覽：golden 依 FR-011 記錄後更新（含 003 鎖定的 ES5 baseline，如 <code>page0/intra-procedurals/5.graph.dot</code> 的例外邊）；004 該句由 D2 取代</td><td>全部</td></tr>
+</table></div>
+<div class="note"><b>golden 影響擴大：</b>FR-014 適用所有模型的例外邊，凡例外邊所帶定義與先前不同的 fixture 都會變（含 ES5 baseline）；FR-013 改動含 <code>finally</code> 的 CFG 邊。差異不會被放行成回歸，須逐項寫進 <code>golden-diff.md</code> 並對到 FR（FR-011）。使用者已在 Session 2026-11-17 選定（FR-014 更正後改選 IN），不另列判斷點。</div>
 
 <h2>工程師要決定的事</h2>
 
@@ -181,21 +201,25 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>D5、N1、N5</td><td>golden 差異記於 <code>golden-diff.md</code>；US4 情境 1 改 loop-pair 程式；US4-2 為守門</td><td>D5；Clarifications</td></tr>
 <tr><td>SC-002</td><td>以 P1–P11 為準（自身遞迴、具名函式運算式內部名稱列入成功準則）；P12–P16 由 SC-001 的情境測試涵蓋</td><td>Clarifications（2026-11-17）；SC-002</td></tr>
 <tr><td>驗收缺口</td><td>先查 MDN 語料（33 檔，含 Classes 頁）：無 <code>try</code>／<code>catch</code>／<code>finally</code>／<code>throw</code>、無函式內區域函式、類別欄位無初始化式，補不了；改以探測程式補成情境（P12–P16），多被叫端串接改自 MDN <code>Person</code></td><td>Clarifications（2026-11-17）；探測結果</td></tr>
+<tr><td>Q-a</td><td>返回後呼叫敘述不再拋錯；呼叫之前仍算（帶呼叫前定義）；運算式中與決策節點前的呼叫維持現況（007）</td><td>Session 2026-11-17；FR-006</td></tr>
+<tr><td>Q-b（擴大）</td><td><code>finally</code> 整族一起修，函式內與頁面層一致</td><td>Session 2026-11-17；FR-013</td></tr>
+<tr><td>FR-014</td><td>例外路徑只帶拋錯節點執行前的定義，全面套用（中途選「前後聯集」，更正後改選 IN）</td><td>Session 2026-11-17；FR-014</td></tr>
+<tr><td>generator／async</td><td>摘要不做 must-KILL，只保留可能的 GEN；記入 known-issues</td><td>Session 2026-11-17；FR-001</td></tr>
+<tr><td>裁判定案</td><td>LOOP 不套 must-KILL；upward-exposed uses 看所有路徑；intra-procedural 呼叫維持不透明；不動點從「無正常返回」起算；<code>window.f</code> 誤連列為限制；駁回「US1-1 的『恰為』與表示法矛盾」</td><td>Session 2026-11-17</td></tr>
 <tr><td>MDN 控制流程頁</td><td>使用者再指定 MDN Guide「Control flow and error handling」：US3 情境 2、4 改用該頁範例的改寫版（P13、P14，原合成程式留在 probes/ 對照）；新增情境 6（P17，改自該頁 <code>finally</code> 覆寫範例）。該頁 <code>getMonthName</code> 的呼叫在運算式中，屬 007，未採用</td><td>Clarifications（使用者再指定）</td></tr>
 </table></div>
 
 <h3>驗收條件盤點</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>情境</th><th>判定</th><th>說明</th></tr>
-<tr><td>US1 多處叫用</td><td>1、2、3、4、6</td><td class="ok">可驗證</td><td>皆有程式與具體 pair（3、4、6 為守門）；6 為多被叫端串接（<code>new Person</code>：欄位初始化式＋constructor），改自 MDN</td></tr>
-<tr><td>US1</td><td>5 配對資訊</td><td class="ok">可驗證</td><td>以「每條 return 邊對應唯一 call 邊」驗；輸出格式由 plan 定（FR-010）</td></tr>
-<tr><td>US2 函式內叫用</td><td>1–6</td><td class="ok">可驗證</td><td>皆有程式與 pair；4 區域函式已補成具體 pair（<code>x: L4 -> L8</code>，守門）</td></tr>
-<tr><td>US3 例外離開</td><td>1、3、4、5</td><td class="ok">可驗證</td><td>有程式與 pair；3 為 <code>us3-3.js</code>（守門）；4 改自 MDN <code>finally</code> 範例（P14，守門）；5 為例外沿呼叫鏈進 LOOP（需 D2 連結）</td></tr>
-<tr><td>US3</td><td>2 try／catch</td><td class="ok">可驗證</td><td>改自 MDN Error objects（P13）：<code>state: L1 -> L13</code>、<code>L1 -> L15</code>、<code>L7 -> L15</code>、<code>e: L11 -> L12</code>；<code>state: L7 -> L13</code> 刻意不斷言，待 Q-a</td></tr>
-<tr><td>US3</td><td>6 <code>catch</code> 重拋後經 <code>finally</code></td><td class="ok">可驗證</td><td>程式與 pair 俱全（有 <code>r: L10 -> L16／L18</code>，沒有 <code>r: L7 -> L16／L18</code>）；現況不成立（P17），Q-b 選 A，由 FR-013 修正</td></tr>
-<tr><td>US4 處理器配對</td><td>1、2</td><td class="ok">可驗證</td><td>有程式與 pair（2 為守門）</td></tr>
+<tr><td>US1 多處叫用</td><td>1、2、3、4、6、7、8</td><td class="ok">可驗證</td><td>皆有程式與具體 pair（3、4、6 為守門）；6 為多被叫端串接（<code>new Person</code>），改自 MDN；7 無正常返回（<code>c-noret.js</code>）；8 generator／async（<code>c-gen.js</code>、<code>c-asy.js</code>）</td></tr>
+<tr><td>US1</td><td>5 配對資訊</td><td class="ok">可驗證</td><td>以「每條 return 邊對應唯一 call 邊」驗，另驗 US3-3 程式 <code>s</code> 的例外只接 L9 <code>catch</code>；輸出格式由 plan 定（FR-010）</td></tr>
+<tr><td>US2 函式內叫用</td><td>1–7</td><td class="ok">可驗證</td><td>皆有程式與 pair；4、7 為守門；5、6 自身遞迴與具名運算式內部名稱；7 block 內函式宣告不在 block 外連結</td></tr>
+<tr><td>US3 例外離開</td><td>1–7</td><td class="ok">可驗證</td><td>2 明確斷言沒有 <code>state: L7 -> L13</code>（Q-a 已決）；3 有 <code>x: L1 -> L10</code>、沒有 <code>x: L5 -> L10</code>；4、7 守門；5 例外沿呼叫鏈進 LOOP；6 為 <code>catch</code> 重拋經 <code>finally</code>（P17，FR-013 修正後成立，現況不成立）</td></tr>
+<tr><td>US4 處理器配對</td><td>1、2、3</td><td class="ok">可驗證</td><td>有程式與 pair（2、3 為守門；3 驗 LOOP 不套 must-KILL）</td></tr>
+<tr><td>US6 try／finally</td><td>1–7</td><td class="ok">可驗證</td><td>皆有探測程式（<code>c-fin*.js</code> 等）與 pair；1、3、4、5、6、7 現況不成立（P18、P20–P24）；2 守門；其中 3 驗「L8 不可達」（沒有任何 pair，屬否定式斷言）</td></tr>
 <tr><td>US5 entry 節點</td><td>1、2、3</td><td class="ok">可驗證</td><td>1 依 KI §18 程式；以節點 use 集合驗</td></tr>
-<tr><td>Edge Cases</td><td>無正常返回（一定拋錯）</td><td class="no">缺</td><td>只列為邊界，無驗收程式與 pair；多被叫端串接已由 US1-6 涵蓋</td></tr>
+<tr><td>Edge Cases</td><td>無正常返回</td><td class="ok">可驗證</td><td>無條件遞迴由 US1-7、一定拋錯由 US6-1 涵蓋；多被叫端串接由 US1-6 涵蓋</td></tr>
 <tr><td>SC-004／005</td><td>MDN 33 個程式、2 倍時間</td><td class="ok">可驗證</td><td>SC-005 的「能說明」靠人工歸類，無自動判準</td></tr>
 </table></div>
 
@@ -203,30 +227,17 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <p>無偏離。規範以服務與前端為主，未涵蓋靜態分析的輸出格式與 golden 比對；配對資訊格式、摘要是否輸出成檔案留待 plan 決定。</p>
 
 <h3>CRITICAL／HIGH 衝突與影響</h3>
-<p>無（未做 analyze）。需留意：D4 修訂 003 spec「範圍外」中「每個呼叫點各自展開屬 stage 2」的說法；D2 取代 004 Clarifications H3 的一部分。</p>
+<p>無（未做 analyze）。需留意：D4 修訂 003 spec「範圍外」中「每個呼叫點各自展開屬 stage 2」的說法；D2 取代 004 Clarifications H3 的一部分與 FR-018「函式不適用放寬」一句；D6 明列 003「golden 差異不得放行」不適用於本 feature。</p>
 
 <h3>本輪判斷點</h3>
-<p><b>已決：方案 A</b>（使用者 2026-11-17 選定，spec FR-013；US3 情境 6 納入本 feature）。以下保留當時的選項供參照。</p>
-<div class="box"><table>
-<tr><th>Q-b</th><td colspan="3"><b>函式內 <code>catch</code> 重拋的例外會略過 <code>finally</code> 直接離開函式（P17；同程式不在函式中時正確，m4–m6）。此既有缺陷是否在 005 修正？</b></td></tr>
-<tr><th>方案 A（建議）</th><td colspan="3">納入 005 修正。US3 情境 6 成立；golden 可能變化，差異列入 <code>golden-diff.md</code>（FR-011）。</td></tr>
-<tr><th>方案 B</th><td colspan="3">記錄為已知問題（<code>known-issues.md</code> 新增章節），US3 情境 6 移出本 feature。範圍較小、golden 不因此變動。</td></tr>
-<tr><th>影響</th><td colspan="3">A：多一處 CFG 改動與 golden 審查，但摘要第四項（例外離開時可能有效的定義）在函式內有 <code>try／catch／finally</code> 時才正確。B：該情形下摘要第四項會多報 <code>r: L7 -> …</code>、漏報 <code>r: L10 -> …</code>，005 自己宣稱的例外語意（D3、FR-006）在已知情形下是錯的，須在文件註明。</td></tr>
-<tr><th>建議理由</th><td colspan="3">缺陷落在 FR-006 要消費的那條例外邊上，不修就等於在新功能的核心語意裡留下已知錯誤；而它只影響「函式內 <code>catch</code> 重拋且有 <code>finally</code>」這個窄情形（MDN 語料沒有 <code>try</code>），golden 衝擊預期有限、可由 golden-diff 逐項核對。若 plan 階段發現修正牽動面遠超預期，再回頭改 B。</td></tr>
-<tr><th>出處</th><td colspan="3">Clarifications「待 clarify」Q-b；US3 情境 6；D3、FR-006、FR-011；探測 P17</td></tr>
-</table></div>
+<p><b>無。</b>前輪的 Q-a、Q-b 與先前「可能拋錯節點範圍」「處理器間 GEN 流動」兩個疑點，都已由本輪 4 個使用者答案與裁判定案項目回答（見上方已決事項）；
+文件上沒有仍會改變交付物、卻判不了的問題。golden 變動擴大（FR-013／FR-014，含 ES5 baseline）已由 D6 與 FR-011 明定處理方式，屬已決事項。</p>
 
-<h3>待 clarify（spec 已登記，不佔判斷點）</h3>
-<div class="box"><table>
-<tr><th>編號</th><th>問題</th><th>影響</th><th>出處</th></tr>
-<tr><td>Q-a</td><td>被呼叫端正常返回後，呼叫端 <code>try</code> 內若已無其他可能拋錯的節點，被呼叫端的定義是否仍可經例外到達 <code>catch</code>？（呼叫敘述本身在返回後算不算可能拋錯）</td><td>決定 <code>state: L7 -> L13</code>（US3-2，P13）、<code>x: L4 -> L9</code>（<code>g2-try-catch.js</code>）、<code>x: L5 -> L10</code>（<code>us3-3.js</code>）是否保留，也影響 golden 差異</td><td>Clarifications「待 clarify」；US3-2；D3</td></tr>
-</table></div>
-
-<h3>次要疑點</h3>
+<h3>次要疑點（不佔判斷點）</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>spec 未定義「可能拋錯的節點」範圍（是否僅沿用現有 CFG 例外邊），會影響第四項的 pair 數量與 golden 差異</td><td>D3、FR-006</td></tr>
-<tr><td>spec 未定義事件處理器多次被 LOOP 進入時，處理器之間的 GEN 如何流動（US4-2 只驗不該有的 pair）</td><td>US4、FR-007</td></tr>
-<tr><td>Edge Cases 要求「不得讓 dead-code pair 變多」，但無對應情境或量測方式</td><td>Edge Cases；KI §22(5)</td></tr>
+<tr><td>SC-005 的「每個消失／新增的 pair 都能說明」靠人工歸類，無自動判準；FR-013／FR-014 加入後歸類項目增多</td><td>SC-005</td></tr>
+<tr><td>配對資訊的輸出格式與摘要是否輸出成檔案，spec 明確交 plan 決定</td><td>FR-010；Assumptions</td></tr>
+<tr><td>Edge Cases 改為「本 feature 造成的 dead-code pair 增減列入 golden-diff」，仍無量測方式；KI §22 (5) 其餘在 008</td><td>Edge Cases</td></tr>
 </table></div>
 </main>
