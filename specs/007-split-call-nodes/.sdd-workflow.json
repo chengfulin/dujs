@@ -21,6 +21,34 @@
       "findings": 18,
       "remediated": 16,
       "decisions": "DECISION 006"
+    },
+    "implement": {
+      "parallel_plan": {
+        "mode": "sequential",
+        "mode_reason": "波次估計加速 1.1x 未達 1.5x",
+        "granularity": "task",
+        "basis": "codegraph",
+        "tasks": 66,
+        "conflict_pairs": 638,
+        "pairs": 2145,
+        "by_type": {
+          "相依": 369,
+          "寫入": 133,
+          "資源": 12,
+          "宣告": 124
+        },
+        "batches": 36,
+        "max_width": 8,
+        "phases": 7,
+        "waves": 13,
+        "est_speedup": 1.14,
+        "low_conf": [
+          "T041",
+          "T056",
+          "T064"
+        ],
+        "plan_file": "specs/007-split-call-nodes/parallel-plan.json"
+      }
     }
   },
   "brief": {
