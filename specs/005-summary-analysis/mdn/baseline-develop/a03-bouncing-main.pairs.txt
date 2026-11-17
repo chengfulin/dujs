@@ -1,0 +1,18 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.random
+$DOMAIN.$PAGE_0.randomRGB
+## intra $DOMAIN.$PAGE_0
+canvas: L3 -> L4
+document: entry -> L3
+window: entry -> L6
+window: entry -> L7
+## intra $DOMAIN.$PAGE_0.random
+max: entry -> L12
+min: entry -> L12
+## intra $DOMAIN.$PAGE_0.randomRGB
+## intra-page (nodes 8)
+canvas: L3 -> L4
+document: entry -> L3
+window: entry -> L6
+window: entry -> L7

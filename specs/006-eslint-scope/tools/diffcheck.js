@@ -1117,7 +1117,27 @@ module.exports = {
 	verifyRecord: verifyRecord,
 	baseOf: baseOf,
 	exitCodesOf: exitCodesOf,
-	main: main
+	main: main,
+	// reused by specs/005-summary-analysis/tools/diffcheck.js (exports only, no behavior change)
+	splitPair: splitPair,
+	normalizeUse: normalizeUse,
+	lineOf: lineOf,
+	pairParts: pairParts,
+	parse: parse,
+	walk: walk,
+	listDotFiles: listDotFiles,
+	locate: locate,
+	multisetDiff: multisetDiff,
+	sha256Of: sha256Of,
+	keyOf: keyOf,
+	allDiffs: allDiffs,
+	rowNumbers: rowNumbers,
+	tableOf: tableOf,
+	unquote: unquote,
+	normalizeSign: normalizeSign,
+	pageSource: pageSource,
+	goldenCases: goldenCases,
+	runCli: runCli
 };
 
 if (require.main === module) {

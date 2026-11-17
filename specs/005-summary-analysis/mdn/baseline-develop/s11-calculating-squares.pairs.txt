@@ -1,0 +1,44 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.calculate
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+## intra $DOMAIN.$PAGE_0
+calculate: entry -> L14
+calculateBtn: L11 -> L14
+clearBtn: L12 -> L15
+document: entry -> L1
+document: entry -> L11
+document: entry -> L12
+## intra $DOMAIN.$PAGE_0.calculate
+i: L4 -> L4
+i: L4 -> L4>L5:T
+i: L4 -> L4>L8:F
+i: L4 -> L5
+newResult: L5 -> L6
+results: L6 -> L6
+results: L6 -> L8
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+## intra-page (nodes 20)
+calculate: entry -> L14
+calculateBtn: L11 -> L14
+clearBtn: L12 -> L15
+document: entry -> L1
+document: entry -> L11
+document: entry -> L12
+i: L4 -> L4
+i: L4 -> L4>L5:T
+i: L4 -> L4>L8:F
+i: L4 -> L5
+newResult: L5 -> L6
+results: L1 -> L6
+results: L1 -> L8
+results: L1 -> entry
+results: L15 -> L6
+results: L15 -> L8
+results: L15 -> entry
+results: L6 -> L6
+results: L6 -> L8
+results: L6 -> entry
+results: L8 -> L6
+results: L8 -> L8
+results: L8 -> entry

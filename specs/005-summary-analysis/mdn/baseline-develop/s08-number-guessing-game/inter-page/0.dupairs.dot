@@ -1,0 +1,31 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="12">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,3)</td><td>(entry_a,4)</td><td>(entry_a,5)</td><td>(entry_a,6)</td><td>(entry_a,7)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td>(entry_a,entry_b)</td><td>(entry_a,12)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>checkGuess</td><td>(entry_a,43)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>setGameOver</td><td>(entry_a,entry_b)</td><td>(entry_a,23)</td><td>(entry_a,27)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>resetGame</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Math</td><td>(entry_a,2)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>randomNumber</td><td>(2,entry_b)</td><td>(2,(19,20))</td><td>(2,(19,24))</td><td>(2,(31,32))</td><td>(2,(31,33))</td><td>(2,(33,34))</td><td>(2,(33,38))</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guesses</td><td>(3,entry_b)</td><td>(14,entry_b)</td><td>(17,entry_b)</td><td>(14,17)</td><td>(3,17)</td><td>(17,17)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>lastResult</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>lowOrHi</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guessSubmit</td><td>(6,43)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guessField</td><td>(7,entry_b)</td><td>(39,entry_b)</td><td>(7,12)</td><td>(39,12)</td><td>(39,40)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guessCount</td><td>(8,entry_b)</td><td>(38,entry_b)</td><td>(8,(13,14))</td><td>(8,(13,17))</td><td>(38,(13,14))</td><td>(38,(13,17))</td><td>(8,38)</td><td>(38,38)</td><td>(8,(24,25))</td><td>(8,(24,29))</td><td>(38,(24,25))</td><td>(38,(24,29))</td></tr>
+<tr><td>resetButton</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>userGuess</td><td>(12,17)</td><td>(12,(19,20))</td><td>(12,(19,24))</td><td>(12,(31,32))</td><td>(12,(31,33))</td><td>(12,(33,34))</td><td>(12,(33,38))</td><td></td><td></td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

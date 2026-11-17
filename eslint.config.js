@@ -38,6 +38,9 @@ module.exports = [
 			// feature 006: probe copies and MDN corpus are browser scripts analyzed as input
 			'tests/dujs/cases/probes006/**',
 			'specs/006-eslint-scope/mdn/**',
+			// feature 005: probe copies and MDN baseline snapshots are analysis inputs
+			'tests/dujs/cases/probes005/**',
+			'specs/005-summary-analysis/mdn/**',
 			// research helper scripts (not part of dujs)
 			'docs/research/**'
 		]
