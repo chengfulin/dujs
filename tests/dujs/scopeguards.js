@@ -33,6 +33,50 @@ var CHANGED_INTER_PROCEDURAL_COUNTS = {
 };
 
 /**
+ * Probes compared with develop except the pairs added for the unresolved
+ * names of the page (US4-4: eval and the other undeclared names are page
+ * globals by D3, spec Clarifications "implement US3")
+ * @type {Array}
+ */
+var GLOBAL_ADDITIONS_ALLOWED = ['with.js', 'evalouter.js'];
+
+/**
+ * Names of the unresolved references of the page analyzed last
+ * @param {Object} result
+ * @returns {Array}
+ */
+function unresolvedNamesOf(result) {
+	'use strict';
+	/// only the page globals of D3 (global or implicit global Vars), not every unresolved reference (US3 review R1)
+	return result.scopeTree.binding.globalVars().map(function (variable) {
+		return variable.name;
+	});
+}
+
+/**
+ * Check the pairs against the pairs of develop, allowing only added pairs of
+ * the unresolved names when unresolved is given
+ * @param {Array} pairs
+ * @param {Array} expected
+ * @param {Array|null} unresolved
+ */
+function checkDevelopPairs(pairs, expected, unresolved) {
+	'use strict';
+	if (!unresolved) {
+		pairs.should.eql(expected);
+		return;
+	}
+	expected.forEach(function (pair) {
+		pairs.should.containEql(pair);
+	});
+	pairs.filter(function (pair) {
+		return expected.indexOf(pair) === -1;
+	}).forEach(function (pair) {
+		unresolved.should.containEql(pair.split(': ')[0]);
+	});
+}
+
+/**
  * Analyze a probe (a file name of probes006) or code
  * @param {string} probe
  * @returns {Object} the result of the analyze helper
@@ -97,9 +141,8 @@ describe('Guards of the scope binding (feature 006)', function () {
 		});
 
 		/// the reads of f and g2 outside the blocks are unresolved, i.e. read-only
-		/// page globals, which get their definitions at the page entry in US3
-		/// (Def.GLOBAL_TYPE, T050); enable this case there
-		it.skip('should read f and g2 as page globals (enabled by the global definitions of US3)', function () {
+		/// page globals defined at the page entry (US3, Def.GLOBAL_TYPE)
+		it('should read f and g2 as page globals', function () {
 			var pairs = analyzeProbe('annexb.js').intraPage();
 			pairs.should.containEql('f: entry -> L1');
 			pairs.should.containEql('f: entry -> L5');
@@ -111,10 +154,15 @@ describe('Guards of the scope binding (feature 006)', function () {
 		Object.keys(DEVELOP_PAIRS).forEach(function (probe) {
 			var expected = DEVELOP_PAIRS[probe];
 			it('should give the pairs of develop for ' + probe, function () {
-				var result = (probe === 'q3') ? analyze(expected.code) : analyzeProbe(probe);
-				result.intraPage().should.eql(expected.intraPage);
+				var result = (probe === 'q3') ? analyze(expected.code) : analyzeProbe(probe),
+					unresolved = (GLOBAL_ADDITIONS_ALLOWED.indexOf(probe) !== -1) ? unresolvedNamesOf(result) : null;
+				checkDevelopPairs(result.intraPage(), expected.intraPage, unresolved);
 				if (expected.hasOwnProperty('interProcedural')) {
-					interProceduralPairsOf(result).should.eql(expected.interProcedural);
+					var models = interProceduralPairsOf(result);
+					models.length.should.eql(expected.interProcedural.length);
+					models.forEach(function (pairs, index) {
+						checkDevelopPairs(pairs, expected.interProcedural[index], unresolved);
+					});
 				}
 			});
 		});

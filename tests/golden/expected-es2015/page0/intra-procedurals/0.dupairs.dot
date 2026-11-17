@@ -14,6 +14,7 @@ struct1 [label=<
 <tr><td>Date</td><td></td><td></td></tr>
 <tr><td>console</td><td></td><td></td></tr>
 <tr><td>init</td><td>(entry,37)</td><td></td></tr>
+<tr><td>Math</td><td></td><td></td></tr>
 <tr><td>loadTodos</td><td></td><td></td></tr>
 <tr><td>saveTodos</td><td></td><td></td></tr>
 <tr><td>state</td><td></td><td></td></tr>

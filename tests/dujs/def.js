@@ -83,6 +83,23 @@ describe('Def', function () {
 			    }).throw();
 		    });
 	    });
+
+	    /// feature 006 US3: the definition of a global read without declaration
+	    describe('GLOBAL_TYPE', function () {
+		    it('should have correct value', function () {
+			    Def.GLOBAL_TYPE.should.eql('global');
+		    });
+
+		    it('should be one of the TYPES', function () {
+			    Def.TYPES.should.containEql(Def.GLOBAL_TYPE);
+		    });
+
+		    it('should not support to modify value', function () {
+			    should(function () {
+				    Def.GLOBAL_TYPE = 'type';
+			    }).throw();
+		    });
+	    });
     });
 
 	describe('static methods', function () {

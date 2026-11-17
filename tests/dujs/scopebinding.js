@@ -341,6 +341,29 @@ describe('PageBinding (scopebinding)', function () {
 			ug[0].binding.declarations.should.eql([]);
 		});
 
+		/// US3 (T050): a name only read without declaration is a page global of kind global
+		it('should give an undeclared name only read a global Var without declarations', function () {
+			var page = setUp('console.log(gr);\nfunction f() { return gr; }');
+			var gr = page.binding.useVarsOf(idOf(page.ast, 'gr', 0));
+			gr.length.should.eql(1);
+			gr[0].name.should.eql('gr');
+			gr[0].binding.kind.should.eql('global');
+			should(gr[0].binding.variable).be.null();
+			gr[0].binding.declarations.should.eql([]);
+			page.binding.useVarsOf(idOf(page.ast, 'gr', 1)).should.eql(gr);
+		});
+
+		/// US3 (T050): names written only by ++/-- or as the left of for-in/for-of are implicit globals
+		it('should give undeclared names written by ++, -- and for-in/for-of implicitGlobal Vars', function () {
+			var page = setUp('for (ki in {}) {}\nfor (ko of []) {}\nuu++;\n--ud;');
+			['ki', 'ko', 'uu', 'ud'].forEach(function (name) {
+				var defined = page.binding.defVarsOf(idOf(page.ast, name));
+				defined.length.should.eql(1);
+				defined[0].binding.kind.should.eql('implicitGlobal');
+				defined[0].binding.declarations.should.eql([]);
+			});
+		});
+
 		it('should give arguments no Var', function () {
 			var page = setUp(code);
 			page.binding.useVarsOf(idOf(page.ast, 'arguments')).should.eql([]);
@@ -568,8 +591,13 @@ describe('PageBinding (scopebinding)', function () {
 
 		it('should keep a block function in a function with eval inside the block (D5 first)', function () {
 			var page = setUp('function h() {\n  eval("");\n  { function bf() {} }\n  bf();\n}');
-			page.binding.defVarsOf(idOf(page.ast, 'bf', 0)).length.should.eql(1);
-			page.binding.useVarsOf(idOf(page.ast, 'bf', 1)).should.eql([]);
+			var blockFunction = page.binding.defVarsOf(idOf(page.ast, 'bf', 0));
+			blockFunction.length.should.eql(1);
+			/// the call outside the block reads a page global (US3, D3), not the block function
+			var used = page.binding.useVarsOf(idOf(page.ast, 'bf', 1));
+			used.length.should.eql(1);
+			used[0].binding.kind.should.eql('global');
+			used[0].should.not.equal(blockFunction[0]);
 		});
 
 		it('should resolve a catch parameter inside with to the catch parameter', function () {
@@ -664,6 +692,32 @@ describe('PageBinding (scopebinding)', function () {
 			result.scopeTree.root.variables.indexOf(e).should.not.eql(-1);
 			result.scopeTree.root.variables.indexOf(innerA).should.not.eql(-1);
 			binding.ownerScopeOf(eslintScopeOfType(binding, 'function-expression-name')).variables.indexOf(h).should.not.eql(-1);
+		});
+
+		/// US3 (T050, R5): implicit globals written only by ++ or for-in after the existing Vars, then the
+		/// read-only globals, each in source order
+		it('should register the implicit globals of ++ and for-in, then the read-only globals, after the existing Vars', function () {
+			var result = analyze('var o = {};\nconsole.log(rb);\nfor (kk in o) {}\nuu++;\nconsole.log(ra);\nzz = 1;\nvar q;');
+			var binding = result.scopeTree.binding,
+				ast = binding.scopeManager.globalScope.block;
+			var names = result.scopeTree.root.variables.filter(function (aVar) {
+				return !!aVar.binding && aVar.binding.kind !== 'builtIn';
+			}).map(function (aVar) {
+				return aVar.name + ':' + aVar.binding.kind;
+			});
+			names.should.eql(['o:var', 'zz:implicitGlobal', 'q:var', 'kk:implicitGlobal', 'uu:implicitGlobal',
+				'rb:global', 'ra:global']);
+			binding.globalVars().should.eql([binding.useVarOf(idOf(ast, 'rb')), binding.useVarOf(idOf(ast, 'ra'))]);
+		});
+
+		/// Foundational review R1: a name assigned only in a parameter default is registered to the page scope
+		it('should register to the page scope a name assigned only in a parameter default (g1)', function () {
+			var result = analyze('function f(a = (g1 = 1)) { return a + g1; }\nf();');
+			var binding = result.scopeTree.binding,
+				ast = binding.scopeManager.globalScope.block,
+				g1 = binding.defVarsOf(idOf(ast, 'g1', 0))[0];
+			g1.binding.kind.should.eql('implicitGlobal');
+			result.scopeTree.root.variables.indexOf(g1).should.not.eql(-1);
 		});
 
 		it('should register every declared Var once in the dujs scope tree (one-to-one, data-model section 1)', function () {

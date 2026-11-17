@@ -144,6 +144,11 @@
   其餘 GEN／KILL（如外層 `B`）照舊在 CALL RETURN；允許修改 `lib/dujs/modelbuilder.js` 與 `lib/dujs/expansion.js`。若 golden 因此改變，於 US2 依序列化規則
   寫入並歸解析類（US1 已 commit、US3 尚未開始，順序不衝突）。
 
+### Session 2026-11-17（implement US3）
+
+- Q: US3 後 `eval` 也成為未宣告的全域（evalouter 多出 `eval: entry -> L3` 等），與 US4-4「與 `develop` 相同」衝突，怎麼處理？ → A: `eval` 與其他未宣告名稱
+  一視同仁為全域（排除名單不變：`undefined`／`NaN`／`Infinity`／`arguments`）；US4-4 與 develop 的比對排除 D3 新增的全域 pair（差異歸全域類）。
+
 ## 表示法
 
 沿用 `specs/001-fix-known-issues/spec.md`「表示法」：def-use pair 寫成 `<變數>: <def> -> <use>`，`<def>` 為 `entry` 或節點標記；p-use 為
@@ -249,7 +254,7 @@ catch 參數（含解構）在 catch 子句定義，只在 catch 區塊內可見
    函式 scope 命名（`f_1`、`$BLOCK_n.f`）不變。[SRC PRB annexb；KI §8；USR D5]
 4. **Given** with（`var o = {};` L1 / `with (o) { p = 1; console.log(p); }` L2 / `var q = 2;` L3 / `function k(){ eval("var q=3"); return q; }` L4 / `k();` L5），
    **When** 分析 intra-page，**Then** 與 `develop` 相同：有 `q: L3 -> L4`、`p: L2 -> L2`、`o: L1 -> L2`。evalouter（外層函式 `outer` 的 `a`、`p` 在內層 `eval` 影響下）
-   同樣與 `develop` 相同：有 `a: L2 -> L3`、`a: L2 -> L5`、`p: entry -> L5`。[SRC PRB with、evalouter；USR D6]
+   同樣與 `develop` 相同：有 `a: L2 -> L3`、`a: L2 -> L5`、`p: entry -> L5`。兩者皆不計 D3 新增的未宣告名稱全域 pair（如 `eval`，Clarifications「implement US3」）。[SRC PRB with、evalouter；USR D6]
 5. **Given** op（`var o = new A();` L7、`o.p = 1;` L8），**When** 分析，**Then** 與 `develop` 相同（`o: L7 -> L8` 維持；def／use 的分類不變）。[SRC PRB op；USR D1]
 6. **Given** 程式碼審查，**When** 檢查宣告的收集與識別字的解析，**Then** 皆取自 eslint-scope 的結果；除 FR-012 (1) 白名單（D6 的回退、D3 的「頁面＋名稱」合併與名稱排除、固定清單與 `localStorage` 的名稱對應）外，
    沒有以名稱查找變數的路徑；此情境以 FR-012 的靜態測試驗證。[SRC USR D1；Clarifications]

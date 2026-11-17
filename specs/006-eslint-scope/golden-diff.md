@@ -10,14 +10,33 @@
 
 | # | case | 頁 | 檔案／層級 | 單位 | ± | 內容 | 類別 | FR | 說明 |
 |---|------|----|------------|------|---|------|------|----|------|
-| 1 | expected | page0 | intra-procedurals/5.dupairs.dot | row | + | `e` | catch | FR-003 | `parseSaved` 的 `catch (e)`（app.js L54）參數改為登記在 catch scope 的變數，列出 `e` 列（無 pair）；判準 (c) |
-| 2 | expected-es2015 | inter-page | 0.dupairs.dot | row | + | `TodoList` | 解析 | FR-002–FR-005 | `class TodoList`（app.js L6）的 class scope 內層綁定成為獨立 Var（無 pair）；外層列 `(7,17)` 不變 |
-| 3 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | row | + | `TodoList` | 解析 | FR-002–FR-005 | 同 #2：class 內層綁定列（無 pair） |
-| 4 | expected-es2015 | page0 | intra-procedurals/0.dupairs.dot | row | + | `TodoList` | 解析 | FR-002–FR-005 | 同 #2：class 內層綁定列（無 pair） |
-| 5 | expected-fixes004 | inter-page | 0.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | `class Counter`（app.js L10）外／內層綁定分拆：類別本體內的參照（L11 `static self = Counter`、L13 `y = Counter`，dot 12、14 與 entry_c、entry_d）歸內層列，外層保留 call_d、37、call_j；pair multiset 不變 |
-| 6 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | 同 #5：外／內層列分拆，pair multiset 不變 |
-| 7 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | 同 #5：外／內層列分拆，pair multiset 不變 |
-| 8 | expected-fixes004 | page0 | intra-procedurals/0.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | class 內層綁定列（無 pair）；外層列 `(11,36)`、`(11,37)`、`(11,39)` 不變 |
+| 1 | expected | inter-page | 0.dupairs.dot | row | + | `JSON` | 全域 | FR-006 | page0、page1 各自的 `JSON` Var（頁面＋名稱，不跨頁，US3-5），各一列 |
+| 2 | expected | inter-page | 0.dupairs.dot | row | + | `JSON` | 全域 | FR-006 | page0、page1 各自的 `JSON` Var（頁面＋名稱，不跨頁，US3-5），各一列 |
+| 3 | expected | inter-page | 0.dupairs.dot | pair | + | `JSON: entry -> 6` | 全域 | FR-006 | 同 #13（page1 entry_e → report.js L5），不跨頁 |
+| 4 | expected | inter-page | 0.dupairs.dot | pair | + | `JSON: entry -> 71` | 全域 | FR-006 | 同 #8（page0 entry_a → app.js L70） |
+| 5 | expected | inter-page | 0.dupairs.dot | pair | + | `JSON: entry -> entry` | 全域 | FR-006 | 函式 entry 節點讀本體變數（KI §18；page0 entry_c、page1 entry_f 各一） |
+| 6 | expected | inter-page | 0.dupairs.dot | pair | + | `JSON: entry -> entry` | 全域 | FR-006 | 函式 entry 節點讀本體變數（KI §18；page0 entry_c、page1 entry_f 各一） |
+| 7 | expected | page0 | intra-pages/0.dupairs.dot | row | + | `JSON` | 全域 | FR-006 | `JSON` 全域列（D3）：頁面 entry 定義 |
+| 8 | expected | page0 | intra-pages/0.dupairs.dot | pair | + | `JSON: entry -> 71` | 全域 | FR-006 | `onAdd` 的 `JSON.stringify(items)`（app.js L70）讀頁面 entry 的 `global` 定義 |
+| 9 | expected | page0 | intra-pages/0.dupairs.dot | pair | + | `JSON: entry -> entry` | 全域 | FR-006 | 函式 entry 節點讀本體變數（KI §18 既有行為，`onAdd` 的 entry_c） |
+| 10 | expected | page0 | intra-procedurals/0.dupairs.dot | row | + | `JSON` | 全域 | FR-006 | `JSON`（app.js L70 `JSON.stringify`，L53 `JSON.parse`）未宣告只讀，成為 page0 的 `global` Var，頁面 entry 定義（D3）；intra-procedural 為空列 |
+| 11 | expected | page0 | intra-procedurals/5.dupairs.dot | row | + | `e` | catch | FR-003 | `parseSaved` 的 `catch (e)`（app.js L54）參數改為登記在 catch scope 的變數，列出 `e` 列（無 pair）；判準 (c) |
+| 12 | expected | page1 | intra-pages/0.dupairs.dot | row | + | `JSON` | 全域 | FR-006 | `JSON`（report.js L5 `JSON.parse`）未宣告只讀，成為 page1 的 `global` Var（D3） |
+| 13 | expected | page1 | intra-pages/0.dupairs.dot | pair | + | `JSON: entry -> 6` | 全域 | FR-006 | `onLoad` 的 `JSON.parse(...)`（report.js L5）讀 page1 entry 的 `global` 定義 |
+| 14 | expected | page1 | intra-pages/0.dupairs.dot | pair | + | `JSON: entry -> entry` | 全域 | FR-006 | 函式 entry 節點讀本體變數（KI §18 既有行為，`onLoad` 的 entry_b） |
+| 15 | expected | page1 | intra-procedurals/0.dupairs.dot | row | + | `JSON` | 全域 | FR-006 | `JSON`（report.js L5 `JSON.parse`）未宣告只讀，成為 page1 的 `global` Var（D3）；intra-procedural 為空列 |
+| 16 | expected-es2015 | inter-page | 0.dupairs.dot | row | + | `Math` | 全域 | FR-006 | `Math`（app.js L30 `Math.max`）未宣告只讀，成為頁面 `global` Var，頁面 entry 定義（D3） |
+| 17 | expected-es2015 | inter-page | 0.dupairs.dot | row | + | `TodoList` | 解析 | FR-002–FR-005 | `class TodoList`（app.js L6）的 class scope 內層綁定成為獨立 Var（無 pair）；外層列 `(7,17)` 不變 |
+| 18 | expected-es2015 | inter-page | 0.dupairs.dot | pair | + | `Math: entry -> 31` | 全域 | FR-006 | `init` 中 `Math.max(...)`（app.js L30）讀頁面 entry 的 `global` 定義（US3-4 形態） |
+| 19 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | row | + | `Math` | 全域 | FR-006 | `Math`（app.js L30 `Math.max`）未宣告只讀，成為頁面 `global` Var，頁面 entry 定義（D3） |
+| 20 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | row | + | `TodoList` | 解析 | FR-002–FR-005 | 同 #17：class 內層綁定列（無 pair） |
+| 21 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | pair | + | `Math: entry -> 31` | 全域 | FR-006 | `init` 中 `Math.max(...)`（app.js L30）讀頁面 entry 的 `global` 定義（US3-4 形態） |
+| 22 | expected-es2015 | page0 | intra-procedurals/0.dupairs.dot | row | + | `Math` | 全域 | FR-006 | `Math`（app.js L30 `Math.max`）未宣告只讀，成為頁面 `global` Var，頁面 entry 定義（D3）；intra-procedural 為空列 |
+| 23 | expected-es2015 | page0 | intra-procedurals/0.dupairs.dot | row | + | `TodoList` | 解析 | FR-002–FR-005 | 同 #17：class 內層綁定列（無 pair） |
+| 24 | expected-fixes004 | inter-page | 0.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | `class Counter`（app.js L10）外／內層綁定分拆：類別本體內的參照（L11 `static self = Counter`、L13 `y = Counter`，dot 12、14 與 entry_c、entry_d）歸內層列，外層保留 call_d、37、call_j；pair multiset 不變 |
+| 25 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | 同 #24：外／內層列分拆，pair multiset 不變 |
+| 26 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | 同 #24：外／內層列分拆，pair multiset 不變 |
+| 27 | expected-fixes004 | page0 | intra-procedurals/0.dupairs.dot | row | + | `Counter` | 解析 | FR-002–FR-005 | class 內層綁定列（無 pair）；外層列 `(11,36)`、`(11,37)`、`(11,39)` 不變 |
 
 ## 解析類移除簽核（F3：歸「解析」的移除 pair 的釘選筆數）
 
@@ -124,17 +143,37 @@ CALL RETURN（`lib/dujs/expansion.js` 的 `replayCall`）。golden fixture 沒�
 
 ### 變化說明
 
-（待 US3 階段填寫）
+未宣告只讀的名稱成為頁面＋名稱的 `global` Var（`Def.GLOBAL_TYPE`，頁面 entry 在 fixed list、`undefined` 初值、函式宣告之後依 `globalVars()` 定義；
+只被 `++`／`--`、for-in／for-of 左側寫入或只在參數預設值／class 成員中賦值的未宣告名稱補登記為 `implicitGlobal`，T053–T055）後，
+淨差異表由 8 筆增為 27 筆：新增 19 筆全為全域類（FR-006），皆為 row／pair 新增，無移除、無 model／graph 差異（所有 `graph.dot`、`hierarchy.dot` 不變）。
+`expected-fixes004/`、`expected-interprocedural/` 相對 US2（9c2941c）零差異。
+
+- `expected` page0：`JSON`（app.js L53、L70）— intra-procedural 空列、intra-page 列與 `JSON: entry -> 71`、`JSON: entry -> entry`（KI §18 函式 entry 讀取）；
+  page1：`JSON`（report.js L5）— 同形態的 `JSON: entry -> 6`、`JSON: entry -> entry`；inter-page 兩頁各一列、各自的 pair，不跨頁（US3-5）。
+- `expected-es2015` page0：`Math`（app.js L30，`init` 中）— intra-procedural 空列、intra-page／inter-page 的 `Math: entry -> 31`（US3-4 形態）。
+- US3-2：fixed list 物件（`window`、`document`、`console` 等）與 `localStorage` 的列與 pair 都不在淨差異表（逐位元組未變）。
+- KI §18 的 `JSON: entry -> entry` 4 筆（page0／page1 intra-page 各 1、inter-page 2）歸全域類。
 
 ### 雜湊變化表（舊→新 sha256 前 12 碼）
 
 | case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
 |------|------|---------------------------|------|
+| expected | inter-page/0.dupairs.dot | 387e1b57c79c → 0f8c365bdb97 | #1–#6 兩頁的 `JSON` 列與 pair |
+| expected | page0/intra-pages/0.dupairs.dot | a4c5ad1279d0 → 419aa93ab44d | #7–#9 `JSON` 列與 pair |
+| expected | page0/intra-procedurals/0.dupairs.dot | 7b24e6ae6159 → fb4aa3646fb8 | #10 `JSON` 空列 |
+| expected | page1/intra-pages/0.dupairs.dot | 6b114f03c64e → 49980f7fbfcc | #12–#14 `JSON` 列與 pair |
+| expected | page1/intra-procedurals/0.dupairs.dot | b84eb11c9d66 → 288475fbb8e3 | #15 `JSON` 空列 |
+| expected-es2015 | inter-page/0.dupairs.dot | a3a117d300c0 → eb4f45437f3f | #16、#18 `Math` 列與 pair |
+| expected-es2015 | page0/intra-pages/0.dupairs.dot | a3a117d300c0 → eb4f45437f3f | #19、#21 `Math` 列與 pair |
+| expected-es2015 | page0/intra-procedurals/0.dupairs.dot | 31017662f6cc → 58fc5a25ce9c | #22 `Math` 空列 |
 
 ### 單元測試期望
 
 | 檔案 | 變更 | FR |
 |------|------|----|
+| `tests/dujs/scopebinding.js`「should keep a block function in a function with eval inside the block (D5 first)」 | 原斷言 block 外的 `bf()` 的 `useVarsOf` 為 `[]`；US3 後未解析的 `bf` 是頁面 `global` Var，改斷言恰一個 Var、種類 `global`、不是 block 函式的 Var（D5 不連結的語意不變） | FR-006、FR-007 |
+| `tests/dujs/scopeguards.js`「should read f and g2 as page globals」（annexb） | 取消 `it.skip`（Foundational 因只讀全域屬 US3 而暫略），斷言不變 | FR-006、FR-007 |
+| `tests/dujs/scopeguards.js`「should give the pairs of develop for with.js／evalouter.js」 | 原為與 develop 清單嚴格相等；US3 後多出 `eval: entry -> L4`、`eval: entry -> entry`（with）與 `eval: entry -> L3`、`eval: entry -> entry`（evalouter）。依 spec Clarifications「implement US3」改為「develop 清單全部存在＋新增 pair 的變數名須為該頁未解析名稱」（intra-page 與 inter-procedural 皆同；其他 probe 仍嚴格相等） | FR-006、US4-4 |
 
 ## US4
 
