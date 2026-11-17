@@ -48,7 +48,12 @@ describe('Nested functions', function () {
 		].join('\n'));
 		var page = result.scopeTree.root,
 			anonymous = page.children[0];
-		page.hasLocalVariable('g').should.eql(false);
-		anonymous.hasNamedFunction('g').should.eql(true);
+		/// the scope name APIs were removed by feature 006: the Vars registered in the scopes
+		page.variables.some(function (variable) {
+			return variable.name === 'g';
+		}).should.eql(false);
+		anonymous.variables.some(function (variable) {
+			return variable.name === 'g' && variable.binding.kind === 'function';
+		}).should.eql(true);
 	});
 });

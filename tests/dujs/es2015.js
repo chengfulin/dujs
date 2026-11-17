@@ -7,6 +7,20 @@ var analyze = require('../helpers/analyze');
 var PAGE = '$DOMAIN.$PAGE_0',
 	ANONYMOUS = PAGE + '.$ANONYMOUS_FUN_';
 
+/**
+ * Whether a Var with the name is registered in the scope (the scope name API
+ * hasLocalVariable was removed by feature 006)
+ * @param {Scope} scope
+ * @param {string} name
+ * @returns {boolean}
+ */
+function hasLocal(scope, name) {
+	'use strict';
+	return scope.variables.some(function (variable) {
+		return variable.name === name;
+	});
+}
+
 function pairsOf(pairs, name) {
 	'use strict';
 	return pairs.filter(function (pair) {
@@ -97,9 +111,9 @@ describe('ES2015+ modeling', function () {
 			].join('\n'));
 			var g = result.scopeTree.root.children[0],
 				loop = g.children[0];
-			g.hasLocalVariable('i').should.eql(false);
+			hasLocal(g, 'i').should.eql(false);
 			loop.type.should.eql('block');
-			loop.hasLocalVariable('i').should.eql(true);
+			hasLocal(loop, 'i').should.eql(true);
 			var pairs = result.intraProcedural(PAGE + '.g');
 			pairs.should.containDeep(['i: L3 -> L3>L4:T', 'i: L3 -> L3>L6:F']);
 			pairsOf(pairs, 'total').should.eql([
@@ -117,7 +131,7 @@ describe('ES2015+ modeling', function () {
 				'  }',
 				'}'
 			].join('\n'));
-			result.scopeTree.root.hasLocalVariable('t').should.eql(false);
+			hasLocal(result.scopeTree.root, 't').should.eql(false);
 			pairsOf(result.intraProcedural(PAGE + '.h'), 't').should.eql(['t: L4 -> L5']);
 		});
 
@@ -156,7 +170,7 @@ describe('ES2015+ modeling', function () {
 			var pairs = result.intraProcedural();
 			pairs.should.containDeep(['a: L2 -> L3', 'c: L2 -> L3', 'obj: L1 -> L2']);
 			pairs.should.not.containEql('a: entry -> L1');
-			result.scopeTree.root.hasLocalVariable('b').should.eql(false);
+			hasLocal(result.scopeTree.root, 'b').should.eql(false);
 		});
 
 		it('should define variables of an array pattern with defaults and a rest element', function () {
@@ -200,7 +214,9 @@ describe('ES2015+ modeling', function () {
 			].join('\n'));
 			var h = result.scopeTree.root.children[0];
 			['id', 'name', 'first', 'last', 'others'].forEach(function (name) {
-				h.params.has(name).should.eql(true);
+				h.variables.some(function (variable) { /// scope.params was removed by feature 006
+					return variable.name === name && variable.binding.kind === 'parameter';
+				}).should.eql(true);
 			});
 			/// FR-005: `last = 1` is initialized at its own node on line 1 (was `last: entry -> L2`)
 			result.intraProcedural(PAGE + '.h').should.eql([
@@ -234,7 +250,7 @@ describe('ES2015+ modeling', function () {
 				'items: entry -> L3',
 				'total: L2 -> L4', 'total: L2 -> L6', 'total: L4 -> L4', 'total: L4 -> L6'
 			]);
-			result.scopeTree.root.children[0].children[0].hasLocalVariable('item').should.eql(true);
+			hasLocal(result.scopeTree.root.children[0].children[0], 'item').should.eql(true);
 		});
 
 		it('should continue to the loop node and break out of the loop', function () {
@@ -330,8 +346,8 @@ describe('ES2015+ modeling', function () {
 				'}'
 			].join('\n'));
 			var f = result.scopeTree.root.children[0];
-			f.hasLocalVariable('Local').should.eql(false);
-			f.children[0].hasLocalVariable('Local').should.eql(true);
+			hasLocal(f, 'Local').should.eql(false);
+			hasLocal(f.children[0], 'Local').should.eql(true);
 			result.intraProcedural(PAGE + '.f').should.containEql('Local: L3 -> L4');
 		});
 	});
@@ -367,8 +383,8 @@ describe('ES2015+ modeling', function () {
 				'fetchItems: L1 -> L4', 'max: L1 -> L4', 'items: L4 -> L10', 'App: L8 -> L10'
 			]);
 			pairs.should.not.containEql('fetchItems: entry -> L4');
-			result.scopeTree.root.hasLocalVariable('LIMIT').should.eql(false);
-			result.scopeTree.root.hasLocalVariable('display').should.eql(false);
+			hasLocal(result.scopeTree.root, 'LIMIT').should.eql(false);
+			hasLocal(result.scopeTree.root, 'display').should.eql(false);
 		});
 
 		it('should model anonymous default-exported functions and classes', function () {

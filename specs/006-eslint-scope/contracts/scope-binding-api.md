@@ -17,12 +17,23 @@
 | `useVarsOf(identifier)` | `Var[]`：只查 Reference，**不回退** `declaredBy`（data-model §5，F5） | defuseanalyzer `findUSESet`、hierarchy（localStorage 讀取） |
 | `useVarOf(identifier)` | `Var|null`：`useVarsOf` 的唯一元素 | callresolver（callee `f()`、`new X()`、`o.m()` 的 `o`）、modelbuilder（handler 識別字） |
 | `defVarsOf(identifier)` | `Var[]`：Reference 優先，否則 `declaredBy`；class 宣告 id → 外層＋內層 | defuseanalyzer `findGENSet`／`getDefinedVariables`（含 `o` of `o.p = v`）、variableanalyzer |
+| `declaredVarsOf(identifier)` | `Var[]`：只查 `declaredBy`（宣告歸屬）；`defVarsOf` 無 Reference 時回退至此（Foundational 2b 新增：讓 `catch (e) { var e = 4; }` 的 `var e` 在走訪時登記外層 `e`，維持 entry 初值順序） | variableanalyzer |
 | `variableVar(variable)` | `Var|null`（eslint-scope Variable → Var） | variableanalyzer |
 | `isVisible(var, dujsScope)` | boolean（research R6 (a)∪(b)∪(c)，快取；(a) 的遮蔽判定為白名單 W4 `isShadowed`；(c) 用 `definingScopeOf`） | `getNonReachableVarDefs`、`bypassFilter` |
 | `isOnFunctionChain(var, dujsFunctionScope)` | boolean：Var 的宣告 eslint scope 是函式 eslint scope 本身或其祖先，或 Var 無宣告（全域／builtin）（research R6a，Q3） | `findUSESet` 處理函式 entry 節點時過濾 |
 | `classBindingGroupOf(var)` | `Var[]`（class 宣告的外層＋內層；其他為 `[var]`） | callresolver `definitionsOnThePage`（FR-018 合併計數） |
 | `globalVars()` | 依原始碼順序的 `global` 類 Var | defuseanalyzer 在頁面 entry 產生 `global` 定義 |
 | `localStorageVar()` | domain scope 的 `localStorage` Var | hierarchy `definingLocalStorageNodes` |
+
+### 2.1 其他公開面（Foundational 實作補記，審查 R2）
+
+| 名稱 | 說明 |
+|------|------|
+| 模組函式 `builtInVariablesOf(scope)` | 依 `scope.builtInObjects` 為 page／domain scope 建立 builtin Var（每個 scope 只建一次；domain 的 `localStorage` 跨頁共用），`binding.kind`＝`'builtIn'`。`builtInObjects` 描述須在首次分析前設定，之後不得改寫（審查 R3） |
+| 模組常數 `KINDS` | 種類列舉（含 `builtIn`） |
+| `Var.setBinding(var, binding)` | 一次性設定 Var 的 `binding`（供 scopebinding 建 Var 時使用） |
+| 測試讀取介面 `options`、`scopeManager`、`scopeTree`、`ownerScopeOf(eslintScope)`、`eslintScopeOf(dujsScope)`、`definingScopeOf(var)` | 只供測試與 diffcheck 診斷讀取，lib 其他模組不得依賴 |
+| `declarations` 每筆 | `{kind, node, identifier}`（`identifier`＝`Definition.name`） |
 
 ## 3. 宣告查詢（給 005；US4-9 單元測試的對象）
 
