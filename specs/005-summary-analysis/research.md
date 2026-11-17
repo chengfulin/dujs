@@ -58,6 +58,10 @@
   `applyExceptional(S_callee, OUT(d.callNode))`。LOOP RETURN 得 `OUT(LOOP) ∪ ⋃_h (gen_h ∪ exceptional_h)`（R4）。`OUT(n) = (IN(n) − KILL(n)) ∪ GEN(n)`，KILL 沿用
   `computeKILLSet`（含 entry 殺不可見、exit 殺區域）。依賴改變時把受影響節點重新入列（callNode→callReturn、callNode→exceptionalReturn、LOOP→LOOP RETURN）。
 - 摘要圖中 entry 的 IN 為**哨兵定義**（R3），其他模型 entry 的 IN 為空（同現況 `start`）。
+- **相容模式（Foundational，至 US1 前）**：未給 `options.calls`／`options.loops` 時，return 邊與處理器 exit → LOOP RETURN 邊照舊帶 `OUT(p)`，callReturn 的 bypass 合併以
+  `extraReachIns` 傳入；另有**過渡規則**（analyze Q1 → A）：指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊仍帶 `OUT(p)`，否則被呼叫端拋錯前的定義會
+  經 return 邊流回呼叫端、造成非 `例外IN` 類差異。預期 Foundational golden 零差異、單元測試只翻轉 `catchclause.js` 的 catch-edge 一筆；US1 摘要上線時刪除此過渡規則
+  並記入 golden-diff US1 節。
 - **Q-a**：`replayCall`（非決策節點前的呼叫）只把非例外邊搬到 callReturn，例外邊留在 callSite（此時已是 CALL 節點）。CALL 節點 GEN／KILL 已搬走，所以
   `IN(callNode) = OUT(callNode)`＝呼叫前的定義（求 callee、引數時拋錯），被呼叫端正常返回後不再拋錯。決策節點前的呼叫（`beforeDecision`）與運算式中的呼叫維持現況（007）。
   串接的第 2 個以後被呼叫端，其 callNode 是前一個 callReturn（無例外邊），`exceptionalReturn` 取串接首個 callSite 的例外目標。
@@ -157,12 +161,12 @@
   golden 基準 `9e324be`（檔頭寫死）；MDN 語料沿用 `specs/006-eslint-scope/mdn/corpus/`，但 **develop 快照需重做**（006 的 `baseline-develop` 是 `584e17d`、006 之前）：
   Setup 以本 branch 未改 lib 的工作樹（＝`9e324be`）產生 `specs/005-summary-analysis/mdn/baseline-develop/`。類別與觸發條件見 contracts/diff-check.md；無法機械歸類到單一原因者
   以「每頁釘選筆數＋必填說明＋使用者簽核」把關（006 F3／N2 慣例）。
-- 新增的 pair 只允許 `連結`（FR-005）、`finally`（FR-013）、`例外 IN`（FR-014）三類（SC-005）。
+- 新增的 pair 只允許 `連結`（FR-005）、`finally`（FR-013）、`例外 IN`（FR-014；新增者以基準攤平圖判定並釘選，analyze Q2）、`Q-a`、`保守摘要`（FR-001，generator／async；analyze Q3）（SC-005）。
 
 ## R11 效能（SC-004：≤ develop 的 2 倍）
 
 - 基準（006 perf.md）：MDN 32 id 約 92–95 ms／輪。新增成本：每個 scope 一次摘要圖求解（SCC 內多輪）、攤平圖求解時 VarDef 對應。D2 新連結在 MDN 只有 4 處，攤平圖成長有限。
-- **Decision**：沿用 `specs/006-eslint-scope/tools/perf.js <dujsRoot>`（它從 006 目錄讀語料，對任意 dujs 根目錄量測），另加 golden 3 個 case 的 CLI 時間；結果記入
+- **Decision**：沿用 `specs/006-eslint-scope/tools/perf.js <dujsRoot>`（它從 006 目錄讀語料，對任意 dujs 根目錄量測），另加 golden 4 個 case 的 CLI 時間；結果記入
   `specs/005-summary-analysis/perf.md`，門檻 2.0。摘要依 scope 快取、每頁算一次；哨兵只建「相關變數」。
 
 ## R12 測試策略

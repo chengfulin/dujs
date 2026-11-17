@@ -61,7 +61,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>摘要式分析：同一個小程序被多處叫用時只報走得到的配對</h1>
-<p class="meta">005-summary-analysis · plan · 第 1 輪（plan.md、research R0–R14、data-model、contracts；沿用 clarify 第 4 輪的 spec）· 2026-11-17</p>
+<p class="meta">005-summary-analysis · analyze · 第 1 輪（speckit-analyze、sdd-spec-clarifier、全新 context 裁判三方發現；上半沿用 plan 第 1 輪）· 2026-11-17</p>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -197,22 +197,24 @@ flowchart LR
   </ul>
 </section>
 
-<h2>本輪變更（plan · 第 1 輪）</h2>
-<h3>技術選型（使用者已確認：沿用現有技術棧，不新增執行期相依）</h3>
+<h2>本輪變更（analyze · 第 1 輪）</h2>
+<p class="meta">三方：speckit-analyze、sdd-spec-clarifier（full）、全新 context 裁判（跑了兩個原型：全測試＋golden）。CRITICAL 0、HIGH 4（含 3 個判斷點）、MEDIUM 7、LOW 約 10。</p>
+<h3>CRITICAL／HIGH 發現（全列）</h3>
 <div class="box"><table>
-<tr><th>項目</th><th>選型</th><th>偏離 tech-standards</th></tr>
-<tr><td>語言／執行環境</td><td>JavaScript（CommonJS，<code>lib/</code> 維持 ES5 風格）、Node.js ≥24</td><td>無</td></tr>
-<tr><td>解析／作用域／CFG</td><td>espree ^11.2.0、eslint-scope ^9.1.2、自有 esgraph（LGPL 衍生檔 <code>index.js</code>、<code>dot.js</code> 需改，檔頭記 Modified）</td><td>無</td></tr>
-<tr><td>測試</td><td>mocha＋should＋fast-check（inlining oracle 做 property test）、golden fixture；基線 1273 passing</td><td>無</td></tr>
-<tr><td>效能門檻</td><td>總分析時間 ≤ develop（<code>9e324be</code>）× 2（SC-004）</td><td>無</td></tr>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>一句話說明</th><th>建議處置</th></tr>
+<tr><td>F1／H2</td><td class="no">HIGH</td><td>diff-check.md「例外IN」；T019</td><td>判準只能歸類「消失」的 pair；新增 pair（如 c-out3 <code>x: L1 -> L6</code>）歸不了類，T019 必卡</td><td>判斷點 2</td></tr>
+<tr><td>H1</td><td class="no">HIGH</td><td>acceptance.md US1-7；T044/T045/T060/T083/T089</td><td>US1-7（<code>c-noret.js</code>）要 US2 的 D2 連結才過，卻排在 US1 phase</td><td>移到 US2 phase（orchestrator 直接改）</td></tr>
+<tr><td>N1</td><td class="no">HIGH</td><td>Foundational 相容模式；T015</td><td>被呼叫端賦值的例外邊帶 IN 到 exit、經 return 邊回到呼叫之後，破壞 must-KILL。原型實測：26 個既有測試翻轉、golden 21 筆新增 pair 歸不了類</td><td>判斷點 1</td></tr>
+<tr><td>N2</td><td class="no">HIGH</td><td>spec US6-5</td><td>同因：「無 <code>r: L4 -> L11</code>」在 US6 phase 不成立</td><td>隨判斷點 1</td></tr>
 </table></div>
-<p class="meta">tech-standards 未涵蓋靜態分析 CLI／函式庫，無偏離項、無 §CP-6 例外。</p>
+<p class="meta">MEDIUM 7 筆：F2／M4（generator／async 新增 pair 無允許類別 → 判斷點 3）、F3／M1（US1→US3 間被呼叫端例外 pair 暫失，需暫改還原規則）、M2（未列名的翻轉測試）、M3（FR-008 括號與 US5-1 矛盾）、M5（T030 缺兩種 finally 測試）、N3（US5 實測 14 檔 58 個測試翻轉）、N4（US5-2 手推預期錯，已採 A 改 case 節點）。LOW：F4–F9、N5–N8、I1 等文字與細節修正。駁回：F3「T068／T069 提前」、I2、I3。</p>
+<div class="note">orchestrator 直接套用、不需使用者決策：diff-check.md、tasks.md、acceptance.md、data-model §6、spec 文字（Status、P13 列、FR-008 括號、US5-2）、plan 兩處。M2 翻轉測試以「實跑失敗為準」。</div>
 
-<h3>關鍵設計與影響</h3>
+<h3>plan 既定設計（沿用，供對照）</h3>
 <div class="box"><table>
 <tr><th>議題</th><th>決策</th><th>影響</th></tr>
 <tr><td>實作順序</td><td>Setup → 求解器（FR-014）→ US5 → US6 → US1 → US3 → US4 → US2 → Polish</td><td>US2 雖 P1，連結放寬須等摘要，否則出現不可實現 pair；改 golden 的階段須依序並逐次 <code>diffcheck --verify</code></td></tr>
-<tr><td>FR-013 finally</td><td>新增 <code>finallyExit</code> 節點與多目標 <code>finally</code> 邊（見判斷點 2）</td><td>golden 只動 page0 <code>parseSaved</code> 一處；MDN 語料無 <code>try</code></td></tr>
+<tr><td>FR-013 finally</td><td>新增 <code>finallyExit</code> 節點與多目標 <code>finally</code> 邊（plan 判斷點 2 已決 A）</td><td>golden 只動 page0 <code>parseSaved</code> 一處；MDN 語料無 <code>try</code></td></tr>
 <tr><td>Q-a</td><td>呼叫敘述的例外邊留在 CALL 節點；被呼叫端例外以虛擬貢獻帶出</td><td>US3-2、3、7</td></tr>
 <tr><td>generator／async</td><td>摘要標 <code>conservative</code>：恆正常返回、無 must-KILL</td><td>US1-8</td></tr>
 <tr><td>golden／MDN</td><td>新 <code>tools/diffcheck.js</code> 以類別（§18、連結、finally、例外IN、Q-a、摘要）核對；差異記 <code>golden-diff.md</code></td><td>FR-011；釘選類別由使用者簽核</td></tr>
@@ -229,6 +231,8 @@ flowchart LR
 <tr><td>D4、R2-1</td><td>攤平圖不複製被呼叫端；以配對資訊表達進出與「只看正常返回」，<code>.dot</code> 不變</td><td>D4</td></tr>
 <tr><td>D5、N1、N5</td><td>golden 差異記於 <code>golden-diff.md</code>；US4 情境 1 改 loop-pair 程式；US4-2 為守門</td><td>D5；Clarifications</td></tr>
 <tr><td>SC-002</td><td>以 P1–P11 為準（自身遞迴、具名函式運算式內部名稱列入成功準則）；P12–P16 由 SC-001 的情境測試涵蓋</td><td>Clarifications（2026-11-17）；SC-002</td></tr>
+<tr><td>plan 裁決</td><td>US1-4 改用 <code>c-cyc3-cond.js</code>；接受 <code>.dot</code> 新增 <code>finallyExit</code> 節點與多目標 <code>finally</code> 邊</td><td>Clarifications（plan review）；FR-013</td></tr>
+<tr><td>analyze Q4</td><td>US5-2 預期改為 case 節點（<code>x: L1 -> L7>L8:T</code>、<code>x: L1 -> L7>L10:F</code>）；B 方案超出範圍，由 orchestrator 採 A</td><td>analyze N4</td></tr>
 <tr><td>驗收缺口</td><td>先查 MDN 語料（33 檔，含 Classes 頁）：無 <code>try</code>／<code>catch</code>／<code>finally</code>／<code>throw</code>、無函式內區域函式、類別欄位無初始化式，補不了；改以探測程式補成情境（P12–P16），多被叫端串接改自 MDN <code>Person</code></td><td>Clarifications（2026-11-17）；探測結果</td></tr>
 <tr><td>Q-a</td><td>返回後呼叫敘述不再拋錯；呼叫之前仍算（帶呼叫前定義）；運算式中與決策節點前的呼叫維持現況（007）</td><td>Session 2026-11-17；FR-006</td></tr>
 <tr><td>Q-b（擴大）</td><td><code>finally</code> 整族一起修，函式內與頁面層一致</td><td>Session 2026-11-17；FR-013</td></tr>
@@ -241,16 +245,16 @@ flowchart LR
 <h3>驗收條件盤點</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>情境</th><th>判定</th><th>說明</th></tr>
-<tr><td>US1 多處叫用</td><td>1、2、3、6、7、8</td><td class="ok">可驗證</td><td>皆有程式與具體 pair（3、6 為守門）；6 為多被叫端串接（<code>new Person</code>），改自 MDN；7 無正常返回（<code>c-noret.js</code>）；8 generator／async（<code>c-gen.js</code>、<code>c-asy.js</code>）</td></tr>
+<tr><td>US1 多處叫用</td><td>1、2、3、6、7、8</td><td class="ok">可驗證</td><td>皆有程式與具體 pair（3、6 為守門）；6 為多被叫端串接（<code>new Person</code>），改自 MDN；7 無正常返回（<code>c-noret.js</code>，analyze H1：須待 US2 的 D2 才能通過，改在 US2 phase 驗）；8 generator／async（<code>c-gen.js</code>、<code>c-asy.js</code>；新增 pair 的允許原因見判斷點 3）</td></tr>
 <tr><td>US1</td><td>4 外層區域變數不受內層影響</td><td class="ok">可驗證</td><td>判斷點 1 → A：改用加終止條件的 <code>c-cyc3-cond.js</code>（<code>t: L4 -> L8</code>）；原 cyc-3 驗「沒有以 L6 為 use 端的 pair、分析終止」</td></tr>
 <tr><td>US1</td><td>5 配對資訊</td><td class="ok">可驗證</td><td>以「每條 return 邊對應唯一 call 邊」驗，另驗 US3-3 程式 <code>s</code> 的例外只接 L9 <code>catch</code>；輸出格式由 plan 定（FR-010）</td></tr>
 <tr><td>US2 函式內叫用</td><td>1–7</td><td class="ok">可驗證</td><td>皆有程式與 pair；4、7 為守門；5、6 自身遞迴與具名運算式內部名稱；7 block 內函式宣告不在 block 外連結</td></tr>
 <tr><td>US3 例外離開</td><td>1–7</td><td class="ok">可驗證</td><td>2 明確斷言沒有 <code>state: L7 -> L13</code>（Q-a 已決）；3 有 <code>x: L1 -> L10</code>、沒有 <code>x: L5 -> L10</code>；4、7 守門；5 例外沿呼叫鏈進 LOOP；6 為 <code>catch</code> 重拋經 <code>finally</code>（P17，FR-013 修正後成立，現況不成立）</td></tr>
 <tr><td>US4 處理器配對</td><td>1、2、3</td><td class="ok">可驗證</td><td>有程式與 pair（2、3 為守門；3 驗 LOOP 不套 must-KILL）</td></tr>
-<tr><td>US6 try／finally</td><td>1–7</td><td class="ok">可驗證</td><td>皆有探測程式（<code>c-fin*.js</code> 等）與 pair；1、3、4、5、6、7 現況不成立（P18、P20–P24）；2 守門；其中 3 驗「L8 不可達」（沒有任何 pair，屬否定式斷言）</td></tr>
-<tr><td>US5 entry 節點</td><td>1、2、3</td><td class="ok">可驗證</td><td>1 依 KI §18 程式；以節點 use 集合驗</td></tr>
+<tr><td>US6 try／finally</td><td>1–7</td><td class="ok">可驗證</td><td>皆有探測程式（<code>c-fin*.js</code> 等）與 pair；1、3、4、5、6、7 現況不成立（P18、P20–P24）；2 守門；其中 3 驗「L8 不可達」（沒有任何 pair，屬否定式斷言）；5 的「無 <code>r: L4 -> L11</code>」在 US6 phase 不成立（N2，隨判斷點 1）</td></tr>
+<tr><td>US5 entry 節點</td><td>1、2、3</td><td class="ok">可驗證</td><td>1 依 KI §18 程式；以節點 use 集合驗；2 原手推預期有誤（N4），改為 case 節點 pair（<code>x: L1 -> L7>L8:T</code>、<code>x: L1 -> L7>L10:F</code>），待 orchestrator 改 spec 後成立；實測 US5 會翻轉 14 檔 58 個測試（皆為刪除 use 端為 entry 的期望，N3）</td></tr>
 <tr><td>Edge Cases</td><td>無正常返回</td><td class="ok">可驗證</td><td>無條件遞迴由 US1-7、一定拋錯由 US6-1 涵蓋；多被叫端串接由 US1-6 涵蓋</td></tr>
-<tr><td>SC-004／005</td><td>MDN 33 個程式、2 倍時間</td><td class="ok">可驗證</td><td>SC-005 的「能說明」靠人工歸類，無自動判準</td></tr>
+<tr><td>SC-004／005</td><td>MDN 33 個程式、2 倍時間</td><td class="no">部分缺</td><td>SC-005 的「能說明」靠人工歸類；「例外IN」新增 pair 無判準（判斷點 2）、generator／async 新增 pair 無允許類別（判斷點 3）</td></tr>
 </table></div>
 
 <h3>tech-standards 缺漏或變更</h3>
@@ -259,23 +263,26 @@ flowchart LR
 <h3>CRITICAL／HIGH 衝突與影響</h3>
 <div class="box"><table>
 <tr><th>條款</th><th>衝突內容</th><th>受影響 story</th></tr>
-<tr><td>§CP-1 可追溯（spec 內部矛盾，HIGH）</td><td>US1-4 用無條件遞迴的 <code>cyc-3.js</code> 要求 <code>t: L4 -> L6</code>，與 FR-003「從無正常返回起算」、US1-7「無條件遞迴後不可達」互斥（research R3）</td><td>US1-4、US1-7</td></tr>
-<tr><td>§CP-1 可追溯（spec 與設計落差，HIGH）</td><td>FR-013 的 spec 只提「邊」變化；實際需新增 <code>finallyExit</code> 節點型別與多目標 <code>finally</code> 邊，出現在 <code>.dot</code></td><td>US6、US3-6</td></tr>
+<tr><td>§CP-4 驗收可測（附件未標條款；HIGH）</td><td>N1／N2：Foundational 相容模式下例外邊外洩，破壞 must-KILL，既有 26 個測試翻轉；US6-5 否定斷言不成立</td><td>US1、US3、US6-5</td></tr>
+<tr><td>SC-005 可說明（HIGH）</td><td>F1／H2：新增 pair 歸不了類，golden 差異無法簽核</td><td>全部（golden 差異）</td></tr>
+<tr><td>phase 排序（HIGH）</td><td>H1：US1-7 相依 US2 的 D2</td><td>US1-7、US2</td></tr>
 </table></div>
-<p class="meta">尚未做 analyze。D4 修訂 003「每個呼叫點各自展開屬 stage 2」、D2 取代 004 FR-018 一句、D6 讓 003「golden 差異不得放行」不適用，皆已於 spec 明列。</p>
+<p class="meta">plan 輪的兩項 HIGH（US1-4 與 FR-003 矛盾、FR-013 新節點型別）已於 plan review 採 A 解決。D4 修訂 003、D2 取代 004 FR-018 一句、D6 讓 003「golden 差異不得放行」不適用，皆已於 spec 明列。</p>
 
 <h3>本輪判斷點</h3>
-<p><b>已決：1 → A、2 → A</b>（使用者 2026-11-17 採建議；spec US1 情境 4、FR-013 已改）。以下保留當時的選項供參照。</p>
+<p class="meta">plan 輪的判斷點 1、2 已決（皆採 A）。本輪 3 題如下，建議標 *。</p>
 <div class="box"><table>
 <tr><th>#</th><th>問題</th><th>方案（建議標 *）</th><th>影響</th><th>出處</th></tr>
-<tr><td>1</td><td>US1-4 與 FR-003 矛盾，要怎麼改驗收？</td><td>*A：US1-4 改用有終止條件的變體（<code>if (p) { this.m(0); }</code>）驗「外層區域變數不受內層影響」；原 cyc-3 改驗「沒有以 L6 為 use 端的 pair、分析終止」<br>B：改 FR-003／US1-7，讓無條件遞迴後仍可達（推翻已決的不動點起點）</td><td>A：只改一條驗收，其餘不變；B：影響 US1-7、US6-3 與多處 golden</td><td>US1 情境 4、7；FR-003；research R3</td></tr>
-<tr><td>2</td><td>是否接受 <code>.dot</code> 新增 <code>finallyExit</code> 節點與多目標 <code>finally</code> 邊？</td><td>*A：接受（golden 只動 page0 <code>parseSaved</code>）<br>B：依續行種類複製 finally 節點（同一行多節點、pair 重複）</td><td>A：<code>.dot</code> 多一種節點／邊，spec 需補述；B：不改圖型別，但 pair 重複、較難驗證</td><td>FR-013；US6；research R6；data-model §7</td></tr>
+<tr><td>1</td><td>Foundational 的例外 IN 外洩（N1、N2）：相容模式下被呼叫端賦值的例外邊帶 IN 到 exit，怎麼處理？</td><td>*A：相容模式加一列「指向有 return 出邊之 exit 的例外邊仍帶 OUT，US1 移除」<br>B：維持現設計，T015 列約 26 筆暫改並在 US1／US3 還原；US6-5 否定斷言移到 US1<br>C：FR-014 延到 US1 才啟用，T011 與 US6-7 後移</td><td>A：Foundational golden 零差異、只翻轉 1 筆測試；B：大量暫改與還原；C：phase 重排，US6 不驗例外帶 IN</td><td>FR-014；tasks T011、T015；US6-5、US6-7</td></tr>
+<tr><td>2</td><td>「例外IN」新增 pair 的歸類判準（F1／H2）</td><td>*A：基準側攤平圖路徑判準（存在帶例外出邊的節點 n，def 可達 n、n 的例外目標可達 use），加每頁筆數釘選與使用者簽核<br>B：只用路徑判準<br>C：新增 pair 一律釘選簽核</td><td>A：可自動歸類且有人把關；B：無筆數把關；C：簽核量大、T019 易卡</td><td>SC-005；diff-check.md；tasks T019</td></tr>
+<tr><td>3</td><td>generator／async 新增 pair 要不要有允許類別（F2／M4）</td><td>*A：SC-005 與 diff-check 增列「保守摘要（FR-001）」為允許原因，觸發為頁面有對 generator／async 的呼叫敘述<br>B：不改，出現時停下裁決（目前 golden、MDN 都沒有）</td><td>A：先備好歸類，文字小改；B：不改文件，出現時才中斷</td><td>FR-001；SC-005；US1-8；diff-check.md</td></tr>
 </table></div>
 
 <h3>次要疑點（不佔判斷點）</h3>
 <div class="box"><table>
 <tr><th>疑點</th><th>出處</th></tr>
-<tr><td>SC-005 的「每個消失／新增的 pair 都能說明」靠人工歸類，無自動判準；diffcheck 只能做到類別核對，歸類項目隨 FR-013／FR-014 增多</td><td>SC-005</td></tr>
+<tr><td>N8：US4 可能新增 inter-page localStorage pair；出現即停下裁決</td><td>analyze N8；US4</td></tr>
+<tr><td>SC-005 的「每個消失／新增的 pair 都能說明」靠人工歸類；判斷點 2、3 定案後僅剩類別核對</td><td>SC-005</td></tr>
 <tr><td>Edge Cases「dead-code pair 增減列入 golden-diff」仍無量測方式；KI §22 (5) 其餘在 008</td><td>Edge Cases</td></tr>
 </table></div>
 </main>

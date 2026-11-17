@@ -9,7 +9,8 @@
 | US1-1、US1-2、US1-3 | `tests/dujs/summaryanalysis.js` | p1、p2、內嵌 | US1-1 斷言 `x` 的 pair「恰為」兩筆 |
 | US1-4 | 同上 | `probes/c-cyc3-cond.js`（裁決 Q1 → A：有 `t: L4 -> L8`）；004 `cyc-3.js` 斷言沒有以 L6 為 use 端的 pair | 斷言分析終止 |
 | US1-5 | `tests/dujs/matching.js` | p1、us3-3 | 讀 `model.callBypassOf` 與 CLI 產出的 `*.matching.json`（contracts/matching-output.md §4） |
-| US1-6、US1-7、US1-8 | `tests/dujs/summaryanalysis.js` | g5、c-noret、c-gen、c-asy | US1-8 另斷言 Summary `conservative` |
+| US1-6、US1-8 | `tests/dujs/summaryanalysis.js` | g5、c-gen、c-asy | US1-8 另斷言 Summary `conservative` |
+| US1-7 | `tests/dujs/relaxedcallee.js`（T083） | c-noret | 於 US2 phase 驗收（需 D2 自身遞迴連結） |
 | US2-1…7 | `tests/dujs/relaxedcallee.js` | p3、us2-2-let、內嵌（`var f`、兩筆定義、`new f()`）、p7、g1、p10、p11、c-blk | 連結與否以 inter-procedural 模型的 `relatedScopes`／hierarchy call 邊斷言 |
 | US3-1…7 | `tests/dujs/exceptionsummary.js` | p4、m1、us3-3、m2、g4、m3、c-nt | US3-2 另以 g2 對照 |
 | US4-1…3 | `tests/dujs/loopmatching.js` | p5、p6、c-h12 | intra-page |

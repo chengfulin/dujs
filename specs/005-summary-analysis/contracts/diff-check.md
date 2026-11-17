@@ -15,16 +15,17 @@
 |------|------|--------------------------|----|
 | `§18` | − pair | use 端為 `entry` | FR-008 |
 | `連結` | ± pair／row、model、graph | 頁面有 D2 新連結呼叫點：函式內呼叫敘述 `f()`，`f` 解析到的 Variable 種類為函式宣告／`let`／`const`／具名函式運算式名稱，且基準側該呼叫點未連結（以基準 `.hierarchy.dot` 的 call 邊判定） | FR-005 |
-| `finally` | ± pair、graph | 頁面有 `TryStatement` 且 finalizer 非空；pair 的 def 或 use 行位於該 try 敘述行範圍，或其後繼可經該 try 到達（以「use 行 > try 起始行」近似） | FR-013 |
-| `例外IN` | ± pair | def 行的節點在基準側 intra-procedural `.graph.dot` 有 exception 出邊 | FR-014 |
-| `Q-a` | − pair、graph | def 行為呼叫點（基準 `.hierarchy.dot` 的 call 邊）且層級不是 intra-procedural | FR-006 |
+| `finally` | ± pair、graph | 頁面有 `TryStatement` 且有 finalizer（不論空否）；pair 的 def 或 use 行位於該 try 敘述行範圍，或其後繼可經該 try 到達（以「use 行 > try 起始行」近似） | FR-013 |
+| `例外IN` | ± pair | 消失 pair：def 行的節點在基準側 intra-procedural `.graph.dot` 有 exception 出邊。新增 pair（analyze Q2）：基準側同一模型的攤平圖 `.graph.dot` 上存在帶 exception 出邊的節點 n，def 可達 n、n 的例外目標可達 use；新增者逐頁釘選 | FR-014 |
+| `Q-a` | ± pair、graph | def 行為呼叫點（基準 `.hierarchy.dot` 的 call 邊）且層級不是 intra-procedural | FR-006 |
 | `摘要` | − pair | 層級不是 intra-procedural，且頁面基準側有 call 邊或 LOOP 有處理器；細分原因（不可實現路徑、例外不返回、呼叫無正常返回）寫在說明欄 | FR-002、FR-003、FR-006、FR-007 |
+| `保守摘要` | ± pair | 頁面有對 generator／async 函式的呼叫敘述（analyze Q3）；層級不是 intra-procedural | FR-001 |
 | `graph` 共通 | graph | 頁面有任一呼叫（Q-a 搬移例外邊）、`finally` 或 `連結` 觸發 | — |
 
-- 新增的 pair 只能歸 `連結`、`finally`、`例外IN`（SC-005）；歸不進即失敗。
+- 新增的 pair 只能歸 `連結`、`finally`、`例外IN`、`Q-a`、`保守摘要`（SC-005）；歸不進即失敗。
 - 一筆差異符合多類時報告全部，紀錄選一（須成立）。
-- **釘選與簽核**：`摘要`、`連結`、`finally` 三類的每頁筆數記在「釘選與簽核」表；`--verify` 核對筆數；「說明」欄必填；簽核欄 implementer 只填「草擬，待簽核」，
-  使用者在 golden 收尾後、PR 前簽核一次（golden-diff），MDN 驗證後簽核一次（mdn-diff）。`§18`、`例外IN`、`Q-a` 為機械判定，不需釘選。
+- **釘選與簽核**：`摘要`、`連結`、`finally`、`保守摘要` 四類，以及 `例外IN` 的新增 pair（analyze Q2），每頁筆數記在「釘選與簽核」表；`--verify` 核對筆數；「說明」欄必填；簽核欄 implementer 只填「草擬，待簽核」，
+  使用者在 golden 收尾後、PR 前簽核一次（golden-diff），MDN 驗證後簽核一次（mdn-diff）。`§18`、`例外IN` 的消失 pair、`Q-a` 為機械判定，不需釘選。
 
 ## 3. 紀錄檔
 
@@ -35,7 +36,7 @@
 
 1. 以本 branch 工作樹（lib＝`9e324be`）對 `specs/006-eslint-scope/mdn/pages.json` 每個 id 跑 CLI，只存 `.dot` 到 `specs/005-summary-analysis/mdn/baseline-develop/<id>/`，
    `exitcodes.json` 記結束碼，`<id>.pairs.txt` 供閱讀（`docs/research/mdn-baseline/tools/run-pairs.js`）。
-2. `node specs/006-eslint-scope/tools/perf.js .` 與 golden 3 個 case 的 CLI 時間寫入 `perf.md`（develop 基準）。
+2. `node specs/006-eslint-scope/tools/perf.js .` 與 golden 4 個 case 的 CLI 時間寫入 `perf.md`（develop 基準）。
 3. 同一 commit 提交快照與 perf 基準。
 
 ## 5. 指令

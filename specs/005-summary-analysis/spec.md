@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-16
 
-**Status**: Draft
+**Status**: Ready for implementation（analyze 閘門 2026-11-17 已裁決）
 
 **Input**: User description: "新 feature：階層模型 stage 2（summary-based analysis：上層以 GEN at exit、must-KILL、upward-exposed uses 做 context-sensitive 分析，預期結果改變、golden diff 需記錄），並一併處理 known-issues §16（decision node 的 call 插入順序）、§18（function entry node 使用 body 內變數）、§22 後續項目（return f() 作為 call-site、o.p=1 作為 o.p 的 def、具名函式運算式內部名稱、localStorage.removeItem、dead-code pair）、§23（o 定義在函式外時 o.m() 未連結）、§24（固定的全域物件清單）。設計輸入見 memory dujs-hierarchical-model-design 與 docs/known-issues.md。PR 目標 develop。"（範圍經 2026-11-16 spec review 拆成三輪，本 feature 只做第一輪，見 D1；2026-11-17 於 `006-eslint-scope` 合併後續作）
 
@@ -83,7 +83,7 @@ spec review 時（584e17d）的結果與下表相同，除 P5（改用新程式�
 | P10 | US2 情境 5 | 函式宣告的自身遞迴 `f();` 不連結；沒有 `n: L4 -> L3>L4:T` | 006 決策：自身遞迴留給本 feature |
 | P11 | US2 情境 6 | 具名函式運算式內部名稱的遞迴 `fact();` 不連結（有 `fact: L2 -> L5`）；沒有 `n: L4 -> L3>L4:T` | 同 P10 |
 | P12 | US2 情境 4（`g1-local-fn.js`） | `f();` 以區域到達定義連結；有 `x: L4 -> L8`，沒有 `x: L6 -> L8` | 守門 |
-| P13 | US3 情境 2（`m1-mdn-error-objects.js`；合成版 `g2-try-catch.js`） | 有 `state: L1 -> L13`、`state: L1 -> L15`、`state: L7 -> L15`、`e: L11 -> L12`，另有 `state: L7 -> L13` | `state: L7 -> L13` 是否保留待 clarify（Q-a） |
+| P13 | US3 情境 2（`m1-mdn-error-objects.js`；合成版 `g2-try-catch.js`） | 有 `state: L1 -> L13`、`state: L1 -> L15`、`state: L7 -> L15`、`e: L11 -> L12`，另有 `state: L7 -> L13` | 已決（Q-a）：不保留 `state: L7 -> L13`（被呼叫端正常返回後呼叫敘述不再拋錯） |
 | P14 | US3 情境 4（`m2-mdn-finally.js`；合成版 `g3-finally.js`） | 有 `opened: L3 -> L16`、`opened: L9 -> L22`，沒有 `opened: L1 -> …` | 守門 |
 | P15 | US3 情境 5（`g4-chain-loop.js`） | `t()` 內的 `s();` 不連結；intra-page 有 `x: L1 -> L12`、`x: L9 -> L12`，沒有 `x: L3 -> L12` | 例外沿呼叫鏈進 LOOP 需 D2 連結 |
 | P16 | US1 情境 6（`g5-mdn-person-field.js`） | 有 `count: L1 -> L3`、`count: L1 -> L5`、`count: L5 -> L10`，沒有 `count: L1 -> L10` | 守門（改自 MDN） |
@@ -156,6 +156,13 @@ clarify 由 sdd-spec-clarifier（15 項發現，HIGH 5）與全新 context 的 F
   的情境（FR-003、US1 情境 7）；例外 return 配對情境（US1 情境 5）；block 內函式宣告依 006 D5 不在 block 外連結（US2 情境 7）；
   `window.f = …` 不視為 `f` 的定義而可能誤連，寫入 README 限制（FR-012）；SC-005 的理由補齊；對 003／004 的修訂明列（D2、D4、D6）。
   駁回：US1 情境 1「恰為」與表示法不矛盾。
+
+### analyze（2026-11-17）的使用者決策
+
+- **Q1 → A**：Foundational 相容模式加過渡規則「指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊仍帶 OUT」，US1 摘要上線時刪除並記錄；US6 情境 5 的否定斷言維持在 US6。
+- **Q2 → A**：diff-check「例外IN」新增 pair 改以基準側攤平圖 `.graph.dot` 判定（def 可達帶 exception 出邊的 n、n 的例外目標可達 use），逐頁釘選並由使用者簽核。
+- **Q3 → A**：SC-005 與 diff-check 增列允許原因「保守摘要（FR-001，generator／async）」，觸發為頁面有對 generator／async 函式的呼叫敘述。
+- **Q4 → A**：US5 情境 2 的 p-use 在 L7 的 `case` 節點（有 `x: L1 -> L7>L8:T`、`x: L1 -> L7>L10:F`），不再說 L6 的 `switch` 節點。
 
 ## 表示法
 
@@ -327,8 +334,8 @@ intra-page 中，事件處理器由 LOOP 節點進入時，其返回只回到 LO
 1. **Given** KI §18 程式，**When** 建立模型，**Then** `f` 的 entry 節點的 c-use 與 p-use 集合皆為空；`x`、`a`、`o`、`b` 的讀取只在各自
    敘述的節點。（`f` 未被呼叫時頁面各層沒有其 pair，故以節點的 use 集合驗證。）[SRC KI §18；PRB P8]
 2. **Given** `var x = 0;` L1 / `function g() {` L2 / `x = 1;` L3 / `}` L4 / `function f() {` L5 / `switch (x) {` L6 / `case 1:` L7 /
-   `g();` L8 / `}` L9 / `x;` L10 / `}` L11 / `f();` L12，**When** 分析，**Then** 分析完成；`switch (x)` 的 p-use 在 L6 節點上，沒有任何以
-   `entry` 為 use 端的 `x` pair。[SRC PRB P9]
+   `g();` L8 / `}` L9 / `x;` L10 / `}` L11 / `f();` L12，**When** 分析，**Then** 分析完成；p-use 在 L7 的 `case` 節點上：有 `x: L1 -> L7>L8:T`、
+   `x: L1 -> L7>L10:F`（不再是 L6 的 `switch` 節點）；沒有任何以 `entry` 為 use 端的 `x` pair。[SRC PRB P9]
 3. **Given** US1 情境 2 程式，**When** 分析，**Then** 沒有 `x: L3 -> entry`、`x: L11 -> entry`；004 cyc-3 沒有 `t: L4 -> entry`、
    `p: entry -> entry`。[SRC KI §18]
 
@@ -401,7 +408,7 @@ intra-page 中，事件處理器由 LOOP 節點進入時，其返回只回到 LO
   之後不再拋錯（運算式中與決策節點前的呼叫維持現況，007 處理）。[SRC USR D3、R2-2；Session 2026-11-17]
 - **FR-007**: intra-page 中，事件處理器由 LOOP 進入時 MUST 只返回 LOOP；同一函式被直接呼叫時 MUST 只返回該呼叫點。LOOP 處 MUST 不套
   must-KILL（處理器可能不被觸發），各處理器的 GEN MUST 經 LOOP 流向所有處理器（含自己）。[SRC PRB P5、P6、P26]
-- **FR-008**: 函式的 entry 節點 MUST 不含本體任何敘述的 use（只保留參數預設值等屬於進入函式本身的讀取）；本體敘述的讀取只記在各自節點。[SRC KI §18；PRB P8、P9]
+- **FR-008**: 函式的 entry 節點 MUST 不含本體任何敘述的 use（參數預設值的讀取在合成的參數初始化節點，entry 不含任何 use）；本體敘述的讀取只記在各自節點。[SRC KI §18；PRB P8、P9]
 - **FR-009**: 攤平的敘述層級圖與階層圖 MUST 繼續輸出；MUST 不為每個呼叫點複製被呼叫端（現況因模型串接產生的重複節點照舊）；pair 以摘要
   分析的結果為權威，inter-procedural、intra-page 模型與攤平圖附帶的 pair 一致；intra-procedural 模型中的呼叫 MUST 維持不透明，只受 FR-008、
   FR-013、FR-014 影響。[SRC USR D4、R2-1；HD 雙輸出、D3]
@@ -436,7 +443,8 @@ intra-page 中，事件處理器由 LOOP 節點進入時，其返回只回到 LO
 - **SC-003**: 既有測試全部通過（編碼舊行為的測試更新並列入 golden-diff）；golden 差異 100% 有對應記錄。
 - **SC-004**: 現有 golden fixture 與 004 研究所用的 MDN 範例集（33 個程式）全部能完成分析、不拋錯；總分析時間不超過 `develop` 的 2 倍。
 - **SC-005**: MDN 範例集中，每一個相對 `develop` 消失的 pair 都能以「不可實現路徑」「例外不返回」「呼叫無正常返回」「FR-005 新連結的呼叫殺掉
-  定義」「FR-013／FR-014 的例外路徑修正」或 §18（FR-008）說明；每一個新增的 pair 都對應到 FR-005 的放寬、FR-013 或 FR-014。
+  定義」「FR-013／FR-014 的例外路徑修正」「保守摘要（FR-001，generator／async）」或 §18（FR-008）說明；每一個新增的 pair 都對應到
+  FR-005 的放寬、FR-013、FR-014、Q-a（呼叫敘述只在呼叫前拋錯，FR-006）或保守摘要（FR-001，generator／async；觸發為頁面有對 generator／async 函式的呼叫敘述）。
 
 ## Assumptions
 

@@ -53,8 +53,19 @@
 
 ## 6. 求解結果（`lib/dujs/reachingsolver.js`）
 
-`solve(graph, options) → Map(FlowNode → {in, out, generate, kill})`；`options = {entryInput, generateOf(node), useOf(node), calls, loops, summaryOf(scope), flatVarDefOf}`。
-邊貢獻表見 research R2。`doAnalysis` 將結果寫回 `reachIns`／`reachOuts`／`kill` 並 `setAnalysisResults`（既有 API）。另回傳 exit 的 `normalArrivals`／`exceptionalArrivals`（摘要用）。
+`solve(graph, options) → {results: Map(FlowNode → {in, out, generate, kill}), exitArrivals: {normal: Set<VarDef>, exceptional: Set<VarDef>}}`（contracts/lib-api.md §2）；
+`options = {entryInput, generateOf(node), useOf(node), calls, loops, summaryOf(scope), flatVarDefOf, extraReachIns(node), exceptionToCalleeExitCarriesOut}`。
+
+| 選項 | 說明 |
+|------|------|
+| `entryInput` | entry 的 IN（摘要圖為哨兵，其他模型為空） |
+| `calls`／`loops` | CallSiteRecord／LoopRecord；未給時為相容模式（return 邊與處理器 exit → LOOP RETURN 邊帶 OUT） |
+| `summaryOf`／`flatVarDefOf` | 摘要查詢與 original VarDef → 本圖 VarDef（摘要圖為恆等） |
+| `extraReachIns(node)` | 相容模式下 callReturn 的 bypass 合併；**動態回呼**，依迭代中當下的 `OUT(callNode)` 計算，callNode 改變時 callReturn 重新入列（US1 起不再使用） |
+| `exceptionToCalleeExitCarriesOut` | Foundational 過渡規則（analyze Q1）：為 true 時，指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊帶 `OUT(p)`；US1 摘要上線時刪除 |
+
+邊貢獻表見 research R2。`doAnalysis` 將 `results` 寫回 `reachIns`／`reachOuts`／`kill` 並 `setAnalysisResults`（既有 API）。`exitArrivals` 依抵達 exit 的最後一條邊型別分開
+（normal／`finally` 邊屬 `normal`，exception 邊屬 `exceptional`），供摘要使用。
 
 ## 7. FlowNode 新增（`lib/esgraph/flownode.js`）
 

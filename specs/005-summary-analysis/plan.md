@@ -37,7 +37,7 @@ golden 每處差異記錄於 `golden-diff.md` 並對應 FR／KI（FR-011）；`e
 
 **tech-standards**：`.specify/memory/baseline/tech-standards.md` 未涵蓋靜態分析 CLI／函式庫，無偏離項，無 §CP-6 例外。
 
-**NEEDS CLARIFICATION**：無技術未知項；另有兩項 spec 層級事項需使用者裁決（見「需使用者裁決的事項」），不影響其餘設計。
+**NEEDS CLARIFICATION**：無技術未知項；plan review 的兩項 spec 層級事項（Q1、Q2）與 analyze 閘門的四項（Q1–Q4）皆已由使用者裁決（見「需使用者裁決的事項」與 spec Clarifications）。
 
 ## Constitution Check
 
@@ -45,7 +45,7 @@ golden 每處差異記錄於 `golden-diff.md` 並對應 FR／KI（FR-011）；`e
 
 | 條款 | 檢查 | Phase 0 前 | Phase 1 後 |
 |------|------|-----------|-----------|
-| §CP-1 可追溯 | 每項設計對應 FR／D／Clarifications（下表「關鍵設計」）；發現的 spec 矛盾（Q1）與 `.dot` 新節點（Q2）列為裁決事項，不自行改 spec | PASS | PASS（待裁決事項不改變其他設計） |
+| §CP-1 可追溯 | 每項設計對應 FR／D／Clarifications（下表「關鍵設計」）；發現的 spec 矛盾（Q1）與 `.dot` 新節點（Q2）列為裁決事項，不自行改 spec | PASS | PASS（裁決事項皆已決，見「需使用者裁決的事項」） |
 | §CP-2 機密 | 不涉及；MDN 語料為 CC0 | PASS | PASS |
 | §CP-3 設定不硬編碼 | 無新設定；`UPDATE_GOLDEN` 沿用；diffcheck 基準以檔頭／參數指定 | PASS | PASS |
 | §CP-4 核心邏輯測試 | 每個驗收情境有自動化測試（contracts/acceptance.md）；摘要、求解器、esgraph finally、inlining oracle（property test）各有單元測試；golden 回歸 | PASS | PASS |
@@ -70,7 +70,7 @@ golden 每處差異記錄於 `golden-diff.md` 並對應 FR／KI（FR-011）；`e
 | FR-005 D2 放寬 | `callresolver.resolveVariable`：無到達定義＋`CallExpression`＋函式內＋全頁恰 1 筆定義＋指向函式＋`scopebinding.isRelaxedCallee`（function／let／const／namedExpressionName） | R8 |
 | FR-008 §18 | `usedexpressions` 對 entry／exit 回傳空；移除 `findUSESet` 的 entry 特例與 `isOnFunctionChain` | R7 |
 | generator／async | 摘要 `conservative`：恆正常返回、無 must-KILL、gen 合併正常與例外抵達 | R13 |
-| golden／MDN 差異 | 新 `tools/diffcheck.js` 重用 006 的解析與 verify，替換類別（§18、連結、finally、例外IN、Q-a、摘要）；golden 基準 `9e324be`；MDN develop 快照於 Setup 重做 | R10；contracts/diff-check.md |
+| golden／MDN 差異 | 新 `tools/diffcheck.js` 重用 006 的解析與 verify，替換類別（§18、連結、finally、例外IN、Q-a、摘要、保守摘要）；golden 基準 `9e324be`；MDN develop 快照於 Setup 重做 | R10；contracts/diff-check.md |
 | 效能 | 摘要每 scope 每頁算一次（SCC 內多輪）；哨兵只建相關變數；以 006 perf.js 量測，門檻 2.0 | R11 |
 
 ## 變更影響範圍（§TR-8，參考）
@@ -115,10 +115,10 @@ tests/golden/  expected*／manifest.json（更新）、golden.js（納入 matchi
 | 階段 | 內容 | 主要檔案 | golden |
 |------|------|----------|--------|
 | Setup | probes 複製到 `tests/dujs/cases/probes005/`；MDN develop 快照與 perf 基準；diffcheck（含自我測試） | specs、tests/dujs/cases | 不變 |
-| Foundational（阻擋全部 story） | `reachingsolver`（邊貢獻表；此時 return／LOOP 虛擬貢獻先以「沿用 exit 邊」模式保持行為）＋`doAnalysis` 切換；FR-014 exception 帶 IN 同時生效 | `reachingsolver.js`、`defuseanalyzer.js` | **更新**（例外IN） |
+| Foundational（阻擋全部 story） | `reachingsolver`（邊貢獻表；此時 return／LOOP 虛擬貢獻先以「沿用 exit 邊」模式保持行為，並加過渡規則：指向被呼叫端 exit 的 exception 邊仍帶 OUT，analyze Q1）＋`doAnalysis` 切換；FR-014 exception 帶 IN 同時生效 | `reachingsolver.js`、`defuseanalyzer.js` | **更新**（預期零差異，至多例外IN；單元測試只翻轉 `catchclause.js` catch-edge 一筆） |
 | US5（P1，§18） | entry／exit 不讀本體；移除 `isOnFunctionChain` | `usedexpressions.js`、`defuseanalyzer.js`、`scopebinding.js` | **更新**（§18） |
 | US6（P2，finally） | esgraph finally 整族、`finallyExit`、`finally` 邊、dot 繪製 | `lib/esgraph/*` | **更新**（finally） |
-| US1（P1，摘要核心） | `summary.js`、`expandShallow`、CallSiteRecord、`flatVarDefOf`、Q-a、callReturn 改吃摘要、`*.matching.json` | `summary.js`、`expansion.js`、`model.js`、`modelbuilder.js`、`defuseanalysisexecutor.js`、`outputwriter.js`、`cfggraphconverter.js` | **更新**（摘要、Q-a、matching 新檔） |
+| US1（P1，摘要核心） | `summary.js`、`expandShallow`、CallSiteRecord、`flatVarDefOf`、Q-a、callReturn 改吃摘要、`*.matching.json`；刪除 Foundational 的過渡規則（analyze Q1） | `summary.js`、`expansion.js`、`model.js`、`modelbuilder.js`、`defuseanalysisexecutor.js`、`outputwriter.js`、`cfggraphconverter.js` | **更新**（摘要、Q-a、matching 新檔） |
 | US3（P2，例外摘要） | `exceptional`、`exceptionalReturn` 虛擬貢獻、沿呼叫鏈往外 | `summary.js`、`reachingsolver.js` | **更新** |
 | US4（P2，LOOP） | LoopRecord、LOOP RETURN 虛擬貢獻 | `expansion.js`、`reachingsolver.js` | **更新** |
 | US2（P1，D2） | `isRelaxedCallee`、`resolveVariable` 放寬；自身／互相遞迴的不動點驗收 | `scopebinding.js`、`callresolver.js` | **更新**（連結） |
@@ -126,7 +126,10 @@ tests/golden/  expected*／manifest.json（更新）、golden.js（納入 matchi
 
 - **順序理由**：US2 雖為 P1，但它新增的連結（自身／互相遞迴）沒有摘要時會讓 P6 一類守門變成不可實現 pair（spec P6 說明），故排在 US1、US3、US4 之後；US5 與 US6 不依賴摘要，先做以縮小
   後續 golden 差異的混雜。改 golden 的階段**必須依序**，每次重產「淨差異」並 `--verify`（淨差異相對 develop 累積）。
-- **Foundational 的行為保持**：求解器切換時先不啟用摘要（return／LOOP RETURN 邊照舊貢獻），使該階段 golden 差異只有 FR-014 一類，便於核對。
+- **Foundational 的行為保持**：求解器切換時先不啟用摘要（return／LOOP RETURN 邊照舊貢獻），使該階段 golden 差異只有 FR-014 一類，便於核對。另加**過渡規則**
+  （analyze Q1 → A）：指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊仍帶 OUT——否則被呼叫端拋錯前的定義會經 return 邊流回呼叫端（Fable 原型實測翻轉 26 個
+  既有測試）；加入後預期 Foundational golden 零差異、只翻轉 `catchclause.js` 的 catch-edge 一筆。US1 摘要上線時刪除此規則並記入 golden-diff US1 節；US6 情境 5 的否定斷言
+  （無 `r: L4 -> L11`）在 Q1-A 下仍屬 US6。
 
 ## 需使用者裁決的事項
 
@@ -134,6 +137,12 @@ tests/golden/  expected*／manifest.json（更新）、golden.js（納入 matchi
 |---|------|------|----------------|
 | Q1（已決：A，2026-11-17 使用者採建議，spec 已改） | US1-4 的 `cyc-3.js` 是無條件遞迴（`m` 每次都呼叫 `this.m(0)`），依 FR-003「從無正常返回起算」與 US1-7，L6 不可達，`t: L4 -> L6` 必然消失，與 US1-4「仍有 `t: L4 -> L6`」矛盾 | US1-4 改用有終止條件的變體（`if (p) { this.m(0); }`）檢查「外層區域變數不受內層影響」；原 cyc-3 改為「沒有以 L6 為 use 端的 pair、分析終止」 | US1-4 無法通過（research R3） |
 | Q2（已決：A，2026-11-17 使用者接受，spec FR-013 已補述） | FR-013 無法只靠「邊變化」完成：`FlowNode` 的 normal／exception 各只有一個目標，例外進入或跳躍穿過的 finally 需要一個續行節點；本設計新增 `finallyExit` 節點型別與多目標 `finally` 邊型別，出現在 `.dot` | 接受（golden 只影響 page0 `parseSaved` 一處；MDN 無 `try`）；或改採複製 finally 節點（同行多節點、pair 重複列，不建議） | `.dot` 出現新節點／邊型別而 spec 只提到邊變化 |
+| analyze Q1（已決：A） | Foundational 相容模式下例外邊帶 IN 會讓被呼叫端拋錯前的定義經 return 邊流回呼叫端 | 加過渡規則（指向被呼叫端 exit 的 exception 邊仍帶 OUT），US1 刪除 | — |
+| analyze Q2（已決：A） | diff-check `例外IN` 的新增 pair 無法以 intra-procedural 圖判定 | 新增 pair 以基準攤平圖判定，逐頁釘選並簽核 | — |
+| analyze Q3（已決：A） | generator／async 保守摘要造成的差異無類別可歸 | SC-005、diff-check 增列 `保守摘要`（FR-001） | — |
+| analyze Q4（已決：A） | US5 情境 2 的 p-use 實際在 L7 的 `case` 節點 | 改為 `x: L1 -> L7>L8:T`、`x: L1 -> L7>L10:F` | — |
+
+analyze 各項的詳細決定見 spec Clarifications「analyze（2026-11-17）的使用者決策」。
 
 ## 已知風險
 
@@ -145,7 +154,7 @@ tests/golden/  expected*／manifest.json（更新）、golden.js（納入 matchi
 | 哨兵外洩到輸出 | `.dupairs.dot` 出現異常列 | 哨兵只放摘要圖 entry；單元測試斷言各模型 reachIns 無 `SENTINEL_TYPE` |
 | finally 續行的聯集過度近似 | 多種進入方式並存時多報 pair | 文件化於 README 限制；spec 情境為單一進入方式，結果精確 |
 | esgraph 新型別未被某處泛用處理（`allNodes` 走訪、`replayLoop`、dot） | 節點遺失或邊未畫 | `tests/esgraph/finally.js` 對每種進入方式檢查節點數、邊型別與 dot 輸出；data-model §7 列出需確認處 |
-| D2 讓 flat 圖變大 | 效能 | 實測 MDN 只有 4 個新連結候選、golden 3 個；perf.md 檢核 2 倍門檻 |
+| D2 讓 flat 圖變大 | 效能 | 實測 MDN 只有 4 個新連結候選、golden 3 個（`addTodo`、`scale`、`log`）；perf.md 檢核 2 倍門檻 |
 | `cyc-3` 一類無條件遞迴在 golden／MDN 中 | 更多 pair 消失 | 歸 `摘要` 類（呼叫無正常返回），逐頁釘選並簽核 |
 
 ## Complexity Tracking
