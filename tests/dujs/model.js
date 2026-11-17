@@ -292,6 +292,50 @@ describe('Model', function () {
             should(upper.flatNodeOf(middle)).equal(null);
         });
 
+        /// feature 005 data-model §4: the values of setCallBypasses are CallSiteRecords
+        it('should keep the CallSiteRecords of the calls in their order', function () {
+            var callReturn = factoryFlowNode.createCallReturnNode(),
+                other = factoryFlowNode.createCallReturnNode(),
+                first = Object.freeze({callNode: middle, callReturn: callReturn, calleeScope: null,
+                    exceptionalReturn: exit, entry: null, exit: null, seq: 3, back: false,
+                    beforeDecision: false, callSiteLine: 2}),
+                second = Object.freeze({callNode: callReturn, callReturn: other, calleeScope: null,
+                    exceptionalReturn: exit, entry: null, exit: null, seq: 4, back: true,
+                    beforeDecision: false, callSiteLine: 2}),
+                map = new Map([[callReturn, first], [other, second]]);
+            model.setCallBypasses(map);
+            map.clear();
+            model.callBypassOf(callReturn).should.equal(first);
+            model.callBypassOf(callReturn).exceptionalReturn.should.equal(exit);
+            model.callBypassOf(other).should.equal(second);
+            should(model.callBypassOf(middle)).equal(null);
+            var records = model.callSiteRecords();
+            records.length.should.eql(2);
+            records[0].should.equal(first);
+            records[1].should.equal(second);
+            records.pop();
+            model.callSiteRecords().length.should.eql(2);
+            new Model().callSiteRecords().should.eql([]);
+        });
+
+        /// feature 005 research R1: original VarDef -> VarDef of the graph
+        it('should map an original VarDef by setFlatVarDefOf and default to the identity', function () {
+            var original = {name: 'original'},
+                rebuilt = {name: 'rebuilt'},
+                missing = {name: 'missing'};
+            model.flatVarDefOf(original).should.equal(original);
+            var map = new Map([[original, rebuilt]]);
+            model.setFlatVarDefOf(map);
+            map.clear();
+            model.flatVarDefOf(original).should.equal(rebuilt);
+            should(model.flatVarDefOf(missing)).equal(null);
+            model.setFlatVarDefOf(null);
+            model.flatVarDefOf(missing).should.equal(missing);
+            should(function () {
+                model.setFlatVarDefOf({});
+            }).throw();
+        });
+
         it('should return null before the model is analyzed', function () {
             should(model.analysisResultOf(middle)).equal(null);
         });

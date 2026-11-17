@@ -64,58 +64,78 @@
 | 50 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | pair | - | `loadTodos: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：連結、摘要） |
 | 51 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | pair | - | `state: 33 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：連結、摘要、例外IN） |
 | 52 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | pair | - | `state: 4 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：連結、摘要） |
-| 53 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `console: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 54 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `limit: 3 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 55 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `total: 17 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 56 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `total: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 57 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 58 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 59 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `value: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 60 | expected-interprocedural | page0 | inter-procedurals/0.dupairs.dot | pair | - | `value: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 61 | expected-interprocedural | page0 | inter-procedurals/1.dupairs.dot | pair | - | `limit: 3 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 62 | expected-interprocedural | page0 | inter-procedurals/1.dupairs.dot | pair | - | `total: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 63 | expected-interprocedural | page0 | inter-procedurals/1.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 64 | expected-interprocedural | page0 | inter-procedurals/1.dupairs.dot | pair | - | `value: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 65 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `console: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 66 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `limit: 3 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 67 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `total: 17 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 68 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `total: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 69 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 70 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 71 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `value: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 72 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
-| 73 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
-| 74 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `a: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 75 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `a: 4 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 76 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `c: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 77 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 78 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `q: 45 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 79 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `x: 7 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 80 | expected-fixes004 | page0 | inter-procedurals/0.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 81 | expected-fixes004 | page0 | inter-procedurals/1.dupairs.dot | pair | - | `q: 45 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 82 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
-| 83 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
-| 84 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `a: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 85 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `a: 4 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 86 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `c: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 87 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 88 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `q: 45 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 89 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `x: 7 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 90 | expected-fixes004 | page0 | inter-procedurals/3.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 91 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
-| 92 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
-| 93 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `a: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 94 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `a: 4 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 95 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `c: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
-| 96 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 97 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `q: 45 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
-| 98 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `x: 7 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 53 | expected-interprocedural | inter-page | 0.graph.dot | graph | ~ | `0.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 54 | expected-interprocedural | page0 | inter-procedurals/0.graph.dot | graph | ~ | `inter-procedurals/0.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 55 | expected-interprocedural | page0 | inter-procedurals/1.graph.dot | graph | ~ | `inter-procedurals/1.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 56 | expected-interprocedural | page0 | inter-procedurals/2.graph.dot | graph | ~ | `inter-procedurals/2.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 57 | expected-interprocedural | page0 | intra-pages/0.graph.dot | graph | ~ | `intra-pages/0.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 58 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `console: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 59 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `limit: 3 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 60 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `total: 17 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 61 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | + | `total: 2 -> 21` | 例外IN | FR-014 | US1：Q-a 後 L15 `addTo(1)`（fixture L14）的 exception 邊自 callNode 出發、帶呼叫前的定義（FR-014 的 IN），L2 `total`（fixture L1）經頁面 exit 與 LOOP 進入 onClick 的 log，到 L21 `console.log(total)`（fixture L20）；呼叫在 addTo 執行前即拋錯時可實現 |
+| 62 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `total: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 63 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 64 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 65 | expected-interprocedural | inter-page | 0.dupairs.dot | pair | - | `value: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 66 | expected-interprocedural | page0 | inter-procedurals/0.dupairs.dot | pair | - | `value: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 67 | expected-interprocedural | page0 | inter-procedurals/1.dupairs.dot | pair | - | `limit: 3 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 68 | expected-interprocedural | page0 | inter-procedurals/1.dupairs.dot | pair | - | `total: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 69 | expected-interprocedural | page0 | inter-procedurals/1.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 70 | expected-interprocedural | page0 | inter-procedurals/1.dupairs.dot | pair | - | `value: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 71 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `console: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 72 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `limit: 3 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 73 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `total: 17 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 74 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | + | `total: 2 -> 21` | 例外IN | FR-014 | US1：Q-a 後 L15 `addTo(1)`（fixture L14）的 exception 邊自 callNode 出發、帶呼叫前的定義（FR-014 的 IN），L2 `total`（fixture L1）經頁面 exit 與 LOOP 進入 onClick 的 log，到 L21 `console.log(total)`（fixture L20）；呼叫在 addTo 執行前即拋錯時可實現 |
+| 75 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `total: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 76 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 77 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `total: 8 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 78 | expected-interprocedural | page0 | intra-pages/0.dupairs.dot | pair | - | `value: entry -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 79 | expected-fixes004 | inter-page | 0.graph.dot | graph | ~ | `0.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 80 | expected-fixes004 | page0 | inter-procedurals/0.graph.dot | graph | ~ | `inter-procedurals/0.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 81 | expected-fixes004 | page0 | inter-procedurals/1.graph.dot | graph | ~ | `inter-procedurals/1.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 82 | expected-fixes004 | page0 | inter-procedurals/2.graph.dot | graph | ~ | `inter-procedurals/2.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 83 | expected-fixes004 | page0 | inter-procedurals/3.graph.dot | graph | ~ | `inter-procedurals/3.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 84 | expected-fixes004 | page0 | intra-pages/0.graph.dot | graph | ~ | `intra-pages/0.graph.dot` | Q-a | FR-006 | US1：Q-a（FR-006）：呼叫敘述的 exception 邊由 callReturn 移回 callNode（呼叫前），callReturn 不再有 exception 邊；節點與其他邊不變 （亦符：共通） |
+| 85 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
+| 86 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
+| 87 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `a: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 88 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `a: 4 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 89 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `c: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 90 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 91 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `q: 45 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 92 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `x: 7 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 93 | expected-fixes004 | inter-page | 0.dupairs.dot | pair | - | `y: 14 -> 52` | 摘要 | FR-002、FR-003、FR-006、FR-007 | US1：L36 `new Counter().add(2)`（fixture L35）改以 add 的摘要套用：add 每條正常返回路徑都經 L23 `y = t`（mustKill `y`），L14 的 `y`（static block）在 callReturn 被殺；舊 pair 來自 add／bump 內的例外經被呼叫端 exit 的 return 邊回到 callReturn（不可實現）。非被呼叫端的例外定義，US3 不還原 （亦符：例外IN） |
+| 94 | expected-fixes004 | page0 | inter-procedurals/0.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 95 | expected-fixes004 | page0 | inter-procedurals/1.dupairs.dot | pair | - | `q: 45 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 96 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
+| 97 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
+| 98 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `a: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 99 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `a: 4 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 100 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `c: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 101 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 102 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `q: 45 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 103 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `x: 7 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 104 | expected-fixes004 | page0 | inter-procedurals/2.dupairs.dot | pair | - | `y: 14 -> 52` | 摘要 | FR-002、FR-003、FR-006、FR-007 | US1：L36 `new Counter().add(2)`（fixture L35）改以 add 的摘要套用：add 每條正常返回路徑都經 L23 `y = t`（mustKill `y`），L14 的 `y`（static block）在 callReturn 被殺；舊 pair 來自 add／bump 內的例外經被呼叫端 exit 的 return 邊回到 callReturn（不可實現）。非被呼叫端的例外定義，US3 不還原 （亦符：例外IN） |
+| 105 | expected-fixes004 | page0 | inter-procedurals/3.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 106 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
+| 107 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `Counter: call -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、Q-a） |
+| 108 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `a: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 109 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `a: 4 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 110 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `c: 2 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要） |
+| 111 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `c: 27 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 112 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `q: 45 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 113 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `x: 7 -> entry` | §18 | FR-008 | US5：entry 不讀本體，use 端為 entry 的 pair 消失 （亦符：摘要、例外IN） |
+| 114 | expected-fixes004 | page0 | intra-pages/0.dupairs.dot | pair | - | `y: 14 -> 52` | 摘要 | FR-002、FR-003、FR-006、FR-007 | US1：L36 `new Counter().add(2)`（fixture L35）改以 add 的摘要套用：add 每條正常返回路徑都經 L23 `y = t`（mustKill `y`），L14 的 `y`（static block）在 callReturn 被殺；舊 pair 來自 add／bump 內的例外經被呼叫端 exit 的 return 邊回到 callReturn（不可實現）。非被呼叫端的例外定義，US3 不還原 （亦符：例外IN） |
 
 ## 釘選與簽核
 
 | case | 頁 | 類別 | 觸發 | + | − | 說明 | 簽核 |
 |------|----|------|------|---|---|------|------|
 | expected | page0 | finally | L53–L59 `try`／`catch`／`finally`（parseSaved 內；fixture L52–L58） | 1 | 1 | `.graph.dot`：parseSaved 的 catch 本體拋錯改經 finally，新增 `finallyExit` 節點（#2）；pair：finally 由正常與例外進入，續行取聯集而新增 `parsed: 52 -> 60`（#37，過度近似，research R6） | 草擬，待簽核（#2、#37） |
+| expected-interprocedural | inter-page | 例外IN | L15 `addTo(1)` 的 callNode 例外邊（Q-a） | 1 | 0 | Q-a：L15 `addTo(1)` 的 callNode 例外邊帶 IN（FR-014），`total: 2 -> 21` 經頁面 exit 與 LOOP 到 onClick 的 log | 草擬，待簽核（#61） |
+| expected-interprocedural | page0 | 例外IN | L15 `addTo(1)` 的 callNode 例外邊（Q-a） | 1 | 0 | Q-a：L15 `addTo(1)` 的 callNode 例外邊帶 IN（FR-014），`total: 2 -> 21` 經頁面 exit 與 LOOP 到 onClick 的 log | 草擬，待簽核（#74） |
+| expected-fixes004 | inter-page | 摘要 | 基準有 call 邊 | 0 | 1 | L36 `new Counter().add(2)` 套用 add 的摘要（mustKill `y`），`y: 14 -> 52` 消失（不可實現的例外經 exit 回 callReturn 路徑不再存在；US3 不還原） | 草擬，待簽核（#93） |
+| expected-fixes004 | page0 | 摘要 | 基準有 call 邊 | 0 | 2 | L36 `new Counter().add(2)` 套用 add 的摘要（mustKill `y`），`y: 14 -> 52` 消失（inter-procedural 2 與 intra-page 各 1；US3 不還原） | 草擬，待簽核（#104、#114） |
 
 ## Foundational
 
@@ -236,17 +256,67 @@ cfgId 為全域計數器，其後建立的模型（page0 intra-procedurals 6–8
 
 ### 變化說明
 
-（待 T062 填寫）
+- 摘要上線（T053–T056）：upper 模型（有 hierarchy）的 `doAnalysis` 以 `calls`＋`summary.summaryOf` 求解；callReturn 不再吃被呼叫端 exit 的 `return` 邊，改吃
+  `apply(S, OUT(callNode))`；被呼叫端例外不再經 exit 回到 callReturn（US3 由 `exceptionalReturn` 接到例外目標）；永不正常返回的被呼叫端之後的節點不分析。
+- 刪除 Foundational 過渡規則 `exceptionToCalleeExitCarriesOut`（analyze Q1）與 `doAnalysis` 對它的開啟；`callReturn` 的 `bypassFilter` 合併移除
+  （`_bypassFilter` 保留，改以 `isVisibleToCallee` 實作，即摘要的可見性過濾）。
+- 呼叫配對輸出（T058、FR-010）：每個 inter-procedural、intra-page、inter-page 模型在 `.graph.dot` 旁另寫 `<index>.matching.json`（`dujs-matching/1`；節點名與 `.graph.dot`
+  同為 `cfggraphconverter.dotNodeIds` 的 `n<k>`；`loops` 先為空陣列〔US4〕、摘要的 `exceptional` 先為空〔US3〕；不產 png）。golden 新增 16 個 `*.matching.json`，登記於
+  `tests/golden/manifest.json` 各 case 的 `added`（`expected` 3、`expected-es2015` 2、`expected-interprocedural` 5、`expected-fixes004` 6）；`tests/golden/golden.js` 的檔案清單納入它們。
+- golden（T062）：`expected`、`expected-es2015` 的 `.dot` 位元組不變（兩者的 upper 模型沒有 call 邊〔函式內的呼叫未連結，D2 屬 US2〕，只有 LOOP／onEvent；`matching.json` 的 `calls` 為空；事件處理器偵測不變）。淨差異由 98 筆增為 114 筆，新增 16 筆：
+  - `Q-a` 11 筆（`.graph.dot` ~）：`expected-interprocedural` 5、`expected-fixes004` 6 個 upper 模型圖中，呼叫敘述的 exception 邊由 callReturn 移回 callNode；
+    逐行比對只有 `label="exception"` 的邊變化，節點與其他邊不變。
+  - `例外IN` 2 筆（+，釘選）：`expected-interprocedural` 的 `total: 2 -> 21`（intra-page、inter-page 各 1）：L15 `addTo(1)` 的 callNode 例外邊帶呼叫前的 IN。
+  - `摘要` 3 筆（−，釘選）：`expected-fixes004` 的 `y: 14 -> 52`（inter-procedural 2、intra-page、inter-page 各 1）：add 的摘要 mustKill `y`；舊 pair 經被呼叫端例外 → exit → return 邊回到
+    callReturn，為不可實現路徑。不是被呼叫端的例外定義，**US3 不還原**；本階段 golden 中標「US3 還原」者 0 筆。
+  - `expected-fixes004` 的 `page0/inter-procedurals/0.dupairs.dot` 只有變數列順序改變（`y`、`x` 兩列互換，皆無 pair），pair 不變、不列入淨差異。
+- 先前各階段的列保留原類別與說明（`--verify` 核對類別仍成立）；`--report` 對 `expected` 的部分 `共通`／`finally` 列另列出 `連結` 為首選類別，沿用原類別。
 
 ### 雜湊變化表（舊→新 sha256 前 12 碼）
 
 | case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
 |------|------|---------------------------|------|
+| expected-interprocedural | inter-page/0.dupairs.dot | 7d3cda0b5220 → 98da3f06a99f | 新增 `total: 2 -> 21`（例外IN） |
+| expected-interprocedural | inter-page/0.graph.dot | 984a9b950a93 → 37ee3d700c98 | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-interprocedural | page0/inter-procedurals/0.graph.dot | 6358657de2d0 → c0dc33fb5f88 | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-interprocedural | page0/inter-procedurals/1.graph.dot | 6e41ae057c7f → 1de49a9e02ee | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-interprocedural | page0/inter-procedurals/2.graph.dot | 1ccd8d44b126 → 52ee22d5a537 | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-interprocedural | page0/intra-pages/0.dupairs.dot | 1b96184c3d78 → 9965cedd1487 | 新增 `total: 2 -> 21`（例外IN） |
+| expected-interprocedural | page0/intra-pages/0.graph.dot | d8c9a6ea00d5 → 2a92a0d7a998 | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-fixes004 | inter-page/0.dupairs.dot | 72c28ca1410d → 3b8024a6c642 | 刪除 `y: 14 -> 52`（摘要） |
+| expected-fixes004 | inter-page/0.graph.dot | dbe14af147e1 → 270dee2acc57 | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-fixes004 | page0/inter-procedurals/0.dupairs.dot | f02d01f385d3 → 1b233dcf964e | 變數列 `y`、`x` 順序互換（無 pair 變化） |
+| expected-fixes004 | page0/inter-procedurals/0.graph.dot | 15aa29de3b01 → 79aaf94c4589 | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-fixes004 | page0/inter-procedurals/1.graph.dot | c7e843bc8efc → b57af69454b0 | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-fixes004 | page0/inter-procedurals/2.dupairs.dot | 72c28ca1410d → 3b8024a6c642 | 刪除 `y: 14 -> 52`（摘要） |
+| expected-fixes004 | page0/inter-procedurals/2.graph.dot | 41e81ffde555 → 39b85cf6f25d | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-fixes004 | page0/inter-procedurals/3.graph.dot | f9edebfc6ee8 → f360f12e1169 | Q-a：exception 邊由 callReturn 移回 callNode |
+| expected-fixes004 | page0/intra-pages/0.dupairs.dot | 72c28ca1410d → 3b8024a6c642 | 刪除 `y: 14 -> 52`（摘要） |
+| expected-fixes004 | page0/intra-pages/0.graph.dot | 26c9d70364b5 → 9bc65091578e | Q-a：exception 邊由 callReturn 移回 callNode |
 
 ### 單元測試期望
 
-| 檔案 | 變更 | FR |
-|------|------|----|
+| 檔案 | 測試 | 原期望 → 新期望 | 理由 | FR | 還原 |
+|------|------|-----------------|------|----|------|
+| `tests/dujs/reachingsolver.js` | `transitional rule exceptionToCalleeExitCarriesOut (analyze Q1)` 三案例 | 刪除 → 新增 `calls mode (summaries)` 三案例（callReturn 得 `apply`、無正常返回時其後不分析、摘要 VarDef 對不到本圖時拋錯） | 過渡規則隨摘要上線刪除（T054） | FR-002、FR-014 | — |
+| `tests/dujs/callcycles.js` | cyc-1、ctor-cycle | intra-page／頁面模型去掉 `x: L1 -> L12` | m（constructor）每條正常路徑都定義 x（mustKill）；舊 pair 來自 L5 例外經 exit 回 L11 callReturn，現例外離開頁面 | FR-001、FR-002 | — |
+| `tests/dujs/callcycles.js` | cyc-2 | 去掉 `x: L1 -> L16`、`x: L12 -> L16` | m 正常返回前必經 L8 `x = 1`，殺掉 L1 與 n 的 L12 | FR-001、FR-003 | — |
+| `tests/dujs/callcycles.js` | cyc-3（改名 `should have no pair used at L6 after an unconditional recursive call`） | `t: L4 -> L6` → 無以 L6 為 use 端的 pair | 無條件遞迴，m 無正常返回（R3 Q1、US1-4）；條件遞迴版由 `c-cyc3-cond` 驗 | FR-003 | — |
+| `tests/dujs/callcycles.js` | cyc-uncond | `['A: L2 -> L8', 'x: L5 -> L9']` → `['A: L2 -> L8']`（頁面模型同） | m 無正常返回，L8 callReturn 之後不可達，不再分析 | FR-003 | — |
+| `tests/dujs/callcycles.js` | should connect each call-site once when the page calls both m and n of a cycle | 去掉 `x: L1 -> L18`、`x: L8 -> L18` | L17 `a.n()` 正常返回前必經 L12 `x = 2` | FR-001、FR-002 | — |
+| `tests/dujs/expansion.js` | pre-refactor characterization a1（三模型） | 去掉 `i: entry -> L7`、`x: L7 -> L6` | g 只回到自己的呼叫點（L6／L7 的呼叫不再互通） | FR-002 | — |
+| `tests/dujs/expansion.js` | pre-refactor characterization a2（三模型） | 去掉 `n: L3 -> L9`、`n: L3 -> L10`；intra-page／inter-page 另去掉 `n: L8 -> L9`、`n: L8 -> L10` | L5 `h()` 經 `reg()` mustKill n；h 作為處理器時不再回到 L5 的 callReturn | FR-001、FR-002 | — |
+| `tests/dujs/expansion.js` | pre-refactor characterization a3（三模型） | 去掉 `s: L3 -> L10>L10:T/F`、`s: L6 -> L10>L10:T/F` | outer／inner 的例外不再經 exit 回 L9 callReturn；正常返回必經 L7 finally `s = 6` | FR-001、FR-002 | — |
+| `tests/dujs/expansion.js` | pre-refactor characterization r8（三模型） | 去掉 `n: L1 -> L6`；intra-page／inter-page 另去掉 `n: L2 -> L6` | L4 `h()` 經 `reg()` mustKill n；處理器 h 不再回到 L4 的 callReturn | FR-001、FR-002 | — |
+| `tests/dujs/modelbuilder.js` | should find the handlers and pairs of probe a2 as before the refactoring | 去掉 `n: L3 -> L9/L10`、`n: L8 -> L9/L10` | 同 a2 | FR-001、FR-002 | — |
+| `tests/dujs/modelbuilder.js` | should keep the onEvent targets g, h, g of probe r8 in order with duplicates | 去掉 `n: L1 -> L6`、`n: L2 -> L6` | 同 r8 | FR-001、FR-002 | — |
+| `tests/dujs/methodcalls.js` | US3-7 should connect new A().m(); to the field, the constructor and then m | 去掉 `x: L5 -> L13` | m 每條正常路徑定義 x（L9）；L8 例外不再回 L12 callReturn | FR-001、FR-002 | — |
+| `tests/dujs/newcallsite.js` | US2-3 should connect new B(); to B only without following extends | 去掉 `x: L1 -> L15` | B 的 constructor 正常返回必經 L11 `x = 2`；`super()` 例外不再回 L14 callReturn | FR-001、FR-002 | — |
+| `tests/dujs/finallyflow.js` | US6-1（c-fin1） | present `r: L4 -> L14`、`r: L4 -> L16` → present 空（absent 不變） | f 例外離開時的定義暫失（Q-a 後 callNode 例外邊只帶呼叫前定義；`exceptional` 待 US3） | FR-006、FR-013 | US3 還原 |
+| `tests/dujs/finallyflow.js` | US6-2（c-fin3） | present `r: L7 -> L16`、`r: L7 -> L18` → present 空 | 同上 | FR-006、FR-013 | US3 還原 |
+| `tests/dujs/summary.js`、`tests/dujs/summaryanalysis.js` | `scopeNamed`、US1-8 的 scope 查找；`invariants` 的 no-write 快照；`applyExceptional` 的 `containEql` | 期望不變；修測試工具：`Scope.name` 為全名改比對末段；`Model.graph`／FlowNode Set 欄位讀取即複本，改比對元素 identity；`containEql(VarDef)` 會讓 should-format 拋錯，改 `indexOf` | 測試本身無法執行（與實作無關） | — | — |
+| `tests/dujs/summary.js` | `upward-exposed uses` › `should hold the upward-exposed uses of a nested callee` | 程式由「函式 f 內呼叫頁面函式 `g()`」改為 class 方法 `f() { this.g(); }`、`g() { return y; }`；斷言同為 g 與 f 的 `upwardExposed` 含 `y` | 函式內呼叫頁面函式需 US2 的 D2 才連結；依 T044 遞迴案例用 `this.m()` 的同一原則改寫（orchestrator 裁決），驗的仍是巢狀被呼叫端的 `upwardExposed` 併入（測試註解說明） | FR-001 | — |
+| `tests/dujs/matching.js` | US1-5 p1、us3-3 的 `calleeScope` 比對 | 期望不變；修測試工具：`Scope.name` 為全名（`$DOMAIN.$PAGE_0.f`），改比對末段（`lastPartOf`）。`matching.json` 的 `callee` 依 contracts/matching-output.md §2 為全名，不變 | 測試本身無法執行（與實作無關） | — | — |
 
 ## US3
 

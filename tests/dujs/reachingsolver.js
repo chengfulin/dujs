@@ -4,8 +4,9 @@
  * research R2): the contribution of each predecessor depends on the type of
  * the edge (an exception edge carries IN of its source, FR-014); without
  * options.calls and options.loops the solver is in the compatible mode (return
- * edges and the edges from handler exits to LOOP RETURN carry OUT, and the
- * transitional rule exceptionToCalleeExitCarriesOut of analyze Q1).
+ * edges and the edges from handler exits to LOOP RETURN carry OUT). The
+ * transitional rule exceptionToCalleeExitCarriesOut of analyze Q1 is removed
+ * by User Story 1 (T054) with its cases.
  *
  * Original dujs code, MIT License (see LICENSE).
  */
@@ -197,70 +198,70 @@ describe('reachingsolver', function () {
 				optionsOf(new Map([[entry, [d0]], [handlerExit, [d1]]])));
 			shouldHaveExactly(solved.results.get(loopReturn).in, [d1]);
 		});
+	});
 
-		describe('transitional rule exceptionToCalleeExitCarriesOut (analyze Q1)', function () {
-			/// p (x = d1 after d0 of entry) throws to the callee exit (with a return edge) and to a handler h
-			function solveTransitional(rule) {
-				var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
-					exit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
-					p = new FlowNode(),
-					q = new FlowNode(),
-					h = new FlowNode(),
-					calleeExit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
-					plainExit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
-					callReturn = new FlowNode(FlowNode.CALL_RETURN_NODE_TYPE),
-					d0 = vardefOf(x, entry),
-					d1 = vardefOf(x, p),
-					d2 = vardefOf(x, q);
-				entry.connect(p);
-				p.connect(calleeExit, FlowNode.EXCEPTION_CONNECTION_TYPE);
-				p.connect(q);
-				q.connect(h, FlowNode.EXCEPTION_CONNECTION_TYPE);
-				q.connect(plainExit);
-				h.connect(plainExit);
-				calleeExit.connect(callReturn, FlowNode.RETURN_CONNECTION_TYPE);
-				callReturn.connect(exit);
-				var options = optionsOf(new Map([[entry, [d0]], [p, [d1]], [q, [d2]]]));
-				if (rule !== undefined) {
-					options.exceptionToCalleeExitCarriesOut = rule;
-				}
-				var solved = solver.solve(graphOf([entry, exit, p, q, h, calleeExit, plainExit, callReturn]), options);
-				return {
-					calleeExit: solved.results.get(calleeExit).in,
-					handler: solved.results.get(h).in,
-					d0: d0, d1: d1, d2: d2
-				};
+	/// User Story 1 (T054): the CALL RETURN NODE gets the summary of the callee applied to OUT of the call node
+	describe('calls mode (summaries)', function () {
+		/// entry defines x (d0) and y (dy); call -> calleeEntry -> calleeExit (d1 of x) -> callReturn -> exit
+		function solveWithSummary(summary, flatVarDefOf) {
+			var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
+				exit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
+				call = new FlowNode(FlowNode.CALL_NODE_TYPE),
+				calleeEntry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
+				calleeExit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
+				callReturn = new FlowNode(FlowNode.CALL_RETURN_NODE_TYPE),
+				d0 = vardefOf(x, entry),
+				dy = vardefOf(y, entry),
+				d1 = vardefOf(x, calleeExit),
+				calleeScope = {};
+			entry.connect(call);
+			call.connect(calleeEntry, FlowNode.CALL_CONNECTION_TYPE);
+			calleeEntry.connect(calleeExit);
+			calleeExit.connect(callReturn, FlowNode.RETURN_CONNECTION_TYPE);
+			callReturn.connect(exit);
+			var record = {callNode: call, callReturn: callReturn, calleeScope: calleeScope},
+				ofCallee = summary(d1),
+				options = optionsOf(new Map([[entry, [d0, dy]], [calleeExit, [d1]]]), {
+					calls: [record],
+					summaryOf: function (scope) {
+						scope.should.equal(calleeScope);
+						return ofCallee;
+					}
+				});
+			if (!!flatVarDefOf) {
+				options.flatVarDefOf = flatVarDefOf;
 			}
+			var solved = solver.solve(graphOf([entry, exit, call, calleeEntry, calleeExit, callReturn]), options);
+			return {
+				callReturn: solved.results.has(callReturn) ? solved.results.get(callReturn).in : null,
+				exit: solved.results.has(exit) ? solved.results.get(exit).in : null,
+				d0: d0, dy: dy, d1: d1
+			};
+		}
 
-			it('should carry OUT by the exception edge to a callee exit when on', function () {
-				var solved = solveTransitional(true);
-				shouldHaveExactly(solved.calleeExit, [solved.d1]);
-				/// other exception edges still carry IN
-				shouldHaveExactly(solved.handler, [solved.d1]);
+		it('should give apply(summary, OUT(call node)) to the CALL RETURN NODE, not OUT of the exit', function () {
+			var solved = solveWithSummary(function (d1) {
+				return {normalReturn: true, gen: new Set([d1]), mustKill: new Set([x])};
 			});
+			shouldHaveExactly(solved.callReturn, [solved.dy, solved.d1]);
+		});
 
-			it('should carry IN by the exception edge to an exit without return edge when on', function () {
-				var entry = new FlowNode(FlowNode.ENTRY_NODE_TYPE),
-					exit = new FlowNode(FlowNode.EXIT_NODE_TYPE),
-					p = new FlowNode(),
-					d0 = vardefOf(x, entry),
-					d1 = vardefOf(x, p);
-				entry.connect(p);
-				p.connect(exit, FlowNode.EXCEPTION_CONNECTION_TYPE);
-				p.connect(exit);
-				var solved = solver.solve(graphOf([entry, exit, p]),
-					optionsOf(new Map([[entry, [d0]], [p, [d1]]]), {exceptionToCalleeExitCarriesOut: true}));
-				shouldHaveExactly(solved.exitArrivals.exceptional, [d0]);
-				shouldHaveExactly(solved.exitArrivals.normal, [d1]);
+		it('should not analyze the nodes after a callee without a normal return', function () {
+			var solved = solveWithSummary(function (d1) {
+				return {normalReturn: false, gen: new Set([d1]), mustKill: new Set()};
 			});
+			should(solved.callReturn).be.null();
+			should(solved.exit).be.null();
+		});
 
-			it('should carry IN by the exception edge to a callee exit when off', function () {
-				var solved = solveTransitional(false);
-				shouldHaveExactly(solved.calleeExit, [solved.d0]);
-				shouldHaveExactly(solved.handler, [solved.d1]);
-				var byDefault = solveTransitional();
-				shouldHaveExactly(byDefault.calleeExit, [byDefault.d0]);
-			});
+		it('should throw when a definition of the summary has no VarDef in the graph', function () {
+			should(function () {
+				solveWithSummary(function (d1) {
+					return {normalReturn: true, gen: new Set([d1]), mustKill: new Set()};
+				}, function () {
+					return null;
+				});
+			}).throw(/no VarDef in the graph/);
 		});
 	});
 

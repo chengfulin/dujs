@@ -11,7 +11,16 @@
  * are not the topmost model (a2 h is called and registered and registers reg
  * by an identifier; r8 g and h are called and registered, h registers g).
  * The expected values are the output of the program at that time, not a
- * statement of correctness. The probes n1, n1b and n1c are not asserted here
+ * statement of correctness; feature 005 (User Story 1, summaries: a call
+ * returns only to its own call-site, and an exception of a callee no longer
+ * goes back to the CALL RETURN NODE) removed these pairs (golden-diff.md
+ * US1 "unit test expectations"): a1 i: entry -> L7, x: L7 -> L6 (g returning
+ * to the call of another line); a2 n: L3 -> L9/L10 (h() of L5 must-KILLs n by
+ * reg()), n: L8 -> L9/L10 (intra-page and inter-page: h registered as a handler
+ * returning to the call of L5); a3 s: L3 -> L10, s: L6 -> L10 (exceptions of
+ * outer and inner returning to the call of L9); r8 n: L1 -> L6 (h() of L4
+ * must-KILLs n by reg()), n: L2 -> L6 (intra-page and inter-page: the handler h
+ * returning to the call of L4). The probes n1, n1b and n1c are not asserted here
  * (their pairs are recorded in specs/003-hierarchical-models/probes/n1-leak-baseline.md).
  */
 require('should');
@@ -92,7 +101,6 @@ describe('pre-refactor characterization (probes)', function () {
 						'g: entry -> L7>L7:T',
 						'g: entry -> L7>exit:F',
 						'i: L7 -> L7',
-						'i: entry -> L7',
 						'k: entry -> L2',
 						'v: entry -> L2',
 						'x: L4 -> L3',
@@ -101,8 +109,7 @@ describe('pre-refactor characterization (probes)', function () {
 						'x: L5 -> L6',
 						'x: L6 -> L3',
 						'x: L6 -> L6',
-						'x: L7 -> L3',
-						'x: L7 -> L6'
+						'x: L7 -> L3'
 					]
 				}
 			],
@@ -115,7 +122,6 @@ describe('pre-refactor characterization (probes)', function () {
 				'g: entry -> L7>L7:T',
 				'g: entry -> L7>Lnull:F',
 				'i: L7 -> L7',
-				'i: entry -> L7',
 				'k: entry -> L2',
 				'v: entry -> L2',
 				'x: L4 -> L3',
@@ -125,7 +131,6 @@ describe('pre-refactor characterization (probes)', function () {
 				'x: L6 -> L3',
 				'x: L6 -> L6',
 				'x: L7 -> L3',
-				'x: L7 -> L6'
 			],
 			onEvent: [
 				'$DOMAIN.$PAGE_0'
@@ -139,7 +144,6 @@ describe('pre-refactor characterization (probes)', function () {
 				'g: entry -> L7>L7:T',
 				'g: entry -> L7>Lnull:F',
 				'i: L7 -> L7',
-				'i: entry -> L7',
 				'k: entry -> L2',
 				'v: entry -> L2',
 				'x: L4 -> L3',
@@ -148,8 +152,7 @@ describe('pre-refactor characterization (probes)', function () {
 				'x: L5 -> L6',
 				'x: L6 -> L3',
 				'x: L6 -> L6',
-				'x: L7 -> L3',
-				'x: L7 -> L6'
+				'x: L7 -> L3'
 			]
 		},
 		a2: {
@@ -177,8 +180,6 @@ describe('pre-refactor characterization (probes)', function () {
 						'h: entry -> L6',
 						'h: entry -> L7',
 						'init: entry -> L3',
-						'n: L3 -> L10',
-						'n: L3 -> L9',
 						'n: L4 -> L10',
 						'n: L4 -> L9',
 						'reg: entry -> L4',
@@ -195,12 +196,8 @@ describe('pre-refactor characterization (probes)', function () {
 				'h: entry -> L7',
 				'h: entry -> L8',
 				'init: entry -> L3',
-				'n: L3 -> L10',
-				'n: L3 -> L9',
 				'n: L4 -> L10',
 				'n: L4 -> L9',
-				'n: L8 -> L10',
-				'n: L8 -> L9',
 				'reg: entry -> L4',
 				'window: entry -> L4',
 				'window: entry -> L6',
@@ -219,12 +216,8 @@ describe('pre-refactor characterization (probes)', function () {
 				'h: entry -> L7',
 				'h: entry -> L8',
 				'init: entry -> L3',
-				'n: L3 -> L10',
-				'n: L3 -> L9',
 				'n: L4 -> L10',
 				'n: L4 -> L9',
-				'n: L8 -> L10',
-				'n: L8 -> L9',
 				'reg: entry -> L4',
 				'window: entry -> L4',
 				'window: entry -> L6',
@@ -257,14 +250,10 @@ describe('pre-refactor characterization (probes)', function () {
 						'inner: L3 -> L4',
 						'outer: entry -> L9',
 						's: L1 -> L3',
-						's: L3 -> L10>L10:F',
-						's: L3 -> L10>L10:T',
 						's: L3 -> L5>L5:T',
 						's: L3 -> L5>L6:F',
 						's: L3 -> L6>L6:F',
 						's: L3 -> L6>L6:T',
-						's: L6 -> L10>L10:F',
-						's: L6 -> L10>L10:T',
 						's: L7 -> L10>L10:F',
 						's: L7 -> L10>L10:T'
 					]
@@ -274,14 +263,10 @@ describe('pre-refactor characterization (probes)', function () {
 				'inner: L3 -> L4',
 				'outer: entry -> L9',
 				's: L1 -> L3',
-				's: L3 -> L10>L10:F',
-				's: L3 -> L10>L10:T',
 				's: L3 -> L5>L5:T',
 				's: L3 -> L5>L6:F',
 				's: L3 -> L6>L6:F',
 				's: L3 -> L6>L6:T',
-				's: L6 -> L10>L10:F',
-				's: L6 -> L10>L10:T',
 				's: L7 -> L10>L10:F',
 				's: L7 -> L10>L10:T'
 			],
@@ -292,14 +277,10 @@ describe('pre-refactor characterization (probes)', function () {
 				'inner: L3 -> L4',
 				'outer: entry -> L9',
 				's: L1 -> L3',
-				's: L3 -> L10>L10:F',
-				's: L3 -> L10>L10:T',
 				's: L3 -> L5>L5:T',
 				's: L3 -> L5>L6:F',
 				's: L3 -> L6>L6:F',
 				's: L3 -> L6>L6:T',
-				's: L6 -> L10>L10:F',
-				's: L6 -> L10>L10:T',
 				's: L7 -> L10>L10:F',
 				's: L7 -> L10>L10:T'
 			]
@@ -492,7 +473,6 @@ describe('pre-refactor characterization (probes)', function () {
 						'g: entry -> L3',
 						'h: entry -> L4',
 						'h: entry -> L5',
-						'n: L1 -> L6',
 						'n: L3 -> L6',
 						'reg: entry -> L3',
 						'window: entry -> L3',
@@ -504,8 +484,6 @@ describe('pre-refactor characterization (probes)', function () {
 				'g: entry -> L3',
 				'h: entry -> L4',
 				'h: entry -> L5',
-				'n: L1 -> L6',
-				'n: L2 -> L6',
 				'n: L3 -> L6',
 				'reg: entry -> L3',
 				'window: entry -> L3',
@@ -520,8 +498,6 @@ describe('pre-refactor characterization (probes)', function () {
 				'g: entry -> L3',
 				'h: entry -> L4',
 				'h: entry -> L5',
-				'n: L1 -> L6',
-				'n: L2 -> L6',
 				'n: L3 -> L6',
 				'reg: entry -> L3',
 				'window: entry -> L3',
@@ -711,21 +687,22 @@ var CALLS = [
 	'g();'
 ].join('\n');
 
-/// the root inter-procedural model of CALLS as before the refactoring
+/// the root inter-procedural model of CALLS as before the refactoring, except that the exception edge of a call statement stays at the CALL
+/// NODE instead of moving to the CALL RETURN NODE (feature 005, Q-a)
 var CALLS_STRUCTURE = [
 	'entry=0 exit=21',
 	'0 #14 entry normal=1 prev= next=1',
 	'1 #15 normal normal=2 prev=0 next=2',
-	'2 #16 call call=3 prev=1 next=3',
+	'2 #16 call exception=21 call=3 prev=1 next=21,3',
 	'3 #27 entry normal=4 prev=2 next=4',
-	'4 #28 call call=5 prev=3 next=5',
+	'4 #28 call exception=10 call=5 prev=3 next=10,5',
 	'5 #34 entry normal=6 prev=4 next=6',
 	'6 #35 normal normal=7 exception=7 prev=5 next=7',
 	'7 #36 exit return=8 prev=6 next=8',
-	'8 #44 callReturn normal=9 exception=10 prev=7 next=9,10',
+	'8 #44 callReturn normal=9 prev=7 next=9',
 	'9 #29 normal normal=10 prev=8 next=10',
-	'10 #30 exit return=11 prev=9,8 next=11',
-	'11 #45 callReturn normal=12 exception=21 prev=10 next=12,21',
+	'10 #30 exit return=11 prev=4,9 next=11',
+	'11 #45 callReturn normal=12 prev=10 next=12',
 	'12 #47 call call=13 prev=11 next=13',
 	'13 #41 entry normal=14 prev=12,19 next=14',
 	'14 #42 normal normal=15 prev=13 next=15',
@@ -733,9 +710,9 @@ var CALLS_STRUCTURE = [
 	'16 #46 callReturn normal=17 prev=15 next=17',
 	'17 #17 normal true=18 false=19 exception=21 prev=16 next=21,18,19',
 	'18 #18 normal normal=19 exception=21 prev=17 next=21,19',
-	'19 #19 call call=13 prev=18,17 next=13',
-	'20 #48 callReturn normal=21 exception=21 prev=15 next=21',
-	'21 #20 exit prev=18,17,11,20 next='
+	'19 #19 call exception=21 call=13 prev=18,17 next=21,13',
+	'20 #48 callReturn normal=21 prev=15 next=21',
+	'21 #20 exit prev=2,18,17,19,20 next='
 ];
 
 /**
@@ -805,7 +782,7 @@ describe('expansion', function () {
 			shouldBeSameObjects(expanded.graph[2], expected.map(copyOf));
 		});
 
-		it('should keep the structure of the flat graph as before the refactoring', function () {
+		it('should keep the structure of the flat graph as before the refactoring but Q-a', function () {
 			structureOf(expanded.graph).should.eql(CALLS_STRUCTURE);
 		});
 
@@ -1124,12 +1101,13 @@ describe('expansion', function () {
 	});
 
 	describe('chained calls and duplicated handlers', function () {
-		/// the root inter-procedural model of probe a2 as before the refactoring
+		/// the root inter-procedural model of probe a2 as before the refactoring, except that the
+		/// exception edge of a call statement stays at the CALL NODE (feature 005, Q-a)
 		var A2_STRUCTURE = [
 			'entry=0 exit=30',
 			'0 #15 entry normal=1 prev= next=1',
 			'1 #16 normal normal=2 prev=0 next=2',
-			'2 #17 call call=3 prev=1 next=3',
+			'2 #17 call exception=30 call=3 prev=1 next=30,3',
 			'3 #35 entry normal=4 prev=2 next=4',
 			'4 #36 normal normal=5 exception=5 prev=3 next=5',
 			'5 #37 exit return=6 prev=4 next=6',
@@ -1141,42 +1119,43 @@ describe('expansion', function () {
 			'11 #48 entry normal=12 prev=10 next=12',
 			'12 #49 normal normal=13 exception=13 prev=11 next=13',
 			'13 #50 exit return=14 prev=12 next=14',
-			'14 #83 callReturn normal=15 exception=30 prev=13 next=15,30',
-			'15 #18 call call=16 prev=14 next=16',
+			'14 #83 callReturn normal=15 prev=13 next=15',
+			'15 #18 call exception=30 call=16 prev=14 next=30,16',
 			'16 #63 entry normal=17 prev=15 next=17',
 			'17 #64 normal normal=18 exception=23 prev=16 next=23,18',
-			'18 #65 call call=19 prev=17 next=19',
+			'18 #65 call exception=23 call=19 prev=17 next=23,19',
 			'19 #70 entry normal=20 prev=18 next=20',
 			'20 #71 normal normal=21 exception=21 prev=19 next=21',
 			'21 #72 exit return=22 prev=20 next=22',
-			'22 #84 callReturn normal=23 exception=23 prev=21 next=23',
-			'23 #66 exit return=24 prev=17,22 next=24',
-			'24 #85 callReturn normal=25 exception=30 prev=23 next=25,30',
+			'22 #84 callReturn normal=23 prev=21 next=23',
+			'23 #66 exit return=24 prev=17,18,22 next=24',
+			'24 #85 callReturn normal=25 prev=23 next=25',
 			'25 #19 normal normal=26 exception=30 prev=24 next=30,26',
 			'26 #20 normal normal=27 exception=30 prev=25 next=30,27',
 			'27 #21 normal normal=28 exception=30 prev=26 next=30,28',
 			'28 #22 normal normal=29 exception=30 prev=27 next=30,29',
 			'29 #23 normal normal=30 exception=30 prev=28 next=30',
-			'30 #24 exit prev=25,26,27,28,29,14,24 next='
+			'30 #24 exit prev=2,15,25,26,27,28,29 next='
 		];
-		/// the intra-page and inter-page models of probe r8 as before the refactoring
+		/// the intra-page and inter-page models of probe r8 as before the refactoring, except that
+		/// the exception edge of a call statement stays at the CALL NODE (feature 005, Q-a)
 		var R8_PAGE_STRUCTURE = [
 			'entry=0 exit=15',
 			'0 #11 entry normal=1 prev= next=1',
 			'1 #12 normal normal=2 prev=0 next=2',
-			'2 #13 call call=3 prev=1 next=3',
+			'2 #13 call exception=14 call=3 prev=1 next=3,14',
 			'3 #28 entry normal=4 prev=2,14 next=4',
 			'4 #29 normal normal=5 exception=10 prev=3 next=10,5',
-			'5 #30 call call=6 prev=4 next=6',
+			'5 #30 call exception=10 call=6 prev=4 next=10,6',
 			'6 #35 entry normal=7 prev=5 next=7',
 			'7 #36 normal normal=8 exception=8 prev=6 next=8',
 			'8 #37 exit return=9 prev=7 next=9',
-			'9 #38 callReturn normal=10 exception=10 prev=8 next=10',
-			'10 #31 exit normal=19 return=11 prev=4,9 next=11,19',
-			'11 #39 callReturn normal=12 exception=14 prev=10 next=12,14',
+			'9 #38 callReturn normal=10 prev=8 next=10',
+			'10 #31 exit normal=19 return=11 prev=4,5,9 next=11,19',
+			'11 #39 callReturn normal=12 prev=10 next=12',
 			'12 #14 normal normal=13 exception=14 prev=11 next=13,14',
 			'13 #15 normal normal=14 exception=14 prev=12 next=14',
-			'14 #40 loop normal=15 onEvent=16,3,16 prev=12,13,11,19 next=15,16,3',
+			'14 #40 loop normal=15 onEvent=16,3,16 prev=2,12,13,19 next=15,16,3',
 			'15 #16 exit prev=14 next=',
 			'16 #20 entry normal=17 prev=14 next=17',
 			'17 #21 normal normal=18 exception=18 prev=16 next=18',
@@ -1184,12 +1163,12 @@ describe('expansion', function () {
 			'19 #41 loopReturn return=14 prev=18,10 next=14',
 			'20 #28 entry normal=4 prev=2,14 next=4',
 			'21 #29 normal normal=5 exception=10 prev=3 next=10,5',
-			'22 #30 call call=6 prev=4 next=6',
+			'22 #30 call exception=10 call=6 prev=4 next=10,6',
 			'23 #35 entry normal=7 prev=5 next=7',
 			'24 #36 normal normal=8 exception=8 prev=6 next=8',
 			'25 #37 exit return=9 prev=7 next=9',
-			'26 #38 callReturn normal=10 exception=10 prev=8 next=10',
-			'27 #31 exit normal=19 return=11 prev=4,9 next=11,19',
+			'26 #38 callReturn normal=10 prev=8 next=10',
+			'27 #31 exit normal=19 return=11 prev=4,5,9 next=11,19',
 			'28 #20 entry normal=17 prev=14 next=17',
 			'29 #21 normal normal=18 exception=18 prev=16 next=18',
 			'30 #22 exit normal=19 prev=17 next=19'
@@ -1199,19 +1178,19 @@ describe('expansion', function () {
 			'0 #42 localStorage loadStorage=1 prev=14 next=1',
 			'1 #11 entry normal=2 prev=0 next=2',
 			'2 #12 normal normal=3 prev=1 next=3',
-			'3 #13 call call=4 prev=2 next=4',
+			'3 #13 call exception=15 call=4 prev=2 next=4,15',
 			'4 #28 entry normal=5 prev=3,15 next=5',
 			'5 #29 normal normal=6 exception=11 prev=4 next=11,6',
-			'6 #30 call call=7 prev=5 next=7',
+			'6 #30 call exception=11 call=7 prev=5 next=11,7',
 			'7 #35 entry normal=8 prev=6 next=8',
 			'8 #36 normal normal=9 exception=9 prev=7 next=9',
 			'9 #37 exit return=10 prev=8 next=10',
-			'10 #38 callReturn normal=11 exception=11 prev=9 next=11',
-			'11 #31 exit normal=20 return=12 prev=5,10 next=12,20',
-			'12 #39 callReturn normal=13 exception=15 prev=11 next=13,15',
+			'10 #38 callReturn normal=11 prev=9 next=11',
+			'11 #31 exit normal=20 return=12 prev=5,6,10 next=12,20',
+			'12 #39 callReturn normal=13 prev=11 next=13',
 			'13 #14 normal normal=14 exception=15 prev=12 next=14,15',
 			'14 #15 normal normal=15 exception=15 saveStorage=0 prev=13 next=15,0',
-			'15 #40 loop normal=16 onEvent=17,4,17 prev=13,14,12,20 next=16,17,4',
+			'15 #40 loop normal=16 onEvent=17,4,17 prev=3,13,14,20 next=16,17,4',
 			'16 #16 exit prev=15 next=',
 			'17 #20 entry normal=18 prev=15 next=18',
 			'18 #21 normal normal=19 exception=19 prev=17 next=19',
@@ -1219,12 +1198,12 @@ describe('expansion', function () {
 			'20 #41 loopReturn return=15 prev=19,11 next=15',
 			'21 #28 entry normal=5 prev=3,15 next=5',
 			'22 #29 normal normal=6 exception=11 prev=4 next=11,6',
-			'23 #30 call call=7 prev=5 next=7',
+			'23 #30 call exception=11 call=7 prev=5 next=11,7',
 			'24 #35 entry normal=8 prev=6 next=8',
 			'25 #36 normal normal=9 exception=9 prev=7 next=9',
 			'26 #37 exit return=10 prev=8 next=10',
-			'27 #38 callReturn normal=11 exception=11 prev=9 next=11',
-			'28 #31 exit normal=20 return=12 prev=5,10 next=12,20',
+			'27 #38 callReturn normal=11 prev=9 next=11',
+			'28 #31 exit normal=20 return=12 prev=5,6,10 next=12,20',
 			'29 #20 entry normal=18 prev=15 next=18',
 			'30 #21 normal normal=19 exception=19 prev=17 next=19',
 			'31 #22 exit normal=20 prev=18 next=20'
@@ -1510,5 +1489,268 @@ describe('replayLoop with finally edges', function () {
 	it('should reach the handler with the definition of the finally block', function () {
 		var pairs = analyze(PROGRAM).intraPage();
 		pairs.should.containEql('r: L10 -> L3');
+	});
+});
+
+/*
+ * Feature 005 (User Story 1, research R1, R2 Q-a, data-model §3, §4): the
+ * exception edge of a call statement stays at the CALL NODE (Q-a), expand
+ * returns the CallSiteRecords of the calls and the map of the rebuilt
+ * VarDefs (flatVarDefOf), and expandShallow builds the summary graph of a
+ * scope (its own nodes and the CALL NODE and CALL RETURN NODE of its own
+ * calls, no node of a callee).
+ */
+describe('expansion of feature 005 (Q-a, CallSiteRecord, expandShallow)', function () {
+	'use strict';
+	after(analyze.reset);
+
+	var RECORD_FIELDS = ['callNode', 'callReturn', 'calleeScope', 'exceptionalReturn', 'entry', 'exit',
+		'seq', 'back', 'beforeDecision', 'callSiteLine'];
+
+	describe('Q-a and the CallSiteRecords of expand', function () {
+		var built, expanded;
+
+		beforeEach(function () {
+			built = buildCalls();
+			expanded = expansion.expand(built.root);
+		});
+
+		function copyOf(node) {
+			return expanded.flatNodeOf.get(node);
+		}
+
+		it('should keep the exception edge of a call statement at the CALL NODE', function () {
+			var exitOfPage = copyOf(built.page.modelOf('').graph[1]);
+			[built.callOfF, built.callOfGAgain].forEach(function (edge) {
+				var callSite = copyOf(edge.callSite),
+					callReturn = copyOf(edge.callReturn);
+				callSite.type.should.eql(FlowNode.CALL_NODE_TYPE);
+				(callSite.exception === exitOfPage).should.be.true();
+				(callReturn.exception === null).should.be.true();
+				(callReturn.normal !== null).should.be.true();
+			});
+			/// the call of k in f: the exception edge goes to the exit of f
+			(copyOf(built.callOfK.callSite).exception === copyOf(built.page.modelOf('f').graph[1])).should.be.true();
+			(copyOf(built.callOfK.callReturn).exception === null).should.be.true();
+		});
+
+		it('should keep a call before a decision node as before (the decision keeps its exception edge)', function () {
+			var decision = copyOf(built.callOfG.callSite),
+				callNode = copyOf(built.callOfG.callNode);
+			(decision.exception === copyOf(built.page.modelOf('').graph[1])).should.be.true();
+			(callNode.exception === null).should.be.true();
+		});
+
+		it('should return one frozen CallSiteRecord per call edge in the order of the sequence numbers', function () {
+			expanded.calls.should.have.length(4);
+			expanded.calls.map(function (record) {
+				return record.seq;
+			}).should.eql([built.callOfK, built.callOfF, built.callOfG, built.callOfGAgain].map(function (edge) {
+				return edge.seq;
+			}));
+			expanded.calls.forEach(function (record) {
+				Object.isFrozen(record).should.be.true();
+				Object.keys(record).sort().should.eql(RECORD_FIELDS.slice().sort());
+				(expanded.bypasses.get(record.callReturn) === record).should.be.true();
+			});
+			expanded.bypasses.size.should.eql(4);
+		});
+
+		it('should fill the fields of the records of a call and of a call before a decision', function () {
+			var exitOfPage = copyOf(built.page.modelOf('').graph[1]),
+				ofF = expanded.bypasses.get(copyOf(built.callOfF.callReturn)),
+				ofG = expanded.bypasses.get(copyOf(built.callOfG.callReturn));
+			(ofF.callNode === copyOf(built.callOfF.callSite)).should.be.true();
+			(ofF.calleeScope === built.page.scopeOf('f')).should.be.true();
+			(ofF.entry === copyOf(built.page.modelOf('f').graph[0])).should.be.true();
+			(ofF.exit === copyOf(built.page.modelOf('f').graph[1])).should.be.true();
+			(ofF.exceptionalReturn === exitOfPage).should.be.true();
+			ofF.back.should.be.false();
+			ofF.beforeDecision.should.be.false();
+			ofF.callSiteLine.should.eql(4);
+			(ofG.callNode === copyOf(built.callOfG.callNode)).should.be.true();
+			(ofG.calleeScope === built.page.scopeOf('g')).should.be.true();
+			(ofG.exceptionalReturn === exitOfPage).should.be.true();
+			ofG.beforeDecision.should.be.true();
+			ofG.callSiteLine.should.eql(5);
+		});
+
+		it('should map every original VarDef to the rebuilt VarDef of the graph (flatVarDefOf)', function () {
+			(expanded.flatVarDefOf instanceof Map).should.be.true();
+			var mapped = 0;
+			expanded.flatNodeOf.forEach(function (copy, original) {
+				if (!original.generate) {
+					return;
+				}
+				original.generate.values().forEach(function (vardef) {
+					var rebuilt = expanded.flatVarDefOf.get(vardef);
+					(!!rebuilt && rebuilt !== vardef).should.be.true();
+					rebuilt.variable.should.equal(vardef.variable);
+					expanded.graph[2].indexOf(rebuilt.definition.fromNode).should.not.eql(-1);
+					mapped += 1;
+				});
+			});
+			mapped.should.be.above(0);
+		});
+
+		it('should return no call and the identity of the VarDefs for an intra-procedural model', function () {
+			var model = built.page.modelOf('f'),
+				result = expansion.expand(model);
+			result.calls.should.eql([]);
+			result.flatVarDefOf.size.should.be.above(0);
+			result.flatVarDefOf.forEach(function (to, from) {
+				(to === from).should.be.true();
+			});
+		});
+
+		it('should set the exceptional return of chained calls to the target of the first call-site (probe a2)', function () {
+			var page = intraProceduralModelsOf(fs.readFileSync(path.join(PROBES, 'a2.js'), 'utf8'));
+			var root = hierarchy.createCallHierarchyModel(page.modelOf('')),
+				callSite = nodeAt(page.modelOf(''), 3);
+			var edges = ['$ANONYMOUS_FUN_0', '$ANONYMOUS_FUN_1', '$ANONYMOUS_FUN_2'].map(function (name) {
+				var edge = hierarchy.addCallEdge(root, {callSite: callSite, calleeModel: page.modelOf(name)});
+				callSite = edge.callReturn;
+				return edge;
+			});
+			var chained = expansion.expand(hierarchy.freeze(root)),
+				exitOfPage = chained.flatNodeOf.get(page.modelOf('').graph[1]);
+			edges.forEach(function (edge, index) {
+				var record = chained.bypasses.get(chained.flatNodeOf.get(edge.callReturn));
+				(record.exceptionalReturn === exitOfPage).should.be.true();
+				(record.callNode === chained.flatNodeOf.get(index === 0 ? edge.callSite : edges[index - 1].callReturn))
+					.should.be.true();
+				(chained.flatNodeOf.get(edge.callReturn).exception === null).should.be.true();
+			});
+			(chained.flatNodeOf.get(edges[0].callSite).exception === exitOfPage).should.be.true();
+		});
+	});
+
+	describe('expandShallow', function () {
+		var built;
+
+		beforeEach(function () {
+			built = buildCalls();
+		});
+
+		it('should hold the nodes of the scope and the structure nodes of its own calls only', function () {
+			var shallow = expansion.expandShallow(built.root),
+				nodesOfPage = built.page.modelOf('').graph[2],
+				templates = [built.callOfF.callReturn, built.callOfG.callNode, built.callOfG.callReturn,
+					built.callOfGAgain.callReturn];
+			shallow.graph[2].should.have.length(nodesOfPage.length + templates.length);
+			shallow.graph[2].forEach(function (copy) {
+				(copy.original !== copy).should.be.true();
+				(nodesOfPage.indexOf(copy.original) !== -1 || templates.indexOf(copy.original) !== -1).should.be.true();
+			});
+			(shallow.graph[0] === shallow.flatNodeOf.get(nodesOfPage[0])).should.be.true();
+			(shallow.graph[0].original === built.page.modelOf('').graph[0]).should.be.true();
+			(shallow.graph[1].original === built.page.modelOf('').graph[1]).should.be.true();
+		});
+
+		it('should record the calls without connecting the callees', function () {
+			var shallow = expansion.expandShallow(built.root);
+			shallow.calls.should.have.length(3);
+			shallow.calls.forEach(function (record) {
+				(record.entry === null).should.be.true();
+				(record.exit === null).should.be.true();
+				(record.callNode.call === null).should.be.true();
+				record.callReturn.prev.should.have.length(0);
+				shallow.graph[2].indexOf(record.callNode).should.not.eql(-1);
+				shallow.graph[2].indexOf(record.callReturn).should.not.eql(-1);
+			});
+			shallow.calls.map(function (record) {
+				return record.calleeScope;
+			}).should.eql([built.page.scopeOf('f'), built.page.scopeOf('g'), built.page.scopeOf('g')]);
+			/// Q-a in the summary graph as well
+			var ofF = shallow.calls[0],
+				exitOfPage = shallow.graph[1];
+			(ofF.callNode.exception === exitOfPage).should.be.true();
+			(ofF.exceptionalReturn === exitOfPage).should.be.true();
+			(ofF.callReturn.exception === null).should.be.true();
+		});
+
+		it('should keep the original VarDefs in the GEN of the copies (moved to the CALL RETURN NODE)', function () {
+			var shallow = expansion.expandShallow(built.root),
+				callSite = built.callOfF.callSite;
+			shallow.flatNodeOf.forEach(function (copy, original) {
+				if (!original.generate || original === callSite) {
+					return;
+				}
+				(copy.generate === original.generate).should.be.false();
+				shouldBeSameObjects(copy.generate.values(), original.generate.values());
+			});
+			/// the GEN of f(x = 1) moves to its CALL RETURN NODE
+			callSite.generate.size.should.be.above(0);
+			shallow.flatNodeOf.get(callSite).generate.size.should.eql(0);
+			shouldBeSameObjects(shallow.flatNodeOf.get(built.callOfF.callReturn).generate.values(),
+				callSite.generate.values());
+		});
+
+		it('should not change the originals, the templates, the counter and the sequence numbers', function () {
+			var originals = expansion.nodeOrder(built.root),
+				before = snapshotOf(originals),
+				counter = factoryFlowNode.counter,
+				seq = hierarchy.nextSeq();
+			expansion.expandShallow(built.root);
+			expansion.expandShallow(built.modelOfF);
+			var after = snapshotOf(originals);
+			after.text.should.eql(before.text);
+			shouldBeSameObjects(after.vardefs, before.vardefs);
+			factoryFlowNode.counter.should.eql(counter);
+			hierarchy.nextSeq().should.eql(seq + 1);
+			/// the flat graph expanded after it is not affected
+			structureOf(expansion.expand(built.root).graph).should.eql(CALLS_STRUCTURE);
+		});
+
+		it('should give different copies each time', function () {
+			var one = expansion.expandShallow(built.root),
+				another = expansion.expandShallow(built.root);
+			structureOf(one.graph).should.eql(structureOf(another.graph));
+			one.graph[2].forEach(function (node) {
+				another.graph[2].indexOf(node).should.eql(-1);
+			});
+		});
+
+		it('should hold the call of k but no node of k for the model of f', function () {
+			var shallow = expansion.expandShallow(built.modelOfF),
+				nodesOfF = built.page.modelOf('f').graph[2];
+			shallow.graph[2].should.have.length(nodesOfF.length + 1);
+			shallow.calls.should.have.length(1);
+			(shallow.calls[0].calleeScope === built.page.scopeOf('f.k')).should.be.true();
+			(shallow.flatNodeOf.has(built.page.modelOf('f.k').graph[0])).should.be.false();
+		});
+
+		it('should copy the nodes of an intra-procedural model with no call', function () {
+			var model = built.page.modelOf('g'),
+				shallow = expansion.expandShallow(model);
+			shallow.calls.should.eql([]);
+			shallow.graph[2].should.have.length(model.graph[2].length);
+			shallow.graph[2].forEach(function (copy, index) {
+				(copy.original === model.graph[2][index]).should.be.true();
+			});
+			(shallow.graph[0].original === model.graph[0]).should.be.true();
+		});
+
+		it('should record back call edges as calls', function () {
+			var page = intraProceduralModelsOf([
+				'function f(n) {',
+				'  f(n - 1);',
+				'}',
+				'f(1);'
+			].join('\n'));
+			var modelOfF = hierarchy.createCallHierarchyModel(page.modelOf('f'));
+			hierarchy.addCallEdge(modelOfF, {callSite: nodeAt(page.modelOf('f'), 2, 'f'), calleeModel: page.modelOf('f'), back: true});
+			var shallow = expansion.expandShallow(hierarchy.freeze(modelOfF));
+			shallow.calls.should.have.length(1);
+			shallow.calls[0].back.should.be.true();
+			shallow.graph[2].should.have.length(page.modelOf('f').graph[2].length + 1);
+		});
+
+		it('should throw for a model with a hierarchy other than inter-procedural', function () {
+			var intraPage = hierarchy.createIntraPageModel(built.root, []);
+			(function () {
+				expansion.expandShallow(intraPage);
+			}).should.throw(/^expandShallow: not an inter-procedural model/);
+		});
 	});
 });

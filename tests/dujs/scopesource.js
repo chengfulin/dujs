@@ -118,6 +118,11 @@ var S5_ALLOWED = [
 	{file: 'lib/dujs/graphics.js', fn: 'convertDUPairsToDot', expr: 'key.name',
 		reason: 'variable name in the DOT output'},
 	{file: 'lib/dujs/scope.js', fn: 'toString', expr: 'this.name', reason: 'scope name as its string form'},
+	/// added by feature 005 T058
+	{file: 'lib/dujs/outputwriter.js', fn: 'variableNameOf', expr: 'variable.name',
+		reason: 'variable name in the call matching output (matching.json)'},
+	{file: 'lib/dujs/outputwriter.js', fn: 'scopeNameOf', expr: 'scope.name',
+		reason: 'scope name in the call matching output (matching.json)'},
 	{file: 'lib/dujs/scope.js', fn: 'name', expr: 'internal(this)._parent.name',
 		reason: 'scope name composed with the parent scope name'},
 	{file: 'lib/dujs/scopetree.js', fn: 'addScope', expr: 'scope.name',

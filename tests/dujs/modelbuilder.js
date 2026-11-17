@@ -684,6 +684,61 @@ describe('ModelBuilder upper models as hierarchies', function () {
 			(models[2].hierarchy.edges[0].calleeModel === models[1]).should.be.true();
 			result.intraPage().should.eql(['a: entry -> L12', 'b: entry -> L8', 'c: entry -> L5', 'e: entry -> L13', 'k: entry -> L9']);
 		});
+
+		/// feature 005 research R1: the model of the own calls of each scope
+		it('should keep the first model built for each scope (callModelOf)', function () {
+			var result = analyze(NESTED),
+				pageModels = modelCtrl.collectionOfPageModels.get(result.scopeTree),
+				models = pageModels.interProceduralModels;
+			function scopeNamed(name) {
+				return result.scopeTree.scopes.filter(function (scope) {
+					return String(scope) === '$DOMAIN.$PAGE_0' + name;
+				})[0];
+			}
+			(modelBuilder.callModelOf(scopeNamed('.a.b')) === models[0]).should.be.true();
+			(modelBuilder.callModelOf(scopeNamed('.a')) === models[1]).should.be.true();
+			(modelBuilder.callModelOf(scopeNamed('')) === models[2]).should.be.true();
+			/// a scope without a call: its intra-procedural model
+			['.a.b.c', '.a.k', '.e'].forEach(function (name) {
+				var scope = scopeNamed(name);
+				(modelBuilder.callModelOf(scope) ===
+					modelCtrl.getIntraProceduralModelByMainlyRelatedScopeFromAPageModels(result.scopeTree, scope)).should.be.true();
+			});
+			/// the direct calls of the scope are the edges of its hierarchy
+			modelBuilder.callModelOf(scopeNamed('.a')).hierarchy.edges.map(function (edge) {
+				return String(edge.calleeModel.mainlyRelatedScope);
+			}).should.eql(['$DOMAIN.$PAGE_0.a.b', '$DOMAIN.$PAGE_0.a.k']);
+			(modelBuilder.callModelOf({}) === null).should.be.true();
+		});
+
+		/// feature 005 research R1: the flat graph keeps its CallSiteRecords and flatVarDefOf
+		it('should keep the CallSiteRecords and the flat VarDefs of a registered model', function () {
+			var result = analyze(NESTED),
+				model = modelCtrl.collectionOfPageModels.get(result.scopeTree).interProceduralModels[2],
+				records = model.callSiteRecords();
+			records.map(function (record) {
+				return String(record.calleeScope);
+			}).should.eql(['.a.b.c', '.a.b', '.a.k', '.a', '.e'].map(function (name) {
+				return '$DOMAIN.$PAGE_0' + name;
+			}));
+			records.forEach(function (record) {
+				(model.callBypassOf(record.callReturn) === record).should.be.true();
+				model.graph[2].indexOf(record.callNode).should.not.eql(-1);
+			});
+			var mapped = 0;
+			model.graph[2].forEach(function (node) {
+				if (!node.original || !node.original.generate) {
+					return;
+				}
+				node.original.generate.values().forEach(function (vardef) {
+					var flat = model.flatVarDefOf(vardef);
+					(flat !== null && flat !== vardef).should.be.true();
+					model.graph[2].indexOf(flat.definition.fromNode).should.not.eql(-1);
+					mapped += 1;
+				});
+			});
+			mapped.should.be.above(0);
+		});
 	});
 
 	describe('handlers found with the reach-in definitions of research R8', function () {
@@ -718,7 +773,9 @@ describe('ModelBuilder upper models as hierarchies', function () {
 			result.intraPage().should.eql([
 				'h: entry -> L5', 'h: entry -> L6', 'h: entry -> L7', 'h: entry -> L8',
 				'init: entry -> L3',
-				'n: L3 -> L10', 'n: L3 -> L9', 'n: L4 -> L10', 'n: L4 -> L9', 'n: L8 -> L10', 'n: L8 -> L9',
+				/// feature 005 (US1, summaries): h() of L5 must-KILLs n (reg() of L4), and h as a handler
+				/// no longer returns to the call of L5: n: L3 and n: L8 -> L9, L10 are gone
+				'n: L4 -> L10', 'n: L4 -> L9',
 				'reg: entry -> L4',
 				'window: entry -> L4', 'window: entry -> L6', 'window: entry -> L7', 'window: entry -> L8'
 			]);
@@ -786,7 +843,9 @@ describe('ModelBuilder upper models as hierarchies', function () {
 			onEventOf(result).should.eql(['$DOMAIN.$PAGE_0.g', '$DOMAIN.$PAGE_0.h', '$DOMAIN.$PAGE_0.g']);
 			result.intraPage().should.eql([
 				'g: entry -> L3', 'h: entry -> L4', 'h: entry -> L5',
-				'n: L1 -> L6', 'n: L2 -> L6', 'n: L3 -> L6',
+				/// feature 005 (US1, summaries): h() of L4 must-KILLs n (reg() of L3), and h as a handler
+				/// no longer returns to the call of L4: n: L1 -> L6 and n: L2 -> L6 are gone
+				'n: L3 -> L6',
 				'reg: entry -> L3', 'window: entry -> L3', 'window: entry -> L5'
 			]);
 		});

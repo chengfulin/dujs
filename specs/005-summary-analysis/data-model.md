@@ -60,9 +60,10 @@
 |------|------|
 | `entryInput` | entry 的 IN（摘要圖為哨兵，其他模型為空） |
 | `calls`／`loops` | CallSiteRecord／LoopRecord；未給時為相容模式（return 邊與處理器 exit → LOOP RETURN 邊帶 OUT） |
+| （calls 模式的可達性） | 給 `calls` 時只分析從 entry 走得到的節點；callReturn 只在被呼叫端摘要的 `normalReturn` 成立時才算走得到（FR-003：無正常返回時呼叫之後不可達）。未分析的節點 `reachIns`／`reachOuts` 為空集合、不寫入分析結果。只有「被呼叫端 exit → 某筆 CallSiteRecord 的 callReturn」的 return 邊不貢獻；LOOP 相關 return 邊依 `loops`（US4）處理（US1 實作時補述） |
 | `summaryOf`／`flatVarDefOf` | 摘要查詢與 original VarDef → 本圖 VarDef（摘要圖為恆等） |
 | `extraReachIns(node, outOf)` | 相容模式下 callReturn 的 bypass 合併；**動態回呼**：`outOf(m)` 回傳 m 當下的 OUT 並登記依賴，m 的 OUT 改變時 node 重新入列；求解前對全部節點先呼叫一次以登記依賴，使 callee 永不返回時的 callReturn 仍會被分析（US1 起不再使用） |
-| `exceptionToCalleeExitCarriesOut` | Foundational 過渡規則（analyze Q1）：為 true 時，指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊帶 `OUT(p)`；US1 摘要上線時刪除 |
+| ~~`exceptionToCalleeExitCarriesOut`~~ | Foundational 過渡規則（analyze Q1）：為 true 時，指向被呼叫端 exit（有 return 出邊之 exit）的 exception 邊帶 `OUT(p)`。**已於 US1 刪除** |
 
 邊貢獻表見 research R2。`doAnalysis` 將 `results` 寫回 `reachIns`／`reachOuts`／`kill` 並 `setAnalysisResults`（既有 API）。`exitArrivals` 依抵達 exit 的最後一條邊型別分開
 （normal／`finally` 邊屬 `normal`，exception 邊屬 `exceptional`），供摘要使用。

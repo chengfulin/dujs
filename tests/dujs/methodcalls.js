@@ -167,9 +167,11 @@ describe('class method calls (User Story 3)', function () {
 	/// US3 #7: the field, then the constructor and then m run in order
 	it('US3-7 should connect new A().m(); to the field, the constructor and then m', function () {
 		var result = analyzeProbe('us3-7');
+		/// feature 005 (US1, summaries): m defines x on every normal path and an exception of m
+		/// (y = x of L8) no longer goes back to the CALL RETURN NODE of L12: x: L5 -> L13 is gone
 		var expected = [
 			'A: L2 -> L12', 'console: entry -> L13',
-			'x: L1 -> L3', 'x: L5 -> L13', 'x: L5 -> L8', 'x: L9 -> L13'
+			'x: L1 -> L3', 'x: L5 -> L8', 'x: L9 -> L13'
 		];
 		result.intraPage().should.eql(expected);
 		result.interProceduralScopes().should.eql([[PAGE, ANONYMOUS + '0', ANONYMOUS + '1', ANONYMOUS + '2']]);

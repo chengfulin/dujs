@@ -6,7 +6,7 @@
 
 | API | 說明 |
 |-----|------|
-| `computeForPage(scopeTree)` | 以 `modelbuilder.callModelOf` 取得每個 scope 的直接呼叫，建 scope 呼叫圖，SCC 反拓撲序、SCC 內從 ⊥ 反覆求解至不變；結果存入該頁表。重複呼叫為 no-op |
+| `computeForPage(scopeTree)` | 以 `modelbuilder.callModelOf` 取得每個 scope 的直接呼叫，建 scope 呼叫圖，SCC 反拓撲序、SCC 內從 ⊥ 反覆求解至不變；結果以被呼叫端的 scope 物件為鍵存入全域表（跨頁可查，供 inter-page 模型使用；US1 實作時補述），並記錄該頁已計算。重複呼叫為 no-op |
 | `summaryOf(scope)` | 回傳該 scope 的 Summary；未計算時拋錯（不得默默回傳恆等） |
 | `apply(summary, vardefs)`／`applyExceptional(summary, vardefs)` | data-model §1；回傳新 Set，不改輸入 |
 | `reset()` | 測試用；清空所有頁的表 |
@@ -18,7 +18,7 @@
 `solve(graph, options)`：純函式。邊貢獻依 research R2；`options.calls`（CallSiteRecord）與 `options.loops`（LoopRecord）提供虛擬貢獻；`options.summaryOf` 與
 `options.flatVarDefOf`（摘要的 original VarDef → 本圖 VarDef；摘要圖為恆等）。相容模式（未給 `calls`／`loops`，Foundational 至 US1 前）：`options.extraReachIns(node, outOf)`（`outOf(m)` 回傳 m 當下的 OUT 並登記依賴；求解前對全部節點先呼叫一次，見 data-model §6）
 為動態回呼（依迭代中的 `OUT(callNode)`，變動時 callReturn 重新入列）；`options.exceptionToCalleeExitCarriesOut` 為過渡規則（analyze Q1：指向被呼叫端 exit 的 exception 邊帶
-`OUT(p)`），US1 刪除。完整選項見 data-model §6。回傳 `{results: Map(node → {in, out, generate, kill}), exitArrivals: {normal: Set, exceptional: Set}}`。
+`OUT(p)`），已於 US1 刪除。給 `calls` 時只分析從 entry 走得到的節點，callReturn 需被呼叫端摘要 `normalReturn` 成立才可達（見 data-model §6）。完整選項見 data-model §6。回傳 `{results: Map(node → {in, out, generate, kill}), exitArrivals: {normal: Set, exceptional: Set}}`。
 
 ## 3. 既有模組的變更
 

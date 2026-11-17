@@ -124,10 +124,13 @@ describe('new statements as call-sites (FR-002, FR-003)', function () {
 	/// US2 #3: extends is not followed (A's constructor is not connected)
 	it('US2-3 should connect new B(); to B only without following extends', function () {
 		var result = analyzeProbe('us2-3');
-		/// x: L1 -> L15: super(); is not connected and its exception edge goes to the exit of B's constructor
+		/// super(); is not connected and its exception edge goes to the exit of B's constructor; before
+		/// feature 005 that exception went back to the CALL RETURN NODE of L14 (x: L1 -> L15). With the
+		/// summaries (US1) B's constructor defines x on every normal path and its exception leaves the
+		/// page, so x: L1 -> L15 is gone
 		result.intraPage().should.eql([
 			'A: L2 -> L7', 'B: L7 -> L14',
-			'x: L1 -> L15', 'x: L1 -> L8', 'x: L11 -> L15'
+			'x: L1 -> L8', 'x: L11 -> L15'
 		]);
 		result.interProceduralScopes().should.eql([[PAGE, ANONYMOUS + '1', ANONYMOUS + '2']]);
 	});

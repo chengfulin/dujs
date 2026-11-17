@@ -1,0 +1,84 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 9,
+      "callee": "$DOMAIN.$PAGE_0.addTo.scale",
+      "callNode": "n28",
+      "entry": "n29",
+      "exit": "n31",
+      "callReturn": "n32",
+      "exceptionalReturn": "n34",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 15,
+      "callee": "$DOMAIN.$PAGE_0.addTo",
+      "callNode": "n25",
+      "entry": "n26",
+      "exit": "n34",
+      "callReturn": "n35",
+      "exceptionalReturn": "n46",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 16,
+      "callee": "$DOMAIN.$PAGE_0.isReady",
+      "callNode": "n36",
+      "entry": "n37",
+      "exit": "n39",
+      "callReturn": "n40",
+      "exceptionalReturn": "n46",
+      "back": false,
+      "beforeDecision": true
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.addTo": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "total@n27"
+      ],
+      "mustKill": [
+        "total"
+      ],
+      "upwardExposed": [
+        "total"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.addTo.scale": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "value"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.isReady": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "limit",
+        "total"
+      ],
+      "exceptional": []
+    }
+  }
+}

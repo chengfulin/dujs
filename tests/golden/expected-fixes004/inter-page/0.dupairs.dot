@@ -15,9 +15,9 @@ struct1 [label=<
 <tr><td>console</td><td>(entry_a,52)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>a</td><td>(2,(3,4))</td><td>(2,(3,call_a))</td><td>(4,call_k)</td><td>(2,call_k)</td><td>(4,44)</td><td>(2,44)</td><td></td><td></td><td></td><td></td></tr>
 <tr><td>b</td><td>(2,(3,4))</td><td>(2,(3,call_a))</td><td>(2,call_n)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>c</td><td>(2,(3,4))</td><td>(2,(3,call_a))</td><td>(27,(26,27))</td><td>(27,(26,30))</td><td>(2,(26,27))</td><td>(2,(26,30))</td><td>(27,(42,call_k))</td><td>(27,(42,call_n))</td><td>(2,(42,call_k))</td><td>(2,(42,call_n))</td></tr>
+<tr><td>c</td><td>(2,(3,4))</td><td>(2,(3,call_a))</td><td>(2,(26,27))</td><td>(2,(26,30))</td><td>(27,(26,27))</td><td>(27,(26,30))</td><td>(2,(42,call_k))</td><td>(2,(42,call_n))</td><td>(27,(42,call_k))</td><td>(27,(42,call_n))</td></tr>
 <tr><td>x</td><td>(7,10)</td><td>(7,16)</td><td>(33,52)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>y</td><td>(23,52)</td><td>(14,52)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>y</td><td>(23,52)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>counter</td><td>(37,call_i)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>P</td><td>(entry_a,call_a)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 <tr><td>log</td><td>(entry_a,call_k)</td><td>(entry_a,call_n)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>

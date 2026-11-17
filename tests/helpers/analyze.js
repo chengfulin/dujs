@@ -40,6 +40,7 @@ var scopeCtrl = require('../../lib/dujs/scopectrl'),
 	modelCtrl = require('../../lib/dujs/modelctrl'),
 	cfgBuilder = require('../../lib/dujs/cfgbuilder'),
 	executor = require('../../lib/dujs/defuseanalysisexecutor'),
+	summary = require('../../lib/dujs/summary'),
 	Pair = require('../../lib/dujs/pair'),
 	FlowNode = require('../../lib/esgraph/flownode'),
 	branchLabel = require('../../lib/esgraph/branchlabel');
@@ -280,6 +281,7 @@ function reset() {
 	scopeCtrl.clear();
 	modelCtrl.clear();
 	cfgBuilder.resetGraphNodeCounter();
+	summary.reset();
 }
 
 /**
