@@ -16,6 +16,10 @@
     "plan": {
       "done": true,
       "decisions": "D011–D019"
+    },
+    "tasks": {
+      "done": true,
+      "count": 69
     }
   }
 }
