@@ -44,7 +44,7 @@ modelsOfPages(codeOfPages) -> Array<{programId, modelName, model}>   // 以 test
 | `return`，目標既不是任何 record 的 `callReturn` 也不是 LOOP | **拋錯**（fail-closed：模型形狀與本契約不符，須重審） |
 | 處理器 exit → LOOP RETURN（`normal`） | 照常可走（「表示法」(b)） |
 | (a) 虛擬邊 `record.callNode → record.callReturn` | `callNode` 可到達且 `normalReturn(record.calleeScope)` 為是 |
-| 虛擬例外邊 `record.callNode → record.exceptionalReturn`（非 null 時） | `callNode` 可到達即可走，**型別視為例外**（被呼叫端未捕捉的例外；D014）。`exceptionalReturn` 由 `lib/dujs/expansion.js:592-606` 的 `finishCallRecords` 依圖結構設定（鏈的第一個呼叫的段 0 呼叫節點的 `.exception` 目標），不是求解器的結果；求解器只在 `reachingsolver.js:292` 讀它。實測（語料 probes＋golden fixture＋MDN 33 檔）533 筆 record：524 筆 `callNode.exception` 即 `exceptionalReturn`（與圖上的例外邊重合），9 筆呼叫節點本身沒有例外邊（鏈式呼叫的後段、決策前呼叫——這些才需要本虛擬邊），0 筆為 null；下述斷言全部成立 |
+| 虛擬例外邊 `record.callNode → record.exceptionalReturn`（非 null 時） | `callNode` 可到達即可走，**型別視為例外**（被呼叫端未捕捉的例外；D014）。`exceptionalReturn` 由 `lib/dujs/expansion.js:592-606` 的 `finishCallRecords` 依圖結構設定（鏈的第一個呼叫的段 0 呼叫節點的 `.exception` 目標），不是求解器的結果；求解器只在 `reachingsolver.js:292` 讀它。實測（語料 probes＋golden fixture＋MDN 33 檔）533 筆 record：524 筆 `callNode.exception` 即 `exceptionalReturn`（與圖上的例外邊重合），9 筆呼叫節點本身沒有例外邊，0 筆為 null；下述斷言全部成立。**實作後實測更正**（Foundational，509 個模型）：本虛擬邊不改變任何節點的可到達性——`exceptionalReturn` 恆另有圖上可到達的例外入邊（目標即段 0 的例外目標；007 拆段後 `new A().m()` 的後段與 `if (f())` 的決策前呼叫皆有例外邊，實際無例外邊的只有 class 欄位初始化之後的 constructor 呼叫）。本邊實際作用者為「型別視為例外」：只經它到達 exit 的被呼叫端沒有正常返回。本邊保留為防線，其可到達效果的測試以偽造 record 覆蓋（`tests/dujs/reachability.js` D014 區塊） |
 | (b) 虛擬邊 `loopRecord.loop → loopRecord.loopReturn` | `loop` 可到達即可走（不論圖上有無對應的邊） |
 
 **`exceptionalReturn` 的斷言（D014）**：檢查器對每個模型斷言「每個非 null 的 `record.exceptionalReturn` 都是圖上某節點的 `.exception` 目標」，不成立即拋錯（表示 records 與圖的關係改變，本契約須重審）。
