@@ -6,7 +6,7 @@
 
 | 情境 | 測試檔 | 程式 | 備註 |
 |------|--------|------|------|
-| US1-1…5、7…13 | `tests/dujs/propertydefs.js`（新） | p1、p2、p3、p4、p12、p25、p27、p29、p30、p31、p32、p33 | US1-8 另斷言 `L6:F` 節點沒有 `o` 的 c-use；US1-9…12 斷言 hierarchy 的 call 邊（被呼叫端 scope 名稱）；US1-13 斷言 `f(a)` 的 call 邊與 L5、L6 的 GEN 為空 |
+| US1-1…5、7…13、17 | `tests/dujs/propertydefs.js`（新） | p1、p2、p3、p4、p12、p25、p27、p29、p30、p31、p32、p33、p37 | US1-8 另斷言 `L6:F` 節點沒有 `o` 的 c-use；US1-9…12 斷言 hierarchy 的 call 邊（被呼叫端 scope 名稱）；US1-13 斷言 `f(a)` 的 call 邊與 L5、L6 的 GEN 為空 |
 | US1-6 | 同上 | pages/s1…s9 | 輸出四行（intra(page 1)、storage nodes、inter-page localStorage、inter-page (all)）與 `probes/pages/baseline-develop.txt` 對應段落**逐字相同**（以同一份 baseline 檔讀入比對，不手抄期望） |
 | US1-16 | 同上 | p42 | L2 的 GEN 為空、L2 的 USE 含 `localStorage` 與 `n`（D013）；`n: L1 -> L2`、`o: L1 -> L2`、`console: entry -> L3`；`localStorage` 的 pair 以實跑為準寫入測試（develop 慣例下頁面無定義時無 pair）；儲存定義節點數 0（與 develop 同） |
 | US1-14、US1-15 | 同上 | pages/s10…s14 | inter-page (all) 與第一頁 intra-page 的斷言；s13、s14 的 `inter-page localStorage` 行與 baseline 相同；儲存定義節點數 |

@@ -2,7 +2,7 @@
 
 **Branch**: `008-property-defs-method-calls` | **Date**: 2026-11-18 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `specs/008-property-defs-method-calls/spec.md`（D001–D019 已裁決；D012–D017 為 plan 階段的使用者裁決，D018–D019 為 plan 裁決）
+**Input**: Feature specification from `specs/008-property-defs-method-calls/spec.md`（D001–D020 已裁決；D012–D017 為 plan 階段的使用者裁決，D018–D019 為 plan 裁決，D020 為 analyze 裁決）
 
 ## Summary
 
@@ -82,8 +82,8 @@ golden／MDN 差異以 008 自己的 `tools/diffcheck.js`＋`tools/classify.js`�
 
 - **新增**：`tests/helpers/reachability.js`；`tests/dujs/{propertydefs, reachability, reachabilityinvariant}.js`、`tests/dujs/cases/probes008/`（含 `pages/`）、`tests/dujs/cases/reachability-allowlist.json`；
   `specs/008-property-defs-method-calls/{tools/diffcheck.js, tools/diffcheck.test.js, tools/classify.js, tools/classify.test.js, mdn/baseline-develop/, golden-diff.md, mdn-diff.md, perf.md, docs-check.md}`。
-- **修改**：`lib/dujs/defuseanalyzer.js`（`findGENSet`、`getDefinedVariables`、`findUSESet`；US3 的 `findDUPairs` deferred p-use 配對條件，FR-013）、`usedexpressions.js`（`loopHeadExpressions`）、`bindingpattern.js`（`getMemberTargetReads`）、`scopebinding.js`（三個新方法、`RELAXED_INSTANCE_KINDS`、邏輯賦值目標集合）、`callresolver.js`（`relaxedClassOfInstance`）、`hierarchy.js`（`definesLocalStorage` 改呼叫 binding，行為不變）；
-  `tests/golden/expected*`、`manifest.json`；既有測試中編碼舊行為者（`globals.js`、`methodcalls.js` 等，以各階段 `npm test` 失敗清單為準，逐處列入 golden-diff「單元測試期望」）；擴充 `tests/dujs/{scopebinding, usedexpressions, defuseanalyzer, relaxedcallee, methodcalls, summary, matching}.js`；`README.md`、`docs/known-issues.md`。
+- **修改**：`lib/dujs/defuseanalyzer.js`（`findGENSet`、`getDefinedVariables`、`findUSESet`；US3 的 `findDUPairs` deferred p-use 配對條件，FR-013）、`usedexpressions.js`（`loopHeadExpressions`）、`bindingpattern.js`（`getMemberTargetReads`）、`scopebinding.js`（三個新方法、`RELAXED_INSTANCE_KINDS`、邏輯賦值目標集合）、`callresolver.js`（`relaxedClassOfInstance`）、`hierarchy.js`（`definesLocalStorage` 改呼叫 binding，行為不變）；`eslint.config.js`（ignores 加 `tests/dujs/cases/probes008/**`，同 005–007 先例，D020）；
+  `tests/golden/expected*`、`manifest.json`（UPDATE_GOLDEN 不寫 manifest，`baseline` 雜湊手動重算寫回，D020）；既有測試中編碼舊行為者（`globals.js`、`methodcalls.js` 等，以各階段 `npm test` 失敗清單為準，逐處列入 golden-diff「單元測試期望」）；擴充 `tests/dujs/{scopebinding, usedexpressions, defuseanalyzer, relaxedcallee, methodcalls, summary, matching}.js`；`README.md`、`docs/known-issues.md`。
 - **預期不改程式**（以測試確認）：`lib/dujs/summary.js`、`reachingsolver.js`（FR-013 所需的 reached 資訊已由 `doAnalysis` 只為 reached 節點存的分析結果提供，`model.analysisResultOf`）、`expansion.js`、`callsplit.js`、`modelbuilder.js`、`outputwriter.js`、`cfggraphconverter.js`、`tests/helpers/analyze.js`。
 - **明確不受影響**：`lib/esgraph/**`（含 LGPL 檔、`astrewriter.js`）、`lib/analyses/**`、`cli.js`、`bin/dujs.js`、scope 命名與數量、儲存定義節點的判定結果、事件處理器註冊查找、`*.matching.json` 格式、005／006／007 的 `tools/`。
 
@@ -121,7 +121,7 @@ tests/golden/   expected*／manifest.json（更新）
 | Foundational | 可到達檢查器 `tests/helpers/reachability.js`＋單元測試、陽性對照、注入、獨立性守門（在 develop 行為上先建立）；`reachabilityinvariant.js` 全量（probes、golden、MDN；MDN 缺檔／檔數 ≠ 33／sha256 不符即失敗，D016）啟用，先以暫行允許清單（P21、P23、P24 及實測的 finallyExit 根因項）報紅 P38–P40；接著 **FR-013**（task 標 [US3／FR-013]）：`findDUPairs` 的 deferred p-use 只在 owner 可到達時配對，P38–P40 轉綠；`scopebinding` 三個新方法＋單元測試（尚未接線，行為不變） | tests/helpers、tests/dujs、defuseanalyzer.js、scopebinding.js、allowlist | 不變（原型實測 golden 0 筆差異） |
 | US1（P1，§22 (1)） | GEN／USE 改動、`getMemberTargetReads`、迴圈頭、F 分支、巢狀賦值條件、hierarchy 重構；s1–s14、P1–P4、P12、P25、P27、P29–P33 驗收；外溢 characterization；summary／matching 擴充 | defuseanalyzer、usedexpressions、bindingpattern、hierarchy | **更新**（成員目標、損失、外溢） |
 | US2（P1，§23） | `relaxedClassOfInstance`；P5–P11、P26、P28、P34–P36、MDN a05 驗收 | callresolver | **更新**（放寬） |
-| US3（P2，§22 (5)） | P41 可達集合測試（D015）；允許清單依 US1／US2 後的最終行為定稿與見證（P21、P23、P24 及實測到的 finallyExit 根因項）；關掉 (c) 仍違反者依 FR-008 修正或 DECISION（FR-013 已於 Foundational 完成） | tests、allowlist | 不變 |
+| US3（P2，§22 (5)） | P41 的 pair 斷言（可達集合測試 D015 已在 Foundational）；允許清單依 US1／US2 後的最終行為定稿與見證（P21、P23、P24 及實測到的 finallyExit 根因項）；關掉 (c) 仍違反者依 FR-008 修正或 DECISION（FR-013 已於 Foundational 完成） | tests、allowlist | 不變 |
 | Polish | MDN `--verify`、mdn-diff、perf.md、KI（FR-011 (a)–(g)）、README（FR-012）、docs-check.md、quickstart 全流程、golden-diff／mdn-diff 簽核 | docs、specs | `--verify` |
 
 - **順序理由**：檢查器與全量不變量測試在 Foundational 建立並於 `npm test` 中執行，US1／US2 期間即作為回歸網（新 pair 若落在不可到達節點，`npm test` 立即失敗）；FR-013 緊接其後，使檢查器先報紅 P38–P40 再轉綠；允許清單在 US3 依最終行為定稿（US1／US2 可能新增或消除 finallyExit 根因的 pair）。US2 依賴 US1（P9：`o.p = 1` 不再是定義）。改 golden 的階段必須依序，每次重產相對 `2035c93` 的累積淨差異。

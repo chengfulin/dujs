@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-18
 
-**Status**: Draft（D001–D019 已裁決 2026-11-18）
+**Status**: Draft（D001–D020 已裁決 2026-11-18）
 
 **Input**: User description: "Feature 008 = docs/known-issues.md 的 §22 (1)、§22 (5) 與 §23（見該檔 L20–60 的總覽，以及 §22、§23 本文）。§22 (4)（storage model）不在範圍內。先確認 007 修完後哪些仍未解決，再寫 spec。技術選型維持 repo 現況，不引入新框架或新依賴。慣例沿用 005、006、007：probes 目錄、golden 差異以 tests/golden + diffcheck 記錄、MDN 範例驗收（Advanced JavaScript objects + Core Scripting），新發現記到 docs/known-issues.md。PR 目標 develop。"
 
@@ -22,7 +22,7 @@
 
 | User Story | 來源 |
 |------------|------|
-| US1 | KI §22 (1)；PRB P1–P4、P12、P25、P27、P29–P33、P42 |
+| US1 | KI §22 (1)；PRB P1–P4、P12、P25、P27、P29–P33、P37、P42 |
 | US2 | KI §23、§22 (0)；F005 D1、D2；PRB P5–P11、P26、P28、P34–P36 |
 | US3 | KI §22 (5)、§38；F005 FR-003；PRB P13–P24、P38–P41 |
 
@@ -127,6 +127,10 @@
 - Q: 檢查器 (a) 對 generator／async 被呼叫端如何判定正常返回？ → A（D019）: 依被呼叫端 scope AST 的 `generator`／`async` 旗標判為有正常返回（語法判定、不讀摘要，FR-007 的獨立性不變）；「表示法」(a) 補記，contracts/reachability.md §2 修正，加單元測試——反例 `async function f(){ await f(); } f(); x = 1; console.log(x);`：求解器得 `x: L6 -> L7`（行號依測試程式），純結構重算會誤判 `f` 沒有正常返回而誤報。
 - 其餘 plan 裁決（不改需求）：FR-013 移到 Foundational（檢查器建立後先報紅 P38–P40，再改 lib 轉綠）；階段檢查統一為「允許清單外 0 違反」；全量不變量測試在 Foundational 啟用、允許清單在 US3 定稿；FR-013 的 owner 可達判定採簡單版（`analysisResultOf(owner) === null` 即略過，產品呼叫端皆在 `doAnalysis` 之後），刪「model 未分析時維持現行行為」；P38–P40 修正前的違反以注入重現；D014 的數字改為上述語料實測。
 
+### analyze 裁決（2026-11-18，主對話；D020）
+
+- Q: P37 沒有驗收情境，SC-002 無從核對，怎麼處理？ → A（D020）: 新增 US1 情境 17（Fable 原型 repo2 實跑）：有 `o: L1 -> L2`、`o: L1 -> L5`、`q: L1 -> L6`、`q: L1 -> L7`、`x: L1 -> L8`，兩個呼叫都不連結（`o`、`q` 的定義是物件字面值，不是 class）；沒有 `o: L2 -> L5`、`q: L6 -> L7`。同次裁決的 tasks／plan 修正（golden manifest 手動同步、`eslint.config.js` 加 `probes008` ignore、MDN 提前比對等）不改需求，見 tasks.md。
+
 #### 延後釐清
 
 - （M4，交 plan）inter-page 模型的獨立可到達判定以哪些節點為起點（每頁 entry、事件處理器經 LOOP 進入）、例外邊如何辨識（圖上的邊型別），由 plan 定案並寫入 contracts。
@@ -174,7 +178,7 @@
 
 **Why this priority**: 這是錯誤的 pair（多報與漏報）且影響呼叫解析；MDN 範例中物件屬性賦值極為常見，修正後 pair 的定義端才正確。也是 US2 能涵蓋 P9 的前提。
 
-**Independent Test**: 以 P1–P4、P12、P25、P27、P29–P33、P42 與 `probes/pages/` 的 s1–s14 執行，比對 intra-procedural、inter-procedural、intra-page、inter-page 的 pair 與連結。
+**Independent Test**: 以 P1–P4、P12、P25、P27、P29–P33、P37、P42 與 `probes/pages/` 的 s1–s14 執行，比對 intra-procedural、inter-procedural、intra-page、inter-page 的 pair 與連結。
 
 **Acceptance Scenarios**:
 
@@ -194,6 +198,7 @@
 14. **Given** `probes/pages/s10-two-pages-method.js`（第一頁：`class A` 的 `m() { x = 1; }` L3、`const o = new A();` L5、`function g` 中 `f(); o.m();` L8–L9、`o.p = 1;` L11、`g();` L12、`localStorage.k = x;` L13；第二頁讀 `y`、`localStorage.k`），**When** 以 `run-pages.js` 分析，**Then** `inter-page (all)` 中第一頁的 pair 有 `o: L5 -> L9`、`o: L5 -> L11`、`x: L3 -> L13`，沒有 `o: L11 -> L9`、`x: L6 -> L13`（develop 有後兩者）；`localStorage: L13 -> L7`（第二頁 L7）與第二頁的 pair 與 develop 相同；第一頁的 intra-page 模型也有 `o: L5 -> L9`、`o: L5 -> L11`、`x: L3 -> L13`，沒有 `o: L11 -> L9`、`x: L6 -> L13`（FR-003 的 intra-page）。標記不含頁別，行號依情境所述頁別解讀。（FR-003、FR-005，D007）
 15. **Given** `probes/pages/` 的 s11–s14（D008），**When** 以 `run-pages.js` 分析，**Then**：s11（函式內 `let localStorage = {};` L3、`localStorage.k = 2;` L4）有 `localStorage: L3 -> L4`、`localStorage: L3 -> L5`，沒有 `localStorage: L4 -> L5`，儲存定義節點數 1；s12（頁面 `var localStorage = {};` L1、`localStorage.k = 2;` L2）有 `localStorage: L1 -> L2`、`localStorage: L1 -> L3`，沒有 `localStorage: L2 -> L3`，儲存定義節點數 0；s13（`var s = localStorage;` L2、`s.k = 2;` L3）有 `s: L2 -> L3`、`s: L2 -> L4`，沒有 `s: L3 -> L4`，儲存定義節點數 1；s14（`window.localStorage.k = 2;` L2、`+= 3` L3、`window.f = 1;` L4）有 `window: entry -> L2`、`window: entry -> L3`、`window: entry -> L4`、`window: entry -> L5`，沒有 `window: L4 -> L5`，儲存定義節點數 1（與 develop 同）；s13、s14 的 `inter-page localStorage` 行與 develop 相同；s11 中 domain `localStorage` 的 pair 不變（`localStorage: L1 -> L1`（第二頁 L1）、`localStorage: L1 -> L8`），被遮蔽或頁面宣告的 `localStorage` 的 pair 依上述改變（`inter-page localStorage` 與 `inter-page (all)` 兩行對應更新）。
 16. **Given** P42（`var n = 'k', o = 1;` L1、`localStorage.getItem(n).p = o;` L2、`console.log(localStorage);` L3），**When** 分析，**Then** L2 不定義任何變數，也不是儲存定義節點（與 develop 同）；L2 讀取 `localStorage` 與 `n`（物件運算式是呼叫，沒有物件變數，不豁免，D013）：有 `n: L1 -> L2`、`o: L1 -> L2`、`console: entry -> L3`。`localStorage` 在頁面上沒有定義時是否產生 pair 依 develop 慣例（develop 中 L3 讀 `localStorage` 也沒有 pair），以實跑為準由實作確認並寫入測試；L2 的讀取以該節點的 USE 集合斷言。develop 只有 `console: entry -> L3`、`o: L1 -> L2`。
+17. **Given** P37（`var x = 0, o = {}, q = {m: function () {}};` L1、`o.m = function () {…};` L2–L4、`o.m();` L5、`q.n = 1;` L6、`q.m();` L7、`console.log(x);` L8），**When** 分析，**Then** 有 `o: L1 -> L2`、`o: L1 -> L5`、`q: L1 -> L6`、`q: L1 -> L7`、`x: L1 -> L8`；沒有 `o: L2 -> L5`、`q: L6 -> L7`（develop 有，差異分類分別為損失與修正，D011）；`o.m()`、`q.m()` 都不連結（定義是物件字面值，不是 class；與 develop 同）。（D020）
 
 ---
 

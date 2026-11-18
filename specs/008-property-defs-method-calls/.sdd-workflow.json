@@ -19,7 +19,14 @@
     },
     "tasks": {
       "done": true,
-      "count": 69
+      "count": 70
+    },
+    "analyze": {
+      "done": true,
+      "findings": 19,
+      "remediated": 16,
+      "decisions": "D020",
+      "notes": "analyze 9（MEDIUM 4、LOW 5）＋clarifier 10（HIGH 2、MEDIUM 5、INFO 3）；I3 基線不升級、S1／I3(spec) 純文字未改"
     }
   }
 }
