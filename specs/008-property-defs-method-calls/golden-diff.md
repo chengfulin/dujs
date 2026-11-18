@@ -103,24 +103,24 @@ pair 以「頁 × 層級」的聯集比對（D022）；某行兩側同模型 `.g
 
 | case | 頁 | 模型檔 | 行 | 基準段標記數 | 008 段標記數 | 簽核 |
 |------|----|--------|----|--------------|--------------|------|
-| expected-es2015 | inter-page | *.graph.dot | 12 | 0 | 1 | 待簽核 |
-| expected-es2015 | inter-page | *.graph.dot | 13 | 0 | 1 | 待簽核 |
-| expected-es2015 | inter-page | *.graph.dot | 25 | 1 | 2 | 待簽核 |
-| expected-es2015 | inter-page | *.graph.dot | 34 | 1 | 2 | 待簽核 |
-| expected-es2015 | inter-page | *.graph.dot | entry | 5 | 6 | 待簽核 |
-| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 12 | 0 | 1 | 待簽核 |
-| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 13 | 0 | 1 | 待簽核 |
-| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 25 | 1 | 2 | 待簽核 |
-| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 29 | 0 | 1 | 待簽核 |
-| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 30 | 0 | 2 | 待簽核 |
-| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 31 | 0 | 1 | 待簽核 |
-| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 33 | 0 | 1 | 待簽核 |
-| expected-es2015 | page0 | inter-procedurals/*.graph.dot | entry | 2 | 3 | 待簽核 |
-| expected-es2015 | page0 | intra-pages/*.graph.dot | 12 | 0 | 1 | 待簽核 |
-| expected-es2015 | page0 | intra-pages/*.graph.dot | 13 | 0 | 1 | 待簽核 |
-| expected-es2015 | page0 | intra-pages/*.graph.dot | 25 | 1 | 2 | 待簽核 |
-| expected-es2015 | page0 | intra-pages/*.graph.dot | 34 | 1 | 2 | 待簽核 |
-| expected-es2015 | page0 | intra-pages/*.graph.dot | entry | 5 | 6 | 待簽核 |
+| expected-es2015 | inter-page | *.graph.dot | 12 | 0 | 1 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | inter-page | *.graph.dot | 13 | 0 | 1 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | inter-page | *.graph.dot | 25 | 1 | 2 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | inter-page | *.graph.dot | 34 | 1 | 2 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | inter-page | *.graph.dot | entry | 5 | 6 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 12 | 0 | 1 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 13 | 0 | 1 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 25 | 1 | 2 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 29 | 0 | 1 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 30 | 0 | 2 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 31 | 0 | 1 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | inter-procedurals/*.graph.dot | 33 | 0 | 1 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | inter-procedurals/*.graph.dot | entry | 2 | 3 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | intra-pages/*.graph.dot | 12 | 0 | 1 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | intra-pages/*.graph.dot | 13 | 0 | 1 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | intra-pages/*.graph.dot | 25 | 1 | 2 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | intra-pages/*.graph.dot | 34 | 1 | 2 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
+| expected-es2015 | page0 | intra-pages/*.graph.dot | entry | 5 | 6 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核） |
 
 ## 重複列數
 
@@ -141,12 +141,12 @@ pair 以「頁 × 層級」的聯集比對（D022）；某行兩側同模型 `.g
 
 | case | 頁 | 類別 | 觸發 | + | − | 說明 | 簽核 |
 |------|----|------|------|---|---|------|------|
-| expected-es2015 | inter-page | 放寬 | L25 → $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1；L34 → $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1 | 7 | 8 | L25 `list.render(state.todos)`（`addTodo`，$ANONYMOUS_FUN_3）與 L34（`init`）在函式內呼叫頂層 `const list = new TodoList(…)` 的方法，FR-004 放寬後連到 `TodoList` 的 `render`（$ANONYMOUS_FUN_1）。+：`render` 內 `todos: entry -> 12`、`visible: 12 -> 13` 與其兩列（#16、#17、#32、#33），`list: call (17) -> call (25)`／`call (34)`（#21、#22，use 端改為呼叫節點），#11 摘要 `init.upwardExposed +state`；−：`list: call (17) -> 25`／`34`（#19、#20，與 #21、#22 為同一 pair 改標），#11 摘要 gen／exceptional −`state@n` 6 筆（L23／L33 成員目標，即 US1 的摘要差異；本檔因新連結多出 `$ANONYMOUS_FUN_1` 鍵，改隨檔歸放寬）；`init.gen −nextId@n144 +nextId@n146` 為純重編號（兩側標記皆 31，D025 不計） | 草擬，待簽核（#1、#11、#16、#17、#19、#20、#21、#22、#32、#33） |
-| expected-es2015 | page0 | 放寬 | L25 → $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1；L34 → $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1 | 25 | 10 | 同 inter-page 的觸發（L25、L34 → `render`）。新模型 `inter-procedurals/2`（`init` → `render`）與 `3`（$ANONYMOUS_FUN_4 → `addTodo` → `render`；基準 `1` 依 mainScope 配對到此，#14）共 8 檔（#4–#9、#13、#14）；008 的 `1` 改以 `addTodo`（$ANONYMOUS_FUN_3）為 mainScope（`addTodo` → `render`），#2、#3 改變、其 matching 無基準對應（#12）；inter-procedurals 新增 `id`、`saved`、`todos`、`visible` 四列與 6 筆 pair（#38、#40–#42 為 `init` 模型內的 pair，相同（變數、def、use）見於基準 intra-pages/0，亦符層級新增，D022）；intra-pages 同 inter-page（#47、#48、#50–#53、#63、#64）；摘要 #14 −2（$ANONYMOUS_FUN_3 的 `state@n122`）、#15 +1／−6（同 inter-page #11） | 草擬，待簽核（#2、#3、#4、#5、#6、#7、#8、#9、#10、#12、#13、#14、#15、#34、#35、#36、#37、#38、#40、#41、#42、#45、#46、#47、#48、#50、#51、#52、#53、#63、#64） |
-| expected-es2015 | inter-page | 成員目標 | 定義性成員目標 input L41；state L23、L33 | 5 | 0 | L41 `input.value = ''` 改為讀取 `input`（+`input: 39 -> 41`）；L23、L33 的 `state.todos = …` 不再殺除 `state`，L4 的 `const state` 到達 L24、L25、L34，L33 本身成為 `state` 的讀取（+`state: 4 -> 33`）；L25、L34 在 US2 成為 `render` 的呼叫節點，pair 標記改為 `call (25)`／`call (34)`（取代 US1 的 `4 -> 25`／`4 -> 34`） | 草擬，待簽核（#18、#28、#29、#30、#31） |
-| expected-es2015 | inter-page | 屬性寫入→讀取損失 | 定義性成員目標 input L41；state L23、L33 | 0 | 5 | L23、L33 的 `state.todos = …` 原為 `state` 的定義，到達 L23（下一次呼叫 `addTodo` 時）、L24、L25、L34 對 `state.todos` 的讀取；008 不追屬性，這些 pair 消失（讀取路徑 [todos] 與寫入路徑 [todos] 相同，語意上確有資料流，D001 接受的損失）；與 US1 相同 | 草擬，待簽核（#23、#24、#25、#26、#27） |
-| expected-es2015 | page0 | 成員目標 | 定義性成員目標 input L41；state L23、L33 | 7 | 0 | 同 inter-page：intra-pages 4 筆 `state: 4 -> …`（含 `call (25)`、`call (34)`）與 `input: 39 -> 41`；inter-procedurals、intra-procedurals 只有 `input: 39 -> 41`（`addTodo`／`init` 的單函式模型無 L4 的定義可到達）；與 US1 相同 | 草擬，待簽核（#39、#49、#59、#60、#61、#62、#65） |
-| expected-es2015 | page0 | 屬性寫入→讀取損失 | 定義性成員目標 input L41；state L23、L33 | 0 | 10 | 同 inter-page：intra-pages 5 筆；inter-procedurals `state: 23 -> 24`、`23 -> 25`（`addTodo`）；intra-procedurals `23 -> 24`、`23 -> 25`（`addTodo`）與 `33 -> 34`（`init`）；與 US1 相同 | 草擬，待簽核（#43、#44、#54、#55、#56、#57、#58、#66、#67、#68） |
+| expected-es2015 | inter-page | 放寬 | L25 → $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1；L34 → $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1 | 7 | 8 | L25 `list.render(state.todos)`（`addTodo`，$ANONYMOUS_FUN_3）與 L34（`init`）在函式內呼叫頂層 `const list = new TodoList(…)` 的方法，FR-004 放寬後連到 `TodoList` 的 `render`（$ANONYMOUS_FUN_1）。+：`render` 內 `todos: entry -> 12`、`visible: 12 -> 13` 與其兩列（#16、#17、#32、#33），`list: call (17) -> call (25)`／`call (34)`（#21、#22，use 端改為呼叫節點），#11 摘要 `init.upwardExposed +state`；−：`list: call (17) -> 25`／`34`（#19、#20，與 #21、#22 為同一 pair 改標），#11 摘要 gen／exceptional −`state@n` 6 筆（L23／L33 成員目標，即 US1 的摘要差異；本檔因新連結多出 `$ANONYMOUS_FUN_1` 鍵，改隨檔歸放寬）；`init.gen −nextId@n144 +nextId@n146` 為純重編號（兩側標記皆 31，D025 不計） | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核）（#1、#11、#16、#17、#19、#20、#21、#22、#32、#33） |
+| expected-es2015 | page0 | 放寬 | L25 → $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1；L34 → $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1 | 25 | 10 | 同 inter-page 的觸發（L25、L34 → `render`）。新模型 `inter-procedurals/2`（`init` → `render`）與 `3`（$ANONYMOUS_FUN_4 → `addTodo` → `render`；基準 `1` 依 mainScope 配對到此，#14）共 8 檔（#4–#9、#13、#14）；008 的 `1` 改以 `addTodo`（$ANONYMOUS_FUN_3）為 mainScope（`addTodo` → `render`），#2、#3 改變、其 matching 無基準對應（#12）；inter-procedurals 新增 `id`、`saved`、`todos`、`visible` 四列與 6 筆 pair（#38、#40–#42 為 `init` 模型內的 pair，相同（變數、def、use）見於基準 intra-pages/0，亦符層級新增，D022）；intra-pages 同 inter-page（#47、#48、#50–#53、#63、#64）；摘要 #14 −2（$ANONYMOUS_FUN_3 的 `state@n122`）、#15 +1／−6（同 inter-page #11） | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核）（#2、#3、#4、#5、#6、#7、#8、#9、#10、#12、#13、#14、#15、#34、#35、#36、#37、#38、#40、#41、#42、#45、#46、#47、#48、#50、#51、#52、#53、#63、#64） |
+| expected-es2015 | inter-page | 成員目標 | 定義性成員目標 input L41；state L23、L33 | 5 | 0 | L41 `input.value = ''` 改為讀取 `input`（+`input: 39 -> 41`）；L23、L33 的 `state.todos = …` 不再殺除 `state`，L4 的 `const state` 到達 L24、L25、L34，L33 本身成為 `state` 的讀取（+`state: 4 -> 33`）；L25、L34 在 US2 成為 `render` 的呼叫節點，pair 標記改為 `call (25)`／`call (34)`（取代 US1 的 `4 -> 25`／`4 -> 34`） | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核）（#18、#28、#29、#30、#31） |
+| expected-es2015 | inter-page | 屬性寫入→讀取損失 | 定義性成員目標 input L41；state L23、L33 | 0 | 5 | L23、L33 的 `state.todos = …` 原為 `state` 的定義，到達 L23（下一次呼叫 `addTodo` 時）、L24、L25、L34 對 `state.todos` 的讀取；008 不追屬性，這些 pair 消失（讀取路徑 [todos] 與寫入路徑 [todos] 相同，語意上確有資料流，D001 接受的損失）；與 US1 相同 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核）（#23、#24、#25、#26、#27） |
+| expected-es2015 | page0 | 成員目標 | 定義性成員目標 input L41；state L23、L33 | 7 | 0 | 同 inter-page：intra-pages 4 筆 `state: 4 -> …`（含 `call (25)`、`call (34)`）與 `input: 39 -> 41`；inter-procedurals、intra-procedurals 只有 `input: 39 -> 41`（`addTodo`／`init` 的單函式模型無 L4 的定義可到達）；與 US1 相同 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核）（#39、#49、#59、#60、#61、#62、#65） |
+| expected-es2015 | page0 | 屬性寫入→讀取損失 | 定義性成員目標 input L41；state L23、L33 | 0 | 10 | 同 inter-page：intra-pages 5 筆；inter-procedurals `state: 23 -> 24`、`23 -> 25`（`addTodo`）；intra-procedurals `23 -> 24`、`23 -> 25`（`addTodo`）與 `33 -> 34`（`init`）；與 US1 相同 | 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核）（#43、#44、#54、#55、#56、#57、#58、#66、#67、#68） |
 
 
 ### 簽核備註（D026，主對話＋Fable 裁判獨立核對）
@@ -258,7 +258,7 @@ T048–T055 已完成（`lib/dujs/callresolver.js`：`classOfInstance` 沒有到
 - **US1 的摘要 matching `~` 改歸 `放寬`**：US1 的 3 筆 `成員目標（摘要）`（inter-page `0`、page0 `intra-pages/0` 與 `inter-procedurals/1`）在 US2 因新連結多出 `$ANONYMOUS_FUN_1`（`render`）的摘要鍵，`summaries` 鍵集合兩側不同，`成員目標（摘要）` 的「鍵集合相同」條件不再成立；該檔已因 L25／L34 觸發行成立 `放寬`，新鍵 ∈ N(f)（記「新鍵（新連結）$ANONYMOUS_FUN_1」），其餘元素差異（gen／exceptional −`state@n`、`init.upwardExposed +state`）仍逐元素通過 D023 (b) 的 (1)–(3)，故整檔改歸 `放寬`，元素數計入 `放寬` 釘選列（inter-page +1／−6；page0 +1／−8），「釘選與簽核」不再有 `成員目標（摘要）` 列。基準 `inter-procedurals/1`（mainScope $ANONYMOUS_FUN_4）改與 008 `3` 配對（matching `~` `inter-procedurals/1.matching.json → inter-procedurals/3.matching.json`）。
 - **D025**：inter-page `0.matching.json` 的 `init.gen`／`exceptional −nextId@n144 +nextId@n146` 是 `render` 節點插入造成的純重編號（兩側節點標記皆 `31`）；D025 前逐元素比對判為失敗（(4) 需同摘要有 `nextId` 的成員目標移除），整檔歸不進類別（exit 1）。D025 改為先以同模型 `.graph.dot` 換成節點標記再比對，此元素不算差異，該檔歸 `放寬`。
 - **類別分布**（68 筆）：`放寬` 41（inter-page 10、page0 31；pair +／− 14／4、row + 8、model + 2、graph ~／+ 8、matching ~／+ 5）、`屬性寫入→讀取損失` 15、`成員目標（不再殺除）` 6、`成員目標（新增讀取）` 6；`成員目標（修正）`、`成員目標（摘要）`、`成員目標（列消失）`、`外溢` 0。釘選：`放寬` inter-page +7／−8、page0 +25／−10；`成員目標` inter-page +5、page0 +7；`屬性寫入→讀取損失` inter-page −5、page0 −10（後兩類筆數同 US1）。
-- **段結構改變行** 18 列（inter-page、page0 intra-pages 各 5 列：L12、L13、L25、L34、entry；page0 inter-procedurals 8 列：L12、L13、L25、L29、L30、L31、L33、entry），皆為 `render` 連結帶出的新段（L12、L13 為 `render` 本身、L25／L34 為呼叫點、entry 多一段；inter-procedurals 的 L29–L33 為新模型 `2` 中的 `init`），逐列「待簽核」。
+- **段結構改變行** 18 列（inter-page、page0 intra-pages 各 5 列：L12、L13、L25、L34、entry；page0 inter-procedurals 8 列：L12、L13、L25、L29、L30、L31、L33、entry），皆為 `render` 連結帶出的新段（L12、L13 為 `render` 本身、L25／L34 為呼叫點、entry 多一段；inter-procedurals 的 L29–L33 為新模型 `2` 中的 `init`），逐列已簽核（2026-11-18，主對話＋Fable 裁判，依使用者授權）。
 - **MDN（只檢查，不寫 mdn-diff）**：`diffcheck.js mdn --report` exit 0，547 筆，0 筆歸不進類別：`成員目標（新增讀取）` 197、`成員目標（不再殺除）` 96、`放寬` 83、`屬性寫入→讀取損失` 78、`成員目標（修正）` 54、`成員目標（摘要）` 32、`成員目標（列消失）` 7；段結構改變行 74 列。`mdn --verify specs/008-property-defs-method-calls/mdn-diff.md` exit 1（mdn-diff 機器區塊仍為 Setup 的 develop 等價記錄，lib 已改；於 T063 重產）。
 
 - **T053 實際修改的既有測試**（以 `npm test` 失敗清單為準）：**無**。`relaxedClassOfInstance` 接線後 `npm test` 的失敗只有 `tests/golden/golden.js` 的 4 項（`expected-es2015`，留給 T056）；預檢的 `tests/dujs/methodcalls.js`「should not resolve o.m() without a reaching definition of o」（`var o`，D002 不放寬）期望不變。US2 只新增測試：`tests/dujs/propertydefs.js`（T048、T049）、`tests/dujs/relaxedcallee.js` 與 `tests/dujs/methodcalls.js`（T050）、`tests/dujs/matching.js`（T051）。
