@@ -56,11 +56,11 @@ describe('Labels of call return nodes (FR-011)', function () {
 	describe('a split call site: us6-1.js, log(c ? a : b);', function () {
 		var code = fs.readFileSync(path.join(PROBES, 'us6-1.js'), 'utf8');
 
-		/// US6 #1, CLI default converter
-		it('should label the call returns with line and branch path', function () {
+		/// US6 #1, CLI default converter; feature 007 (FR-007, DECISION 005 Q1 A): the calls as well
+		it('should label the calls and the call returns with line and branch path', function () {
 			labelsOf(interProceduralModelOf(code), 'toDotWithLabelLine').should.eql([
-				'entry_a', '1', '4', 'call_a', 'entry_b', 'exit_a',
-				'callReturn (4:T)', 'exit_b', 'call_b', 'callReturn (4:F)'
+				'entry_a', '1', '4', 'call (4:T)', 'entry_b', 'exit_a',
+				'callReturn (4:T)', 'exit_b', 'call (4:F)', 'callReturn (4:F)'
 			]);
 		});
 
@@ -88,10 +88,11 @@ describe('Labels of call return nodes (FR-011)', function () {
 	describe('call sites not split: f(); statements', function () {
 		var code = 'function f() {\n}\nf();\nf();';
 
-		/// US6 #2: same labels as before, deduplicated by _a, _b
-		it('should keep the labels with labeled line numbers', function () {
+		/// feature 007 (FR-007, DECISION 005 Q1 A): a call and a call return are labeled with their line
+		/// (no ':' for an empty path); other equal labels are deduplicated by _a, _b
+		it('should label the calls and the call returns with their lines', function () {
 			labelsOf(interProceduralModelOf(code), 'toDotWithLabelLine').should.eql([
-				'entry_a', 'call_a', 'entry_b', 'exit_a', 'callReturn_a', 'call_b', 'callReturn_b', 'exit_b'
+				'entry_a', 'call (3)', 'entry_b', 'exit_a', 'callReturn (3)', 'call (4)', 'callReturn (4)', 'exit_b'
 			]);
 		});
 
@@ -107,13 +108,15 @@ describe('Labels of call return nodes (FR-011)', function () {
 	describe('a split call site and a call site not split', function () {
 		var code = 'var a = 1, b = 2, c = 0;\nfunction log(v) {\n}\nlog(c ? a : b);\nlog(a);';
 
-		/// the call return not split keeps the plain label, unique once the
-		/// split ones carry their paths
+		/// feature 007 (FR-007): the call return not split carries its line without a path
 		it('should label only the call returns of the split call site with paths', function () {
 			var labels = labelsOf(interProceduralModelOf(code), 'toDotWithLabelLine');
 			labels.filter(function (label) {
 				return label.indexOf('callReturn') === 0;
-			}).sort().should.eql(['callReturn', 'callReturn (4:F)', 'callReturn (4:T)']);
+			}).sort().should.eql(['callReturn (4:F)', 'callReturn (4:T)', 'callReturn (5)']);
+			labels.filter(function (label) {
+				return label.indexOf('call ') === 0;
+			}).sort().should.eql(['call (4:F)', 'call (4:T)', 'call (5)']);
 		});
 
 		it('should label only the call returns of the split call site with paths, with columns', function () {
@@ -121,6 +124,47 @@ describe('Labels of call return nodes (FR-011)', function () {
 			labels.filter(function (label) {
 				return label.indexOf('callReturn') === 0;
 			}).sort().should.eql(['callReturn (L4:C0:F)', 'callReturn (L4:C0:T)', 'callReturn (L5:C0)']);
+		});
+	});
+
+	/// feature 007 (FR-007, DECISION 005 Q1 A): call sites on one line give equal labels, deduplicated by _a, _b
+	describe('call sites on the same line', function () {
+		var code = 'function f() {\n}\nf(); f();';
+
+		it('should deduplicate the labels call (<line>) and callReturn (<line>) by _a, _b', function () {
+			labelsOf(interProceduralModelOf(code), 'toDotWithLabelLine').should.eql([
+				'entry_a', 'call (3)_a', 'entry_b', 'exit_a', 'callReturn (3)_a', 'call (3)_b', 'callReturn (3)_b', 'exit_b'
+			]);
+		});
+
+		/// two call sites in one node (feature 007 User Story 2): the return of the first call is the call of
+		/// the second one; every label carries the line of the node
+		it('should label the call sites of one node with its line', function () {
+			var labels = labelsOf(interProceduralModelOf('function f() {\n}\nvar y = f() + f();'), 'toDotWithLabelLine');
+			labels.filter(function (label) {
+				return /^call/.test(label);
+			}).sort().should.eql(['call (3)_a', 'call (3)_b', 'callReturn (3)']);
+		});
+	});
+
+	/// feature 007 T068 (DECISION 013): 27 or more nodes with one label used to loop forever in
+	/// computeLabelIndex (heap OOM); the labels stay distinct and the indexes 0-25 keep a-z
+	describe('27 call sites on the same line', function () {
+		var count = 27,
+			code = 'function f() {\n}\n' + new Array(count + 1).join('f(); ');
+		var letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+		['call', 'callReturn'].forEach(function (type) {
+			it('should give the ' + count + ' ' + type + ' nodes distinct labels, a-z for the first 26', function () {
+				var labels = labelsOf(interProceduralModelOf(code), 'toDotWithLabelLine').filter(function (label) {
+					return label.indexOf(type + ' (3)_') === 0;
+				});
+				labels.should.have.length(count);
+				new Set(labels).size.should.eql(count);
+				labels.slice(0, letters.length).should.eql(letters.map(function (letter) {
+					return type + ' (3)_' + letter;
+				}));
+			});
 		});
 	});
 });

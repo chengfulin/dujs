@@ -1,0 +1,22 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="3">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry,9)</td><td>(entry,10)</td><td>(entry,11)</td></tr>
+<tr><td>String</td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td></tr>
+<tr><td>contacts</td><td></td><td></td><td></td></tr>
+<tr><td>para</td><td></td><td></td><td></td></tr>
+<tr><td>input</td><td></td><td></td><td></td></tr>
+<tr><td>btn</td><td>(11,13)</td><td></td><td></td></tr>
+</TABLE>
+>];
+}

@@ -1,0 +1,22 @@
+## scopes
+$DOMAIN.$PAGE_0
+## intra $DOMAIN.$PAGE_0
+Date: entry -> L1
+Object: entry -> L5
+console: entry -> L6
+myDate: L1 -> L2
+object: L2 -> L5
+object: L5 -> L5
+object: L5 -> L6
+object: L5 -> L7>L5:T
+object: L5 -> L7>exit:F
+## intra-page (nodes 9)
+Date: entry -> L1
+Object: entry -> L5
+console: entry -> L6
+myDate: L1 -> L2
+object: L2 -> L5
+object: L5 -> L5
+object: L5 -> L6
+object: L5 -> L7>L5:T
+object: L5 -> L7>Lnull:F

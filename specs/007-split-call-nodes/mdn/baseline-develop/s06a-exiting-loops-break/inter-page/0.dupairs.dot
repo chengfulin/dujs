@@ -1,0 +1,25 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="4">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,9)</td><td>(entry_a,10)</td><td>(entry_a,11)</td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>contacts</td><td>(2,18)</td><td></td><td></td><td></td></tr>
+<tr><td>para</td><td>(17,(25,26))</td><td>(17,(25,exit_b))</td><td>(21,(25,26))</td><td>(21,(25,exit_b))</td></tr>
+<tr><td>input</td><td>(10,14)</td><td>(15,14)</td><td>(15,16)</td><td></td></tr>
+<tr><td>btn</td><td>(11,13)</td><td></td><td></td><td></td></tr>
+<tr><td>searchName</td><td>(14,(20,21))</td><td>(14,(20,18))</td><td></td><td></td></tr>
+<tr><td>contact</td><td>(18,19)</td><td></td><td></td><td></td></tr>
+<tr><td>splitContact</td><td>(19,(20,21))</td><td>(19,(20,18))</td><td>(19,21)</td><td></td></tr>
+</TABLE>
+>];
+}

@@ -27,7 +27,8 @@ var modelCtrl = require('../../lib/dujs/modelctrl'),
 	analyze = require('../helpers/analyze');
 
 var ROOT = path.join(__dirname, '..', '..'),
-	PROBES005 = path.join(__dirname, 'cases', 'probes005');
+	PROBES005 = path.join(__dirname, 'cases', 'probes005'),
+	PROBES007 = path.join(__dirname, 'cases', 'probes007');
 
 /// fields of a CallSiteRecord (data-model §4)
 var RECORD_FIELDS = ['callNode', 'callReturn', 'calleeScope', 'exceptionalReturn', 'entry', 'exit',
@@ -55,6 +56,16 @@ function lastPartOf(name) {
 function analyzeProbe(probe) {
 	'use strict';
 	return analyze(fs.readFileSync(path.join(PROBES005, probe), 'utf8'));
+}
+
+/**
+ * Analyze a probe of feature 007
+ * @param {string} probe file name
+ * @returns {Object} the result of the analyze helper
+ */
+function analyzeProbe007(probe) {
+	'use strict';
+	return analyze(fs.readFileSync(path.join(PROBES007, probe), 'utf8'));
 }
 
 /**
@@ -105,13 +116,14 @@ function recordsOf(model) {
 /**
  * Run the CLI on a probe into a temporary directory
  * @param {string} probe file name
+ * @param {string} [probes] directory of the probe, default is probes005
  * @returns {Object} {dir, out} the temporary directory and the output directory
  */
-function runCLI(probe) {
+function runCLI(probe, probes) {
 	'use strict';
 	var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dujs-matching-'));
 	var run = childProcess.spawnSync(process.execPath,
-		[path.join(ROOT, 'bin', 'dujs.js'), '-js', path.join(PROBES005, probe)],
+		[path.join(ROOT, 'bin', 'dujs.js'), '-js', path.join(probes || PROBES005, probe)],
 		{cwd: dir, encoding: 'utf8'});
 	run.status.should.eql(0, run.stderr);
 	var outDirs = fs.readdirSync(dir).filter(function (name) {
@@ -207,6 +219,138 @@ describe('call matching (feature 005, User Story 1 scenario 5)', function () {
 						});
 					});
 				});
+			});
+		});
+	});
+
+	/// feature 007 User Story 2 (T036, FR-007): the call sites of one node each have a record
+	describe('call sites in expressions (feature 007 User Story 2)', function () {
+		/**
+		 * Records of the page model at a line, in seq order: [callee last part, ...]
+		 * @param {Model} model
+		 * @param {number} line
+		 * @returns {Array}
+		 */
+		function recordsAtLine(model, line) {
+			return recordsOf(model).filter(function (record) {
+				return record.callSiteLine === line;
+			}).sort(function (first, second) {
+				return first.seq - second.seq;
+			});
+		}
+
+		it('should map every return edge to a call return to exactly one record (p6, p31)', function () {
+			['p6-two-calls.js', 'p31-new-method-arg.js'].forEach(function (probe) {
+				upperModelsOf(analyzeProbe007(probe)).forEach(function (model) {
+					var records = recordsOf(model), returns = 0;
+					model.graph[2].forEach(function (node) {
+						node.return.forEach(function (target) {
+							if (target.type === FlowNode.LOOP_NODE_TYPE) {
+								return;
+							}
+							returns += 1;
+							records.filter(function (record) {
+								return record.exit === node && record.callReturn === target;
+							}).should.have.length(1, probe + ': return edge to ' + target);
+						});
+					});
+					returns.should.eql(records.length);
+				});
+			});
+		});
+
+		/// var y = f() + g(); at L10: f then g
+		it('should give one record to each call site of a node in evaluation order (p6)', function () {
+			var model = interProceduralModelOfPage(analyzeProbe007('p6-two-calls.js')),
+				records = recordsAtLine(model, 10);
+			records.map(function (record) {
+				return lastPartOf(record.calleeScope.name);
+			}).should.eql(['f', 'g']);
+			/// the call return of f is the call node of g (chained)
+			(records[0].callReturn === records[1].callNode).should.be.true();
+		});
+
+		/// new F().m(x = 1); at L10: the constructor of F (new F()), then m
+		it('should give the constructor and then m of new F().m(x = 1) a record each (p31)', function () {
+			var result = analyzeProbe007('p31-new-method-arg.js'),
+				model = interProceduralModelOfPage(result),
+				records = recordsAtLine(model, 10);
+			records.map(function (record) {
+				return lastPartOf(record.calleeScope.name);
+			}).should.eql(['$ANONYMOUS_FUN_0', '$ANONYMOUS_FUN_1']);
+			records.forEach(function (record) {
+				record.callNode.line.should.eql(10);
+			});
+		});
+
+		it('should write a record of each return edge in *.matching.json (p6, p31)', function () {
+			this.timeout(60000);
+			[['p6-two-calls.js', 11, 2], ['p31-new-method-arg.js', 11, 2]].forEach(function (each) {
+				var output = runCLI(each[0], PROBES007);
+				try {
+					var file = path.join(output.out, 'page0', 'intra-pages', '0'),
+						matching = JSON.parse(fs.readFileSync(file + '.matching.json', 'utf8')),
+						dot = fs.readFileSync(file + '.graph.dot', 'utf8'),
+						/// the return edges to the LOOP node (of the handler loop) have no record
+						loops = dot.split('\n').map(function (line) {
+							return /^(n\d+) \[label="loop"/.exec(line);
+						}).filter(Boolean).map(function (matched) {
+							return matched[1];
+						}),
+						returnEdges = dot.split('\n').filter(function (line) {
+							var matched = /^n\d+ -> (n\d+) \[color="blue", label="return"\]$/.exec(line);
+							return !!matched && loops.indexOf(matched[1]) === -1;
+						});
+					returnEdges.length.should.eql(matching.calls.length, each[0]);
+					returnEdges.forEach(function (line) {
+						var parts = /^(n\d+) -> (n\d+) /.exec(line);
+						matching.calls.filter(function (call) {
+							return call.exit === parts[1] && call.callReturn === parts[2];
+						}).should.have.length(1, each[0] + ': ' + line);
+					});
+					var atLine = matching.calls.filter(function (call) {
+						return call.callSiteLine === each[1];
+					});
+					atLine.should.have.length(each[2]);
+					(atLine[0].seq < atLine[1].seq).should.be.true();
+				} finally {
+					fs.rmSync(output.dir, {recursive: true, force: true});
+				}
+			});
+		});
+	});
+
+	describe('call sites evaluated once and before a decision (feature 007 User Story 3)', function () {
+		it('should map every return edge to a call return to exactly one record (p32, p15)', function () {
+			['p32-switch-read-before.js', 'p15-for-of.js'].forEach(function (probe) {
+				var models = upperModelsOf(analyzeProbe007(probe));
+				models.length.should.be.above(0, probe);
+				models.forEach(function (model) {
+					var records = recordsOf(model), returns = 0;
+					model.graph[2].forEach(function (node) {
+						node.return.forEach(function (target) {
+							if (target.type === FlowNode.LOOP_NODE_TYPE) {
+								return;
+							}
+							returns += 1;
+							records.filter(function (record) {
+								return record.exit === node && record.callReturn === target;
+							}).should.have.length(1, probe + ': return edge to ' + target);
+						});
+					});
+					returns.should.eql(records.length);
+				});
+			});
+		});
+
+		/// if (f() > x) at L6, switch (x + f()) at L6 (the call site is the first case, L7), for (var v of f()) at L6
+		[['p8-cond-after.js', 6], ['p32-switch-read-before.js', 7], ['p15-for-of.js', 6]].forEach(function (each) {
+			it('should record the call of ' + each[0] + ' as before a decision', function () {
+				var records = recordsOf(interProceduralModelOfPage(analyzeProbe007(each[0])));
+				records.should.have.length(1);
+				records[0].beforeDecision.should.be.true();
+				records[0].callSiteLine.should.eql(each[1]);
+				lastPartOf(records[0].calleeScope.name).should.eql('f');
 			});
 		});
 	});

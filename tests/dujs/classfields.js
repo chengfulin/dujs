@@ -13,7 +13,8 @@
 require('should');
 var fs = require('fs'),
 	path = require('path'),
-	analyze = require('../helpers/analyze');
+	analyze = require('../helpers/analyze'),
+	modelCtrl = require('../../lib/dujs/modelctrl');
 
 var PROBES = path.join(__dirname, 'cases', 'probes004');
 
@@ -258,6 +259,64 @@ describe('Class field initializers and static blocks', function () {
 			].join('\n'));
 			pairsOf(result.intraPage(), 'Q').should.containEql('Q: L1 -> L2');
 			pairsOf(result.intraPage(), 'B').should.eql([]);
+		});
+	});
+	/// feature 007 T023: the position rules of segmentOfVarDef (the name of a class bound before its static
+	/// members) replace keepGenerateAtCallSite and splitByInnerClassName; the pairs of the class static members
+	/// are the same as develop (edc22d5). A difference is a bug. The positions not listed as call sites
+	/// (T066, a behavior change) are not here.
+	describe('class static members as call sites are the same as develop (007 T023)', function () {
+		var STATIC = PAGE + '.$ANONYMOUS_FUN_';
+		[
+			{
+				name: 'a class declaration reading its name',
+				code: ['var v = 1;', 'class A {', '  static s = A;', '  static {', '    v = A;', '  }', '}', 'console.log(v);'],
+				scopes: [PAGE, STATIC + '0', STATIC + '1'],
+				pairs: ['A: L2 -> L3', 'A: L2 -> L5', 'console: entry -> L8', 'v: L5 -> L8']
+			},
+			{
+				name: 'the variable of a class expression',
+				code: ['var v = 1;', 'var C = class {', '  static s = C;', '  static t = (v = 2);', '};', 'console.log(v, C);'],
+				scopes: [PAGE, STATIC + '0', STATIC + '1'],
+				pairs: ['C: L2 -> L6', 'C: entry -> L3', 'console: entry -> L6', 'v: L4 -> L6']
+			},
+			{
+				name: 'the inner name of a named class expression',
+				code: ['var v = 1;', 'var C = class X {', '  static s = X;', '  static t = (v = X);', '};',
+					'console.log(v, C);'],
+				scopes: [PAGE, STATIC + '0', STATIC + '1'],
+				pairs: ['C: L2 -> L6', 'X: L2 -> L3', 'X: L2 -> L4', 'console: entry -> L6', 'v: L4 -> L6']
+			},
+			{
+				name: 'a class argument before the called function',
+				code: ['var v = 1;', 'function foo(k) {', '  return v;', '}', 'foo(class X {', '  static s = (v = 2);', '});',
+					'console.log(v);'],
+				scopes: [PAGE, STATIC + '0', PAGE + '.foo'],
+				pairs: ['console: entry -> L8', 'foo: entry -> L5', 'v: L6 -> L3', 'v: L6 -> L8']
+			},
+			{
+				name: 'a class declaration with a superclass',
+				code: ['var v = 1, w = 2;', 'class A extends Object {', '  static s = (v = w);', '}', 'var u = v, q = A;'],
+				scopes: [PAGE, STATIC + '0'],
+				pairs: ['A: L2 -> L5', 'Object: entry -> L2', 'v: L3 -> L5', 'w: L1 -> L3']
+			},
+			{
+				name: 'a class expression as a condition',
+				code: ['var v = 1;', 'if (class {', '  static s = (v = 2);', '}) {', '  console.log(v);', '}'],
+				scopes: [PAGE, STATIC + '0'],
+				pairs: ['console: entry -> L5', 'v: L3 -> L5']
+			}
+		].forEach(function (testCase) {
+			it('should keep the pairs of ' + testCase.name, function () {
+				var result = analyze(testCase.code.join('\n'));
+				var models = modelCtrl.collectionOfPageModels.get(result.scopeTree)
+					.interProceduralModels.filter(function (model) {
+						return model.relatedScopes.map(String).join('|') === testCase.scopes.join('|');
+					});
+				models.should.have.length(1);
+				analyze.pairsOfModel(models[0]).should.eql(testCase.pairs);
+				result.intraPage().should.eql(testCase.pairs);
+			});
 		});
 	});
 });

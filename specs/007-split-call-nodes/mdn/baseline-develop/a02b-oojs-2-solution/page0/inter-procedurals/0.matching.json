@@ -1,0 +1,33 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 36,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
+      "callNode": "n15",
+      "entry": "n16",
+      "exit": "n18",
+      "callReturn": "n19",
+      "exceptionalReturn": "n20",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "console"
+      ],
+      "exceptional": []
+    }
+  }
+}

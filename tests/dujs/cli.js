@@ -425,6 +425,37 @@ describe('CLI', function () {
 			files.should.containEql('inter-page/0.graph.dot');
 		});
 
+		/// feature 007 T068 (DECISION 013): 27 or more nodes with one label in a graph used to make
+		/// computeLabelIndex loop forever (heap OOM, exit 134)
+		describe('27 or more nodes with one label (T068)', function () {
+			/// runs about 12.5-14 s and 4.5 s measured, within the 60 s of this describe
+			/// handlers-9: 9 event handlers call h(), which has two call sites on one line
+			var handlers9 = 'function g(v) { return v; }\n' +
+				'function h() { var s = g(1) + g(2); return s; }\n';
+			for (var k = 0; k < 9; k += 1) {
+				handlers9 += 'function on' + k + '() { var r = h(); }\n' +
+					'document.addEventListener("e' + k + '", on' + k + ');\n';
+			}
+			/// ten-calls-line: ten call sites on one line, reached by three handlers
+			var tenCallsLine = 'function g(v) { return v; }\n' +
+				'function on0() { var s = [g(1), g(2), g(3), g(4), g(5), g(6), g(7), g(8), g(9), g(10)]; }\n' +
+				'function on1() { on0(); }\n' +
+				'function on2() { on0(); }\n' +
+				'document.addEventListener("a", on0);\n' +
+				'document.addEventListener("b", on1);\n' +
+				'document.addEventListener("c", on2);\n';
+
+			[['handlers-9.js', handlers9], ['ten-calls-line.js', tenCallsLine]].forEach(function (sample) {
+				it('should exit with 0 for ' + sample[0], function () {
+					fs.writeFileSync(path.join(dir, sample[0]), sample[1]);
+					var result = spawnBin(['-js', sample[0]]);
+					should(result.status).eql(0);
+					result.stderr.should.eql('');
+					outDirsIn(dir).should.have.length(1);
+				});
+			});
+		});
+
 		/// US5-4 / SC-005: two runs started together in the same directory, 10 times
 		it('US5-4 should give concurrent runs different directories', function () {
 			var rounds = 10;

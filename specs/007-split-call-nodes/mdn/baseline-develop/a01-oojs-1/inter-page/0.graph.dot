@@ -1,0 +1,16 @@
+digraph CFG {
+node [shape="box"]
+label = ""
+n8 [label="localStorage", shape="doublecircle", style="filled", fillcolor="orange"]
+n9 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n10 [label="2"]
+n11 [label="loop", shape="ellipse", style="filled", fillcolor="yellow"]
+n12 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n13 [label="loopReturn", shape="ellipse", style="filled", fillcolor="yellow"]
+n8 -> n9 [style="dotted"]
+n9 -> n10 []
+n10 -> n11 []
+n11 -> n12 []
+n11 -> n13 [color="green", label = "onEvent"]
+n13 -> n11 [color="blue", label="return"]
+}

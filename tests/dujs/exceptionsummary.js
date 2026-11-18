@@ -178,8 +178,10 @@ describe('exceptions leaving a callee (feature 005 US3)', function () {
 	});
 
 	/// A chain of calls at one node: new A().m() calls the constructor, then m from the CALL RETURN NODE of
-	/// the constructor (the CALL NODE of m, with no exception edge of its own). a().b() is not linked
-	/// (the object of b is a call), so the chain is written with new. The definitions m makes before it
+	/// the constructor (the CALL NODE of m, with no exception edge of its own). From feature 007 User Story 2
+	/// new A() and .m() are two call sites of the node (new A() the constructor, .m() m only), chained in
+	/// evaluation order by calleeScopesOf. a().b() is not linked (the object of b is a call), so the chain is
+	/// written with new. The definitions m makes before it
 	/// throws go out through the exceptionalReturn of the later call: to the catch, or to the exit of t and
 	/// on through the exceptional summary of t.
 	it('carries the exceptional definitions of the later call of a chain to the catch and to the exit', function () {
@@ -208,9 +210,38 @@ describe('exceptions leaving a callee (feature 005 US3)', function () {
 			});
 		});
 		calleesAtL11.length.should.eql(2, 'the constructor and m are chained at L11');
+		/// two call sites (feature 007 User Story 2), one callee each
+		pageModels.intraProceduralModels.forEach(function (model) {
+			if (model.mainlyRelatedScope !== result.scopeTree.root) {
+				return;
+			}
+			model.graph[2].forEach(function (node) {
+				if (node.line === 11) {
+					require('../../lib/dujs/callsplit').planOf(node, result.scopeTree)
+						.callSites.map(function (entry) {
+							return entry.kind + ':' + entry.callees.length;
+						}).should.eql(['new:1', 'call:1']);
+				}
+			});
+		});
 		shouldHavePairsIn(pairsOfCode(classA.concat(['try {', '  new A().m();', '} catch (e) {', '  console.log(x);', '}']).join('\n')),
 			'new A().m() in try', ['x: L1 -> L13', 'x: L6 -> L13'], []);
 		shouldHavePairsIn(pairsOfCode(classA.concat(['function t() {', '  new A().m();', '}', 'try {', '  t();', '} catch (e) {',
 			'  console.log(x);', '}']).join('\n')), 'new A().m() in t', ['x: L1 -> L16', 'x: L6 -> L16'], []);
+	});
+	/// feature 007 User Story 4 (FR-005, research R6): the segment after the return of f throws by its own
+	/// evaluation (f().p), so the definitions of f reach the exit of t exceptionally and, through the exceptional
+	/// summary of t, the catch of the caller; a call statement f(); does not throw after the return
+	it('carries the definitions of a callee through the segment after its return (007 US4)', function () {
+		var head = ['var x = 1;', 'var o = null;', 'function f() {', '  x = 2;', '  return o;', '}'];
+		shouldHavePairsIn(pairsOfCode(head.concat(['function t() {', '  var y = f().p;', '}', 'try {', '  t();', '} catch (e) {',
+			'  console.log(x);', '}']).join('\n')), 'f().p in t', ['x: L1 -> L13', 'x: L4 -> L13'], []);
+		shouldHavePairsIn(pairsOfCode(head.concat(['function t() {', '  f();', '}', 'try {', '  t();', '} catch (e) {',
+			'  console.log(x);', '}']).join('\n')), 'f(); in t', ['x: L1 -> L13'], ['x: L4 -> L13']);
+		/// if (f()) does not throw after the return (the decision loses its exception edge); if (f().p) does
+		shouldHavePairsIn(pairsOfCode(head.concat(['try {', '  if (f()) {', '  }', '} catch (e) {', '  console.log(x);', '}'])
+			.join('\n')), 'if (f())', ['x: L1 -> L11'], ['x: L4 -> L11']);
+		shouldHavePairsIn(pairsOfCode(head.concat(['try {', '  if (f().p) {', '  }', '} catch (e) {', '  console.log(x);', '}'])
+			.join('\n')), 'if (f().p)', ['x: L1 -> L11', 'x: L4 -> L11'], []);
 	});
 });

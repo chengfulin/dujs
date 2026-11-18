@@ -143,11 +143,12 @@ describe('new statements as call-sites (FR-002, FR-003)', function () {
 		result.interProceduralScopes().should.eql([]);
 	});
 
-	/// US2 #5: y = new F(); is not a call-site (only a new statement is)
-	it('US2-5 should not connect y = new F();', function () {
+	/// US2 #5: y = new F(); was not a call-site (only a new statement was); feature 007 User Story 2:
+	/// a new expression in an assignment is a call site, F runs before the assignment
+	it('US2-5 should connect y = new F(); (feature 007 User Story 2)', function () {
 		var result = analyzeProbe('us2-5');
-		result.intraPage().should.eql(['F: entry -> L5', 'console: entry -> L6', 'x: L1 -> L6']);
-		result.interProceduralScopes().should.eql([]);
+		result.intraPage().should.eql(['F: entry -> L5', 'console: entry -> L6', 'x: L3 -> L6']);
+		result.interProceduralScopes().should.eql([[PAGE, PAGE + '.F']]);
 	});
 
 	/// US2 #6: new A(); in a function, A the only class declaration of the page (class relaxation)
@@ -284,7 +285,9 @@ describe('callResolver (research R2, FR-018)', function () {
 			(callResolver.callExpressionOf(nodeAt(result, PAGE + '.g', 3)) === null).should.eql(true);
 		});
 
-		it('should return this.m() and new B() of a field initializer (FR-017)', function () {
+		/// feature 007 User Story 2: the field initializer special case is removed; this.m() and new B()
+		/// are call sites of the return statement listed by callsplit.planOf
+		it('should return null for the return statement of a field initializer (feature 007 User Story 2)', function () {
 			var result = analyze([
 				'class B {}',
 				'class A {',
@@ -294,13 +297,12 @@ describe('callResolver (research R2, FR-018)', function () {
 				'  m() {}',
 				'}'
 			].join('\n'));
-			var thisCall = callResolver.callExpressionOf(nodeAt(result, ANONYMOUS + '0', 3)),
-				newB = callResolver.callExpressionOf(nodeAt(result, ANONYMOUS + '1', 4));
-			thisCall.type.should.eql('CallExpression');
-			thisCall.callee.object.type.should.eql('ThisExpression');
-			newB.type.should.eql('NewExpression');
-			newB.callee.name.should.eql('B');
+			(callResolver.callExpressionOf(nodeAt(result, ANONYMOUS + '0', 3)) === null).should.eql(true);
+			(callResolver.callExpressionOf(nodeAt(result, ANONYMOUS + '1', 4)) === null).should.eql(true);
 			(callResolver.callExpressionOf(nodeAt(result, ANONYMOUS + '2', 5)) === null).should.eql(true);
+			/// the calls are still resolved, as call sites of the return statement
+			calleesAt(result, ANONYMOUS + '0', 3).should.eql([ANONYMOUS + '3']);
+			calleesAt(result, ANONYMOUS + '1', 4).should.eql([]);
 		});
 
 		it('should mark the return statement of a field initializer as non-enumerable', function () {
@@ -354,7 +356,8 @@ describe('callResolver (research R2, FR-018)', function () {
 			calleesAt(result, ANONYMOUS + '1', 6).should.eql([]);
 		});
 
-		it('should resolve new ns.A(), new (f())() and an undeclared callee to none', function () {
+		/// feature 007 User Story 2: f() of new (f())() is a call site of its own (new of its value is not resolved)
+		it('should resolve new ns.A() and an undeclared callee to none, and f() of new (f())() to f', function () {
 			var result = analyze([
 				'var ns = {};',
 				'function f() {}',
@@ -364,7 +367,7 @@ describe('callResolver (research R2, FR-018)', function () {
 				'z();'
 			].join('\n'));
 			calleesAt(result, PAGE, 3).should.eql([]);
-			calleesAt(result, PAGE, 4).should.eql([]);
+			calleesAt(result, PAGE, 4).should.eql([PAGE + '.f']);
 			calleesAt(result, PAGE, 5).should.eql([]);
 			calleesAt(result, PAGE, 6).should.eql([]);
 		});
@@ -524,5 +527,69 @@ describe('callResolver (research R2, FR-018)', function () {
 				analyze.compareSnapshots(snapshot, analyze.snapshotOf(snapshot.model));
 			});
 		});
+	});
+});
+
+/**
+ * Names of the callee scopes of the first new expression of the node of a line
+ * whose source is the given text (feature 007 R7)
+ * @param {Object} result
+ * @param {string} source
+ * @param {number} line
+ * @param {string} text
+ * @returns {Array}
+ */
+function newCalleesAt(result, source, line, text) {
+	'use strict';
+	var node = nodeAt(result, PAGE, line), found = null;
+	require('walkes')(node.astNode, {
+		FunctionExpression: function () {},
+		ArrowFunctionExpression: function () {},
+		NewExpression: function (expression, recurse) {
+			if (!found && source.slice(expression.range[0], expression.range[1]) === text) {
+				found = expression;
+			}
+			require('walkes').checkProps(expression, recurse);
+		}
+	});
+	(!!found).should.eql(true, 'no expression ' + text);
+	return callResolver.calleeScopesOfExpression(node, found, result.scopeTree).map(String);
+}
+
+describe('callResolver.calleeScopesOfExpression of new (feature 007 R7)', function () {
+	'use strict';
+
+	after(analyze.reset);
+
+	it('should resolve new A() in an expression to the instance fields and then the constructor', function () {
+		var source = [
+			'class A {',
+			'  f = 1;',
+			'  static s = 2;',
+			'  g = 3;',
+			'  constructor() {}',
+			'}',
+			'var a = [new A()];'
+		].join('\n'), result = analyze(source);
+		newCalleesAt(result, source, 7, 'new A()').should.eql([ANONYMOUS + '0', ANONYMOUS + '2', ANONYMOUS + '3']);
+	});
+
+	it('should resolve new F() in an argument to the function F', function () {
+		var source = ['function F() {}', 'function h() {}', 'h(new F());'].join('\n'),
+			result = analyze(source);
+		newCalleesAt(result, source, 3, 'new F()').should.eql([PAGE + '.F']);
+	});
+
+	it('should resolve new F() of new F().m(x = 1) to F only', function () {
+		var source = ['function F() {}', 'var x;', 'new F().m(x = 1);'].join('\n'),
+			result = analyze(source);
+		newCalleesAt(result, source, 3, 'new F()').should.eql([PAGE + '.F']);
+	});
+
+	it('should resolve new ns.A() and an undeclared callee in an expression to none', function () {
+		var source = ['var ns = {};', 'var a = [new ns.A(), new Z()];'].join('\n'),
+			result = analyze(source);
+		newCalleesAt(result, source, 2, 'new ns.A()').should.eql([]);
+		newCalleesAt(result, source, 2, 'new Z()').should.eql([]);
 	});
 });

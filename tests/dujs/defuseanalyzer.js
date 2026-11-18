@@ -257,3 +257,107 @@ describe('DefUseAnalyzer', function () {
         });
     });
 });
+/**
+ * findGENSet records where each definition is completed (feature 007 T009,
+ * data-model §3, research R3): cfgNode.generatedAt maps each VarDef of the
+ * GEN set to the AST node completing it; the returned GEN set is unchanged.
+ */
+describe('DefUseAnalyzer.findGENSet generatedAt (feature 007 R3)', function () {
+    "use strict";
+    var analyze = require('../helpers/analyze'),
+        FlowNode = require('../../lib/esgraph/flownode');
+
+    after(function () {
+        analyze.reset();
+    });
+
+    /**
+     * The first node of a line in the intra-procedural model of a scope
+     * @param {Object} result
+     * @param {string} scopeName
+     * @param {number} line
+     * @returns {FlowNode}
+     */
+    function nodeAt(result, scopeName, line) {
+        var found = null;
+        modelCtrl.collectionOfPageModels.get(result.scopeTree).intraProceduralModels.forEach(function (model) {
+            if (model.mainlyRelatedScope.name !== scopeName) {
+                return;
+            }
+            model.graph[2].forEach(function (node) {
+                if (!found && node.type !== FlowNode.ENTRY_NODE_TYPE && node.type !== FlowNode.EXIT_NODE_TYPE &&
+                    node.line === line) {
+                    found = node;
+                }
+            });
+        });
+        should.exist(found, 'no node at L' + line);
+        return found;
+    }
+
+    /**
+     * Run findGENSet on the node of a line and describe generatedAt
+     * @param {string} source
+     * @param {number} line
+     * @param {string} [scopeName] default the page
+     * @returns {Array} sorted "<variable>@<AST type>:<source of the AST>"
+     */
+    function generatedAtOf(source, line, scopeName) {
+        var result = analyze(source),
+            node = nodeAt(result, scopeName || '$DOMAIN.$PAGE_0', line),
+            before = node.generate.values().map(String).sort(),
+            returned = defuseAnalyzer.findGENSet(node);
+        /// the returned GEN set is unchanged
+        returned.values().map(String).sort().should.eql(before);
+        (node.generatedAt instanceof Map).should.eql(true);
+        node.generatedAt.size.should.eql(returned.size);
+        return returned.values().map(function (vardef) {
+            node.generatedAt.has(vardef).should.eql(true, 'no generatedAt of ' + vardef);
+            var ast = node.generatedAt.get(vardef);
+            return vardef.variable.toString() + '@' + ast.type + ':' + source.slice(ast.range[0], ast.range[1]);
+        }).sort();
+    }
+
+    it('should map var y = g() to the VariableDeclarator', function () {
+        generatedAtOf('function g() {}\nvar y = g();', 2).should.eql(['y@VariableDeclarator:y = g()']);
+    });
+
+    it('should map x = f() and x += f() to the AssignmentExpression', function () {
+        var source = 'var x;\nfunction f() {}\nx = f();\nx += f();';
+        generatedAtOf(source, 3).should.eql(['x@AssignmentExpression:x = f()']);
+        generatedAtOf(source, 4).should.eql(['x@AssignmentExpression:x += f()']);
+    });
+
+    it('should map a chained assignment to each AssignmentExpression', function () {
+        generatedAtOf('var a, b;\na = b = 1;', 2).should.eql(['a@AssignmentExpression:a = b = 1',
+            'b@AssignmentExpression:b = 1']);
+    });
+
+    it('should map a destructuring declaration to the VariableDeclarator', function () {
+        generatedAtOf('var c = [];\nvar [a, b] = c;', 2).should.eql(['a@VariableDeclarator:[a, b] = c',
+            'b@VariableDeclarator:[a, b] = c']);
+    });
+
+    it('should map the loop variable of for-of to the loop statement', function () {
+        generatedAtOf('var a = [];\nfor (var v of a) {\n}', 2).should.eql(['v@ForOfStatement:for (var v of a) {\n}']);
+    });
+
+    it('should map the name of a class declaration to the ClassDeclaration', function () {
+        var defs = generatedAtOf('class A {\n  static y = 1;\n}', 1);
+        defs.length.should.be.above(0);
+        defs.forEach(function (def) {
+            def.should.startWith('A@ClassDeclaration:class A {');
+        });
+    });
+
+    it('should map a parameter default to its AssignmentExpression', function () {
+        generatedAtOf('function g() {}\nfunction k(p,\n  q = g()) {\n}', 3, '$DOMAIN.$PAGE_0.k')
+            .should.eql(['q@AssignmentExpression:q = g()']);
+    });
+
+    it('should map an update and a named function expression to themselves', function () {
+        generatedAtOf('var i = 0;\ni++;', 2).should.eql(['i@UpdateExpression:i++']);
+        generatedAtOf('var h = function n() {};', 1).should.eql(['h@VariableDeclarator:h = function n() {}',
+            'n@FunctionExpression:function n() {}']);
+    });
+});

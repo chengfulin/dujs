@@ -107,8 +107,8 @@ describe('pre-refactor characterization (probes)', function () {
 						'i: L7 -> L7',
 						'k: entry -> L2',
 						'v: entry -> L2',
-						'x: L4 -> L3',
-						'x: L4 -> L6',
+						'x: L2 -> L3', /// 007 US1: x = 1 of f(x = 1) is defined before f calls k (x = 4)
+						'x: L2 -> L6',
 						'x: L5 -> L3',
 						'x: L5 -> L6',
 						'x: L6 -> L3',
@@ -128,8 +128,8 @@ describe('pre-refactor characterization (probes)', function () {
 				'i: L7 -> L7',
 				'k: entry -> L2',
 				'v: entry -> L2',
-				'x: L4 -> L3',
-				'x: L4 -> L6',
+				'x: L2 -> L3', /// 007 US1: x = 1 of f(x = 1) is defined before f calls k (x = 4)
+				'x: L2 -> L6',
 				'x: L5 -> L3',
 				'x: L5 -> L6',
 				'x: L6 -> L3',
@@ -150,8 +150,8 @@ describe('pre-refactor characterization (probes)', function () {
 				'i: L7 -> L7',
 				'k: entry -> L2',
 				'v: entry -> L2',
-				'x: L4 -> L3',
-				'x: L4 -> L6',
+				'x: L2 -> L3', /// 007 US1: x = 1 of f(x = 1) is defined before f calls k (x = 4)
+				'x: L2 -> L6',
 				'x: L5 -> L3',
 				'x: L5 -> L6',
 				'x: L6 -> L3',
@@ -161,6 +161,14 @@ describe('pre-refactor characterization (probes)', function () {
 		},
 		a2: {
 			interProcedural: [
+				/// 007 US2: init() of the static field a is a call site of its initializer
+				{
+					scopes: [
+						'$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0',
+						'$DOMAIN.$PAGE_0.init'
+					],
+					pairs: []
+				},
 				{
 					scopes: [
 						'$DOMAIN.$PAGE_0.h',
@@ -174,6 +182,7 @@ describe('pre-refactor characterization (probes)', function () {
 					scopes: [
 						'$DOMAIN.$PAGE_0',
 						'$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0',
+						'$DOMAIN.$PAGE_0.init', /// 007 US2
 						'$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1',
 						'$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2',
 						'$DOMAIN.$PAGE_0.h',
@@ -954,33 +963,8 @@ describe('expansion', function () {
 			(originalDefinitionOfX.definition.fromNode === callSite).should.be.true();
 		});
 
-		// 004 contracts/model-api.md §2: keepGenerateAtCallSite (FR-007)
-		it('should keep the GEN at the call-site with keepGenerateAtCallSite', function () {
-			var page = intraProceduralModelsOf(['function f(v) {}', 'var x;', 'f(x = 1);'].join('\n'));
-			var root = hierarchy.createCallHierarchyModel(page.modelOf('')),
-				callSite = nodeAt(page.modelOf(''), 3, 'f');
-			var edge = hierarchy.addCallEdge(root, {
-				callSite: callSite,
-				calleeModel: page.modelOf('f'),
-				keepGenerateAtCallSite: true
-			});
-			var expanded = expandInto(root);
-			shouldRebuildEveryGEN(expanded);
-			var callNode = expanded.flatNodeOf.get(callSite),
-				callReturn = expanded.flatNodeOf.get(edge.callReturn);
-			callNode.type.should.eql(FlowNode.CALL_NODE_TYPE);
-			(callNode.call === expanded.flatNodeOf.get(page.modelOf('f').graph[0])).should.be.true();
-			var definitionsOfX = callNode.generate.values().filter(function (vardef) {
-				return vardef.variable.name === 'x';
-			});
-			definitionsOfX.should.have.length(1);
-			(definitionsOfX[0].definition.fromNode === callNode).should.be.true();
-			callReturn.generate.size.should.eql(0);
-			callReturn.kill.size.should.eql(0);
-			/// the outgoing edges still move to the CALL RETURN NODE
-			(callNode.normal === null).should.be.true();
-			(callReturn.normal === expanded.flatNodeOf.get(callSite.normal)).should.be.true();
-		});
+		/// feature 007: keepGenerateAtCallSite is removed (004 FR-007 is kept by the segments of the class
+		/// name, data-model §2; tests/dujs/classfields.js T023), see 'segments of the nodes with calls'
 
 		it('should rebuild the GEN of every copy with copies (probe a1)', function () {
 			var page = intraProceduralModelsOf(fs.readFileSync(path.join(PROBES, 'a1.js'), 'utf8'));
@@ -1401,16 +1385,17 @@ describe('expansion by the builder', function () {
 			var edge = callEdgesAt(model, line)[0];
 			(model.flatNodeOf(edge.callReturn).normal === model.flatNodeOf(edge.callSite)).should.be.true();
 		});
-		/// the GEN of the CALL RETURN NODE of f(x = 1) defines x at the copy of the call-site
+		/// feature 007 US1: x = 1 of f(x = 1) is in segment 0, so the GEN of the copy of the call-site
+		/// (the CALL NODE) defines it, and the CALL RETURN NODE defines nothing
 		var callOfF = callEdgesAt(model, 4)[0],
 			callSite = model.flatNodeOf(callOfF.callSite),
-			definitionsOfX = model.flatNodeOf(callOfF.callReturn).generate.values().filter(function (vardef) {
+			definitionsOfX = callSite.generate.values().filter(function (vardef) {
 				return vardef.variable.name === 'x';
 			});
 		definitionsOfX.should.have.length(1);
 		(definitionsOfX[0].definition.fromNode === callSite).should.be.true();
 		(callSite.original === callOfF.callSite).should.be.true();
-		callSite.generate.size.should.eql(0);
+		model.flatNodeOf(callOfF.callReturn).generate.size.should.eql(0);
 		/// the original keeps its own definition of x
 		callOfF.callSite.generate.values().filter(function (vardef) {
 			return vardef.variable.name === 'x' && vardef.definition.fromNode === callOfF.callSite;
@@ -1839,5 +1824,422 @@ describe('expansion of feature 005 (Q-a, CallSiteRecord, expandShallow)', functi
 			(expanded.loops[0].loop === expanded.flatNodeOf.get(intraPage.hierarchy.loop)).should.be.true();
 			(expanded.loops[1].loop === expanded.flatNodeOf.get(otherPage.hierarchy.loop)).should.be.true();
 		});
+	});
+});
+
+/// feature 007 T022 (data-model §4, contracts/lib-api.md §5, §6): the segments of a node with call sites in
+/// the flat graph built by the builder (written in US1 for the call sites of develop; the phase predicate
+/// limiting them was removed by T048, so every call site of the plan is listed)
+describe('segments of the nodes with calls (feature 007 US1)', function () {
+	'use strict';
+	var defUseAnalyzer = require('../../lib/dujs/defuseanalyzer');
+	after(analyze.reset);
+
+	/**
+	 * The inter-procedural model of the page and its call edges by line
+	 * @param {Array} lines
+	 * @returns {Object} {model, edgesAt(line)}
+	 */
+	function pageModelOf(lines) {
+		var result = analyze(lines.join('\n')),
+			models = modelCtrl.collectionOfPageModels.get(result.scopeTree).interProceduralModels.filter(function (model) {
+				return model.mainlyRelatedScope === result.scopeTree.root;
+			});
+		models.should.have.length(1);
+		return {
+			model: models[0],
+			edgesAt: function (line) {
+				return models[0].hierarchy.edges.filter(function (edge) {
+					return edge.kind === 'call' && edge.plan.node.line === line;
+				});
+			}
+		};
+	}
+
+	function namesOf(vars) {
+		return (!!vars ? vars.values() : []).map(function (aVar) {
+			return aVar.name;
+		}).sort();
+	}
+
+	function definedNamesOf(node) {
+		return node.generate.values().map(function (vardef) {
+			return vardef.variable.name;
+		}).sort();
+	}
+
+	it('(a) should define x of f(x = 1); in segment 0 and the variables of a class expression after it', function () {
+		var built = pageModelOf(['function f(v) {}', 'var x;', 'f(x = 1);', 'var a = class {', '  static s = (x = 2);',
+				'}, b = x;']),
+			model = built.model;
+		var callOfF = built.edgesAt(3)[0],
+			callSite = model.flatNodeOf(callOfF.callSite),
+			callReturn = model.flatNodeOf(callOfF.callReturn);
+		callSite.type.should.eql(FlowNode.CALL_NODE_TYPE);
+		callSite.segment.index.should.eql(0);
+		definedNamesOf(callSite).should.eql(['x']);
+		(callSite.generate.values()[0].definition.fromNode === callSite).should.be.true();
+		callReturn.segment.index.should.eql(1);
+		definedNamesOf(callReturn).should.eql([]);
+		/// the class expression (a class-static call site): a and b are defined after its static member runs
+		var ofClass = built.edgesAt(4)[0],
+			classSite = model.flatNodeOf(ofClass.callSite),
+			classReturn = model.flatNodeOf(ofClass.callReturn);
+		ofClass.plan.callSites[0].kind.should.eql('class-static');
+		definedNamesOf(classSite).should.eql([]);
+		definedNamesOf(classReturn).should.eql(['a', 'b']);
+		namesOf(classReturn.cuse).should.eql(['x']);
+		namesOf(classSite.cuse).should.eql([]);
+	});
+
+	it('(b) should defer the p-use of the callee f of if (f(x)) from the CALL NODE to the decision', function () {
+		var built = pageModelOf(['var x = 0;', 'function f(v) {', '  return 1;', '}', 'if (f(x)) {', '  x = 2;', '}']),
+			model = built.model,
+			edge = built.edgesAt(5)[0],
+			decision = model.flatNodeOf(edge.callSite),
+			callNode = model.flatNodeOf(edge.callNode),
+			callReturn = model.flatNodeOf(edge.callReturn);
+		edge.beforeDecision.should.be.true();
+		callNode.segment.index.should.eql(0);
+		namesOf(callNode.deferredPuse).should.eql(['f']);
+		namesOf(callNode.cuse).should.eql(['x']);
+		namesOf(callNode.puse).should.eql([]);
+		callNode.puseOwners.should.have.length(1);
+		(callNode.puseOwners[0] === decision).should.be.true();
+		/// the decision node is the last segment and the owner; it reads nothing after the call
+		decision.segment.index.should.eql(1);
+		decision.puseOwners.should.eql([]);
+		namesOf(decision.puse).should.eql([]);
+		namesOf(decision.deferredPuse).should.eql([]);
+		/// the CALL RETURN NODE of the only call site of a decision is not a segment
+		(callReturn.segment === null).should.be.true();
+		analyze.pairsOfModel(model).should.containEql('f: entry -> L5>L6:T');
+		analyze.pairsOfModel(model).should.containEql('f: entry -> L5>exit:F');
+		analyze.pairsOfModel(model).should.not.containEql('f: entry -> L5');
+		/// a deferred p-use already paired for (definition, owner, branch) is not added again
+		function countOfF() {
+			var count = 0;
+			model.dupairs.forEach(function (pairs, variable) {
+				if (variable.name === 'f') {
+					count += pairs.size;
+				}
+			});
+			return count;
+		}
+		countOfF().should.eql(2);
+		var fVar = callNode.deferredPuse.values()[0];
+		callReturn.deferredPuse = new (require('../../lib/analyses/set'))([fVar]);
+		callReturn.puseOwners = [decision];
+		callReturn.reachIns = callNode.reachIns;
+		defUseAnalyzer.findDUPairs(model);
+		countOfF().should.eql(2);
+	});
+
+	/// feature 007 T036 (moved from T022 (b); from US2 f() of x < f() is a call site): x is read before the call,
+	/// so its p-use is deferred from the CALL NODE (segment 0) to the decision, paired once for each branch
+	it('(b2) should defer the p-use of x of if (x < f()) from the CALL NODE to the decision (007 US2)', function () {
+		var built = pageModelOf(['var x = 0;', 'function f() {', '  x = 1;', '  return 1;', '}', 'if (x < f()) {',
+				'  x = 2;', '}']),
+			model = built.model,
+			edge = built.edgesAt(6)[0],
+			decision = model.flatNodeOf(edge.callSite),
+			callNode = model.flatNodeOf(edge.callNode);
+		edge.beforeDecision.should.be.true();
+		callNode.segment.index.should.eql(0);
+		namesOf(callNode.deferredPuse).should.eql(['f', 'x']);
+		namesOf(callNode.cuse).should.eql([]);
+		(callNode.puseOwners[0] === decision).should.be.true();
+		decision.segment.index.should.eql(1);
+		namesOf(decision.deferredPuse).should.eql([]);
+		namesOf(decision.puse).should.eql([]);
+		var pairs = analyze.pairsOfModel(model);
+		pairs.should.containEql('x: L1 -> L6>L7:T');
+		pairs.should.containEql('x: L1 -> L6>exit:F');
+		/// x of f (L3) is not read by the condition
+		pairs.should.not.containEql('x: L3 -> L6>L7:T');
+		function countOfX() {
+			var count = 0;
+			model.dupairs.forEach(function (pairsOfVar, variable) {
+				if (variable.name === 'x') {
+					count += pairsOfVar.size;
+				}
+			});
+			return count;
+		}
+		countOfX().should.eql(2);
+		defUseAnalyzer.findDUPairs(model);
+		countOfX().should.eql(2);
+	});
+
+	it('(c) (d) should connect the CALL NODE before a decision in try to the copy of the catch node', function () {
+		var built = pageModelOf(['function f() {', '  return 1;', '}', 'try {', '  if (f()) {', '  }', '} catch (e) {', '}']),
+			model = built.model,
+			edge = built.edgesAt(5)[0],
+			callNode = model.flatNodeOf(edge.callNode),
+			decision = model.flatNodeOf(edge.callSite),
+			catchNode = model.flatNodeOf(edge.callSite.exception);
+		edge.callSite.exception.astNode.type.should.eql('CatchClause');
+		(callNode.exception === catchNode).should.be.true();
+		/// 007 US4 (research R6): if (f()) does not throw after the return, so the decision loses its exception edge;
+		/// the CALL RETURN NODE has none
+		(decision.exception === null).should.be.true();
+		(model.flatNodeOf(edge.callReturn).exception === null).should.be.true();
+	});
+
+	it('(e) should give the segment nodes {source, index, plan}', function () {
+		var built = pageModelOf(['function f(v) {}', 'var x;', 'f(x = 1);']),
+			edge = built.edgesAt(3)[0],
+			segment = built.model.flatNodeOf(edge.callSite).segment;
+		Object.keys(segment).sort().should.eql(['index', 'plan', 'source']);
+		(segment.source === edge.callSite).should.be.true();
+		(segment.plan === edge.plan).should.be.true();
+		edge.callIndex.should.eql(0);
+		edge.lastOfCallSite.should.be.true();
+	});
+});
+
+/// feature 007 T046 (data-model §4, research R5): the once-switch and once-loop shapes in the flat graph
+describe('segments evaluated once (feature 007 US3)', function () {
+	'use strict';
+	after(analyze.reset);
+
+	/**
+	 * The inter-procedural model of the page and its call edges
+	 * @param {Array} lines
+	 * @returns {Object} {model, edges}
+	 */
+	function pageModelOf(lines) {
+		var result = analyze(lines.join('\n')),
+			models = modelCtrl.collectionOfPageModels.get(result.scopeTree).interProceduralModels.filter(function (model) {
+				return model.mainlyRelatedScope === result.scopeTree.root;
+			});
+		models.should.have.length(1);
+		return {
+			model: models[0],
+			edges: models[0].hierarchy.edges.filter(function (edge) {
+				return edge.kind === 'call';
+			})
+		};
+	}
+
+	it('should insert the segments of switch (f()) before the first case and set discriminantSplit on the case copies', function () {
+		var built = pageModelOf(['function f() {', '  return 1;', '}', 'try {', '  switch (f()) {', '    case 1:',
+				'      break;', '    case 2:', '      break;', '    default:', '  }', '} catch (e) {', '}']),
+			model = built.model;
+		built.edges.should.have.length(1);
+		var edge = built.edges[0],
+			plan = edge.plan,
+			firstCase = edge.callSite,
+			callNode = model.flatNodeOf(edge.callNode),
+			callReturn = model.flatNodeOf(edge.callReturn),
+			firstCopy = model.flatNodeOf(firstCase);
+		plan.shape.should.eql('once-switch');
+		edge.beforeDecision.should.be.true();
+		plan.owners.should.have.length(2);
+		/// every predecessor of the first case enters segment 0; the last segment returns to the first case
+		firstCopy.prev.should.eql([callReturn]);
+		callNode.prev.length.should.be.above(0);
+		callNode.segment.index.should.eql(0);
+		callReturn.segment.index.should.eql(1);
+		/// the case copies with a test do not read the discriminant again; the originals are not changed
+		plan.owners.forEach(function (owner) {
+			model.flatNodeOf(owner).discriminantSplit.should.be.true();
+			owner.discriminantSplit.should.be.false();
+		});
+		/// segment 0 throws to the copy of the exception target of the switch (the catch clause)
+		firstCase.discriminantThrowTarget.astNode.type.should.eql('CatchClause');
+		(callNode.exception === model.flatNodeOf(firstCase.discriminantThrowTarget)).should.be.true();
+	});
+
+	it('should redirect only the predecessors of for (var v of f()) out of the loop body', function () {
+		var built = pageModelOf(['function f() {', '  return [1];', '}', 'function g() {', '}', 'var x = 0;', 'g();',
+				'for (var v of f()) {', '  x = v;', '  g();', '}']),
+			model = built.model,
+			loopEdge = built.edges.filter(function (edge) {
+				return edge.plan.shape === 'once-loop';
+			})[0],
+			plan = loopEdge.plan,
+			callNode = model.flatNodeOf(loopEdge.callNode),
+			callReturn = model.flatNodeOf(loopEdge.callReturn),
+			loopCopy = model.flatNodeOf(loopEdge.callSite);
+		/// the entering predecessor (g(); at L7) is the CALL RETURN NODE of g, whose source is in enteringPrev
+		plan.enteringPrev.map(function (node) {
+			return node.line;
+		}).should.eql([7]);
+		callNode.prev.should.have.length(1);
+		callNode.prev[0].segment.source.line.should.eql(7);
+		/// the loop copy is reached by the last segment and by the back edge of its body (g(); at L10)
+		loopCopy.prev.should.have.length(2);
+		(loopCopy.prev.indexOf(callReturn) !== -1).should.be.true();
+		loopCopy.prev.filter(function (prev) {
+			return prev !== callReturn;
+		})[0].segment.source.line.should.eql(10);
+		loopCopy.loopRightSplit.should.be.true();
+		loopEdge.callSite.loopRightSplit.should.be.false();
+		/// the loop variable is defined at the loop copy, not in a segment
+		loopCopy.generate.values().map(function (vardef) {
+			return vardef.variable.name;
+		}).should.eql(['v']);
+	});
+});
+
+/// feature 007 T053 (data-model §4, research R6): the exception edges of the segments in the flat graph; the
+/// CALL RETURN NODE of segment j >= 1 throws only when plan.throws[j] is true; the copy of a decision node
+/// (segment k of the decision shape) loses its exception edge when throws[k] is false; the exceptionalReturn of
+/// a CallSiteRecord is the copy of plan.throwTarget
+describe('exception edges of the segments (feature 007 US4)', function () {
+	'use strict';
+	after(analyze.reset);
+
+	/**
+	 * The inter-procedural model of the page, its call edges and the copy of the catch clause (the exception
+	 * target of the node of the first call edge)
+	 * @param {Array} lines
+	 * @returns {Object} {model, edges, catchCopy}
+	 */
+	function pageModelOf(lines) {
+		var result = analyze(lines.join('\n')),
+			models = modelCtrl.collectionOfPageModels.get(result.scopeTree).interProceduralModels.filter(function (model) {
+				return model.mainlyRelatedScope === result.scopeTree.root;
+			});
+		models.should.have.length(1);
+		var edges = models[0].hierarchy.edges.filter(function (edge) {
+			return edge.kind === 'call';
+		});
+		return {
+			model: models[0],
+			edges: edges,
+			catchCopy: !!edges[0].plan.throwTarget ? models[0].flatNodeOf(edges[0].plan.throwTarget) : null
+		};
+	}
+
+	function recordOf(built, edge) {
+		return built.model.callBypassOf(built.model.flatNodeOf(edge.callReturn));
+	}
+
+	var F = ['function f() {', '  return 1;', '}'];
+
+	it('should connect the CALL RETURN NODE of var y = f().p; (segment 1 throws) to the catch', function () {
+		var built = pageModelOf(F.concat(['try {', '  var y = f().p;', '} catch (e) {', '}'])),
+			edge = built.edges[0];
+		edge.plan.throws.should.eql([true, true]);
+		built.catchCopy.astNode.type.should.eql('CatchClause');
+		(built.model.flatNodeOf(edge.callSite).exception === built.catchCopy).should.be.true();
+		(built.model.flatNodeOf(edge.callReturn).exception === built.catchCopy).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+	});
+
+	it('should not connect the CALL RETURN NODE of var y = f(); (segment 1 does not throw)', function () {
+		var built = pageModelOf(F.concat(['try {', '  var y = f();', '} catch (e) {', '}'])),
+			edge = built.edges[0];
+		edge.plan.throws.should.eql([true, false]);
+		(built.model.flatNodeOf(edge.callSite).exception === built.catchCopy).should.be.true();
+		(built.model.flatNodeOf(edge.callReturn).exception === null).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+	});
+
+	it('should connect the segments of h(f()); by throws: segment 1 (calling h) throws, segment 2 does not', function () {
+		var built = pageModelOf(F.concat(['function h(v) {', '}', 'try {', '  h(f());', '} catch (e) {', '}'])),
+			edges = built.edges;
+		edges.should.have.length(2);
+		edges[0].plan.throws.should.eql([true, true, false]);
+		(built.model.flatNodeOf(edges[0].callReturn).segment.index === 1).should.be.true();
+		(built.model.flatNodeOf(edges[0].callReturn).exception === built.catchCopy).should.be.true();
+		(built.model.flatNodeOf(edges[1].callReturn).segment.index === 2).should.be.true();
+		(built.model.flatNodeOf(edges[1].callReturn).exception === null).should.be.true();
+		edges.forEach(function (edge) {
+			(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+		});
+	});
+
+	it('should not connect the CALL RETURN NODE between the chained callees of one call site (new A())', function () {
+		var built = pageModelOf(['var x;', 'class A {', '  y = 1;', '  constructor() {', '  }', '}', 'try {', '  x = new A();',
+				'} catch (e) {', '}']),
+			edges = built.edges;
+		edges.should.have.length(2);
+		edges[0].lastOfCallSite.should.be.false();
+		(built.model.flatNodeOf(edges[0].callReturn).exception === null).should.be.true();
+		/// the last callee returns to segment 1, the assignment, which may throw
+		edges[1].plan.throws.should.eql([true, true]);
+		(built.model.flatNodeOf(edges[1].callReturn).exception === built.catchCopy).should.be.true();
+	});
+
+	it('should remove the exception edge of the copy of if (f()) and keep the exceptionalReturn', function () {
+		var built = pageModelOf(F.concat(['try {', '  if (f()) {', '  }', '} catch (e) {', '}'])),
+			edge = built.edges[0],
+			decision = built.model.flatNodeOf(edge.callSite);
+		edge.plan.shape.should.eql('decision');
+		edge.plan.throws.should.eql([true, false]);
+		(edge.callSite.exception === edge.plan.throwTarget).should.be.true();
+		(decision.exception === null).should.be.true();
+		decision.next.indexOf(built.catchCopy).should.eql(-1);
+		/// the branches of the decision are kept
+		(decision.true !== null && decision.false !== null).should.be.true();
+		(built.model.flatNodeOf(edge.callNode).exception === built.catchCopy).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+		/// the original decision node is not changed: its exception edge is still connected and both
+		/// branches are kept
+		edge.callSite.next.indexOf(edge.plan.throwTarget).should.not.eql(-1);
+		(edge.callSite.true !== null && edge.callSite.false !== null).should.be.true();
+	});
+
+	it('should keep the exception edge of the copy of if (f() > 1) (segment 1 throws)', function () {
+		var built = pageModelOf(F.concat(['try {', '  if (f() > 1) {', '  }', '} catch (e) {', '}'])),
+			edge = built.edges[0];
+		edge.plan.throws.should.eql([true, true]);
+		(built.model.flatNodeOf(edge.callSite).exception === built.catchCopy).should.be.true();
+		(built.model.flatNodeOf(edge.callReturn).exception === null).should.be.true();
+	});
+
+	/// the false edge and the exception edge of a decision may go to the same node (the exit of the page)
+	it('should keep the false edge of if (f()) to the exit when its exception edge to the exit is removed', function () {
+		var built = pageModelOf(F.concat(['if (f()) {', '  f();', '}'])),
+			decision = built.model.flatNodeOf(built.edges[0].callSite),
+			exitOfPage = built.model.graph[1];
+		(decision.exception === null).should.be.true();
+		(decision.false === exitOfPage).should.be.true();
+		decision.next.indexOf(exitOfPage).should.not.eql(-1);
+	});
+
+	it('should set the exceptionalReturn of a node with no exception target to null (a split case test)', function () {
+		var built = pageModelOf(['var c = 1, b = 1;', 'function f() {', '  return 1;', '}', 'switch (c) {', '  case 0:',
+				'    break;', '  case f() && b:', '    break;', '}']),
+			edge = built.edges[0];
+		(edge.plan.throwTarget === null).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === null).should.be.true();
+	});
+
+	it('should set the exceptionalReturn of switch (f()) to the copy of the discriminantThrowTarget', function () {
+		var built = pageModelOf(F.concat(['try {', '  switch (f().p) {', '    case 1:', '      break;', '  }', '} catch (e) {',
+				'}'])),
+			edge = built.edges[0];
+		edge.plan.shape.should.eql('once-switch');
+		(edge.plan.throwTarget === edge.callSite.discriminantThrowTarget).should.be.true();
+		edge.plan.throws.should.eql([true, true]);
+		(built.model.flatNodeOf(edge.callReturn).exception === built.catchCopy).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+	});
+
+	/// DECISION 012 Q2: the exception target of g() is the decision if (f()) beginning the finally block, whose
+	/// copy is preceded by the CALL NODE of f; the exceptionalReturn of g is that CALL NODE (the target of the
+	/// exception edge of segment 0), not the copy of the decision
+	it('should set the exceptionalReturn of g() in try to the CALL NODE of f of if (f()) beginning the finally', function () {
+		var built = pageModelOf(F.concat(['function g() {', '}', 'try {', '  g();', '} finally {', '  if (f()) {', '  }', '}'])),
+			byLine = function (line) {
+				return built.edges.filter(function (edge) {
+					return edge.callSite.astNode.loc.start.line === line;
+				});
+			},
+			ofG = byLine(7),
+			ofF = byLine(9);
+		ofG.should.have.length(1);
+		ofF.should.have.length(1);
+		ofF[0].plan.shape.should.eql('decision');
+		var callOfF = built.model.flatNodeOf(ofF[0].callNode),
+			record = recordOf(built, ofG[0]);
+		callOfF.type.should.eql(FlowNode.CALL_NODE_TYPE);
+		(built.model.flatNodeOf(ofG[0].callSite).exception === callOfF).should.be.true();
+		(record.exceptionalReturn === callOfF).should.be.true();
+		(record.exceptionalReturn === built.model.flatNodeOf(ofF[0].callSite)).should.be.false();
 	});
 });

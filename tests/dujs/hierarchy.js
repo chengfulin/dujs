@@ -288,20 +288,44 @@ describe('hierarchy', function () {
 			}).should.throw();
 		});
 
-		// 004 contracts/model-api.md §1: keepGenerateAtCallSite (FR-007)
-		it('should record keepGenerateAtCallSite on the frozen edge', function () {
+		// feature 007 data-model §2: plan, callIndex and lastOfCallSite replace keepGenerateAtCallSite (004 FR-007)
+		it('should record the plan, callIndex and lastOfCallSite on the frozen edge', function () {
+			var callSite = nodeAt(page.modelOf(''), 4, 'f'),
+				plan = {shape: 'statement', node: callSite};
 			var edge = hierarchy.addCallEdge(model, {
-				callSite: nodeAt(page.modelOf(''), 4, 'f'),
+				callSite: callSite,
 				calleeModel: page.modelOf('f'),
-				keepGenerateAtCallSite: true
+				plan: plan,
+				callIndex: 0,
+				lastOfCallSite: true
 			});
-			edge.keepGenerateAtCallSite.should.be.true();
+			(edge.plan === plan).should.be.true();
+			edge.callIndex.should.eql(0);
+			edge.lastOfCallSite.should.be.true();
+			edge.beforeDecision.should.be.false();
+			edge.should.not.have.property('keepGenerateAtCallSite');
 			Object.isFrozen(edge).should.be.true();
 		});
 
-		it('should not keep the GEN at the call-site by default', function () {
+		it('should insert the call before the node by the shape of the plan, the first edge only', function () {
+			var callSite = nodeAt(page.modelOf(''), 4, 'f'),
+				plan = {shape: 'decision', node: callSite};
+			var first = hierarchy.addCallEdge(model, {callSite: callSite, calleeModel: page.modelOf('f'), plan: plan,
+					callIndex: 0, lastOfCallSite: false}),
+				chained = hierarchy.addCallEdge(model, {callSite: first.callReturn, calleeModel: page.modelOf('g'),
+					plan: plan, callIndex: 0, lastOfCallSite: true});
+			first.beforeDecision.should.be.true();
+			FlowNode.isFlowNode(first.callNode).should.be.true();
+			chained.beforeDecision.should.be.false();
+			chained.order.should.eql(1);
+			first.lastOfCallSite.should.be.false();
+		});
+
+		it('should have no plan fields without a plan', function () {
 			var edge = hierarchy.addCallEdge(model, {callSite: nodeAt(page.modelOf(''), 4, 'f'), calleeModel: page.modelOf('f')});
-			edge.keepGenerateAtCallSite.should.be.false();
+			(edge.plan === null).should.be.true();
+			(edge.callIndex === null).should.be.true();
+			(edge.lastOfCallSite === null).should.be.true();
 		});
 	});
 
@@ -581,10 +605,11 @@ describe('US1 acceptance (specs/003-hierarchical-models quickstart §3)', functi
 		callReturn.type.should.eql(FlowNode.CALL_RETURN_NODE_TYPE);
 		(callReturn.normal === inter.flatNodeOf(decision)).should.be.true();
 		inter.flatNodeOf(decision).prev.should.eql([callReturn]);
+		/// feature 007 US1: x = 1 in the argument is defined before f runs (KI §16; was x: L1 -> L3)
 		analyze.pairsOfModel(inter).should.eql([
 			'f: entry -> L5>L6:T',
 			'f: entry -> L5>exit:F',
-			'x: L1 -> L3'
+			'x: L5 -> L3'
 		]);
 	});
 

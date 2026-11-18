@@ -1,0 +1,43 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="6">Def-Use pairs</td></tr><tr><td>window</td><td>(entry_a,7)</td><td>(entry_a,8)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,4)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>random</td><td>(entry_a,80)</td><td>(entry_a,81)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>randomRGB</td><td>(entry_a,81)</td><td>(entry_a,69)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>loop</td><td>(entry_a,call_a)</td><td>(entry_a,105)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Math</td><td>(entry_a,41)</td><td>(entry_a,45)</td><td>(entry_a,49)</td><td>(entry_a,53)</td><td>(entry_a,66)</td><td></td></tr>
+<tr><td>requestAnimationFrame</td><td>(entry_a,105)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>canvas</td><td>(4,5)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>ctx</td><td>(96,97)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>width</td><td>(7,81)</td><td>(7,97)</td><td>(7,(40,41))</td><td>(7,(40,44))</td><td></td><td></td></tr>
+<tr><td>height</td><td>(8,81)</td><td>(8,97)</td><td>(8,(48,49))</td><td>(8,(48,52))</td><td></td><td></td></tr>
+<tr><td>Ball</td><td>(22,81)</td><td>(22,call_b)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Ball</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>balls</td><td>(77,(79,80))</td><td>(77,(79,call_a))</td><td>(77,92)</td><td>(77,99)</td><td>(77,62)</td><td></td></tr>
+<tr><td>size</td><td>(80,81)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>ball</td><td>(81,92)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>ball</td><td>(99,100)</td><td>(99,101)</td><td>(99,102)</td><td></td><td></td><td></td></tr>
+<tr><td>x</td><td>(entry_c,24)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>y</td><td>(entry_c,25)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>velX</td><td>(entry_c,26)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>velY</td><td>(entry_c,27)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>color</td><td>(entry_c,28)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>size</td><td>(entry_c,29)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>dx</td><td>(64,66)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>dy</td><td>(65,66)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>distance</td><td>(66,(68,69))</td><td>(66,(68,62))</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>ball</td><td>(62,(63,64))</td><td>(62,(63,62))</td><td>(62,64)</td><td>(62,65)</td><td>(62,(68,69))</td><td>(62,(68,62))</td></tr>
+</TABLE>
+>];
+}

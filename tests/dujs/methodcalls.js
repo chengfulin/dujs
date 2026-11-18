@@ -214,6 +214,7 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 		calleesAt(result, PAGE, 4).should.eql([ANONYMOUS + '0']);
 	});
 
+	/// feature 007 User Story 2: new A() and .m() are two call sites, chained in evaluation order
 	it('should resolve new A().m() to the fields, the constructor and then m', function () {
 		var result = analyze([
 			'class A {',
@@ -225,10 +226,11 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 			'new A().k();'
 		].join('\n'));
 		calleesAt(result, PAGE, 6).should.eql([ANONYMOUS + '0', ANONYMOUS + '1', ANONYMOUS + '2']);
-		/// k is not a method of A: only the fields and the constructor
+		/// k is not a method of A: only the fields and the constructor (of the call site new A())
 		calleesAt(result, PAGE, 7).should.eql([ANONYMOUS + '0', ANONYMOUS + '1']);
 	});
 
+	/// feature 007 User Story 2: F of the call site new F(); .m() of a function F is not resolved
 	it('should resolve new F().m() of a function F to F only', function () {
 		var result = analyze(['function F() {}', 'new F().m();'].join('\n'));
 		calleesAt(result, PAGE, 2).should.eql([PAGE + '.F']);
@@ -429,11 +431,123 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 		calleesAt(result, PAGE, 15).should.eql([]);
 		calleesAt(result, PAGE, 16).should.eql([]);
 		calleesAt(result, PAGE, 17).should.eql([]);
-		/// pairs as before the fix (var o = new A(); is not a call-site)
+		/// pairs as before the fix; feature 007 User Story 2: var o = new A(); is a call site, connected to the
+		/// initializer of the field h (it creates the arrow function, x is not defined)
 		result.intraPage().should.eql([
 			'A: L2 -> L14', 'console: entry -> L18', 'o: L14 -> L15', 'o: L14 -> L16', 'o: L14 -> L17',
 			'x: L1 -> L18'
 		]);
-		result.interProceduralScopes().should.eql([]);
+		result.interProceduralScopes().should.eql([[PAGE, ANONYMOUS + '3']]);
+	});
+});
+
+/**
+ * The call or new expression of a node whose source is the given text (not in
+ * nested functions)
+ * @param {FlowNode} node
+ * @param {string} source
+ * @param {string} text
+ * @returns {Object} CallExpression or NewExpression
+ */
+function expressionIn(node, source, text) {
+	'use strict';
+	var found = null;
+	function check(expression, recurse) {
+		if (!found && source.slice(expression.range[0], expression.range[1]) === text) {
+			found = expression;
+		}
+		require('walkes').checkProps(expression, recurse);
+	}
+	require('walkes')(node.astNode, {
+		FunctionExpression: function () {},
+		ArrowFunctionExpression: function () {},
+		CallExpression: check,
+		NewExpression: check
+	});
+	(!!found).should.eql(true, 'no expression ' + text);
+	return found;
+}
+
+/**
+ * Names of the callee scopes of one call or new expression of the node of a line
+ * @param {Object} result
+ * @param {string} source
+ * @param {string} scopeName
+ * @param {number} line
+ * @param {string} text Source of the expression
+ * @returns {Array}
+ */
+function expressionCalleesAt(result, source, scopeName, line, text) {
+	'use strict';
+	var node = nodeAt(result, scopeName, line);
+	return callResolver.calleeScopesOfExpression(node, expressionIn(node, source, text), result.scopeTree).map(String);
+}
+
+describe('callResolver.calleeScopesOfExpression (feature 007 R7)', function () {
+	'use strict';
+
+	after(analyze.reset);
+
+	it('should resolve f() in an expression to the function f', function () {
+		var source = ['function f() {}', 'var y = f() + 1;'].join('\n'),
+			result = analyze(source);
+		expressionCalleesAt(result, source, PAGE, 2, 'f()').should.eql([PAGE + '.f']);
+	});
+
+	it('should resolve o.m() in an argument to the method m only', function () {
+		var source = [
+			'class A {',
+			'  constructor() {}',
+			'  m() {}',
+			'}',
+			'var o = new A();',
+			'console.log(o.m());'
+		].join('\n'), result = analyze(source);
+		expressionCalleesAt(result, source, PAGE, 6, 'o.m()').should.eql([ANONYMOUS + '1']);
+		/// console.log is not resolved
+		expressionCalleesAt(result, source, PAGE, 6, 'console.log(o.m())').should.eql([]);
+	});
+
+	it('should resolve this.m() in an expression of a method to the method m', function () {
+		var source = [
+			'class A {',
+			'  m() {}',
+			'  n() {',
+			'    var y = !this.m();',
+			'  }',
+			'}'
+		].join('\n'), result = analyze(source);
+		expressionCalleesAt(result, source, ANONYMOUS + '1', 4, 'this.m()').should.eql([ANONYMOUS + '0']);
+	});
+
+	it('should resolve A.s() in an expression to the static method s', function () {
+		var source = [
+			'class A {',
+			'  static s() {}',
+			'}',
+			'var y = [A.s()];'
+		].join('\n'), result = analyze(source);
+		expressionCalleesAt(result, source, PAGE, 4, 'A.s()').should.eql([ANONYMOUS + '0']);
+	});
+
+	it('should resolve what calleeScopesOf resolves for the call of a call statement', function () {
+		var source = ['function f() {}', 'f();', 'z();', 'o?.m();'].join('\n'),
+			result = analyze(source);
+		expressionCalleesAt(result, source, PAGE, 2, 'f()').should.eql(calleesAt(result, PAGE, 2));
+		expressionCalleesAt(result, source, PAGE, 3, 'z()').should.eql([]);
+		expressionCalleesAt(result, source, PAGE, 4, 'o?.m()').should.eql([]);
+	});
+
+	/// feature 007 User Story 2 (T037): calleeScopesOf chains the call sites new A() (the constructor) and
+	/// .m() (m only, calleeScopesOfExpression of the outer call)
+	it('should chain the call sites new A() and .m() of new A().m() (feature 007 User Story 2)', function () {
+		var source = ['class A {', '  constructor() {}', '  m() {}', '}', 'new A().m();', 'function F() {}', 'new F().m();'].join('\n'),
+			result = analyze(source);
+		calleesAt(result, PAGE, 5).should.eql([ANONYMOUS + '0', ANONYMOUS + '1']);
+		expressionCalleesAt(result, source, PAGE, 5, 'new A().m()').should.eql([ANONYMOUS + '1']);
+		expressionCalleesAt(result, source, PAGE, 5, 'new A()').should.eql([ANONYMOUS + '0']);
+		/// new F().m() of a function F: F by new F(), nothing by .m()
+		calleesAt(result, PAGE, 7).should.eql([PAGE + '.F']);
+		expressionCalleesAt(result, source, PAGE, 7, 'new F().m()').should.eql([]);
 	});
 });
