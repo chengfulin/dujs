@@ -12,6 +12,7 @@
   1. 對每一行號 `n`，若兩側同模型 `.graph.dot` 中標記以 `n` 開頭的節點（`n`、`n:T`、`call (n)`、`callReturn (n)` 及其 `_a`… 後綴）的**多重集合相同**，該行的 pair 以**保留後綴的完整標記**比對；
   2. 不同時（FR-004／外溢新增或移除呼叫點使段後綴位移），該行的 pair 以去後綴後的集合比對，並把（case、頁、模型檔、行、兩側段標記數）列入機器區塊「段結構改變行」表——`--verify` 核對列數與內容，使用者簽核時逐列確認；
   3. 重複列數照 007（data-model §6）另列，不設門檻（KI §43）。
+- **模型對應（D022）**：`pair` 單位以「頁 × 層級」（`intra-procedurals`、`inter-procedurals`、`intra-pages`、inter-page）的**聯集**比對，不依模型檔編號逐檔比——FR-004／外溢新增模型會使編號位移（es2015 基準 `inter-procedurals/1` 在 008 變成 `3`）；模型的出現／消失仍以 `model` 單位記錄。
 - 差異單位：`pair`、`row`、`model`、`graph`、`matching`（同 007）。
 
 ## 2. 類別（SC-004）與機械觸發
@@ -26,6 +27,7 @@
 | `成員目標`（`不再殺除`） | + pair | 頁面上該變數有定義性成員目標，且該 pair 的定義行不是成員目標 | FR-001 |
 | `外溢` | ± pair／row、model、graph、matching | 某行的被呼叫端集合兩側不同（007 `連結` 的判定），且該行呼叫的 callee 識別字（`f()`、`new A()`）或接收者（`o.m()`、`A.s()`）在基準側頁面上有定義性成員目標；pair 的 def 或 use 位於（任一側）被呼叫端的行範圍或該呼叫點之後（use 行 > 呼叫點行）；或 007 防護（同節點先定義的接收者）因成員目標不再定義而解除 | FR-001 外溢（P1、P9、P29–P32） |
 | `放寬` | ± pair／row、model、graph、matching | 某行 008 側新增 `o.m()` 的被呼叫端、基準側沒有；該呼叫在函式中、`o` 的宣告為 `const`／`let` 且初值為 `new A(…)`；pair 位置條件同上 | FR-004 |
+| `層級新增`（子標，可附於 `外溢`／`放寬`／`成員目標`） | + pair | 沿 007 判準（DECISION 011）：該 + pair 所屬模型只存在於 008 側（其 model `+` 已成立上列某類），且以相同的（變數、def、use）存在於基準側同頁的 `intra-pages/*.dupairs.dot`；`--report` 說明欄註明對應基準檔（D022；Fable 實測 US2 的 `saved: 29 -> 33`、`saved: 29 -> (30,30)`、`id: 30 -> 31`、`nextId: 31 -> 31` 皆符合） | FR-001、FR-004 |
 | `無法到達` | − pair | 無自動觸發；預期 0 筆（FR-013 的修正以原型實測 golden、MDN 皆 0 筆差異，D017）。若出現：FR-013 消失的 p-use pair 須以 `tests/helpers/reachability.js` 對基準側模型確認其決策節點不可到達（附檢查器輸出）；其他情形須有 `tests/dujs/reachabilityinvariant.js` 的違反紀錄並發 DECISION | FR-006、FR-013 |
 | `§38`、`§43`… | ± pair | 同 007 的 KI 觸發；說明欄註明節次 | — |
 | `共通` | graph、matching | 去除節點編號後相同；或頁面有新增／移除呼叫點而 `.graph.dot`／`*.matching.json` 結構改變（CALL／CALL RETURN 增減） | — |

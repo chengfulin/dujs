@@ -180,7 +180,7 @@ FR-005 自動成立：callsplit 的呼叫點列舉經 `calleeScopesOfExpression`
 
 ## R10. golden 與 MDN 的重產與簽核
 
-**Decision**：沿 005／007：改 golden 的階段（US1、US2）以 `UPDATE_GOLDEN=1` 更新 `tests/golden/expected*`，並手動重算 `manifest.json` 中 `baseline` 所列 `.dot` 的 sha256 寫回（UPDATE_GOLDEN 不讀也不寫 manifest，`tests/golden/golden.js:21-23`；`added` 類不記；同一 commit，D020），並以 `diffcheck golden --report` 重產相對 `2035c93` 的**累積淨差異**、`--verify` 通過後才 commit（orchestrator 親自重跑）。
+**Decision**：沿 005／007：改 golden 的階段（US1、US2）以 `UPDATE_GOLDEN=1` 更新 `tests/golden/expected*`，並手動重算 `manifest.json` 中 `baseline` 所列 `.dot` 的 sha256 寫回（UPDATE_GOLDEN 不讀也不寫 manifest，`tests/golden/golden.js:21-23`；`added` 類不記雜湊，但**檔案集合改變時同步增刪 `added` 的檔名**——否則 `tests/golden/golden.js:225-229` 會紅；同一 commit，D020、D022 analyze 裁決），並以 `diffcheck golden --report` 重產相對 `2035c93` 的**累積淨差異**、`--verify` 通過後才 commit（orchestrator 親自重跑）。
 釘選列的簽核欄 implementer 只填「草擬，待簽核」；使用者在 golden 收尾後、PR 前簽核 `golden-diff.md` 一次，MDN 驗證（Polish）後簽核 `mdn-diff.md` 一次；不同意的列回到對應階段修正後整表重產。
 「單元測試期望」表記錄改動既有測試期望的每一處（檔案、測試名、舊期望、新期望、FR）。
 

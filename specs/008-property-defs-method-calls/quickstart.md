@@ -55,4 +55,4 @@ golden＋MDN 總分析時間 ≤ develop（`perf.md` 的基準）× 2。
 
 ## 6. 文件（FR-011、FR-012、SC-007）
 
-`specs/008-property-defs-method-calls/docs-check.md` 的每一列核對結果為「符合」；`grep -n "defines <code>a</code>\|known-issues §23)" README.md` 無輸出（L173、L187 的過期敘述已改寫）。
+`specs/008-property-defs-method-calls/docs-check.md` 的每一列核對結果為「符合」；`grep -n "defines <code>a</code>\|defines <code>o</code>\|known-issues §23)" README.md` 無輸出（L173、L187 的過期敘述已改寫）。
