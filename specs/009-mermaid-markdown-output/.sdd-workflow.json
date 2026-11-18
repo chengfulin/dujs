@@ -16,6 +16,10 @@
     "plan": {
       "done": true,
       "decisions": "D002（使用者追加 US4）、D003（README 拆分清單，使用者確認）、D004（plan 閘門）"
+    },
+    "tasks": {
+      "done": true,
+      "count": 44
     }
   }
 }
