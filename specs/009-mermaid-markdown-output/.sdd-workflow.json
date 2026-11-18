@@ -7,6 +7,11 @@
     "specify": {
       "done": true,
       "decisions": "D001"
+    },
+    "clarify": {
+      "done": true,
+      "clarifier_findings": 10,
+      "decisions": "D001（clarify 問題併入 D001-2～D001-5）"
     }
   }
 }

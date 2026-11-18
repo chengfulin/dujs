@@ -31,6 +31,23 @@
 - `report.html` 以 `<img src="../<out>/….png">` 依「每頁：intra-procedural → inter-procedural → intra-page，再 inter-page；上層模型先 hierarchy 再 graph 再 dupairs」排列，並從 CDN 載入 Bootstrap／jQuery。
 - golden 測試（`tests/golden/golden.js`）比對 `.dot` 與 `.matching.json`；另有一個測試檢查 `report.html` 中 `.png` 的引用順序（不需 Graphviz）。MDN 語料（`specs/006-eslint-scope/mdn/corpus`，33 檔、32 個 id）目前最大的圖為 151 條邊、約 9 KB 的 `.dot`。
 
+## Clarifications
+
+### Session 2026-11-18
+
+本輪 clarify 問題與 spec 人為 review 閘門合併為一個裁決請求（D001），由主 session 與獨立 Fable judge 裁決（judge 以程式碼與 `mermaid@12.3.0`＋`jsdom` 探針查證）。
+
+- D001-1 Q: spec 整體是否通過？ → A: 方向通過，必修四項已套用：FR-001 現況描述更正（`graph.dot` 標題實值）；FR-010／G-8 註明 `parse` 只檢查 `maxEdges`、不檢查 `maxTextSize`；FR-005 表格結構定死；移除 `report.html` 的連帶範圍列入 A7。建議修亦已套用：FR-003 依各產生器的跳脫規則還原；FR-004 黃／橘底文字色 `color:#000`；SC-003 改多重集合；G-9 登記 manifest 作法。
+- D001-2 Q: HTML 報告 `report.html` 去留？（REQ §4 Q2） → A: 以總覽 `README.md` 取代，移除 `report.html` 與 `reportgenerator.js`（FR-012、A7）；README 註明此輸出變更；不改 `package.json` 版本號。
+- D001-3 Q: 模型標題的來源？ → A: 上層模型與同模型 `hierarchy.dot` 的 `label` 相同（inter-page 即 `inter-page`）；intra-procedural 為 `intra-procedural: <String(主 scope)>`（FR-001）。
+- D001-4 Q: 超過 Mermaid 上限的大圖如何處理？（REQ §4 Q3） → A: 每張圖各自判斷，邊數 > 500 或 Mermaid 區塊字元數 > 50000 即降級為節點表＋邊表並提示看 `.dot`；閾值為 dujs 自訂常數、執行期自算、不依賴 `mermaid` 套件；測試驗 500／501 邊與 50000／50001 字元兩邊界（FR-010）。
+- D001-5 Q: def-use pairs 用表格還是 Mermaid？ → A: 表格，固定兩欄 `Variable | Def-Use pairs`，pairs 以 `<br/>` 分隔、`|` 跳脫，同名變數多列保留原順序（FR-005、G-6）。
+- 自行決定並經 D001 接受：MDN 語料以 006 corpus 為準（G-7）；驗證用 `mermaid`＋`jsdom` devDependency（G-8，jsdom 全域須在第一次 `import('mermaid')` 前設定）；golden 比對擴及 `.md`（FR-009a）；總覽原始碼以動態加長 fence 呈現（A2）；Mermaid 標籤換行輸出 `<br/>`、`"`、`#`、`<`、`>`、`` ` `` 以 `#<碼>;` 實體表示（FR-006）。
+
+**clarifier（spec-only）發現處置**：H1 → G-6／D001-5；H2 → FR-001／D001-3；H3 → FR-009、G-8；H4 → G-7；M1 → FR-010；M2 → FR-009a、G-9；M3 → A2；M4 → FR-003、情境 3；M5 → FR-004；I1（憲章基線有新版 `fb34a5a`，本專案 `4a4b2be`）→ 依規則不升級，僅告知。
+
+**交給 plan 的注意事項（D001 judge）**：Mermaid 轉換器不得衍生自 LGPL 的 `lib/esgraph/dot.js`（由模型或 `.dot` 文字轉出，放在 MIT 範圍）；`mermaid`＋`jsdom` devDependency 的規模（約 155 套件／225 MB）寫入 plan；README 說明本機檢視需支援 Mermaid 的檢視器（`out-*/` 被 gitignore）；FR-009 往返測試可用 `mermaidAPI.getDiagramFromText(...).db.getVertices()` 取回標籤，但實體以佔位符出現，測試須自行解碼；MDN 最大圖的實際邊數與字元數在 plan 時重新量測並記錄（spec 寫的 151 邊與 006 基線 114 邊／6 KB 不一致）。
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - 每個模型產出可直接閱讀的 Markdown 圖（Priority: P1）
