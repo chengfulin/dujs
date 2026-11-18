@@ -296,14 +296,16 @@ describe('Globals read without declaration (feature 006, US3)', function () {
 		});
 	});
 
-	/// plan review U4: writes of undeclared names by for-in, ++, destructuring and G.p = v
-	it('should define the undeclared names written by for-in, ++ and G.p = v (plan-u4)', function () {
+	/// plan review U4: writes of undeclared names by for-in, ++, destructuring; G.p = v reads G and does not
+	/// define it (feature 008 FR-001, FR-002)
+	it('should define the undeclared names written by for-in, ++ and read G of G.p = v (plan-u4)', function () {
 		var result = analyzeProbe('plan-u4.js'),
 			model = intraPageModelOf(result);
 		checkPairs(result.intraPage(), [
 			'd1: L5 -> L6', 'o: L1 -> L2',
-			'kk: L2 -> L2', 'uu: entry -> L3', 'uu: L3 -> L4', 'Math: L7 -> L8', 'location: L9 -> L10'
-		]);
+			'kk: L2 -> L2', 'uu: entry -> L3', 'uu: L3 -> L4', 'Math: entry -> L7', 'Math: entry -> L8',
+			'location: entry -> L9', 'location: entry -> L10'
+		], ['Math: L7 -> L8', 'location: L9 -> L10']);
 		['Math', 'location'].forEach(function (name) {
 			varsNamed(model, name)[0].binding.kind.should.eql('global');
 		});

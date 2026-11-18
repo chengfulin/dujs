@@ -1,0 +1,54 @@
+{
+  "format": "dujs-matching/1",
+  "level": "intraPage",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [],
+  "loops": [
+    {
+      "loop": "n23",
+      "loopReturn": "n33",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.calculate",
+          "entry": "n25",
+          "exit": "n32"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+          "entry": "n34",
+          "exit": "n36"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "results@n35"
+      ],
+      "mustKill": [
+        "results"
+      ],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.calculate": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "results@n31"
+      ],
+      "mustKill": [
+        "results"
+      ],
+      "upwardExposed": [
+        "results"
+      ],
+      "exceptional": [
+        "results@n29"
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+digraph Hierarchy {
+node [shape="box"]
+label = "intra-page: $DOMAIN.$PAGE_0"
+h0 [label="$DOMAIN.$PAGE_0"]
+h1 [label="loop", shape="ellipse", style="filled", fillcolor="yellow"]
+h2 [label="$DOMAIN.$PAGE_0.setWeather"]
+h0 -> h1 [label="loop"]
+h1 -> h2 [color="green", label="onEvent"]
+h2 -> h1 [color="blue", style="dashed", label="return"]
+}

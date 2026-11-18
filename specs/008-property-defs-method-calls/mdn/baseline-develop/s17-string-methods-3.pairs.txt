@@ -1,0 +1,18 @@
+## scopes
+$DOMAIN.$PAGE_0
+## intra $DOMAIN.$PAGE_0
+document: entry -> L1
+document: entry -> L14
+list: L1 -> L16
+listItem: L15 -> L16
+result: L13 -> L15
+station: L10 -> L13
+stations: L2 -> L10
+## intra-page (nodes 11)
+document: entry -> L1
+document: entry -> L14
+list: L1 -> L16
+listItem: L15 -> L16
+result: L13 -> L15
+station: L10 -> L13
+stations: L2 -> L10

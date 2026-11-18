@@ -401,3 +401,167 @@ describe('usedExpressionsOf', function () {
 		});
 	});
 });
+
+/**
+ * The reads of the member targets of a for-in/for-of head (feature 008 User
+ * Story 1, FR-002, R2-3; contracts/lib-api.md §5): loopHeadExpressions(node,
+ * rightSplit, binding) reads the object and the computed key of a member
+ * target and of each member target of a pattern, except those whose object
+ * variable is the domain localStorage (binding.isLocalStorageObject; a null
+ * binding exempts nothing); the left side first, then the right side.
+ */
+describe('loopHeadExpressions with the reads of member targets (feature 008 User Story 1)', function () {
+	'use strict';
+	var usedExpressions = require('../../lib/dujs/usedexpressions'),
+		code = [
+			'var o = {}, q = {}, a = [1], k = 0, d = 1, e = \'p\';',
+			'for (o[k] of a) {}',
+			'for ([o.p, q[k]] of a) {}',
+			'for ({[e]: o.p = d, x: q[k]} of a) {}',
+			'for (localStorage[k] of a) {}',
+			'for ([localStorage.k, o[k]] of a) {}',
+			'for (o.p.q in a) {}'
+		].join('\n'),
+		nodes = null;
+
+	before(function () {
+		nodes = nodesOf(code);
+	});
+
+	after(analyze.reset);
+
+	/**
+	 * The loop node of a line
+	 */
+	function loopAt(line) {
+		var found = nodes.filter(function (node) {
+			return node.line === line && !!node.astNode &&
+				(node.astNode.type === 'ForOfStatement' || node.astNode.type === 'ForInStatement');
+		});
+		found.length.should.eql(1, 'number of loop nodes at L' + line);
+		return found[0];
+	}
+
+	/**
+	 * Sources of the expressions read by the head of the loop of a line
+	 */
+	function headOf(line, binding, rightSplit) {
+		var loop = loopAt(line);
+		return usedExpressions.loopHeadExpressions(loop.astNode, !!rightSplit,
+			binding === undefined ? loop.scope.binding : binding).map(function (expression) {
+			return code.slice(expression.range[0], expression.range[1]);
+		});
+	}
+
+	it('should read the object and the computed key of a member target, then the right side', function () {
+		headOf(2).should.eql(['o', 'k', 'a']);
+	});
+
+	it('should not read a split right side', function () {
+		headOf(2, undefined, true).should.eql(['o', 'k']);
+	});
+
+	it('should read the object and the computed key of each member target of a pattern, in pattern order', function () {
+		headOf(3).should.eql(['o', 'q', 'k', 'a']);
+	});
+
+	it('should read the defaults, the computed keys and the member targets of a pattern before the right side', function () {
+		var head = headOf(4);
+		head[head.length - 1].should.eql('a');
+		head.slice(0, -1).sort().should.eql(['d', 'e', 'k', 'o', 'q']);
+		/// the computed key of the pattern comes before its default (getEvaluatedExpressions)
+		head.indexOf('e').should.be.below(head.indexOf('d'));
+		/// the object of a member target comes before its computed key
+		head.indexOf('q').should.be.below(head.indexOf('k'));
+	});
+
+	/// D004: the exempted member target keeps the develop reads (its object, not its key)
+	it('should not read the computed key of a member target of the domain localStorage', function () {
+		headOf(5).should.eql(['localStorage', 'a']);
+	});
+
+	it('should not read an exempted member target of a pattern', function () {
+		headOf(6).should.eql(['o', 'k', 'a']);
+	});
+
+	it('should exempt no member target when the binding is null', function () {
+		headOf(5, null).should.eql(['localStorage', 'k', 'a']);
+		headOf(6, null).should.eql(['localStorage', 'o', 'k', 'a']);
+	});
+
+	/// characterization (the same as develop): the object of a non-computed member target
+	it('should read the object o.p of the member target o.p.q', function () {
+		headOf(7).should.eql(['o.p', 'a']);
+	});
+
+	/// astNodeItems passes cfgNode.scope.binding
+	it('should walk the reads of the member targets at the loop node (usedExpressionsOf)', function () {
+		[[2, ['o', 'k', 'a']], [5, ['localStorage', 'a']], [6, ['o', 'k', 'a']]].forEach(function (row) {
+			usedExpressions.usedExpressionsOf(loopAt(row[0])).map(function (item) {
+				item.read.should.eql('walk');
+				return code.slice(item.expression.range[0], item.expression.range[1]);
+			}).should.eql(row[1], 'L' + row[0]);
+		});
+	});
+});
+
+/**
+ * bindingPattern.getMemberTargetReads (feature 008 User Story 1, FR-002;
+ * contracts/lib-api.md §4): the object of each MemberExpression target of a
+ * pattern, followed by its property when the key is computed, in pattern
+ * order; defaults and computed keys of the pattern are not included
+ * (getEvaluatedExpressions)
+ */
+describe('bindingPattern.getMemberTargetReads (feature 008 User Story 1)', function () {
+	'use strict';
+	var espree = require('espree'),
+		bindingPattern = require('../../lib/dujs/bindingpattern');
+
+	/**
+	 * Sources of the reads of the left side of the assignment of a statement
+	 */
+	function readsOf(statement) {
+		var ast = espree.parse(statement, {ecmaVersion: 'latest', range: true}),
+			left = ast.body[0].expression.left;
+		(typeof bindingPattern.getMemberTargetReads).should.eql('function', 'getMemberTargetReads');
+		return bindingPattern.getMemberTargetReads(left).map(function (expression) {
+			return statement.slice(expression.range[0], expression.range[1]);
+		});
+	}
+
+	it('should give the object of each member target, then the computed key, in pattern order', function () {
+		readsOf('[o.p, {a: q[k], b: r.s.t}, ...u[v]] = x;').should.eql(['o', 'q', 'k', 'r.s', 'u', 'v']);
+	});
+
+	it('should not give the defaults and the computed keys of the pattern', function () {
+		readsOf('({[e]: o.p = d, ...w[z]} = x);').should.eql(['o', 'w', 'z']);
+	});
+
+	it('should give the object expression of a member target on a call', function () {
+		readsOf('[f(a).p, g()[i]] = x;').should.eql(['f(a)', 'g()', 'i']);
+	});
+
+	it('should give nothing for a pattern of identifiers', function () {
+		readsOf('[a, {b, c: [d = e]}] = x;').should.eql([]);
+	});
+
+	it('should skip the member targets for which isExempt is true', function () {
+		var statement = '[o.p, {a: q[k], b: r.s.t}, ...u[v]] = x;',
+			ast = espree.parse(statement, {ecmaVersion: 'latest', range: true}),
+			left = ast.body[0].expression.left,
+			seen = [];
+		bindingPattern.getMemberTargetReads(left, function (target) {
+			seen.push(target.type);
+			return target.object.type === 'Identifier' && (target.object.name === 'q' || target.object.name === 'u');
+		}).map(function (expression) {
+			return statement.slice(expression.range[0], expression.range[1]);
+		}).should.eql(['o', 'r.s']);
+		seen.should.eql(['MemberExpression', 'MemberExpression', 'MemberExpression', 'MemberExpression']);
+	});
+
+	it('should skip nothing when isExempt is not given', function () {
+		var statement = '[o.p, q[k]] = x;',
+			ast = espree.parse(statement, {ecmaVersion: 'latest', range: true});
+		bindingPattern.getMemberTargetReads(ast.body[0].expression.left).length.should.eql(3);
+	});
+});

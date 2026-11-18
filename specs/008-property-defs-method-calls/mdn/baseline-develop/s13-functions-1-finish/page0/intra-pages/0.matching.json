@@ -1,0 +1,44 @@
+{
+  "format": "dujs-matching/1",
+  "level": "intraPage",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 20,
+      "callee": "$DOMAIN.$PAGE_0.chooseName",
+      "callNode": "n15",
+      "entry": "n16",
+      "exit": "n20",
+      "callReturn": "n21",
+      "exceptionalReturn": "n22",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [
+    {
+      "loop": "n22",
+      "loopReturn": "n24",
+      "handlers": []
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.chooseName": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "para@n19"
+      ],
+      "mustKill": [
+        "para"
+      ],
+      "upwardExposed": [
+        "Math",
+        "names"
+      ],
+      "exceptional": []
+    }
+  }
+}

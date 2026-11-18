@@ -1,0 +1,24 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="3">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td></td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td>(entry_a,19)</td><td>(entry_a,20)</td><td></td></tr>
+<tr><td>Person</td><td>(entry_a,12)</td><td>(entry_a,call (15))</td><td>(entry_a,call (17))</td></tr>
+<tr><td>Object</td><td>(entry_a,12)</td><td>(entry_a,19)</td><td>(entry_a,20)</td></tr>
+<tr><td>personPrototype</td><td>(2,12)</td><td></td><td></td></tr>
+<tr><td>reuben</td><td>(call (15),16)</td><td></td><td></td></tr>
+<tr><td>name</td><td>(entry_b,9)</td><td></td><td></td></tr>
+<tr><td>irma</td><td>(call (17),19)</td><td>(call (17),20)</td><td></td></tr>
+</TABLE>
+>];
+}

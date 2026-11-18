@@ -19,13 +19,39 @@
     {
       "id": "c2",
       "seq": 2,
+      "callSiteLine": 25,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n66",
+      "entry": "n50",
+      "exit": "n53",
+      "callReturn": "n71",
+      "exceptionalReturn": "n72",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 34,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n49",
+      "entry": "n50",
+      "exit": "n53",
+      "callReturn": "n54",
+      "exceptionalReturn": "n55",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 4,
       "callSiteLine": 40,
       "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
-      "callNode": "n54",
-      "entry": "n55",
-      "exit": "n62",
-      "callReturn": "n63",
-      "exceptionalReturn": "n65",
+      "callNode": "n59",
+      "entry": "n60",
+      "exit": "n72",
+      "callReturn": "n73",
+      "exceptionalReturn": "n75",
       "back": false,
       "beforeDecision": false
     }
@@ -33,17 +59,17 @@
   "loops": [
     {
       "loop": "n41",
-      "loopReturn": "n51",
+      "loopReturn": "n56",
       "handlers": [
         {
           "scope": "$DOMAIN.$PAGE_0.init",
           "entry": "n43",
-          "exit": "n50"
+          "exit": "n55"
         },
         {
           "scope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4",
-          "entry": "n52",
-          "exit": "n65"
+          "entry": "n57",
+          "exit": "n75"
         }
       ]
     }
@@ -57,12 +83,18 @@
       "upwardExposed": [],
       "exceptional": []
     },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    },
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
       "normalReturn": true,
       "conservative": false,
-      "gen": [
-        "state@n59"
-      ],
+      "gen": [],
       "mustKill": [],
       "upwardExposed": [
         "list",
@@ -70,16 +102,12 @@
         "saveTodos",
         "state"
       ],
-      "exceptional": [
-        "state@n59"
-      ]
+      "exceptional": []
     },
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4": {
       "normalReturn": true,
       "conservative": false,
-      "gen": [
-        "state@n59"
-      ],
+      "gen": [],
       "mustKill": [],
       "upwardExposed": [
         "addTodo",
@@ -89,27 +117,24 @@
         "saveTodos",
         "state"
       ],
-      "exceptional": [
-        "state@n59"
-      ]
+      "exceptional": []
     },
     "$DOMAIN.$PAGE_0.init": {
       "normalReturn": true,
       "conservative": true,
       "gen": [
-        "nextId@n47",
-        "state@n48"
+        "nextId@n47"
       ],
       "mustKill": [],
       "upwardExposed": [
         "Math",
         "list",
         "loadTodos",
-        "nextId"
+        "nextId",
+        "state"
       ],
       "exceptional": [
-        "nextId@n47",
-        "state@n48"
+        "nextId@n47"
       ]
     }
   }

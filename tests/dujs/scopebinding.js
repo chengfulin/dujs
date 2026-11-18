@@ -503,6 +503,198 @@ describe('PageBinding (scopebinding)', function () {
 		});
 	});
 
+	/// feature 008 contracts/lib-api.md section 1, D008: Var identity with the domain localStorage
+	describe('isLocalStorageObject (feature 008 D008)', function () {
+		it('should be true for the domain localStorage', function () {
+			var page = setUp('localStorage.k = 1;\nlocalStorage.k;');
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage', 0)).should.eql(true);
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage', 1)).should.eql(true);
+		});
+
+		it('should be true for the domain localStorage used in a function', function () {
+			var page = setUp('function f() { localStorage.k = 1; }\nf();');
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage')).should.eql(true);
+		});
+
+		it('should be false for a page-level var localStorage (s12)', function () {
+			var page = setUp('var localStorage = {};\nlocalStorage.k = 2;\nlocalStorage.k;');
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage', 0)).should.eql(false);
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage', 1)).should.eql(false);
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage', 2)).should.eql(false);
+		});
+
+		it('should be false for a let localStorage shadowing it in a function (s11)', function () {
+			var page = setUp('localStorage.a = 1;\nfunction f() {\n\tlet localStorage = {};\n\tlocalStorage.k = 2;\n}\nf();');
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage', 0)).should.eql(true);
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage', 1)).should.eql(false);
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage', 2)).should.eql(false);
+		});
+
+		it('should be false for an alias of localStorage (s13)', function () {
+			var page = setUp('var s = localStorage;\ns.k = 2;');
+			page.binding.isLocalStorageObject(idOf(page.ast, 's', 0)).should.eql(false);
+			page.binding.isLocalStorageObject(idOf(page.ast, 's', 1)).should.eql(false);
+			page.binding.isLocalStorageObject(idOf(page.ast, 'localStorage')).should.eql(true);
+		});
+
+		it('should be false for window of window.localStorage (s14)', function () {
+			var page = setUp('window.localStorage.k = 2;');
+			page.binding.isLocalStorageObject(idOf(page.ast, 'window')).should.eql(false);
+		});
+	});
+
+	/// feature 008 contracts/lib-api.md section 1, D004, D008, D013: member targets of the domain localStorage
+	describe('isLocalStorageMemberTarget (feature 008 D004)', function () {
+		/**
+		 * The left side of the assignment of statement i of the page
+		 */
+		function leftOf(page, i) {
+			return page.ast.body[i].expression.left;
+		}
+
+		it('should be true for a member target of the domain localStorage, at any depth', function () {
+			var page = setUp('localStorage.a = 1;\nlocalStorage.a.b = 2;\nlocalStorage[k].c = 3;');
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 0)).should.eql(true);
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 1)).should.eql(true);
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 2)).should.eql(true);
+		});
+
+		it('should be false for a shadowed localStorage', function () {
+			var page = setUp('function f() {\n\tlet localStorage = {};\n\tlocalStorage.a.b = 2;\n}\nf();');
+			page.binding.isLocalStorageMemberTarget(page.ast.body[0].body.body[1].expression.left).should.eql(false);
+		});
+
+		it('should be false for window.localStorage', function () {
+			var page = setUp('window.localStorage.k = 2;');
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 0)).should.eql(false);
+		});
+
+		it('should be false for a chain starting with a call (D013)', function () {
+			var page = setUp('g(localStorage).k = 2;\nlocalStorage.getItem(k).p = 3;');
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 0)).should.eql(false);
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 1)).should.eql(false);
+		});
+	});
+
+	/// feature 008 contracts/lib-api.md section 1, D002: relaxed instances are let and const only
+	describe('isRelaxedInstance (feature 008 D002)', function () {
+		var code = [
+			'let il = new Object();',
+			'const ic = new Object();',
+			'var iv = new Object();',
+			'function fd(p1) { return p1; }',
+			'class C1 {}',
+			'try {} catch (ce) {}'
+		].join('\n');
+
+		it('should be true for let and const', function () {
+			var page = setUp(code);
+			['il', 'ic'].forEach(function (name) {
+				var defined = page.binding.defVarsOf(idOf(page.ast, name));
+				defined.length.should.eql(1);
+				page.binding.isRelaxedInstance(defined[0]).should.eql(true, name);
+			});
+		});
+
+		it('should be false for var, parameter, function, class and catch parameter', function () {
+			var page = setUp(code);
+			['iv', 'p1', 'fd', 'C1', 'ce'].forEach(function (name) {
+				var defined = page.binding.defVarsOf(idOf(page.ast, name));
+				defined.length.should.be.above(0);
+				defined.forEach(function (aVar) {
+					page.binding.isRelaxedInstance(aVar).should.eql(false, name);
+				});
+			});
+		});
+
+		it('should be false for a global, an implicit global and no Var', function () {
+			var page = setUp('ug = 1;\ngr();');
+			page.binding.isRelaxedInstance(page.binding.defVarsOf(idOf(page.ast, 'ug'))[0]).should.eql(false);
+			page.binding.isRelaxedInstance(page.binding.useVarsOf(idOf(page.ast, 'gr'))[0]).should.eql(false);
+			page.binding.isRelaxedInstance(null).should.eql(false);
+			page.binding.isRelaxedInstance(undefined).should.eql(false);
+		});
+	});
+
+	/// feature 008 contracts/lib-api.md section 1 (R2-4): left nodes of &&=, ||= and ??=, by identity
+	describe('isLogicalAssignmentTarget (feature 008 R2-4)', function () {
+		/**
+		 * The AssignmentExpression nodes of the AST in source order
+		 * @param {Object} ast
+		 * @returns {Array}
+		 */
+		function assignmentsOf(ast) {
+			var found = [];
+			(function visit(node) {
+				if (!node || typeof node.type !== 'string') {
+					return;
+				}
+				if (node.type === 'AssignmentExpression') {
+					found.push(node);
+				}
+				(espree.VisitorKeys[node.type] || []).forEach(function (key) {
+					[].concat(node[key]).forEach(visit);
+				});
+			}(ast));
+			return found.sort(function (first, second) {
+				return first.range[0] - second.range[0];
+			});
+		}
+
+		var code = [
+			'var a, b, c, d, e, o = {};',
+			'a &&= 1;',
+			'b ||= 2;',
+			'c ??= 3;',
+			'o.p ??= 4;',
+			'function f() { o[a] ||= 5; }',
+			'd += 6;',
+			'e = 7;',
+			'o.q = 8;'
+		].join('\n');
+
+		it('should be true for the left of &&=, ||= and ??= (Identifier and member, also in a function)', function () {
+			var page = setUp(code);
+			var logical = assignmentsOf(page.ast).filter(function (node) {
+				return ['&&=', '||=', '??='].indexOf(node.operator) !== -1;
+			});
+			logical.length.should.eql(5);
+			logical.forEach(function (node) {
+				page.binding.isLogicalAssignmentTarget(node.left).should.eql(true, node.operator + ' at line ' + node.loc.start.line);
+			});
+		});
+
+		it('should be false for the left of += and =', function () {
+			var page = setUp(code);
+			var others = assignmentsOf(page.ast).filter(function (node) {
+				return node.operator === '+=' || node.operator === '=';
+			});
+			others.length.should.eql(3);
+			others.forEach(function (node) {
+				page.binding.isLogicalAssignmentTarget(node.left).should.eql(false, node.operator + ' at line ' + node.loc.start.line);
+			});
+		});
+
+		it('should compare by object identity, not by range or name', function () {
+			var page = setUp(code);
+			var left = assignmentsOf(page.ast)[0].left;
+			left.name.should.eql('a');
+			page.binding.isLogicalAssignmentTarget(Object.assign({}, left)).should.eql(false);
+			/// other nodes of the logical assignment and later reads of the same name
+			page.binding.isLogicalAssignmentTarget(assignmentsOf(page.ast)[0]).should.eql(false);
+			page.binding.isLogicalAssignmentTarget(assignmentsOf(page.ast)[0].right).should.eql(false);
+			page.binding.isLogicalAssignmentTarget(idOf(page.ast, 'a', 2)).should.eql(false);
+		});
+
+		it('should not be shared between pages', function () {
+			var page = setUp(code);
+			var left = assignmentsOf(page.ast)[0].left;
+			var other = scopeBinding.analyze(jsParser.parseAST('x &&= 1;'));
+			other.isLogicalAssignmentTarget(left).should.eql(false);
+			page.binding.isLogicalAssignmentTarget(left).should.eql(true);
+		});
+	});
+
 	describe('isVisible (research R6)', function () {
 		it('should see an outer Var referenced by a parameter default though the function declares the same name (pdef, b)', function () {
 			var page = setUp(fs.readFileSync(path.join(PROBES, 'pdef.js'), 'utf8'));

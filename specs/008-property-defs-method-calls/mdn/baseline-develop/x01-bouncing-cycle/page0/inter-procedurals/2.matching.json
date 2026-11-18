@@ -1,0 +1,311 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 80,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n48",
+      "entry": "n49",
+      "exit": "n51",
+      "callReturn": "n52",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 81,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n53",
+      "entry": "n49",
+      "exit": "n51",
+      "callReturn": "n54",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 81,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n54",
+      "entry": "n49",
+      "exit": "n51",
+      "callReturn": "n55",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 4,
+      "callSiteLine": 81,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n55",
+      "entry": "n49",
+      "exit": "n51",
+      "callReturn": "n56",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c5",
+      "seq": 5,
+      "callSiteLine": 81,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n56",
+      "entry": "n49",
+      "exit": "n51",
+      "callReturn": "n57",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c6",
+      "seq": 6,
+      "callSiteLine": 19,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n59",
+      "entry": "n49",
+      "exit": "n51",
+      "callReturn": "n60",
+      "exceptionalReturn": "n63",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c7",
+      "seq": 7,
+      "callSiteLine": 19,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n60",
+      "entry": "n49",
+      "exit": "n51",
+      "callReturn": "n61",
+      "exceptionalReturn": "n63",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c8",
+      "seq": 8,
+      "callSiteLine": 19,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n61",
+      "entry": "n49",
+      "exit": "n51",
+      "callReturn": "n62",
+      "exceptionalReturn": "n63",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c9",
+      "seq": 9,
+      "callSiteLine": 81,
+      "callee": "$DOMAIN.$PAGE_0.randomRGB",
+      "callNode": "n57",
+      "entry": "n58",
+      "exit": "n63",
+      "callReturn": "n64",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c10",
+      "seq": 10,
+      "callSiteLine": 81,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+      "callNode": "n64",
+      "entry": "n65",
+      "exit": "n72",
+      "callReturn": "n73",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c11",
+      "seq": 11,
+      "callSiteLine": 108,
+      "callee": "$DOMAIN.$PAGE_0.loop",
+      "callNode": "n75",
+      "entry": "n76",
+      "exit": "n84",
+      "callReturn": "n85",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c12",
+      "seq": 12,
+      "callSiteLine": 109,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+      "callNode": "n86",
+      "entry": "n65",
+      "exit": "n72",
+      "callReturn": "n87",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c13",
+      "seq": 13,
+      "callSiteLine": 69,
+      "callee": "$DOMAIN.$PAGE_0.randomRGB",
+      "callNode": "n107",
+      "entry": "n58",
+      "exit": "n63",
+      "callReturn": "n108",
+      "exceptionalReturn": "n111",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c14",
+      "seq": 14,
+      "callSiteLine": 73,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2",
+      "callNode": "n109",
+      "entry": "n88",
+      "exit": "n113",
+      "callReturn": "n110",
+      "exceptionalReturn": "n111",
+      "back": true,
+      "beforeDecision": false
+    },
+    {
+      "id": "c15",
+      "seq": 15,
+      "callSiteLine": 58,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
+      "callNode": "n99",
+      "entry": "n100",
+      "exit": "n111",
+      "callReturn": "n112",
+      "exceptionalReturn": "n113",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c16",
+      "seq": 16,
+      "callSiteLine": 109,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2",
+      "callNode": "n87",
+      "entry": "n88",
+      "exit": "n113",
+      "callReturn": "n114",
+      "exceptionalReturn": "n115",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2": {
+      "normalReturn": false,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [
+        "Math",
+        "balls",
+        "height",
+        "random",
+        "randomRGB",
+        "width"
+      ],
+      "upwardExposed": [
+        "Math",
+        "balls",
+        "height",
+        "random",
+        "randomRGB",
+        "width"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
+      "normalReturn": false,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [
+        "Math",
+        "balls",
+        "height",
+        "random",
+        "randomRGB",
+        "width"
+      ],
+      "upwardExposed": [
+        "Math",
+        "balls",
+        "height",
+        "random",
+        "randomRGB",
+        "width"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.loop": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "ctx@n77"
+      ],
+      "mustKill": [
+        "ctx"
+      ],
+      "upwardExposed": [
+        "balls",
+        "height",
+        "loop",
+        "requestAnimationFrame",
+        "width"
+      ],
+      "exceptional": [
+        "ctx@n77"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.random": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.randomRGB": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math",
+        "random"
+      ],
+      "exceptional": []
+    }
+  }
+}

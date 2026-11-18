@@ -477,12 +477,13 @@ describe('splitting the nodes with calls (feature 007)', function () {
 			});
 		});
 
-		/// L1 (DECISION 005 Q2 A, FR-001 exception): the left side of for-in/for-of
-		it('should not connect g() of for (o[g()] of a) {} (as develop)', function () {
+		/// L1 (DECISION 005 Q2 A, FR-001 exception): the left side of for-in/for-of; feature 008: o[g()] does
+		/// not define o (FR-001) and its key g() is read at the loop node (FR-002, as the default g() below)
+		it('should not connect g() of for (o[g()] of a) {}', function () {
 			var result = analyzeAt('for (o[g()] of a) {}');
 			allCallEdgesOf(result).should.eql([]);
-			result.intraPage().should.eql(['a: L1 -> L9', 'console: entry -> L10', 'o: L1 -> L9', 'o: L9 -> L9',
-				'x: L8 -> L10']);
+			result.intraPage().should.eql(['a: L1 -> L9', 'console: entry -> L10', 'g: entry -> L9>L10:F',
+				'g: entry -> L9>L9:T', 'o: L1 -> L9', 'x: L8 -> L10']);
 		});
 
 		it('should not connect g() of for (var [z = g()] of a) {} (as develop)', function () {

@@ -1,0 +1,49 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.updateAllowance
+## intra $DOMAIN.$PAGE_0
+checkBox: L1 -> L5
+document: entry -> L1
+document: entry -> L2
+updateAllowance: entry -> L25
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+## intra $DOMAIN.$PAGE_0.updateAllowance
+childAllowance: L17 -> L22
+childAllowance: L19 -> L22
+## inter[0] $DOMAIN.$PAGE_0 , $DOMAIN.$PAGE_0.updateAllowance
+checkBox: L1 -> L5
+childAllowance: L17 -> L22
+childAllowance: L19 -> L22
+document: entry -> L1
+document: entry -> L2
+shoppingDone: L3 -> L16>L17:T
+shoppingDone: L3 -> L16>L19:F
+updateAllowance: entry -> L25
+## inter[1] $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0 , $DOMAIN.$PAGE_0.updateAllowance
+childAllowance: L17 -> L22
+childAllowance: L19 -> L22
+shoppingDone: L7 -> L16>L17:T
+shoppingDone: L7 -> L16>L19:F
+shoppingDone: L9 -> L16>L17:T
+shoppingDone: L9 -> L16>L19:F
+## intra-page (nodes 31)
+checkBox: L1 -> L5
+childAllowance: L17 -> L22
+childAllowance: L19 -> L22
+document: entry -> L1
+document: entry -> L2
+shoppingDone: L3 -> L16>L17:T
+shoppingDone: L3 -> L16>L19:F
+shoppingDone: L3 -> L6>L7:T
+shoppingDone: L3 -> L6>L9:F
+shoppingDone: L7 -> L16>L17:T
+shoppingDone: L7 -> L16>L19:F
+shoppingDone: L7 -> L6>L7:T
+shoppingDone: L7 -> L6>L9:F
+shoppingDone: L9 -> L16>L17:T
+shoppingDone: L9 -> L16>L19:F
+shoppingDone: L9 -> L6>L7:T
+shoppingDone: L9 -> L6>L9:F
+updateAllowance: entry -> L11
+updateAllowance: entry -> L25

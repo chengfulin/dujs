@@ -1,0 +1,18 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="7">Def-Use pairs</td></tr><tr><td>randomCharacter</td><td>(call (26),30)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>randomPlace</td><td>(call (27),30)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>array</td><td>(entry_c,9)</td><td>(entry_c,10)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>random</td><td>(9,10)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>randomEvent</td><td>(call (28),30)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>storyText</td><td>(30,32)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>newStory</td><td>(call (40),44)</td><td>(44,50)</td><td>(call (40),50)</td><td>(50,51)</td><td>(51,54)</td><td>(44,54)</td><td>(call (40),54)</td></tr>
+<tr><td>name</td><td>(43,44)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>weight</td><td>(48,50)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>temperature</td><td>(49,51)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>story</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

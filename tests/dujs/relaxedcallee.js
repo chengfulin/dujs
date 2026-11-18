@@ -295,6 +295,96 @@ describe('relaxed callees in functions (feature 005 US2, D2)', function () {
 	});
 });
 
+/**
+ * Lines of a program with the class A of a method m assigning x = 1 (lines 1-6)
+ * @param {Array} rest lines from L7
+ * @returns {Array}
+ */
+function withClassA(rest) {
+	'use strict';
+	return ['var x = 0;', 'class A {', '  m() {', '    x = 1;', '  }', '}'].concat(rest);
+}
+
+/*
+ * Feature 008 User Story 2 (FR-004, research R7, data-model §2): o.m() in a
+ * function, where no definition of o reaches the call, is linked to the
+ * instance method m of A when the binding of o is let or const, o has only
+ * one definition on the page and the definition is new A(...) with A
+ * resolved to a class (relaxedClassOfInstance of callresolver). One negative
+ * case of each condition and the positive cases of T050.
+ */
+describe('relaxed instances of o.m() in functions (feature 008 US2, FR-004)', function () {
+	'use strict';
+	after(analyze.reset);
+
+	/// condition 1 (isInFunction): no definition of o reaches o.m() of the page
+	it('does not relax o.m() of the page', function () {
+		var result = analyzeProgram(withClassA(['o.m();', 'const o = new A();', 'console.log(x);']));
+		calleesAt(result, '$PAGE_0', 7).should.eql([]);
+		shouldHavePairs(result, ['x: L1 -> L9'], ['x: L4 -> L9']);
+	});
+
+	/// condition 1: a block of the page (a dujs block scope, by let y) is not a function
+	it('does not relax o.m() in a block of the page', function () {
+		var result = analyzeProgram(withClassA(['var c = 1;', 'if (c) {', '  let y = 2;', '  o.m();',
+			'  console.log(x, y);', '}', 'const o = new A();']));
+		calleesAt(result, '$PAGE_0', 10).should.eql([]);
+		shouldHavePairs(result, ['x: L1 -> L11'], ['x: L4 -> L11']);
+	});
+
+	/// condition 2 (isRelaxedInstance, D002): var o has the undefined initial value and new A()
+	// D002 (condition 2, let/const): a var always has the undefined initial
+	// definition too, so this case is also rejected by condition 3 (one
+	// definition on the page); it does not lock condition 2 on its own
+	it('does not relax o.m() of var o = new A()', function () {
+		var result = analyzeProgram(withClassA(['var o = new A();', 'function g() {', '  o.m();', '}', 'g();',
+			'console.log(x);']));
+		calleesAt(result, 'g', 9).should.eql([]);
+		shouldHavePairs(result, ['x: L1 -> L12'], ['x: L4 -> L12']);
+	});
+
+	/// condition 3 (one definition on the page): two new A() of the same class are two definitions
+	it('does not relax o.m() when o has two definitions on the page', function () {
+		var result = analyzeProgram(withClassA(['let o = new A();', 'function h() {', '  o = new A();', '}',
+			'function g() {', '  o.m();', '}', 'g();', 'console.log(x);']));
+		calleesAt(result, 'g', 12).should.eql([]);
+		shouldHavePairs(result, ['x: L1 -> L15'], ['x: L4 -> L15']);
+	});
+
+	/// condition 4 (new A() of a class): new F() of a function constructor F
+	it('does not relax o.m() of const o = new F() of a function F', function () {
+		var result = analyzeProgram(['var x = 0;', 'function F() {}', 'F.prototype.m = function () {', '  x = 1;', '};',
+			'const o = new F();', 'function g() {', '  o.m();', '}', 'g();', 'console.log(x);']);
+		calleesAt(result, 'g', 8).should.eql([]);
+		shouldHavePairs(result, ['x: L1 -> L11'], ['x: L4 -> L11']);
+	});
+
+	/// FR-018: no definition of A reaches new A() of L2 (A is declared later), A is resolved by the class
+	/// relaxation
+	it('relaxes o.m() of const o = new A() with A resolved by the class relaxation', function () {
+		var result = analyzeProgram(['var x = 0;', 'const o = new A();', 'function g() {', '  o.m();', '}',
+			'class A {', '  m() {', '    x = 1;', '  }', '}', 'g();', 'console.log(x);']);
+		calleesAt(result, 'g', 4).map(lastPartOf).should.eql(['$ANONYMOUS_FUN_0']);
+		shouldHavePairs(result, ['x: L8 -> L12'], ['x: L1 -> L12']);
+	});
+
+	/// const o = new A() of the outer function is the only definition of o on the page
+	it('relaxes o.m() of an inner function to const o = new A() of the outer function', function () {
+		var result = analyzeProgram(withClassA(['function outer() {', '  const o = new A();', '  function inner() {',
+			'    o.m();', '  }', '  inner();', '  console.log(x);', '}', 'outer();']));
+		calleesAt(result, 'inner', 10).map(lastPartOf).should.eql(['$ANONYMOUS_FUN_0']);
+		shouldHavePairs(result, ['x: L4 -> L13'], ['x: L1 -> L13']);
+	});
+
+	/// D020 analyze C2: an instance field initializer is a function
+	it('relaxes o.m() of an instance field initializer', function () {
+		var result = analyzeProgram(withClassA(['const o = new A();', 'class B {', '  f = o.m();', '}', 'new B();',
+			'console.log(x);']));
+		calleesAt(result, '$ANONYMOUS_FUN_1', 9).map(lastPartOf).should.eql(['$ANONYMOUS_FUN_0']);
+		shouldHavePairs(result, ['x: L4 -> L12'], ['x: L1 -> L12']);
+	});
+});
+
 /*
  * T103 (FR-003): the relaxed callees of D2 make chains of registrations where
  * a handler is registered again by itself or by a handler it registers

@@ -62,6 +62,16 @@ also fixes §49 (a pre-existing bug of the labels of the `.graph.dot` that
 `007` makes much easier to trigger) and records §50 (a pre-existing
 performance problem, left to a later feature).
 
+Feature `008-property-defs-method-calls`
+(`specs/008-property-defs-method-calls/`) makes a member assignment a use of
+the object variable instead of a definition of it, which fixes part of
+§22 (1) (there is still no definition of a property; §51), and connects
+`o.m()` in a function to the class of a `const`/`let` instance defined
+outside the function, which fixes §23. It also checks the dead-code pairs of
+§22 (5) with an independent reachability test and fixes them except for the
+`finally` case of §38. It records its follow-up items
+and findings from §51 on.
+
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
 
@@ -776,7 +786,7 @@ statements are included.
 
 ## Found by feature `004-fix-remaining-issues`
 
-### 22. Strict resolution of `f()` and follow-up items (found by `004-fix-remaining-issues`; (2) fixed by `006-eslint-scope`; (3) fixed by `007-split-call-nodes`)
+### 22. Strict resolution of `f()` and follow-up items (found by `004-fix-remaining-issues`; (2) fixed by `006-eslint-scope`; (3) fixed by `007-split-call-nodes`; (1) partly fixed and (5) fixed except for §38 by `008-property-defs-method-calls`)
 
 **Note (feature `005-summary-analysis`, D2, FR-005)**: in a function, `f();`
 with no definition of `f` reaching the call in the function is now connected
@@ -824,7 +834,21 @@ was connected to the first function and the pair was `x: L3 -> L11`; now
 
 Follow-up items (not fixed):
 
-(1) **An assignment to a property `o.p = 1` is taken as a definition of `o`.**
+(1) **Partly fixed** by feature `008-property-defs-method-calls` (FR-001,
+FR-002, US1): `o` is no longer defined by a member assignment. A member
+target (`o.p = v`, `o[k] = v`, `o.p += v`, `o.p++`, `delete o.p`, a member
+target in a destructuring pattern or in the left side of `for...in`/
+`for...of`) defines no variable; its object expression and computed keys are
+reads (`o` and `k` are used at that node). When the object variable is the
+built-in `localStorage` of the domain, the definitions and uses are those of
+`develop` (exempt; `localStorage.k = v` is still a stored definition). The
+program below now connects `o.m()` (`x: L4 -> L10`, `o: L7 -> L8`,
+`o: L7 -> L9`; no `o: L8 -> L9` and no `x: L1 -> L10`;
+`specs/008-property-defs-method-calls/probes/p1-ki22-1-prop.js`). This is
+not a full fix: there is no definition of the property `o.p`, so the data
+flow from a property write to a read of it is not a pair any more (§51). The
+original description follows.
+**An assignment to a property `o.p = 1` is taken as a definition of `o`.**
 It should be a definition of `o.p` and a use of `o` (planned for feature
 `008`, which must keep `localStorage.k = v` as a stored definition). One
 consequence is that `o.m()` after such an assignment is not connected, because
@@ -891,7 +915,53 @@ definition is `localStorage.k = v`, and it does not distinguish the keys
 (`setItem`, `getItem`, `removeItem`, `clear`, keys) is moved to a separate
 feature.
 
-(5) **Pairs in the dead code after an unconditional recursion** (planned for
+**Note (feature `008-property-defs-method-calls`, decision D004)**: a member
+target whose object variable is the `localStorage` of the domain keeps the
+definitions and uses of `develop` (it is exempt from the change of §22 (1)),
+so these gaps of `develop` are frozen and not fixed (two-page probes
+`specs/008-property-defs-method-calls/probes/pages/s1-eq.js`–`s9-nested.js`,
+output `probes/pages/baseline-develop.txt`, run by `probes/run-pages.js`):
+
+- `localStorage[k] = 2` does not read `k` (s4).
+- `localStorage.k = 2` (s1), `localStorage.a.b = 2` (s8) and a destructuring
+  `[localStorage.k] = a` (s5) do not read `localStorage`; `localStorage.k++`
+  (s7) and `localStorage.a.b = 2` do not define it either.
+- The destructuring `[localStorage.k] = a` (s5) and `for (localStorage.k in a)`
+  (s6) define `localStorage` in the intra-procedural model but are not stored
+  definitions, so the second page does not read them.
+- The nested `x = (localStorage.k = 1)` (s9) defines `localStorage` but is not
+  a stored definition.
+
+A member chain rooted at a call has no object variable and is not exempt:
+`localStorage.getItem(n).p = o` reads `localStorage` and `n` (decision D013,
+`probes/p42-localstorage-call-chain.js`).
+
+(5) **Fixed except for the `finally` case of §38** by feature
+`008-property-defs-method-calls` (FR-006–FR-008, FR-013, US3). A
+reachability checker (`tests/helpers/reachability.js`) recomputes from the
+graph which nodes the entry node can reach (a call continues only when the
+callee can return normally) without reading the results of the solver, and
+checks that no pair has an unreachable definition or use. Checked range: the
+56 probes of the feature (`tests/dujs/cases/probes008/`), the 4 golden
+cases and the 32 MDN programs (33 files), in the four model levels
+(intra-procedural, inter-procedural, intra-page, inter-page): 92 programs and
+569 models (`tests/dujs/reachabilityinvariant.js`). The only pairs left are those of
+the `finally` case of §38 (P21, P23, P24; 18 items of
+`tests/dujs/cases/reachability-allowlist.json`, none in the golden fixtures
+or the MDN programs). One cause was fixed (FR-013): the deferred p-uses of a
+decision (the variables read in the condition before a call in it, feature
+`007`) were paired with the branches even when the call never returns
+normally, so the decision cannot be reached; they are now paired only when
+the solver reaches the decision (`findDUPairs` in
+`lib/dujs/defuseanalyzer.js`). With `f` recursing unconditionally, the
+inter-procedural and intra-page models lose `f: entry -> L5>L6:T` and
+`f: entry -> L5>L8:F` for `if (f())` and `while (f())`
+(`specs/008-property-defs-method-calls/probes/p38-if-norecall.js`,
+`p40-while-norecall.js`) and `g: entry -> L8>L9:T` and
+`g: entry -> L8>L11:F` for `if (g(f()))` (`p39-if-nested-norecall.js`); the
+c-uses of the call segment (`f: entry -> L8`) and the intra-procedural
+models are unchanged. The original description follows.
+**Pairs in the dead code after an unconditional recursion** (planned for
 feature `008`). **Note (feature `005-summary-analysis`)**: the summary of a
 recursive callee starts from "no normal return" (FR-003), so a call that never
 returns normally has no normal successor in the data flow; the program below
@@ -930,7 +1000,35 @@ Every difference from `develop` is a fix of this feature and there is no
 regression; the other differences from the hand-derived pairs are the
 documented limits, except the two issues below.
 
-### 23. `o.m()` in a function is not connected when `o` is defined outside the function
+### 23. `o.m()` in a function is not connected when `o` is defined outside the function (fixed by `008-property-defs-method-calls`)
+
+**Fixed** by feature `008-property-defs-method-calls` (FR-004, US2): in a
+function (also a method, an event handler or a field initializer), `o.m()`
+with no definition of `o` reaching the call in the intra-procedural model of
+the function is connected to the instance method `m` of class `A` when the
+binding of `o` (declared in any scope, also an outer function) has only one
+definition on the whole page (member assignments do not count, §22 (1)), that
+definition is a `const`/`let` declaration `new A(…)`, and `A` is a class at
+that node. The program below now gives `x: L4 -> L12` instead of
+`x: L1 -> L12` (`specs/008-property-defs-method-calls/probes/p5-ki23.js`),
+and the MDN calls `evilBall.draw()`, `evilBall.checkBounds()` and
+`evilBall.collisionDetect()` in `loop()` are connected
+(`specs/008-property-defs-method-calls/mdn-diff.md`). Limits of the rule
+(probes in the same `probes/` directory):
+
+- `var` is not relaxed (decision D002): `var o = new A();` has the initial
+  value `undefined` too, so the page has two definitions of `o`; the call
+  stays unconnected (`p6-ki23-var.js`).
+- A declaration separated from its assignment is not relaxed:
+  `let o; o = new A();` is two definitions (`p35-ki23-let-split.js`), like
+  `let f; f = function () {…};` for `f()` (`p36-d2-let-split.js`).
+- An assignment in a function that is never called counts as a definition
+  too (`p28-ki23-let-reassigned.js`).
+- The execution order is ignored, as for `f()` and `new A()`: a function
+  called before `const o = new A();` is connected, although running it throws
+  (temporal dead zone; `p34-ki23-tdz.js`).
+
+The original description follows.
 
 **Planned for feature `008`** (decision D1 of feature `005-summary-analysis`).
 The relaxation D2 of feature `005-summary-analysis` covers only `f()`, not
@@ -1331,6 +1429,43 @@ entered normally and by an exception of the `catch` block, which adds
 limit, not fixed (copying the `finally` nodes per way, as compilers do, would
 break the one node per AST node of the CFG builder).
 
+**Note (feature `008-property-defs-method-calls`, decision D003, FR-008)**: the
+reachability checker of §22 (5) finds a second effect of this limit. When the
+`try` block cannot complete normally, the `finally` is entered only by an
+exception, but its `finallyExit` still continues on the normal path, so the
+code after the `finally` gets pairs although it cannot be reached. Three forms
+(`specs/008-property-defs-method-calls/probes/`, copied to
+`tests/dujs/cases/probes008/`):
+
+- P21, in the caller itself (`p21-finally.js`): `f()` in the `try` recurses
+  unconditionally (L6), the `finally` is L8–L10 and `console.log(x);` is L11.
+  Pairs `x: L1 -> L11` and `console: entry -> L11`.
+- P23, through a summary (`p23-finally-summary.js`): the same `try` is in `g`
+  (L6–L10), followed by `x = 2;` (L11); the summary of `g` gets a normal
+  return from the `finallyExit` (`lib/dujs/summary.js:245`), so `g();` (L13)
+  continues to `console.log(x);` (L14). Pairs `x: L11 -> L14` and
+  `console: entry -> L14`.
+- P24, a callee that only throws (`p24-finally-throw.js`): `t()` (L6) runs
+  `throw x;` and is not recursive; the rest is as in P21. Pairs `x: L1 -> L11`
+  and `console: entry -> L11`.
+
+Each form has the two pairs in the inter-procedural model of the page, the
+intra-page model and the inter-page model, which gives the 18 items of the
+allowlist `tests/dujs/cases/reachability-allowlist.json` (models
+`inter-procedural[1]`, `intra-page[0]`, `inter-page` for P21;
+`inter-procedural[2]`, `intra-page[0]`, `inter-page` for P23;
+`inter-procedural[0]`, `intra-page[0]`, `inter-page` for P24). The checker
+accepts an item only when the pair breaks the reachability check, the
+definition and the use become reachable when the `finallyExit` is allowed to
+continue on the normal path, and the witness matches. Witness of each item:
+the `finallyExit` with no reachable entry other than an exception,
+`{"scope":"$DOMAIN.$PAGE_0","line":10,"nonExceptionalEntries":0}` for P21 and
+P24 and `{"scope":"$DOMAIN.$PAGE_0.g","line":10,"nonExceptionalEntries":0}`
+for P23. The golden fixtures and the MDN programs have no such item.
+Candidate for a narrow fix (not done, D003): **when a `finally` has no
+reachable entry other than an exception, its `finallyExit` does not continue
+on the normal path.**
+
 ### 39. A recursive run reading definitions of the outer run (research R14)
 
 Research R14 of feature `005-summary-analysis` lists a possible
@@ -1710,3 +1845,192 @@ longer to analyze as their number grows: with 14 of them `bin/dujs.js` takes
 about 7 seconds, and with 26 of them it did not finish within 20 seconds, in
 `develop` and in `007` alike (measured for the sign-off of `007`, DECISION
 013). The cause is not analyzed yet. Not fixed; left to a later feature.
+
+## Found by feature `008-property-defs-method-calls`
+
+Feature `008-property-defs-method-calls` fixes part of §22 (1), §22 (5)
+except for §38, and §23. The sections below record its follow-up items,
+behavior changes, limits and findings.
+
+### 51. Property-level definitions are not modeled (follow-up of §22 (1))
+
+Feature `008` takes a member assignment as a use of the object variable and
+as no definition (decision D001, option A). A property-level model (option B)
+is left to a later feature: `o.p = v` would define `o.p`, a read of `o.p`
+would use `o.p`, and a new definition of `o` would kill `o.p`. Where it would
+change the code (line numbers of `develop` `2035c93`):
+
+- `lib/dujs/var.js:48`: `Var.isValidName` accepts only identifiers, so there
+  is no variable named `o.p`.
+- `lib/dujs/defuseanalyzer.js:77` (`getDefinedVariables`) and
+  `lib/dujs/defuseanalyzer.js:600` (the `AssignmentExpression` rule): a
+  member target is mapped to its object variable (`node.object`).
+- `lib/dujs/outputwriter.js:394-432`: the matching output names a variable by
+  its name and the line of its declaration, which a property has not.
+
+The cost of option A is a loss for all-uses: the data flow from a property
+write to a read of the same property is no longer a pair. In
+`specs/008-property-defs-method-calls/probes/p25-prop-write-read.js`:
+
+```js
+var o = {p: 0};
+o.p = 1;
+var y = o.p;
+o.p = 2;
+console.log(o.p, y);
+```
+
+the pairs are `o: L1 -> L2`, `o: L1 -> L3`, `o: L1 -> L4`, `o: L1 -> L5` and
+`y: L3 -> L5`; `o: L2 -> L3` and `o: L4 -> L5`, which `develop` has, are gone.
+The golden and MDN differences of this kind are recorded as their own
+category ("屬性寫入→讀取損失", the pairs option B would keep) in
+`specs/008-property-defs-method-calls/golden-diff.md` and `mdn-diff.md`,
+not as fixes.
+
+### 52. Known limit of the difference tool of feature `008`
+
+The difference tool `specs/008-property-defs-method-calls/tools/diffcheck`
+compares the summaries of a matching file element by element (decision
+D025): each `v@n` of `gen` / `exceptional` is first replaced by `v` with the
+label of node `n` in the `.graph.dot` of the same model, so a pure
+renumbering is no difference. The two sides are compared as sets of these
+keys. When one line has several nodes for the same variable and both sides
+give them the same label, a side with one more such element than the other
+is not seen, so one element may be counted too few. The criteria of the tool
+are by line, so the effect is bounded (the line and the variable are still
+compared). The tool is left unchanged; this was decided in the main session
+of the feature.
+
+Two more criteria of the tool are too wide (found at the sign-off review of
+`golden-diff.md` and `mdn-diff.md`; the categories and the tool are left
+unchanged):
+
+- The trigger of `成員目標（不再殺除）` merges the definitions by variable
+  name across different declarations. In MDN `a05-assessment-main` the
+  trigger `ball L86、L154` joins the `ball` of `Ball.collisionDetect` (L79)
+  and the one of `EvilCircle.collisionDetect` (L147); the pairs
+  `ball: 147 -> (148,147)` and the like (net differences #51–#56) are
+  really caused by the relaxation (FR-004): the old definition at L154
+  (`ball.exists = false`) would be redefined by the loop head at L147, and
+  the pairs were missing only because `collisionDetect` was not linked.
+- The position condition of `放寬` / `外溢` (a use after the call line) also
+  holds for differences unrelated to the link: in golden, `input: 39 -> 41`
+  (#18, #39, #49, #65) also matches `放寬`, while its main category
+  `成員目標（新增讀取）` is the right one.
+
+### 53. Behavior changes and limits of feature `008`
+
+Besides the fixes of §22 (1), §22 (5) and §23, feature `008` changes these
+results (each kind is a category of
+`specs/008-property-defs-method-calls/golden-diff.md` and `mdn-diff.md`):
+
+- **Spillover to the resolution of calls** (FR-001, category `外溢`): the
+  resolution rules are unchanged, but they count definitions, and a member
+  assignment is no longer one. `function f() {…}` / `f.p = 1;` (L5) / `f();`
+  (L6) is now connected to `f` (`x: L3 -> L7`; `f: L5 -> L6` and `x: L1 -> L7`
+  are gone; `specs/008-property-defs-method-calls/probes/p29-fn-prop-call.js`);
+  `f.p = function () {…}` no longer makes `f()` call that function (P30),
+  `A.count = 0;` no longer stops `new A()` (P31), and `f.p = 1;` on the page is
+  no longer counted by the relaxation D2 of `005-summary-analysis` (P32).
+- **The guard of `007` is lifted**: `007` does not take a call as a call site
+  when its receiver is defined earlier on the same node
+  (`isDefinedBeforeRead` in `lib/dujs/callsplit.js`). In `o.p = 1, o.m();`
+  the member assignment no longer defines `o`, so `o.m()` is now a call site
+  and is connected (`x: L4 -> L9` instead of `x: L1 -> L9`; test in
+  `tests/dujs/propertydefs.js`).
+- **New reads in the object expression** (FR-002, decision D013): the object
+  expression and the computed keys of a member target are evaluated, so
+  `f(a).p = 1` uses `f` and `a`, and `o[i].q = 2` uses `o` and `i` (P33). A
+  chain rooted at a call has no object variable and is not exempt:
+  `localStorage.getItem(n).p = o` uses `localStorage` and `n` (P42,
+  `n: L1 -> L2`), so a new read of `localStorage` can give a new inter-page
+  pair (category `成員目標（新增讀取）`, not the frozen `localStorage` rules of
+  §22 (4)).
+
+Size of the change, against `develop` `2035c93`: 68 differences in the golden
+fixtures (all in `tests/golden/fixtures/es2015/app.js`: `放寬` 41,
+`屬性寫入→讀取損失` 15, `成員目標（不再殺除）` 6, `成員目標（新增讀取）` 6) and
+547 in the MDN programs (`成員目標（新增讀取）` 197, `成員目標（不再殺除）` 96,
+`放寬` 83, `屬性寫入→讀取損失` 78, `成員目標（修正）` 54, `成員目標（摘要）` 32,
+`成員目標（列消失）` 7); no difference is unclassified and none is an
+unreachable pair. The differences are signed off in the two files.
+
+Limits of the relaxation of `o.m()` (§23, also in the README):
+
+- Only `const`/`let`: `var o = new A();` is not relaxed (decision D002; P6).
+- A declaration separated from its assignment (`let o; o = new A();`) is not
+  relaxed (P35), as for `f()` (P36).
+- The execution order is ignored: a function called before
+  `const o = new A();` is connected, although running it throws (temporal dead
+  zone; P34, `g();` L10 before `const o = new A();` L11).
+
+### 54. Findings of the checks of feature `008`
+
+- **The virtual exception edge of the reachability checker has no effect on
+  reachability.** Decision D014 adds an edge from each call node to the
+  `exceptionalReturn` of its call record. Measured at the Foundational phase on
+  509 models (before the full-run total of 569 models in §22 (5)): the `exceptionalReturn` always has another reachable exception
+  edge into it in the graph (the only call without an exception edge of its
+  own is the constructor call after the field initializers of a class), so the
+  edge reaches no new node; its only effect is that the path is of the
+  exception kind (a callee that reaches its exit only through it has no normal
+  return). It is kept as a guard and tested with forged records (D014 block of
+  `tests/dujs/reachability.js`); `specs/008-property-defs-method-calls/contracts/reachability.md`
+  was corrected.
+- **The numbers of the model files can shift** (decision D022). A new
+  connection adds inter-procedural models, so the same model gets another file
+  number: the inter-procedural model `1` of the `es2015` golden case of
+  `develop` is `3` in `008`, and in the MDN program `a05-assessment-main` the
+  models `1` and `2` of `develop` are `2` and `3`, while `1` is the new model of
+  `loop`. The difference tool compares pairs per page and model level, and
+  pairs the `*.matching.json` files by their main scope, not by file number.
+- **Summaries and rows that change without a pair** (decisions D023, D024):
+  a member target that no longer defines `v` removes `v@n` from the `gen` and
+  `exceptional` of a summary, removes `v` from `mustKill` and may add `v` to
+  `upwardExposed`; a new connection adds the elements of the newly reached
+  callees. A row of a variable can disappear from `.dupairs.dot` when all its
+  definitions were member targets (`成員目標（列消失）`, 7 in MDN). The
+  difference tool classifies these by the criteria of
+  `specs/008-property-defs-method-calls/contracts/diff-check.md` §2.
+- **An error in the wording of task T026**: the task says `if (h(a))` has two
+  p-use pairs of `a`, but `a` is an argument of the call in the condition, so
+  it is a c-use of the call segment (`a: L1 -> L5`); only the callee `h` is a
+  deferred p-use (`h: entry -> L5>L6:T`, `h: entry -> L5>L8:F`). The test in
+  `tests/dujs/defuseanalyzer.js` checks the actual pairs, and
+  `if (a < h(a))` covers the p-uses of `a`.
+
+### 55. A nested assignment is a definition only directly in the right side of an assignment (pre-existing)
+
+The definitions of a node (GEN) follow a nested assignment or update only
+when it is directly the right side of an assignment whose left side `develop`
+defines (an identifier, or a member target whose object is an identifier;
+`lib/dujs/defuseanalyzer.js:608-611` of `develop`, `:643-647` after feature
+`008`; decision D012). In other positions the inner assignment defines
+nothing:
+
+- `y = (x = 5, 3)`, `y = [x = 6]`, `y = f(x = 7)`, `[y] = x = [8]`;
+- `o.t = [n++]`, `this.p = x = 1`, `f().p = x = 2`, `o.a.b = x++`.
+
+For example, `var x = 0, y, o = {a: {}};` / `function f() { return o; }` /
+`y = (x = 5, 3);` / `console.log(x, y);` gives `x: L1 -> L4`, not
+`x: L3 -> L4`; `o.a.b = x++;` gives `x: L1 -> L3` and `x: L1 -> L4` (checked
+with `tests/helpers/analyze.js`). It is in the golden fixtures:
+`state.todos = [...state.todos, { id: nextId++, title, done: false }];`
+(`tests/golden/fixtures/es2015/app.js:22`) does not define `nextId`. The gap is
+not limited to member targets. Feature `008` keeps the behavior of `develop`:
+`o.p = x = 1` and `o.p = x++` still define `x` (the right side is directly an
+assignment or update), and `o.a.b = x = 1` and `this.p = x = 1` are pinned by
+characterization tests. Not fixed.
+
+### 56. The test helper labels a node without a line `Lnull` (pre-existing)
+
+`nodeLabel` in `tests/helpers/analyze.js` labels a node by its line, and only
+the entry and exit nodes have names, so a node with no line is labeled
+`Lnull`. In the intra-page and inter-page models the false branch of a loop
+at the end of the page goes to the LOOP node of the event loop, which has no
+line: in `specs/008-property-defs-method-calls/probes/p18-method-loop.js`
+(`while (c)` at L8) the intra-page pair is `c: L1 -> L8>Lnull:F`, while the
+inter-procedural model gives `c: L1 -> L8>exit:F`. Only the tests are
+affected (not the CLI output or the golden files); `tests/dujs/expansion.js:127`,
+`tests/dujs/splitcallnodes.js:251` and `tests/dujs/reachability.js` (P18)
+pin the label. Not fixed.

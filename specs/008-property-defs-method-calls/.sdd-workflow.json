@@ -1,0 +1,70 @@
+{
+  "feature": "008-property-defs-method-calls",
+  "brief": {
+    "artifact_url": "https://claude.ai/artifact/KDbgiNTnWC9WqodAxEecLY"
+  },
+  "steps": {
+    "specify": {
+      "done": true,
+      "decisions": "D001–D005"
+    },
+    "clarify": {
+      "done": true,
+      "clarifier_findings": 8,
+      "decisions": "D006–D010"
+    },
+    "plan": {
+      "done": true,
+      "decisions": "D011–D019"
+    },
+    "tasks": {
+      "done": true,
+      "count": 70
+    },
+    "analyze": {
+      "done": true,
+      "findings": 19,
+      "remediated": 16,
+      "decisions": "D020",
+      "notes": "analyze 9（MEDIUM 4、LOW 5）＋clarifier 10（HIGH 2、MEDIUM 5、INFO 3）；I3 基線不升級、S1／I3(spec) 純文字未改"
+    },
+    "implement": {
+      "done": true,
+      "mode_note": "依序模式（未跑 0P：phase 明文串接、共用熱點檔）",
+      "decisions": "D021–D025",
+      "phases": {
+        "Setup": {
+          "reviewed": true,
+          "committed": true
+        },
+        "Foundational": {
+          "reviewed": true,
+          "committed": true
+        },
+        "Polish": {
+          "reviewed": true,
+          "validated_all": true,
+          "committed": true,
+          "signoff": "T070 已簽核 2026-11-18（主對話＋Fable 裁判，依使用者授權；合併前使用者可複核）"
+        }
+      },
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US2": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US3": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      }
+    }
+  }
+}

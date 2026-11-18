@@ -9,8 +9,10 @@
  * static method s; this.m(...) in a member of A to the method m of A (an
  * instance method in an instance member, a static method in a static
  * member); o.m(...) to the instance method m of A when the definitions of o
- * reaching the call-site are at least one and all new A(...). Other forms
- * are not connected. The expected pairs are those of
+ * reaching the call-site are at least one and all new A(...), or, in a
+ * function where none reaches, when the only definition of a let or const o
+ * on the page is new A(...) (feature 008 FR-004). Other forms are not
+ * connected. The expected pairs are those of
  * contracts/acceptance.md "US3", "FR-017／FR-018" (handler-new) and "Edge
  * cases".
  */
@@ -288,8 +290,8 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 		calleesAt(result, PAGE, 6).should.eql([ANONYMOUS + '1']);
 	});
 
-	/// README: o.p = 1 defines o and the definition is not new A()
-	it('should not resolve o.m() after a property assignment o.p = 1', function () {
+	/// feature 008 FR-001 (US1-1, P1): o.p = 1 does not define o, so new A() reaches o.m()
+	it('should resolve o.m() after a property assignment o.p = 1 to m', function () {
 		var result = analyze([
 			'class A {',
 			'  m() {}',
@@ -298,7 +300,7 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 			'o.p = 1;',
 			'o.m();'
 		].join('\n'));
-		calleesAt(result, PAGE, 6).should.eql([]);
+		calleesAt(result, PAGE, 6).should.eql([ANONYMOUS + '0']);
 	});
 
 	/// o is declared and not defined before o.m()
@@ -313,6 +315,46 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 			'var o = new A();'
 		].join('\n'));
 		calleesAt(result, PAGE + '.g', 5).should.eql([]);
+	});
+
+	/// feature 008 FR-004: no definition of o reaches o.m() in g; const o = new A() is the only one on the page
+	it('should resolve o.m() in a function of const o = new A() to m only (not the constructor)', function () {
+		var result = analyze([
+			'class A {',
+			'  constructor() {}',
+			'  m() {}',
+			'}',
+			'const o = new A();',
+			'function g() {',
+			'  o.m();',
+			'}'
+		].join('\n'));
+		calleesAt(result, PAGE + '.g', 7).should.eql([ANONYMOUS + '1']);
+	});
+
+	/// feature 008 FR-004 (P11): a definition of o reaching o.m() in the function is resolved by the strict rule
+	it('should resolve o.m() in a function by the definitions of o reaching it (strict rule)', function () {
+		var result = analyze([
+			'class A {',
+			'  m() {}',
+			'}',
+			'class B {',
+			'  m() {}',
+			'}',
+			'const o = new A();',
+			'function g() {',
+			'  var o = new B();',
+			'  o.m();',
+			'}',
+			'function h() {',
+			'  var o = mk();',
+			'  o.m();',
+			'}',
+			'function mk() {}'
+		].join('\n'));
+		calleesAt(result, PAGE + '.g', 10).should.eql([ANONYMOUS + '1']);
+		/// the reaching mk() is not a new A(...): not resolved, nor relaxed to the o of the page
+		calleesAt(result, PAGE + '.h', 14).should.eql([]);
 	});
 
 	it('should resolve this.m() in instance members to the instance method m', function () {

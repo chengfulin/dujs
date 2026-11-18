@@ -1,0 +1,13 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="6">Def-Use pairs</td></tr><tr><td>ball</td><td>(62,(63,64))</td><td>(62,(63,62))</td><td>(62,64)</td><td>(62,65)</td><td>(62,(68,call (69)))</td><td>(62,(68,62))</td></tr>
+<tr><td>dx</td><td>(64,66)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>dy</td><td>(65,66)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>distance</td><td>(66,(68,call (69)))</td><td>(66,(68,62))</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>min</td><td>(entry_c,13)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>max</td><td>(entry_c,13)</td><td></td><td></td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

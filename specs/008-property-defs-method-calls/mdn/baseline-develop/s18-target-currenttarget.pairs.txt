@@ -1,0 +1,34 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.handleClick
+## intra $DOMAIN.$PAGE_0
+button: L9 -> L13
+container: L8 -> L12
+document: entry -> L1
+document: entry -> L11
+document: entry -> L8
+document: entry -> L9
+handleClick: entry -> L11
+handleClick: entry -> L12
+handleClick: entry -> L13
+## intra $DOMAIN.$PAGE_0.handleClick
+e: entry -> L3
+e: entry -> L4
+logCurrentTarget: L4 -> L5
+logTarget: L3 -> L5
+## intra-page (nodes 15)
+button: L9 -> L13
+container: L8 -> L12
+document: entry -> L1
+document: entry -> L11
+document: entry -> L8
+document: entry -> L9
+e: entry -> L3
+e: entry -> L4
+handleClick: entry -> L11
+handleClick: entry -> L12
+handleClick: entry -> L13
+logCurrentTarget: L4 -> L5
+logTarget: L3 -> L5
+output: L1 -> L5
+output: L5 -> L5
