@@ -5,7 +5,7 @@ description: "Task list for feature 008-property-defs-method-calls"
 
 # Tasks：成員賦值不是物件變數的定義（KI §22 (1)）、函式中的 `o.m()` 放寬（KI §23）、無法到達的程式碼不產生 pair（KI §22 (5)）
 
-**Input**: `specs/008-property-defs-method-calls/` 的 spec.md（Clarifications D001–D020 為已定決策；D021–D025 為 analyze／implement 中的 Fable 裁決，記於本檔「analyze 裁決（D021–D022）」節；合稱 D001–D025）、plan.md（「實作順序與 story 相依」表與其下條列為排程權威）、research.md（R0–R14）、data-model.md、contracts/（lib-api.md、reachability.md、diff-check.md、acceptance.md）、quickstart.md
+**Input**: `specs/008-property-defs-method-calls/` 的 spec.md（Clarifications D001–D020 為已定決策；D021–D026 為 analyze／implement 中的 Fable 裁決，記於本檔「analyze 裁決（D021–D026）」節；合稱 D001–D026）、plan.md（「實作順序與 story 相依」表與其下條列為排程權威）、research.md（R0–R14）、data-model.md、contracts/（lib-api.md、reachability.md、diff-check.md、acceptance.md）、quickstart.md
 
 **Tests**: 規格要求（§CP-4、SC-001、contracts/acceptance.md），**測試先行**：每個 story／元件先寫測試（預期先失敗；「與 develop 相同」的 characterization 可直接通過），再實作。框架 mocha＋should；驗收測試以 `tests/helpers/analyze.js` 執行，probes 自 `tests/dujs/cases/probes008/` 以 `fs.readFileSync` 讀入，兩頁程式以 `//// page` 行切開（同 `probes/run-pages.js`）。
 
@@ -186,16 +186,18 @@ description: "Task list for feature 008-property-defs-method-calls"
 - [X] T068 建立 `specs/008-property-defs-method-calls/docs-check.md`（SC-007；依賴 T065–T067）：FR-011 (a)–(g) 與 FR-012 每一項一列（項目、檔案位置、核對結果）；`grep -n "defines <code>a</code>\|defines <code>o</code>\|known-issues §23)" README.md` 無輸出
 - [X] T069 執行 `specs/008-property-defs-method-calls/quickstart.md` 全流程（§0–§6）：`npm test`、`npm run lint`、`probes/run.js`、`probes/run-pages.js`、`npx mocha tests/dujs/reachability.js tests/dujs/reachabilityinvariant.js`、classify／diffcheck 自我測試、golden 與 mdn `--verify` 皆 exit 0、perf、docs-check；並確認：`git -C /Users/chengfulin/Documents/Personal/dujs diff --stat 2035c93 -- eslint.config.js` 只有 T003 新增的 `probes008` ignore（含註解共兩行）；`git diff --stat 2035c93 -- lib` 只含 `defuseanalyzer.js`、`usedexpressions.js`、`bindingpattern.js`、`scopebinding.js`、`callresolver.js`、`hierarchy.js`；`git diff --quiet 2035c93 -- lib/esgraph specs/005-summary-analysis/tools specs/006-eslint-scope/tools specs/007-split-call-nodes/tools eslint-suppressions.json` 為 0；`lib/dujs/reachingsolver.js`、`summary.js`、`expansion.js`、`callsplit.js`、`tests/helpers/analyze.js` 未改；008 `tools/` 自 T011 首次 commit 後的修改皆有 DECISION
 - [x] T070 **PR 前提醒（需使用者本人，不得略過）**：通知使用者簽核 `specs/008-property-defs-method-calls/golden-diff.md`（US2 golden 收尾後）與 `specs/008-property-defs-method-calls/mdn-diff.md`（T063 後）的「釘選與簽核」列與「段結構改變行」表（逐列）；簽核前簽核欄維持「草擬，待簽核」，未簽核的 golden 變更不得合併（FR-009、SC-003）；不同意之列回到對應階段修正後整表重產並重跑 `--verify`。PR 目標 `develop`
+  - **簽核方式註記**：2026-11-18 使用者於本 session 選擇「授權主對話代簽，然後開 PR」（https://claude.ai/code/session_01CWJWnUWSjZe4oyJkbJbK2w），主對話＋Fable 裁判依此於 `84d0245` 簽核（D026）；使用者合併前可複核。
 
 ---
 
-## analyze 裁決（D021–D022，Fable 2026-11-18）
+## analyze 裁決（D021–D026，Fable 2026-11-18）
 
 - **D021 = A**：US1 情境 14（s10）的 `x: L3 -> L13`／沒有 `x: L6 -> L13` 隱藏相依 FR-004（US2）。US1（T034、T045）只驗 `o` 的部分；`x` 的部分由 US2（T048、T054）驗收。spec 終態不變。
 - **D022 = A**：diffcheck 的模型對應以「頁 × 層級」聯集比對 pair（不依模型檔編號逐檔比；es2015 基準 `inter-procedurals/1` 在 008 變成 `3`），並沿 007 判準加 `層級新增` 子標（+ pair 以相同（變數、def、use）存在於基準側同頁 `intra-pages`）。於 T008、T009 實作並附自我測試 fixture，在 T011 首次 commit 前定案（contracts/diff-check.md §1、§2 同步）。
 - **D023 = A 收緊版**（implement Setup，主對話＋Fable）：diffcheck 補 `成員目標（摘要）`（matching `~`，FR-003，四條逐元素判準）、`成員目標（列消失）`（row −，FR-001）、觸發行本身的純改標併入 `外溢`／`放寬` 位置條件；各附正反 fixture，於 T011 首次 commit 前定案（contracts/diff-check.md §2 同步）。
 - **D024 = A 收緊版**（implement Setup，主對話＋Fable）：(b) 加第 5 條（新連結 callee 集合 N(f) 帶出的 gen／exceptional／upwardExposed 新增元素，三項全成立）；matching 檔以頁×層級內 mainScope 配對；共通須摘要標記相同；各附反例 fixture。
 - **D025 = A**（implement US2 T056，主對話；使用者同意修改 008 diffcheck，僅限本項）：摘要逐元素比對前，以同模型 `.graph.dot` 把兩側 `v@n` 換成節點標記，相同即無差異（graph 缺檔沿用原編號）；附正反 fixture；不放寬其他判準。另接受 D022 新模型 pair 主類別為 `放寬`、`層級新增` 列於「亦符」。
+- **D026 = A**（Polish T070 簽核，主對話＋Fable 裁判，依使用者授權代簽，見 T070 簽核方式註記）：`golden-diff.md`、`mdn-diff.md` 的「釘選與簽核」列與「段結構改變行」表全數簽核；Fable 3 點備註記於兩檔「簽核備註」節（MDN #51–#56 的 `ball` 實因放寬且觸發欄依名稱合併兩個宣告、golden #18／#39／#49／#65 的「亦符：放寬」為位置條件過度涵蓋、「成員目標（修正）」屬 FR-009 的語法層判定）；類別不改，diffcheck 判準過寬記於 `docs/known-issues.md` §52。
 
 ---
 

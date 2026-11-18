@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-18
 
-**Status**: Draft（D001–D020 已裁決 2026-11-18）
+**Status**: Draft（D001–D026 已裁決；D021–D026 見 tasks.md 裁決節與 golden-diff／mdn-diff 簽核備註）
 
 **Input**: User description: "Feature 008 = docs/known-issues.md 的 §22 (1)、§22 (5) 與 §23（見該檔 L20–60 的總覽，以及 §22、§23 本文）。§22 (4)（storage model）不在範圍內。先確認 007 修完後哪些仍未解決，再寫 spec。技術選型維持 repo 現況，不引入新框架或新依賴。慣例沿用 005、006、007：probes 目錄、golden 差異以 tests/golden + diffcheck 記錄、MDN 範例驗收（Advanced JavaScript objects + Core Scripting），新發現記到 docs/known-issues.md。PR 目標 develop。"
 
@@ -130,6 +130,8 @@
 ### analyze 裁決（2026-11-18，主對話；D020）
 
 - Q: P37 沒有驗收情境，SC-002 無從核對，怎麼處理？ → A（D020）: 新增 US1 情境 17（Fable 原型 repo2 實跑）：有 `o: L1 -> L2`、`o: L1 -> L5`、`q: L1 -> L6`、`q: L1 -> L7`、`x: L1 -> L8`，兩個呼叫都不連結（`o`、`q` 的定義是物件字面值，不是 class）；沒有 `o: L2 -> L5`、`q: L6 -> L7`。同次裁決的 tasks／plan 修正（golden manifest 手動同步、`eslint.config.js` 加 `probes008` ignore、MDN 提前比對等）不改需求，見 tasks.md。
+
+- D021–D026（analyze／implement 與 T070 簽核的裁決）見 tasks.md 裁決節與 golden-diff／mdn-diff 簽核備註。
 
 #### 延後釐清
 

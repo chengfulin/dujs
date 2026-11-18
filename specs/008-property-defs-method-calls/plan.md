@@ -2,7 +2,7 @@
 
 **Branch**: `008-property-defs-method-calls` | **Date**: 2026-11-18 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `specs/008-property-defs-method-calls/spec.md`（D001–D020 已裁決；D012–D017 為 plan 階段的使用者裁決，D018–D019 為 plan 裁決，D020 為 analyze 裁決）
+**Input**: Feature specification from `specs/008-property-defs-method-calls/spec.md`（D001–D026 已裁決；D012–D017 為 plan 階段的使用者裁決，D018–D019 為 plan 裁決，D020 為 analyze 裁決，D021–D026 見 tasks.md 裁決節）
 
 ## Summary
 
