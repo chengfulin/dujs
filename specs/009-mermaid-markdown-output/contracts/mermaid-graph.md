@@ -58,6 +58,8 @@ flowchart TD
 
 `color` 屬性（`red` exception、`blue` call／return／recursive、`green` onEvent）→ linkStyle `stroke:<color>`。同一條邊的 linkStyle 片段依 `stroke`、`stroke-dasharray`、`stroke-width` 順序以逗號連接；完全相同的樣式字串合併為一行。
 
+**未知值拋錯（D005-A8a）**：邊的 `style` 不在上表（無、`dotted`、`dashed`、`bold`、`bold,dashed`）或 `color` 不在 `red`／`blue`／`green` 時，與未知 `shape` 一樣拋 `Error`（fail fast）。僅驗證**邊**的 `style`／`color`；**節點**的 `style="filled"`／`fillcolor` 忽略（形狀只依 `shape`，顏色由 classDef 決定；來源 `lib/esgraph/dot.js` L68／L70、`lib/dujs/hierarchydot.js` L37／L44）。
+
 ### 2.3 標籤跳脫（FR-006）
 
 `quote(text)`：

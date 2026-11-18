@@ -83,7 +83,7 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** 兩頁的輸入，**When** 執行 dujs，**Then** 輸出目錄根有總覽 Markdown，依「每頁：Source Code → intra-procedural → inter-procedural → intra-page，最後 inter-page」列出每個模型檔的相對連結（含模型的標題，如函式名或 scope 名），每個連結都指向存在的檔案。[SRC REQ §2 S3]
+1. **Given** 兩頁的輸入，**When** 執行 dujs，**Then** 輸出目錄根有總覽 Markdown，依「每頁：Source code → intra-procedural → inter-procedural → intra-page，最後 inter-page」列出每個模型檔的相對連結（含模型的標題，如函式名或 scope 名），每個連結都指向存在的檔案。[SRC REQ §2 S3]
 2. **Given** 執行完成，**When** 檢查輸出目錄，**Then** 不再產生 `report.html`，總覽 `README.md` 取代其角色（FR-012）。[SRC REQ §4 Q2]
 3. **Given** 任何環境，**When** 執行 dujs，**Then** 不預先渲染 SVG 或任何圖片，渲染交給 Markdown 檢視器。[SRC REQ §4 Q4]
 
@@ -125,7 +125,7 @@
 
 - 模型沒有任何 def-use pair（`.dupairs.dot` 只有表頭）：Markdown 的 def-use pairs 節仍存在，表格只有表頭或標明「無」。[G-1]
 - 模型的圖沒有邊或只有一個節點：Mermaid 區塊仍可解析。[SRC REQ §2 S5]
-- 節點標籤含換行（`.dot` 中為 `\n`）：在 Mermaid 中以換行顯示，不破壞語法。[SRC REQ §4 Q5]
+- `.dot` 標籤含 `\n` 跳脫或真換行：現行產生路徑（`dot.js`、`hierarchydot.js`）不產生，屬不支援（見 plan「有意的取捨與已知限制」、contracts/mermaid-graph.md §1；D005-A2）。[SRC REQ §4 Q5]
 - 同一對節點之間有多條不同標籤的邊（如 `true` 與 `exception`）：Mermaid 中各自保留，不合併。[SRC REQ §2 S2]
 - 兩頁或多頁輸入、同一頁有多個模型：檔名與 `.dot` 一致地依模型編號區分，不互相覆蓋。[SRC REQ §2 S1]
 - 分析或寫出失敗時（現行：移除整個輸出目錄、結束狀態 1）：行為不變，不留下半份 Markdown。[G-2]
@@ -140,7 +140,7 @@
 - **FR-003**: Mermaid 圖的節點 id MUST 與 `.dot` 相同（扁平圖 `n<k>`、階層圖 `h<k>`），顯示文字 MUST 為 `.dot` 標籤依其產生器的跳脫規則還原後的原文（CODE：`hierarchydot.js` `escapeLabel` 跳脫 `\` 與 `"`；`lib/esgraph/dot.js` 對已設定的 `node.label` 不跳脫，只有以原始碼為標籤的模式才把換行寫成 `\n`、把 `"` 跳脫；`graphics.js` 的圖標題不跳脫），也就是取模型中的原標籤文字；節點與邊的多重集合（重複邊各自保留）MUST 與同模型 `.dot` 一一對應（含每條邊的標籤：`true`、`false`、`exception`、`finally`、`call`、`return`、`onEvent`、`recursive call`、`recursive return`、`loop`、`loadStorage`、`saveStorage`；`.dot` 中無標籤的邊在 Mermaid 中也無標籤）。[SRC REQ §2 S2]
 - **FR-004**: `.dot` 的三類節點 MUST 在 Mermaid 中以三種可區分的形狀呈現：一般方框、黃色橢圓類（entry／exit／call／callReturn／loop／loopReturn／finallyExit 與階層圖的 LOOP）、橘色雙圓類（localStorage 與階層圖的 domain），並 SHOULD 帶對應底色（黃、橘底的文字色固定 `color:#000`，以免深色主題看不清）；邊的顏色與線型（exception 紅、call／return 藍、onEvent 綠、資料流與 storage 虛線、return 與 recursive return 的 dashed、recursive 的 bold）SHOULD 以對應的線型或樣式保留。樣式不得影響可解析性，也不得取代 FR-003 的標籤。[SRC REQ §2 S2；§3 第 2 點]
 - **FR-005**: def-use pairs MUST 以 Markdown 表格表示（`.dupairs.dot` 本身是表格而非圖，G-6）：固定兩欄 `Variable | Def-Use pairs`；每列對應 `.dupairs.dot` 的一列，依原列順序（同名變數的多列各自保留、不合併）；第二欄依原欄順序列出該變數的 pairs，pair 文字與 `.dupairs.dot` 相同（pair 內含逗號，如 `(entry_b,(8,9))`），pairs 之間以 `<br/>` 分隔；儲存格文字以 code span 包住（避免 GitHub 把 `$DOMAIN.$PAGE_0` 當成 `$…$` 數學式），其中的 `|` 跳脫為 `\|`。沒有 pair 的模型只輸出表頭。[SRC REQ §2 S1；CODE；D001-5]
-- **FR-006**: 標籤與表格內容 MUST 依一致的跳脫規則處理 Mermaid 與 Markdown 的特殊字元（至少 `"`、`&`、`[`、`]`、`{`、`}`、`(`、`)`、`|`、`#`、`<`、`>`、`;`、`` ` ``、換行、前後空白，以及空字串標籤）：Mermaid 標籤一律以雙引號包住，換行輸出 `<br/>`，`"`、`#`、`<`、`>`、`` ` `` 以 `#<碼>;` 實體表示（引號內的 `[ ] { } ( ) | ;` 不需跳脫，D001 探針已確認）；使每個 Mermaid 區塊可被 Mermaid 官方 parser 解析、表格不被切斷，且渲染後的文字與 `.dot` 標籤原文相同。[SRC REQ §4 Q5]
+- **FR-006**: 標籤與表格內容 MUST 依一致的跳脫規則處理 Mermaid 與 Markdown 的特殊字元（至少 `"`、`&`、`[`、`]`、`{`、`}`、`(`、`)`、`|`、`#`、`<`、`>`、`;`、`` ` ``、換行、前後空白，以及空字串標籤）：Mermaid 標籤一律以雙引號包住，換行輸出 `<br/>`，`"`、`#`、`<`、`>`、`` ` `` 以 `#<碼>;` 實體表示（引號內的 `[ ] { } ( ) | ;` 不需跳脫，D001 探針已確認）；使每個 Mermaid 區塊可被 Mermaid 官方 parser 解析、表格不被切斷，且渲染後的文字與 `.dot` 標籤原文相同。完整對照（含 D004-1a 補的 `:`、`%`、`\r`、相鄰 `$$`）見 contracts/mermaid-graph.md §2.3。[SRC REQ §4 Q5]
 - **FR-007**: 輸出 MUST 為確定性：同一輸入重複執行，Markdown 檔 byte-identical（不含時間戳記、隨機值或輸出目錄名稱）。[SRC REQ §2 S5]
 - **FR-008**: 本 feature MUST NOT 改變任何分析結果：所有 `.dot` 與 `.matching.json` byte-identical；`tests/golden/manifest.json` 既有的 `baseline` 雜湊不變，新增的 Markdown 檔加入各 fixture 的 `added`。[SRC REQ §3；§2 S5；USR]
 - **FR-009**: 測試 MUST 以 Mermaid 官方 parser（`mermaid` 套件的 `parse`，devDependency）驗證 golden 所有 Mermaid 區塊可解析，且不需要瀏覽器或 Graphviz；另以測試比對每張 Mermaid 圖與同模型 `.dot` 的節點 id、邊（起訖與標籤）集合完全相同（SC-003），並以跳脫規則的往返測試（Mermaid 文字經 Mermaid 的實體解碼後等於 `.dot` 標籤原文）驗證 FR-006 的「顯示文字相同」。[SRC REQ §2 S5；G-8]

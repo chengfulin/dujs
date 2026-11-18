@@ -15,15 +15,11 @@
 
 ## Hierarchy                       ← 僅 inter-procedural／intra-page／inter-page
 
-```mermaid
-<hierarchy 的 Mermaid 區塊，或降級時改為 mermaid-graph.md §3 的提示＋表格>
-```
+<renderGraph(hierarchy).markdown>  ← 未降級：```mermaid fence＋區塊＋結尾 fence；降級：mermaid-graph.md §3 的提示＋節點表＋邊表（整個取代 fence，不在 mermaid fence 內）
 
 ## Graph
 
-```mermaid
-<扁平圖的 Mermaid 區塊（或降級）>
-```
+<renderGraph(graph).markdown>      ← 同上
 
 ## Def-use pairs
 
@@ -33,6 +29,7 @@
 ```
 
 - `<title>`（FR-001，`modelTitleOf`）：intra-procedural＝`intra-procedural: ` + `String(model.mainlyRelatedScope)`；其他層級＝`hierarchydot.hierarchyTitleOf(model)`（與 `.hierarchy.dot` 的 `label` 相同）。標題以 code span 包住（§3 規則）。
+- 降級時整個 mermaid fence 由提示＋表格取代（不把表格放在 mermaid fence 內；與 data-model §2、tasks T009 一致，D005-A8b）。
 - mermaid fence 固定三個反引號：Mermaid 區塊文字不可能含反引號（mermaid-graph.md §2.3 已實體化）。
 
 ## 3. Markdown 儲存格／行內文字規則（`codeSpan`、`cell`）

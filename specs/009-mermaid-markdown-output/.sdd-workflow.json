@@ -20,6 +20,13 @@
     "tasks": {
       "done": true,
       "count": 44
+    },
+    "analyze": {
+      "done": true,
+      "findings": 21,
+      "remediated": 19,
+      "decisions": "D005",
+      "notes": "analyze 10（MEDIUM 3、LOW 7）＋clarifier full 11（MEDIUM 8、INFO 3）；不處理 F7（編號排列）、I1（基線不升級）；I2 記入 T011 備註"
     }
   }
 }

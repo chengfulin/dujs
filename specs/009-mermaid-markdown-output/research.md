@@ -75,7 +75,7 @@
 
 ## R8 MDN 驗收工具（FR-016）
 
-- **Decision**：`specs/009-mermaid-markdown-output/tools/mdncheck.js`（不屬 dujs、不進 `npm test`，同 008 tools 慣例）：對 `pages.json` 每個 id 以 `PATH` 去除 Graphviz 的環境跑 `bin/dujs.js`，並以 `git worktree` 於 `274257a` 跑一次作基準；檢查 exit 0、stderr 空、無 `.png`、每個 `.graph.dot` 有同編號 `.md`、`README.md` 連結全部可達、每個 Mermaid 區塊 parse 通過、邊數 ≤ 500 且字元數 ≤ 50,000（否則必須為降級表格）、Mermaid↔`.dot` 多重集合相同、所有 `.dot`／`.matching.json` 與基準 byte-identical；輸出 `mdn-check.md`（每 id 一列：模型數、圖數、最大邊數、最大字元數、降級數、結果）。`--verify mdn-check.md` 重跑並核對。
+- **Decision**：`specs/009-mermaid-markdown-output/tools/mdncheck.js`（不屬 dujs、不進 `npm test`，同 008 tools 慣例）：對 `pages.json` 每個 id 以 `PATH` 去除 Graphviz 的環境跑 `bin/dujs.js`，並以 `git worktree` 於 `274257a` 跑一次作基準（worktree 內 symlink repo 的 `node_modules`，收尾 `git worktree remove --force`；D005-A5）；檢查 exit 0、stderr 空、無 `.png`、每個 `.graph.dot` 有同編號 `.md`、`README.md` 連結全部可達、每個 Mermaid 區塊 parse 通過、邊數 ≤ 500 且字元數 ≤ 50,000（否則必須為降級表格）、Mermaid↔`.dot` 多重集合相同、所有 `.dot`／`.matching.json` 與基準 byte-identical；輸出 `mdn-check.md`（每 id 一列：模型數、圖數、最大邊數、最大字元數、降級數、結果）。`--verify mdn-check.md` 重跑並核對。
 - **Rationale**：沿用 008 的「工具＋紀錄檔＋verify」作法；`.dot` byte-identical 用 worktree 現跑基準，不需在 repo 存新快照。
 - **Alternatives**：把 MDN 放進 `npm test`——33 檔分析＋基準 worktree 太慢且依賴 git。
 

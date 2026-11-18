@@ -2,7 +2,7 @@
 
 **Branch**: `009-mermaid-markdown-output` | **Date**: 2026-11-18 | **Spec**: [spec.md](./spec.md)
 
-**Input**: `specs/009-mermaid-markdown-output/spec.md`（D001 已裁決；D002 追加 US4；D003 README 拆分清單已確認；D004 plan 閘門已裁決，見「裁決紀錄」）
+**Input**: `specs/009-mermaid-markdown-output/spec.md`（D001 已裁決；D002 追加 US4；D003 README 拆分清單已確認；D004 plan 閘門已裁決；D005 analyze 閘門修正已套用，見「裁決紀錄」）
 
 ## Summary
 
@@ -16,7 +16,7 @@
 
 **Storage**: 檔案輸出：`.dot`（不變）、`*.matching.json`（不變）、新增 `<n>.md`、根目錄 `README.md`；移除 `.png`、`report.html`
 
-**Testing**: mocha ^12＋should ^13；golden `tests/golden/golden.js`＋`manifest.json`；eslint ^10；c8。Mermaid 以動態 `import()` 載入，jsdom 全域先設定。
+**Testing**: mocha ^12＋should ^13；golden `tests/golden/golden.js`＋`manifest.json`；eslint ^10；c8。Mermaid 只在 `tests/helpers/mermaid.js` 的 `load()` 內以動態 `import()` 載入：設 jsdom 全域 → import → initialize → 立即還原全域（D005-A1）。
 
 **Target Platform**: Node.js ≥ 24（macOS／Linux），不需 Graphviz、不需瀏覽器
 
@@ -49,9 +49,9 @@
 ### 影響範圍宣告（§TR-8）
 
 - **新增**：`lib/dujs/dotreader.js`、`lib/dujs/mermaidgraph.js`、`lib/dujs/markdownoutput.js`；`tests/dujs/dotreader.js`、`tests/dujs/mermaidgraph.js`、`tests/dujs/markdownoutput.js`、`tests/helpers/mermaid.js`；`tests/golden/expected*/**/*.md`；（US4）`docs/usage.md`、`docs/output-format.md`、`docs/limitations.md`、`docs/development.md`、`tests/docs/links.js`；本目錄 `tools/mdncheck.js`、`tools/readmecheck.js`、`mdn-check.md`、`readme-map.md`。
-- **修改**：`lib/dujs/outputwriter.js`（去 PNG、寫 `.md`、`writeOverview`）、`lib/dujs/cli.js`（改呼叫總覽）、`lib/dujs/hierarchydot.js`（抽 `hierarchyTitleOf`，輸出不變）、`tests/golden/golden.js`、`tests/golden/manifest.json`（只加 `added`）、`tests/dujs/cli.js`、`package.json`／`package-lock.json`（devDependencies；US4 時 `test` script 加 `tests/docs/*.js`）、`eslint-suppressions.json`、`README.md`、`specs/003-hierarchical-models/contracts/hierarchy-output.md`、`specs/004-fix-remaining-issues/contracts/cli.md`（加 superseded 註記）。
+- **修改**：`lib/dujs/outputwriter.js`（去 PNG、寫 `.md`、`writeOverview`）、`lib/dujs/cli.js`（改呼叫總覽）、`lib/dujs/hierarchydot.js`（抽 `hierarchyTitleOf`、另匯出 `escapeLabel`，輸出不變）、`tests/dujs/hierarchydot.js`、`tests/golden/golden.js`、`tests/golden/manifest.json`（只加 `added`）、`tests/dujs/cli.js`、`package.json`／`package-lock.json`（devDependencies；US4 時 `test` script 加 `tests/docs/*.js`）、`eslint-suppressions.json`、`README.md`、`specs/003-hierarchical-models/contracts/hierarchy-output.md`、`specs/004-fix-remaining-issues/contracts/cli.md`（加 superseded 註記）。
 - **刪除**：`lib/dujs/reportgenerator.js`。
-- **明確不受影響**：`lib/esgraph/**`（含 LGPL `dot.js`、`index.js`）、`lib/analyses/**`、`lib/dujs/graphics.js`、`lib/dujs/cfggraphconverter.js` 與所有分析模組；`.dot`／`.matching.json` 內容；`LICENSE`、`LICENSES/`、`THIRD_PARTY_NOTICES.md`；`package.json` 版本號；`docs/known-issues.md`。
+- **明確不受影響**：`lib/esgraph/**`（含 LGPL `dot.js`、`index.js`）、`lib/analyses/**`、`lib/dujs/graphics.js`、`lib/dujs/cfggraphconverter.js` 與所有分析模組；`.dot`／`.matching.json` 內容；`LICENSE`、`LICENSES/`、`THIRD_PARTY_NOTICES.md`；`package.json` 版本號；`docs/known-issues.md`（若 T044 經 DECISION 核准寫入新段落，同步改本宣告為「只新增核准段落」，並於其後重跑 T043；D005-A9）。
 
 ## 架構
 
@@ -69,13 +69,13 @@ cli.analyzeAndWrite → outputWriter.writeOverview(sourceContents) ──► REA
 ```
 
 - 授權（R1）：三個新模組檔頭標 `Original dujs code, MIT License (see LICENSE).`，不 require／不複製 `lib/esgraph/dot.js`；它們只消費 DOT 字串，與 `dot.js` 的耦合僅限「dujs DOT 方言」這個資料格式（contracts/mermaid-graph.md §1），遇到未知行拋錯（fail fast，避免日後 `.dot` 格式改變時悄悄產生不一致的 Mermaid）。屬性解析為 quote-aware（引號內的 `,`、`]` 不當分隔／結尾，如 `style="bold,dashed"`、標籤含 `]`）。
-- S5 靜態檢查（D004-1b）：`lib/dujs/*.js` 讀 `<x>.name` 須列在 `tests/dujs/scopesource.js` 的 `S5_ALLOWED`；`markdownoutput.js` 的 def-use 表格改以 `String(key)` 取變數名（`lib/dujs/var.js:101` `toString` 回傳同名），不擴充白名單（contracts/model-markdown.md §4）。
+- S5 靜態檢查（D004-1b）：`lib/dujs/*.js` 讀 `<x>.name` 須列在 `tests/dujs/scopesource.js` 的 `S5_ALLOWED`；`markdownoutput.js` 的 def-use 表格改以 `String(key)` 取變數名（`lib/dujs/var.js:101` `toString` 回傳同名），不擴充白名單（contracts/model-markdown.md §4）；`dotreader.js`、`mermaidgraph.js` 同樣不得讀 `<x>.name`（D005 建議）。
 - 標題（R2）：`hierarchydot.hierarchyTitleOf(model)` 為上層模型標題的單一來源（`.dot` label、`<n>.md` 標題、總覽連結）。
 - 總覽（R7）：由模型列舉，不用共享陣列；`writeOverview` 取代 `reportGenerator.createReport()`。
 
 ### 有意的取捨與已知限制（D004-1 建議）
 
-- **dotreader fail-fast → CLI exit 1**：`.dot` 出現方言外的行時 `readDot` 拋錯，CLI 以 exit 1 結束（該模型以後的輸出不寫）。這是有意的取捨：寧可整次失敗，也不產生與 `.dot` 不一致的 Mermaid；現行 `dot.js`／`hierarchydot.js` 的輸出由 golden 與 MDN 驗收守住不會觸發。
+- **dotreader fail-fast → CLI exit 1**：`.dot` 出現方言外的行時 `readDot` 拋錯，CLI 以 exit 1 結束（該模型以後的輸出不寫）。這是有意的取捨：寧可整次失敗，也不產生與 `.dot` 不一致的 Mermaid（由 T045 以 in-process `cli.run` stub `dotreader.readDot` 拋錯驗證 exit 1 且輸出目錄被移除，spec G-2）；現行 `dot.js`／`hierarchydot.js` 的輸出由 golden 與 MDN 驗收守住不會觸發。
 - **`.dot` 標籤含 `\n` 跳脫或真換行**：現行產生路徑不會產生，屬不支援（`\n` 不解碼、真換行使該行無法比對而拋錯；contracts/mermaid-graph.md §1）。
 - **Markdown 表格「反斜線緊接 `|`」**：儲存格內容含 `\|` 時，`|`→`\|` 後成為 `\\|`，GFM 的渲染結果可能與原文不同；現行輸出（pair、變數名、DOT 標籤）不含此序列，列為已知限制（contracts/model-markdown.md §3）。
 
@@ -98,10 +98,11 @@ cli.analyzeAndWrite → outputWriter.writeOverview(sourceContents) ──► REA
 | markdownoutput：標題規則（四層級）、區段順序、code span（含反引號、`|`、`$`）、dupairs 表格（無 pair、同名多列、pair 含逗號；變數名以 `String(key)` 取得）；S5 靜態檢查（`tests/dujs/scopesource.js`）不需改白名單即通過 | `tests/dujs/markdownoutput.js` | FR-001、FR-005 |
 | golden：`listDotFiles` → `listGoldenFiles`（加 `.md`）；檔案集合、逐字比對、manifest `added`（含 `.md`）；baseline 雜湊檢查不變 | `tests/golden/golden.js` | FR-008、FR-009a、SC-001 |
 | golden：所有 `.md` 的 mermaid 區塊 `mermaid.parse` 通過；每張圖 Mermaid（經 `getDiagramFromText`）的節點（id, label）多重集合與邊（from,to,label）多重集合＝同模型 `.dot`，且三種形狀（box／stadium／double circle）的節點數各等於 `.dot` 的 `shape` 計數（測試端以獨立的簡易 regex 讀 `.dot`，不重用 `dotreader`，避免同源錯誤互相掩蓋）；邊數 ≤ 500 且字元 ≤ 50,000 | `tests/golden/golden.js` | FR-009、SC-002、SC-003 |
-| golden：總覽連結全部存在、順序符合 contracts/overview-readme.md §2（取代原 report 順序測試 L189-222 與 `reportImagePaths`）；無 `report.html`、無 `.png` | `tests/golden/golden.js` | FR-011、FR-012、SC-005 |
+| golden：總覽連結全部存在、順序符合 contracts/overview-readme.md §2（取代原 report 順序測試 L189-222 與 `reportImagePaths`）；無 `report.html` | `tests/golden/golden.js` | FR-011、FR-012、SC-005 |
 | 確定性：同一 fixture 在兩個工作目錄各跑一次，所有 `.md` byte-identical | `tests/golden/golden.js` | FR-007、SC-006 |
+| fail-fast：in-process `cli.run(argv, io)` 下 stub `dotreader.readDot` 拋錯 → exit 1、輸出目錄被移除；測試後還原 stub（D005-A6） | `tests/dujs/cli.js` | G-2 |
 | 無 Graphviz：以 `PATH` 只含 `process.execPath` 所在目錄的 env 跑 `bin/dujs.js` → exit 0、stderr 空、0 個 `.png`；靜態檢查 `lib/**/*.js` 不含 `child_process` | `tests/dujs/cli.js` | FR-013、SC-004 |
-| 標題與相對連結（US4）＋ D003 Background 三項逐字字串（中、英文論文標題與網址）出現在根 `README.md`：掃描根 `README.md` 與 `docs/*.md`（不遞迴，避開 `tests/golden/expected*/README.md` 與 `docs/research/`）；標題檢查排除 `docs/known-issues.md`（L427 為 `#7); …` 開頭的折行段落，會被誤判；連結檢查仍做；不改該檔） | `tests/docs/links.js`（併入 `npm test`） | FR-019 |
+| 標題與相對連結（US4）＋ D003 Background 三項逐字字串（中、英文論文標題與網址）出現在根 `README.md`：掃描根 `README.md` 與 `docs/*.md`（不遞迴，避開 `tests/golden/expected*/README.md` 與 `docs/research/`）；標題檢查排除 `docs/known-issues.md`（L427 為 `#7); …` 開頭的折行段落，會被誤判；連結檢查仍做；不改該檔）；解析 `](…)` 略過 fenced code、連結可指向目錄（如 `](LICENSES)`，D005-A8c） | `tests/docs/links.js`（併入 `npm test`） | FR-019 |
 | CLI 測試更新：L289-324 的 report 測試改為 `writeOverview` 寫進實際目錄、連結不含目錄名；L423、L485-489 改查 `README.md`（同時跑的兩個目錄內容相同） | `tests/dujs/cli.js` | FR-012、A7 |
 
 **紅燈先行註記**：「清空 PATH 跑 CLI」測試在 US3 之前就會通過（現行 `spawnSync('dot')` 失敗是靜默的），不能當 US3 的紅燈先行依據；US3 的回歸防線是「輸出 0 個 `.png`」與「`lib/` 不含 `child_process`」的靜態檢查（後者在 US3 前為紅燈）。
@@ -180,6 +181,7 @@ docs/{usage,output-format,limitations,development}.md   # 新（US4，D003 定�
 | D004-1 | plan 閘門 | 必修：(a) 跳脫補 `:`→`#58;`、`%`→`#37;`、`\r`→`#13;`、相鄰 `$$` 以 `#36;` 打斷，往返案例加 `style:#x`、`classDef x:#1`、`%%{init: {}}%%`、`\r`、`$$a$$`（contracts/mermaid-graph.md §2.3）；(b) `markdownoutput.js` 以 `String(key)` 避開 S5，不改白名單。建議（採納）：golden 改 (id, label) 多重集合＋形狀計數；重複邊走到 `getEdges()`；dotreader quote-aware；`.dot` 標籤含換行屬不支援；fail-fast exit 1 為有意取捨；表格反斜線緊接 `|` 為已知限制；修正 research R5／R7 過時敘述；清空 PATH 測試不當紅燈依據 |
 | D004-2 | plan 閘門 | A：`mermaid` 精確 `12.3.0`、`jsdom` `^29.1.1`（Technical Context 已如此） |
 | D004-3 | plan 閘門 | A：`tests/docs/links.js` 併入 `npm test`（`test` script 加 `tests/docs/*.js`）；`readmecheck.js` 留在 `specs/009-…/tools/` 不進 `npm test`；標題檢查排除 `docs/known-issues.md`（連結仍檢查，不改該檔）；links.js 只掃根 `README.md` 與 `docs/*.md`（不遞迴） |
+| D005 | analyze 閘門（Fable judge 裁決，全部採納） | A1 helper `load()` 設全域→import→initialize→立即還原、預載 `this.timeout(30000)`；A2 spec 換行 Edge Case 改為不支援；A3 readme-map 新增列 N1～N4 通用檢查、`## Output` 放輸出變更註記；A4 T025 grep 只掃 `lib bin`；A5 基準 worktree symlink `node_modules`、`remove --force`；A6 新任務 T045（fail-fast exit 1＋移除輸出目錄）、T015 以模組屬性呼叫 `readDot`；A7 T030 為「設計文件不由 implement 修改」的例外；A8 未知邊 `style`／`color` 拋錯（節點 style／fillcolor 忽略）、model-markdown §2 降級取代 fence、links 允許目錄；A9 文件小修（本表上方各處）；N1 `hierarchydot` 匯出 `escapeLabel`；N2 quickstart 以 `env PATH=/usr/bin:/bin "$(command -v node)"`、暫存改 session scratchpad；N3 T016 驗收敘述；建議：S5 提醒擴及 dotreader／mermaidgraph、writeOverview 測試先跑完整分析、manifest 插入位置、T018 `git status --porcelain -- lib`、連結解析略過 fenced code。不處理（記入 analyze 紀錄）：F7 編號排列、I1 基線不升級 |
 
 ## Complexity Tracking
 

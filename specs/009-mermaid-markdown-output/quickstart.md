@@ -14,13 +14,16 @@ npm run lint
 ## 2. 手動跑一次（US1、US2、US3）
 
 ```
-mkdir -p /tmp/dujs-try && cd /tmp/dujs-try
-PATH=/usr/bin:/bin node <repo>/bin/dujs.js -js <repo>/tests/golden/fixtures/page0/app.js -js <repo>/tests/golden/fixtures/page1/report.js
+TRY=/private/tmp/claude-501/-Users-chengfulin-Documents-Personal-dujs/19297300-02ef-456d-8f0f-7f2fc2735e78/scratchpad/dujs-try   # session scratchpad，不用 /tmp/dujs-try
+mkdir -p "$TRY" && cd "$TRY"
+env PATH=/usr/bin:/bin "$(command -v node)" <repo>/bin/dujs.js -js <repo>/tests/golden/fixtures/page0/app.js -js <repo>/tests/golden/fixtures/page1/report.js
 echo $?                                   # 0，stderr 為空
 ls out-*/                                 # README.md、page0/、page1/、inter-page/；沒有 report.html
 find out-* -name '*.png' | wc -l          # 0
 ls out-*/page0/inter-procedurals/         # <n>.graph.dot、<n>.dupairs.dot、<n>.hierarchy.dot、<n>.matching.json、<n>.md
 ```
+
+`node` 在 fnm 目錄（不在 `/usr/bin:/bin`），故先以 `"$(command -v node)"` 取得絕對路徑，再以 `env PATH=/usr/bin:/bin` 去除 Graphviz（D005-N2）；跑完 `rm -rf "$TRY"`。
 
 在 VS Code（Markdown Preview 的 Mermaid 支援）或其他支援 Mermaid 的檢視器開 `out-*/README.md`：依頁 → Source code → Intra-procedural → Inter-procedural → Intra-page，最後 Inter-page；點連結進 `<n>.md`，看到階層圖（上層模型）→ 扁平圖 → def-use pairs 表格（contracts/overview-readme.md、model-markdown.md）。
 

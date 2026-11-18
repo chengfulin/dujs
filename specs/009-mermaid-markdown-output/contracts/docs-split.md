@@ -16,7 +16,7 @@
 
 | 檔案 | 標題 | 涵蓋的原 README 段落 |
 |------|------|----------------------|
-| `README.md` | `# dujs` | Goal、**Background**（D003 新增，見下）、Requirements、Dependency、Setup（僅指令區塊）、Usage（用法區塊＋一個範例＋連到 docs/usage.md）、Output（一兩句概述＋連到 docs/output-format.md）、Demo、SDD 導入宣告、License；另列 docs/ 各章節檔連結 |
+| `README.md` | `# dujs` | Goal、**Background**（D003 新增，見下）、Requirements、Dependency、Setup（僅指令區塊）、Usage（用法區塊＋一個範例＋連到 docs/usage.md）、Output（一兩句概述＋FR-012 輸出變更註記〔§1 最後一列，放在 `## Output`〕＋連到 docs/output-format.md）、Demo、SDD 導入宣告、License；另列 docs/ 各章節檔連結 |
 | `docs/usage.md` | `# Usage` | CLI 完整說明（`-js` 分頁、`--`、`-h`）、輸出目錄命名與 `_<n>`、Exit status |
 | `docs/output-format.md` | `# Output format` | 各輸出檔（`.dot`、`<n>.md`、總覽 `README.md`、降級表格、檢視方式）、`<n>.matching.json`、finallyExit 與 finally 邊、節點標籤、呼叫分段（feature 007） |
 | `docs/limitations.md` | `# Supported syntax and limitations` | Supported syntax、Limits（HTML `<ul>/<li>` 改為 Markdown 清單，巢狀清單保留層級；`<code>` → 反引號；`&amp;` 等實體還原） |
@@ -36,12 +36,12 @@
 
 ## 3. 「內容不遺失」對照表與檢查（FR-018）
 
-- `specs/009-mermaid-markdown-output/readme-map.md`：表格欄 `ID | 原段落（首句摘錄） | 新位置（檔案 + 標題） | 處置 | 理由`；處置為 `搬移`、`改寫` 或 `新增`；`改寫` 必填理由（如「Graphviz／PNG 移除（FR-013）」「HTML 清單改 Markdown（US4 情境 2）」）；`新增` 為原 README 沒有的內容（本 feature 僅 `## Background`，理由欄填「新增（使用者 D003）」，「原段落」欄記載 §2 的三項逐字字串），ID 不佔原段序號（如 `N1`）。原 README 的「段」＝以空行分隔的區塊，`<ul>` 中每個 `<li>`（含巢狀）各算一段。
+- `specs/009-mermaid-markdown-output/readme-map.md`：表格欄 `ID | 原段落（首句摘錄） | 新位置（檔案 + 標題） | 處置 | 理由`；處置為 `搬移`、`改寫` 或 `新增`；`改寫` 必填理由（如「Graphviz／PNG 移除（FR-013）」「HTML 清單改 Markdown（US4 情境 2）」）；`新增` 為原 README 沒有的內容，ID 不佔原段序號：`N1`＝`## Background`（理由「新增（使用者 D003）」，「原段落」欄記載 §2 的三項逐字字串）；`N2`～`N4`＝本 feature 輸出變更引入的新文字——`N2` Requirements 的 Mermaid 檢視器項、`N3` `## Output` 的輸出變更註記（FR-012）、`N4` README 的 `docs/` 章節檔連結清單（理由「新增（本 feature 輸出變更）」，「原段落」欄記載該列須出現的逐字字串或連結）。（D005-A3）原 README 的「段」＝以空行分隔的區塊，`<ul>` 中每個 `<li>`（含巢狀）各算一段。
 - `specs/009-mermaid-markdown-output/tools/readmecheck.js`（不進 `npm test`）：
   1. `git show 274257a:README.md` 切段（同上定義）；每段須在對照表恰有一列（以 ID 對應，ID＝段序號）。
   2. `搬移` 段：正規化（去 Markdown／HTML 標記、實體還原、合併空白）後的文字 MUST 為新位置檔案中該標題下正規化文字的子字串。
   3. `改寫` 段：理由欄非空；新位置的標題存在。
-  4. `新增` 列：只檢查新位置檔案的該標題下存在該列記載的文字／連結（Background 為 §2 的中文標題、英文標題、網址三項逐字字串）；不參與原 README 的逐段對應。
+  4. `新增` 列（通用規則，`N1`～`N4` 同一機制，不得寫死只查 `N1` 的三項字串）：對照表每列「原段落／新增」欄記載的逐字字串或連結，MUST 全部出現在該列新位置檔案的該標題下（`N1` 即 §2 的中文標題、英文標題、網址）；不參與原 README 的逐段對應。`tests/docs/links.js` 對 README Background 三項字串的斷言另行保留（§4）。
   5. 結束狀態：0 全部通過；1 有段落未對應／未找到；2 用法錯誤。輸出逐段結果。
 - SC-007：`readmecheck.js` exit 0。
 
@@ -49,6 +49,6 @@
 
 `tests/docs/links.js`（mocha；`package.json` 的 `test` 加入 `tests/docs/*.js`）掃描**根 `README.md` 與 `docs/*.md`**（不遞迴：不含 `docs/research/**`、`tests/golden/expected*/README.md`）：
 - 每個 ATX 標題符合 `^#{1,6} \S`（fenced code 內不檢查）；**`docs/known-issues.md` 不做標題檢查**（其 L427 是以 `#7); …` 開頭的折行段落，會被誤判；不改該檔），連結檢查仍做；
-- 每個相對連結 `](path[#anchor])` 指向存在的檔案；有 `#anchor` 時目標檔有對應 GitHub slug 的標題；
+- 解析 `](…)` 時略過 fenced code；每個相對連結 `](path[#anchor])` 指向存在的檔案**或目錄**（如 README 的 `](LICENSES)`，D005-A8c）；有 `#anchor` 時目標檔有對應 GitHub slug 的標題；
 - 不檢查外部 `http(s)` 連結（不連網）；
 - **D003 Background 斷言**：根 `README.md` 的 `## Background` 標題存在，且該節逐字含 `JavaScript網頁應用程式資料流測試模型之研究`、`A Study on Dataflow Testing Model of JavaScript Web Applications`、`https://hdl.handle.net/11296/u8f5n6` 三項字串（字串比對，非連網檢查）。
