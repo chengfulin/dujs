@@ -543,6 +543,39 @@ describe('PageBinding (scopebinding)', function () {
 		});
 	});
 
+	/// feature 008 contracts/lib-api.md section 1, D004, D008, D013: member targets of the domain localStorage
+	describe('isLocalStorageMemberTarget (feature 008 D004)', function () {
+		/**
+		 * The left side of the assignment of statement i of the page
+		 */
+		function leftOf(page, i) {
+			return page.ast.body[i].expression.left;
+		}
+
+		it('should be true for a member target of the domain localStorage, at any depth', function () {
+			var page = setUp('localStorage.a = 1;\nlocalStorage.a.b = 2;\nlocalStorage[k].c = 3;');
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 0)).should.eql(true);
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 1)).should.eql(true);
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 2)).should.eql(true);
+		});
+
+		it('should be false for a shadowed localStorage', function () {
+			var page = setUp('function f() {\n\tlet localStorage = {};\n\tlocalStorage.a.b = 2;\n}\nf();');
+			page.binding.isLocalStorageMemberTarget(page.ast.body[0].body.body[1].expression.left).should.eql(false);
+		});
+
+		it('should be false for window.localStorage', function () {
+			var page = setUp('window.localStorage.k = 2;');
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 0)).should.eql(false);
+		});
+
+		it('should be false for a chain starting with a call (D013)', function () {
+			var page = setUp('g(localStorage).k = 2;\nlocalStorage.getItem(k).p = 3;');
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 0)).should.eql(false);
+			page.binding.isLocalStorageMemberTarget(leftOf(page, 1)).should.eql(false);
+		});
+	});
+
 	/// feature 008 contracts/lib-api.md section 1, D002: relaxed instances are let and const only
 	describe('isRelaxedInstance (feature 008 D002)', function () {
 		var code = [

@@ -517,6 +517,10 @@ describe('member targets are uses, not definitions, of their object variable (fe
 				pairs.should.containDeep(['o: L5 -> L9', 'o: L5 -> L11']);
 				pairs.should.not.containEql('o: L11 -> L9');
 			});
+			/// the inter-page localStorage pairs are those of develop, and the other pairs are kept
+			run.lines[2].should.eql(pagesBaseline['s10-two-pages-method.js'][2]);
+			run.interPage.should.containDeep(['localStorage: L13 -> L7', 'y: L2 -> L7', 'console: entry -> L7',
+				'f2: entry -> L4', 'g2: entry -> L6']);
 		});
 
 		/// D008: a localStorage declared in a function or on the page and an alias are not exempted

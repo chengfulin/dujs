@@ -544,4 +544,24 @@ describe('bindingPattern.getMemberTargetReads (feature 008 User Story 1)', funct
 	it('should give nothing for a pattern of identifiers', function () {
 		readsOf('[a, {b, c: [d = e]}] = x;').should.eql([]);
 	});
+
+	it('should skip the member targets for which isExempt is true', function () {
+		var statement = '[o.p, {a: q[k], b: r.s.t}, ...u[v]] = x;',
+			ast = espree.parse(statement, {ecmaVersion: 'latest', range: true}),
+			left = ast.body[0].expression.left,
+			seen = [];
+		bindingPattern.getMemberTargetReads(left, function (target) {
+			seen.push(target.type);
+			return target.object.type === 'Identifier' && (target.object.name === 'q' || target.object.name === 'u');
+		}).map(function (expression) {
+			return statement.slice(expression.range[0], expression.range[1]);
+		}).should.eql(['o', 'r.s']);
+		seen.should.eql(['MemberExpression', 'MemberExpression', 'MemberExpression', 'MemberExpression']);
+	});
+
+	it('should skip nothing when isExempt is not given', function () {
+		var statement = '[o.p, q[k]] = x;',
+			ast = espree.parse(statement, {ecmaVersion: 'latest', range: true});
+		bindingPattern.getMemberTargetReads(ast.body[0].expression.left).length.should.eql(3);
+	});
 });
