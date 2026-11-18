@@ -27,6 +27,17 @@
       "remediated": 19,
       "decisions": "D005",
       "notes": "analyze 10（MEDIUM 3、LOW 7）＋clarifier full 11（MEDIUM 8、INFO 3）；不處理 F7（編號排列）、I1（基線不升級）；I2 記入 T011 備註"
+    },
+    "implement": {
+      "done": false,
+      "mode_note": "依序模式（未跑 0P：US1→US2→US3→US4 明文串接，共用熱點檔 outputwriter.js、golden.js、README.md；同 008）",
+      "phases": {
+        "Setup": {
+          "reviewed": true,
+          "committed": true
+        }
+      },
+      "stories": {}
     }
   }
 }
