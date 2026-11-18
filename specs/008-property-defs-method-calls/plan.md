@@ -2,7 +2,7 @@
 
 **Branch**: `008-property-defs-method-calls` | **Date**: 2026-11-18 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `specs/008-property-defs-method-calls/spec.md`（D001–D017 已裁決；D012–D017 為 plan 階段的使用者裁決）
+**Input**: Feature specification from `specs/008-property-defs-method-calls/spec.md`（D001–D019 已裁決；D012–D017 為 plan 階段的使用者裁決，D018–D019 為 plan 裁決）
 
 ## Summary
 
@@ -59,13 +59,13 @@ golden／MDN 差異以 008 自己的 `tools/diffcheck.js`＋`tools/classify.js`�
 | # | 議題 | 決策 | research／contracts |
 |---|------|------|---------------------|
 | 1 | 008 差異工具（D006） | `tools/classify.js` 純模組（espree＋eslint-scope 取原始碼事實：寫入路徑、讀取形態、同行敘述數）＋`tools/diffcheck.js`（複製 007 的 compareCase／report／verify 後修改；解析 helper 以 require 使用 005／006／007 匯出，不改它們）。損失判準：讀寫同屬性路徑、互為前綴、計算鍵、整個物件讀取、`delete`、同路徑方法呼叫（D011）→ 損失；裸 callee／`new` 運算元、不同路徑、只為解參考 → 修正；模糊（同行多敘述、同名多宣告）→ 損失。正反例含 P1、P25、P4、P2（4 損失 2 修正）、P27、P29–P32、P37。**T068 (d)**：同一行兩側段標記多重集合相同時以保留後綴的完整標記比對，不同時退回去後綴並列入「段結構改變行」表逐列簽核 | R9；contracts/diff-check.md |
-| 2 | 獨立可到達檢查器（FR-006～FR-008；**M4**） | `tests/helpers/reachability.js`＋`tests/dujs/reachability.js`／`reachabilityinvariant.js`，允許清單 `tests/dujs/cases/reachability-allowlist.json`。起點：各模型 `graph[0]`（inter-page 為 domain 節點，每頁 entry 經 `loadStorage` 邊、處理器經 LOOP 的 `onEvent` 邊進入，不另列起點）；例外邊＝連線型別 `exception`＋record 的 `exceptionalReturn`（D014：從 CALL 出發的例外邊；斷言每個非 null 者都是圖上某節點的 `.exception` 目標）；(a) CALL RETURN 只經「同一 record 的 CALL 可到達 ∧ 被呼叫端有正常返回」的虛擬邊（D015，P41 可達集合測試），normalReturn 以最小不動點自行重算；(b) LOOP→LOOP RETURN 虛擬邊；(c) finallyExit 的 `normal` 出邊需該 finally 區域有可到達的非例外進入（以 finalizer 的 range 與擁有函式界定區域）。差分（全開／關 (c)）、見證、四種失敗情形、陽性對照（P21、P23、P24、注入 P13）、獨立性守門。可走規則與求解器 reached 幾乎同構，獨立性只靠重寫、自算 normalReturn 與 (c)——注入與陽性對照是唯一防線，tasks 不得刪減。MDN 語料直接讀 006 corpus，缺檔或檔數 ≠ 33 失敗、核對 sha256（D016） | R8；contracts/reachability.md |
+| 2 | 獨立可到達檢查器（FR-006～FR-008；**M4**） | `tests/helpers/reachability.js`＋`tests/dujs/reachability.js`／`reachabilityinvariant.js`，允許清單 `tests/dujs/cases/reachability-allowlist.json`。起點：各模型 `graph[0]`（inter-page 為 domain 節點，每頁 entry 經 `loadStorage` 邊、處理器經 LOOP 的 `onEvent` 邊進入，不另列起點）；例外邊＝連線型別 `exception`＋record 的 `exceptionalReturn`（D014：從 CALL 出發的例外邊；斷言每個非 null 者都是圖上某節點的 `.exception` 目標）；(a) CALL RETURN 只經「同一 record 的 CALL 可到達 ∧ 被呼叫端有正常返回」的虛擬邊（D015，P41 可達集合測試），normalReturn 以最小不動點自行重算，generator／async 被呼叫端依 scope AST 旗標直接判為有正常返回（D019，反例單元測試）；(b) LOOP→LOOP RETURN 虛擬邊；(c) finallyExit 的 `normal` 出邊需該 finally 區域有可到達的非例外進入（以 finalizer 的 range 與擁有函式界定區域）。差分（全開／關 (c)）、見證、四種失敗情形、陽性對照（P21、P23、P24、注入 P13）、獨立性守門。可走規則與求解器 reached 幾乎同構，獨立性只靠重寫、自算 normalReturn 與 (c)——注入與陽性對照是唯一防線，tasks 不得刪減。MDN 語料直接讀 006 corpus，缺檔或檔數 ≠ 33 失敗、核對 sha256（D016） | R8；contracts/reachability.md |
 | 3 | US1 改動點與 localStorage 凍結（D004、D008） | `scopebinding.isLocalStorageObject`（hierarchy 共用）；物件變數＝沿 `.object` 鏈到達的 Identifier（D013：鏈中遇呼叫即無物件變數、不豁免，P42）；豁免者整個走 develop 路徑（GEN `:600`、`getDefinedVariables`、迴圈 `left.object`、`=` 不讀）；非豁免：GEN 無定義，USE 讀物件運算式與計算鍵（`=`、解構〔新 `getMemberTargetReads`〕、迴圈左側）；邏輯賦值 F 分支以 `isLogicalAssignmentTarget` 不重複讀；巢狀賦值遞迴條件「develop 會定義左側」（D012：維持 develop，缺口記 KI，FR-011 (g)）。summary／expansion／inter-page 不改（FR-003）；s1–s9 以 baseline 檔逐字比對 | R1–R5；contracts/lib-api.md §1–§5 |
 | 4 | FR-001 對呼叫解析的外溢（P29–P32） | 不另改 callresolver：嚴格規則讀 `reachIns`、D2／class 放寬讀 GEN 計數，自動修正；007 防護（同節點先定義的接收者）因此解除者歸「外溢」類並有 characterization 測試 | R3、R6 |
 | 5 | US2 `o.m()` 放寬（FR-004） | `classOfInstance` 無到達定義時 → `relaxedClassOfInstance`：`isInFunction` ∧ `isRelaxedInstance`（let／const）∧ `definitionsOnThePage` 恰一筆 ∧ 定義 range ↦ `new A()` 且 `resolveVariable(def.fromNode, A)` 給 class；與 005 D2 共用判定函式。FR-005 由既有呼叫點管線自動滿足 | R7；contracts/lib-api.md §6 |
 | 6 | golden／MDN 重產與簽核、效能 | US1、US2 各自 `UPDATE_GOLDEN=1`，以 diffcheck 重產相對 `2035c93` 的累積淨差異並 `--verify` 後 commit；使用者在 PR 前各簽核一次；MDN 快照與 perf 基準在 Setup（任何 lib 變更前）產生；SC-006 在 Polish 量測 | R10、R11；contracts/diff-check.md |
 | 7 | 文件（FR-011、FR-012、SC-007） | Polish 逐項修改並寫 `docs-check.md`；新 KI：選項 B、巢狀賦值通用缺口（FR-011 (g)，D012）、`Lnull`；§38 補 P21、P23、P24 形態與窄修候選；§22 (5) 記 FR-013 的修正 | R12 |
-| 8 | deferred p-use 的死碼 pair（FR-013，D017） | `findDUPairs` 第二段（deferred p-use）只在 owner 依求解器可到達時配對：以 `model.analysisResultOf(owner) !== null` 判定（`doAnalysis` 只為 reached 節點存結果，`defuseanalyzer.js:416-438`；沒有 calls／loops 的模型 reached 為 null、全部節點都有結果），不改 `reachingsolver.js`；model 尚未分析（無結果）時維持現行行為。原型實測：probes 只有 P38–P40 的 inter／intra-page 改變、golden 0、MDN 0、`npm test` 1715 passing | R14；contracts/lib-api.md §3 |
+| 8 | deferred p-use 的死碼 pair（FR-013，D017） | `findDUPairs` 第二段（deferred p-use）只在 owner 依求解器可到達時配對：`model.analysisResultOf(owner) === null` 即略過（簡單版：`doAnalysis` 只為 reached 節點存結果，`defuseanalyzer.js:416-438`；沒有 calls／loops 的模型 reached 為 null、全部節點都有結果；產品呼叫端 `defuseanalysisexecutor.js:55/75/87/96` 與 `tests/dujs/expansion.js:1934/1970` 都在 `doAnalysis` 之後，故不另處理「未分析」——公開 API 無法區分未分析與未 reached，`model.js:215-224`），不改 `reachingsolver.js`。排程：Foundational，緊接檢查器之後（先報紅、再轉綠）。原型實測：probes 只有 P38–P40 的 inter／intra-page 改變、golden 0、MDN 0、`npm test` 1715 passing | R14；contracts/lib-api.md §3 |
 
 ## 使用者裁決（D012–D017，2026-11-18；原「需使用者裁決的事項」Q1–Q5）
 
@@ -73,7 +73,7 @@ golden／MDN 差異以 008 自己的 `tools/diffcheck.js`＋`tools/classify.js`�
 |---|------|------|------|
 | Q1→D012 | 成員目標右側的巢狀賦值：develop 中 `o.a.b = x = 1`、`this.p = x = 1` 不定義 `x` | **A：維持 develop**（GEN 只在右側直接是賦值／更新且 develop 會定義左側時遞迴，`defuseanalyzer.js:608-611`）；通用缺口記新 KI（spec FR-011 (g)，含 golden `tests/golden/fixtures/es2015/app.js:22` 的 `nextId++`） | 回歸測試：`o.p = x = 1`、`o.p = x++` 仍定義 `x`；characterization：`o.a.b = x = 1`、`this.p = x = 1` 不定義 `x`（contracts/acceptance.md）；golden／MDN 影響 0 筆 |
 | Q2→D013 | 「物件變數」對呼叫根的成員鏈（`localStorage.getItem(n).p = o`） | **A：只沿 `.object` 鏈**（呼叫中斷 → 沒有物件變數，不豁免，讀 `localStorage`、`n`） | spec「表示法」、US1 情境 16（P42）；FR-009：新 `localStorage` 讀取帶出的 inter-page pair 歸「新增讀取」 |
-| Q3→D014 | 檢查器對被呼叫端未捕捉例外的處理 | **A：`exceptionalReturn` 視為從 CALL 出發的例外邊**（它由 `expansion.js:592-606` `finishCallRecords` 依圖結構設定，求解器只在 `reachingsolver.js:292` 讀它，與獨立性相容） | contracts/reachability.md §2 的敘述修正（實測 1278 筆：1230 筆即 `callNode.exception`、39 筆呼叫節點無例外邊、9 筆 null）；「呼叫節點無例外邊」單元測試；檢查器斷言非 null 者都是圖上某節點的 `.exception` 目標 |
+| Q3→D014 | 檢查器對被呼叫端未捕捉例外的處理 | **A：`exceptionalReturn` 視為從 CALL 出發的例外邊**（它由 `expansion.js:592-606` `finishCallRecords` 依圖結構設定，求解器只在 `reachingsolver.js:292` 讀它，與獨立性相容） | contracts/reachability.md §2 的敘述修正（語料 probes＋golden＋MDN 實測 533 筆：524 筆即 `callNode.exception`、9 筆呼叫節點無例外邊、0 筆 null，斷言全部成立）；「呼叫節點無例外邊」單元測試；檢查器斷言非 null 者都是圖上某節點的 `.exception` 目標 |
 | Q4→D015 | (a) 的 return 是否分呼叫點 | **A：分呼叫點**（比「表示法」(a) 字面嚴格，可達集合是字面可達的子集，通過即滿足 FR-006） | P41 可達集合測試（US3 情境 8） |
 | Q5→D016 | MDN 語料進 `npm test` | **A：直接讀 `specs/006-eslint-scope/mdn/corpus`**（33 檔、1218 行；先例 `tests/dujs/splitcallnodes.js:24`） | 缺檔或檔數 ≠ 33 時測試失敗、不得 skip；核對 `specs/006-eslint-scope/mdn/README.md` 的 sha256 |
 | D017（新） | 決策條件中的無返回呼叫仍產生決策節點的 p-use pair（P38–P40，關掉 (c) 仍違反） | **納入 US3 修正**（FR-013） | 關鍵設計 #8、research R14、contracts/lib-api.md §3、contracts/acceptance.md |
@@ -118,16 +118,15 @@ tests/golden/   expected*／manifest.json（更新）
 | 階段 | 內容 | 主要檔案 | golden |
 |------|------|----------|--------|
 | Setup | probes 複製到 `tests/dujs/cases/probes008/`；MDN `2035c93` 快照與 perf 基準（`git diff --quiet 2035c93 -- lib` 確認）；`tools/classify.js`＋`tools/diffcheck.js` 與自我測試（工具首次 commit 後修改需 DECISION） | specs、tests/dujs/cases | 不變（diffcheck 對現況零差異） |
-| Foundational | 可到達檢查器 `tests/helpers/reachability.js`＋單元測試、陽性對照、注入、獨立性守門（在 develop 行為上先建立；US1／US2 改動後可立即偵測新的不可到達 pair）；`scopebinding` 三個新方法＋單元測試（尚未接線，行為不變） | tests/helpers、tests/dujs、scopebinding.js | 不變 |
+| Foundational | 可到達檢查器 `tests/helpers/reachability.js`＋單元測試、陽性對照、注入、獨立性守門（在 develop 行為上先建立）；`reachabilityinvariant.js` 全量（probes、golden、MDN；MDN 缺檔／檔數 ≠ 33／sha256 不符即失敗，D016）啟用，先以暫行允許清單（P21、P23、P24 及實測的 finallyExit 根因項）報紅 P38–P40；接著 **FR-013**（task 標 [US3／FR-013]）：`findDUPairs` 的 deferred p-use 只在 owner 可到達時配對，P38–P40 轉綠；`scopebinding` 三個新方法＋單元測試（尚未接線，行為不變） | tests/helpers、tests/dujs、defuseanalyzer.js、scopebinding.js、allowlist | 不變（原型實測 golden 0 筆差異） |
 | US1（P1，§22 (1)） | GEN／USE 改動、`getMemberTargetReads`、迴圈頭、F 分支、巢狀賦值條件、hierarchy 重構；s1–s14、P1–P4、P12、P25、P27、P29–P33 驗收；外溢 characterization；summary／matching 擴充 | defuseanalyzer、usedexpressions、bindingpattern、hierarchy | **更新**（成員目標、損失、外溢） |
 | US2（P1，§23） | `relaxedClassOfInstance`；P5–P11、P26、P28、P34–P36、MDN a05 驗收 | callresolver | **更新**（放寬） |
-| US3（P2，§22 (5)） | `findDUPairs` 的 deferred p-use 只在 owner 可到達時配對（FR-013，P38–P40 驗收，intra-procedural 不變）；P41 可達集合測試（D015）；`reachabilityinvariant.js` 全量（probes、golden、MDN；MDN 缺檔／檔數 ≠ 33／sha256 不符即失敗，D016）、允許清單與見證（P21、P23、P24 及實測到的 finallyExit 根因項）；關掉 (c) 仍違反者依 FR-008 修正或 DECISION | defuseanalyzer、tests、allowlist | 不變（原型實測 golden 0 筆差異） |
+| US3（P2，§22 (5)） | P41 可達集合測試（D015）；允許清單依 US1／US2 後的最終行為定稿與見證（P21、P23、P24 及實測到的 finallyExit 根因項）；關掉 (c) 仍違反者依 FR-008 修正或 DECISION（FR-013 已於 Foundational 完成） | tests、allowlist | 不變 |
 | Polish | MDN `--verify`、mdn-diff、perf.md、KI（FR-011 (a)–(g)）、README（FR-012）、docs-check.md、quickstart 全流程、golden-diff／mdn-diff 簽核 | docs、specs | `--verify` |
 
-- **順序理由**：檢查器在 Foundational 建立，US1／US2 期間即作為回歸網（新 pair 若落在不可到達節點立即失敗）；允許清單在 US3 依最終行為定稿（US1／US2 可能新增或消除 finallyExit 根因的 pair）。US2 依賴 US1（P9：`o.p = 1` 不再是定義）。改 golden 的階段必須依序，每次重產相對 `2035c93` 的累積淨差異。
+- **順序理由**：檢查器與全量不變量測試在 Foundational 建立並於 `npm test` 中執行，US1／US2 期間即作為回歸網（新 pair 若落在不可到達節點，`npm test` 立即失敗）；FR-013 緊接其後，使檢查器先報紅 P38–P40 再轉綠；允許清單在 US3 依最終行為定稿（US1／US2 可能新增或消除 finallyExit 根因的 pair）。US2 依賴 US1（P9：`o.p = 1` 不再是定義）。改 golden 的階段必須依序，每次重產相對 `2035c93` 的累積淨差異。
 - **tasks 指引**：檢查器的可走規則與求解器 reached 幾乎同構，獨立性只靠重寫、自算 normalReturn 與 (c)；注入（US3 情境 6）、陽性對照（P21、P23、P24）與 D014／D015 的單元測試是唯一防線，tasks 不得刪減或合併掉。
-- **US3 與 Foundational 的關係**：Foundational 建立的檢查器在 develop 行為上會把 P38–P40 報為允許清單以外的違反（關掉 (c) 仍違反）；Foundational／US1／US2 的階段檢查以「除 P38–P40 外無違反」為準，US3 修正 FR-013 後歸零。
-- **US1 的期中狀態**：Foundational 後檢查器已在 `npm test`，但全量不變量測試（含允許清單）在 US3 才加入；US1／US2 期間以 probes 的 `check` 結果（除 P38–P40 外無允許清單以外違反）作為階段檢查。
+- **階段檢查（統一）**：Foundational 結束起，每階段的檢查都是全量不變量測試「允許清單外 0 違反」，無例外。US1／US2 若新增或消除 finallyExit 根因的 pair，於該階段更新暫行允許清單（附見證，過期項即刪），US3 定稿。P38–P40 修正前的違反在 FR-013 之後以注入重現（contracts/reachability.md §6）。
 
 ## 已知風險
 

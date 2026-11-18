@@ -41,9 +41,10 @@ modelsOfPages(codeOfPages) -> Array<{programId, modelName, model}>   // 以 test
 | `exception`（`u.exception`） | 照常可走（**例外邊的辨識**：連線型別 `FlowNode.EXCEPTION_CONNECTION_TYPE`，即節點的 `exception` 欄位） |
 | `return`，目標是某 CallSiteRecord 的 `callReturn` | **不走**；改由 (a) 的虛擬邊 |
 | `return`，目標是 LOOP（LOOP RETURN → LOOP） | 照常可走 |
+| `return`，目標既不是任何 record 的 `callReturn` 也不是 LOOP | **拋錯**（fail-closed：模型形狀與本契約不符，須重審） |
 | 處理器 exit → LOOP RETURN（`normal`） | 照常可走（「表示法」(b)） |
 | (a) 虛擬邊 `record.callNode → record.callReturn` | `callNode` 可到達且 `normalReturn(record.calleeScope)` 為是 |
-| 虛擬例外邊 `record.callNode → record.exceptionalReturn`（非 null 時） | `callNode` 可到達即可走，**型別視為例外**（被呼叫端未捕捉的例外；D014）。`exceptionalReturn` 由 `lib/dujs/expansion.js:592-606` 的 `finishCallRecords` 依圖結構設定（鏈的第一個呼叫的段 0 呼叫節點的 `.exception` 目標），不是求解器的結果；求解器只在 `reachingsolver.js:292` 讀它。實測 1278 筆 record：1230 筆 `callNode.exception` 即 `exceptionalReturn`（與圖上的例外邊重合），39 筆呼叫節點本身沒有例外邊（鏈式呼叫的後段、決策前呼叫——這些才需要本虛擬邊），9 筆為 null |
+| 虛擬例外邊 `record.callNode → record.exceptionalReturn`（非 null 時） | `callNode` 可到達即可走，**型別視為例外**（被呼叫端未捕捉的例外；D014）。`exceptionalReturn` 由 `lib/dujs/expansion.js:592-606` 的 `finishCallRecords` 依圖結構設定（鏈的第一個呼叫的段 0 呼叫節點的 `.exception` 目標），不是求解器的結果；求解器只在 `reachingsolver.js:292` 讀它。實測（語料 probes＋golden fixture＋MDN 33 檔）533 筆 record：524 筆 `callNode.exception` 即 `exceptionalReturn`（與圖上的例外邊重合），9 筆呼叫節點本身沒有例外邊（鏈式呼叫的後段、決策前呼叫——這些才需要本虛擬邊），0 筆為 null；下述斷言全部成立 |
 | (b) 虛擬邊 `loopRecord.loop → loopRecord.loopReturn` | `loop` 可到達即可走（不論圖上有無對應的邊） |
 
 **`exceptionalReturn` 的斷言（D014）**：檢查器對每個模型斷言「每個非 null 的 `record.exceptionalReturn` 都是圖上某節點的 `.exception` 目標」，不成立即拋錯（表示 records 與圖的關係改變，本契約須重審）。
@@ -52,7 +53,7 @@ modelsOfPages(codeOfPages) -> Array<{programId, modelName, model}>   // 以 test
 
 **與求解器的關係（獨立性的限度）**：本節的可走規則與求解器 `reached` 的計算（`reachingsolver.js:266-303`）幾乎同構；獨立性只靠重寫（不 require、不讀其結果）、自算 normalReturn 與 (c)。因此注入（§6）與陽性對照（P21、P23、P24）是證明檢查器確實會報錯的唯一防線，tasks 不得刪減。
 
-**(a) normalReturn（最小不動點）**：對 records 中出現的每個 `calleeScope`，以 `record.entry`／`record.exit`（攤平圖中的副本）為該 scope 的 entry／exit；初值全為否；
+**(a) normalReturn（最小不動點）**：對 records 中出現的每個 `calleeScope`，以 `record.entry`／`record.exit`（攤平圖中的副本）為該 scope 的 entry／exit；被呼叫端 scope 的 `ast` 是 generator 或 async 函式（`ast.generator === true` 或 `ast.async === true`）時直接為是、不參與不動點（D019：呼叫只建立 generator 物件或 promise 即返回；語法判定、不讀摘要，獨立性不變）；其餘初值為否；
 每輪對每個 scope 從其 entry 以本節同一組規則做可到達，若 exit 有某前驅 `p` 可到達且 `p → exit` 的連線型別不是 `exception`，則為是；直到沒有改變。遞迴的被呼叫端因此從「沒有正常返回」開始（005 FR-003）。
 
 **(c) finallyExit 的正常出邊**：
@@ -100,9 +101,9 @@ modelsOfPages(codeOfPages) -> Array<{programId, modelName, model}>   // 以 test
 ## 6. 陽性對照與單元測試（`tests/dujs/reachability.js`）
 
 - P21、P23、P24：全開時報出 `x: L1 -> L11`／`x: L11 -> L14`／`x: L1 -> L11`（inter-procedural 與 intra-page），關掉 (c) 後兩端皆可達，見證的 `nonExceptionalEntries` 為 0（US3 情境 5）。
-- 注入（US3 情境 6）：取 P13 的 inter-procedural 模型 `m`，`Object.create(m)` 並以 `Object.defineProperty` 覆寫 `dupairs` 為原 Map 的複本加一筆 `DUPair(L9 節點, L9 節點)`（新的 Var `injected`）；`assertInvariant` 必須拋錯且訊息含 `injected`。另一例把同一 pair 加入允許清單時因關掉 (c) 仍違反而拋錯（判準 2）。
+- 注入（US3 情境 6）：取 P13 的 inter-procedural 模型 `m`，`Object.create(m)` 並以 `Object.defineProperty` 覆寫 `dupairs` 為原 Map 的複本加一筆 `DUPair(L9 節點, L9 節點)`（新的 Var `injected`）；`assertInvariant` 必須拋錯且訊息含 `injected`。另一例把同一 pair 加入允許清單時因關掉 (c) 仍違反而拋錯（判準 2）。另注入兩例：「只有定義端不可到達」（定義端取 P13 的 L9 節點、使用端取可到達節點）與「只有 p-use 分支目標不可到達」（`Pair(可到達的決策節點, 不可到達的分支目標)`），`assertInvariant` 都必須拋錯。
 - 規則單元：(a) 無條件遞迴之後不可到達（P13、P14、P15）、條件遞迴可到達（P16、P17）；(a) 分呼叫點（D015）：P41 的 inter-procedural 與 intra-page 模型中，L10 的 CALL、CALL RETURN 與 L11 皆不在 `reachableNodes` 的結果中（直接斷言可達集合；或以注入 `Object.create(model)` 覆寫 `dupairs` 加入一筆以 L11 為使用端的 pair，`assertInvariant` 必須拋錯），並對照「照圖走 return 邊」時 L10 的 CALL RETURN 會可到達（說明本測試能區分兩種解讀）；
-  D014：「呼叫節點無例外邊」的 record（鏈式呼叫的後段，如 `a().b()`；決策前呼叫，如 `if (f())`）在被呼叫端拋錯時，`exceptionalReturn`（catch 或 exit）經虛擬例外邊可到達；`exceptionalReturn` 斷言的反例（以包裝物件竄改 records）會拋錯；FR-013（D017）：P38、P39、P40 修正後全開無違反（修正前即 develop 行為，檢查器報 `f: entry -> L5>L6:T` 等為違反且關掉 (c) 仍違反）；(b) 沒有任何處理器邊的 LoopRecord 其 LOOP RETURN 可到達；(c) 只由例外進入的 finally 之後不可到達、正常進入時可到達、`return` 經 finally 時（`finally` 邊）可到達；巢狀 try–finally（內層 finallyExit 在外層區域內，不算外層的進入）；
+  D014：「呼叫節點無例外邊」的 record（鏈式呼叫的後段，如 `a().b()`；決策前呼叫，如 `if (f())`）在被呼叫端拋錯時，`exceptionalReturn`（catch 或 exit）經虛擬例外邊可到達；`exceptionalReturn` 斷言的反例（以包裝物件竄改 records）會拋錯；FR-013（D017）：P38、P39、P40 修正後全開無違反；修正前的違反以注入重現（修正後已無產品狀態可測）——`Object.create(model)` 覆寫 `dupairs` 補回修正前的兩筆 p-use pair（如 P38 的 `f: entry -> L5>L6:T`、`f: entry -> L5>L8:F`），檢查器報為違反且關掉 (c) 仍違反（`assertInvariant` 拋錯）；D019：`async function f(){ await f(); } f(); x = 1; console.log(x);` 中 `f` 判為有正常返回，`x = 1` 與 `console.log(x)` 可到達、求解器的 `x` pair 不被報為違反（對照：若不依旗標而純結構重算，`f` 會判為沒有正常返回而誤報——測試同時斷言此對照）；(b) 沒有任何處理器邊的 LoopRecord 其 LOOP RETURN 可到達；(c) 只由例外進入的 finally 之後不可到達、正常進入時可到達、`return` 經 finally 時（`finally` 邊）可到達；巢狀 try–finally（內層 finallyExit 在外層區域內，不算外層的進入）；
   intra-procedural 模型中呼叫之後皆可到達；inter-page 每頁 entry 可到達；獨立性守門（§1）。
 - 不變量（`tests/dujs/reachabilityinvariant.js`）：對 `tests/dujs/cases/probes008/`（含 `pages/`）、`tests/golden/fixtures`（頁面同 `tests/golden/golden.js`）、`specs/006-eslint-scope/mdn/corpus`（依 `pages.json`）的每個模型執行 `check`，以 `assertInvariant` 對照允許清單（US3 情境 4、SC-005）。
   MDN 語料（D016）：直接讀 006 的 corpus（先例 `tests/dujs/splitcallnodes.js:24`），缺檔或 `.js` 檔數 ≠ 33 時測試**失敗**（不得 `skip`／`pending`），並以 `crypto` 計算每檔 sha256、與 `specs/006-eslint-scope/mdn/README.md`「sha256（全碼）」區塊逐檔比對，不符即失敗（語料 33 檔、1218 行）。

@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-18
 
-**Status**: Draft（D001–D017 已裁決 2026-11-18）
+**Status**: Draft（D001–D019 已裁決 2026-11-18）
 
 **Input**: User description: "Feature 008 = docs/known-issues.md 的 §22 (1)、§22 (5) 與 §23（見該檔 L20–60 的總覽，以及 §22、§23 本文）。§22 (4)（storage model）不在範圍內。先確認 007 修完後哪些仍未解決，再寫 spec。技術選型維持 repo 現況，不引入新框架或新依賴。慣例沿用 005、006、007：probes 目錄、golden 差異以 tests/golden + diffcheck 記錄、MDN 範例驗收（Advanced JavaScript objects + Core Scripting），新發現記到 docs/known-issues.md。PR 目標 develop。"
 
@@ -116,10 +116,16 @@
 
 - Q: 成員目標右側的巢狀賦值（develop 中 `o.a.b = x = 1`、`this.p = x = 1` 不定義 `x`）要不要修？ → A（D012）: 維持 develop——GEN 只在右側「直接是」賦值／更新且 develop 會定義左側時遞迴（`lib/dujs/defuseanalyzer.js:608-611`），`o.p = x = 1`、`o.p = x++` 仍定義 `x`；這個通用缺口（不限成員目標）記為新 KI（FR-011 (g)），`o.a.b = x = 1`、`this.p = x = 1` 以 characterization 測試釘住；golden／MDN 影響 0 筆。
 - Q: 「物件變數」遇到呼叫根的成員鏈（`localStorage.getItem(n).p = o`）如何判定？ → A（D013）: 沿 `.object` 鏈往左到達的識別字；鏈中遇到呼叫（或 `this`、括號中的其他運算式）即沒有物件變數，不豁免，FR-002 照常把被求值的識別字（`localStorage`、`n`）記為讀取（「表示法」、US1 情境 16、P42）；因此新增的 `localStorage` 讀取帶出的 inter-page pair 歸 FR-002「新增讀取」類（FR-009）。
-- Q: 檢查器如何處理 CallSiteRecord 的 `exceptionalReturn`？ → A（D014）: 視為從呼叫節點出發的例外邊。理由：`exceptionalReturn` 由 `lib/dujs/expansion.js:592-606` 的 `finishCallRecords` 依圖結構設定（段 0 呼叫節點的 `.exception` 目標），求解器只在 `reachingsolver.js:292` 讀它，與 FR-007 的獨立性相容；實測 1278 筆 record 中 1230 筆即 `callNode.exception`，39 筆的呼叫節點沒有例外邊（鏈式呼叫的後段、決策前呼叫），9 筆為 null。條件：「呼叫節點無例外邊」的形態補單元測試；檢查器斷言每個非 null 的 `exceptionalReturn` 都是圖上某節點的 `.exception` 目標（「表示法」）。
+- Q: 檢查器如何處理 CallSiteRecord 的 `exceptionalReturn`？ → A（D014）: 視為從呼叫節點出發的例外邊。理由：`exceptionalReturn` 由 `lib/dujs/expansion.js:592-606` 的 `finishCallRecords` 依圖結構設定（段 0 呼叫節點的 `.exception` 目標），求解器只在 `reachingsolver.js:292` 讀它，與 FR-007 的獨立性相容；實測（語料：probes＋golden fixture＋MDN 33 檔，plan 裁決時 Fable 重測）533 筆 record 中 524 筆即 `callNode.exception`，9 筆的呼叫節點沒有例外邊（鏈式呼叫的後段、決策前呼叫），0 筆為 null，下述斷言全部成立（原記「1278 筆：1230／39／9」未註明語料，以此為準）。條件：「呼叫節點無例外邊」的形態補單元測試；檢查器斷言每個非 null 的 `exceptionalReturn` 都是圖上某節點的 `.exception` 目標（「表示法」）。
 - Q: (a) 的返回要不要分呼叫點？ → A（D015）: 分——同一 record 的 CALL 可到達且被呼叫端有正常返回，CALL RETURN 才可到達。這比「表示法」(a) 的字面嚴格，其可達集合是字面可達的子集，故通過即滿足 FR-006；以 P41 的可達集合測試（L10 的 CALL、CALL RETURN 與 L11 皆不可到達）釘住（US3 情境 8）。
 - Q: 不變量測試的 MDN 語料從哪裡讀？ → A（D016）: 直接讀 `specs/006-eslint-scope/mdn/corpus`（先例 `tests/dujs/splitcallnodes.js:24` 讀 specs 下的檔案）；缺檔或檔數不是 33 時測試失敗、不得 skip，並核對 `specs/006-eslint-scope/mdn/README.md` 記載的 sha256（33 檔、1218 行）。
 - Q: 決策條件中的無返回呼叫（P38–P40）仍產生決策節點的 p-use pair，怎麼處理？ → A（D017）: 納入 US3 修正（FR-013）。根因：007 的 deferred p-use（呼叫之前讀取、記為決策節點的 p-use）在 `defuseanalyzer.findDUPairs`（約 L278-293）以段節點的 reachIns 配對到 owner（決策節點）的兩個分支，不看 owner 是否被求解器 reached；owner 在無返回呼叫之後不可到達，關掉 (c) 仍違反。修正：owner 可到達時才配對（US3 情境 7）；intra-procedural 不拆分，不受影響。
+
+### plan 裁決（2026-11-18，主對話＋Fable 裁判，對 97601c4；D018–D019）
+
+- Q: US2 情境 5（P10）「與 develop 相同」與 FR-002 矛盾（US1 後 L3 `F.prototype.m = …` 讀 `F`）如何處理？ → A（D018）: 改為「不連結、有 `x: L1 -> L11`；另因 FR-002 新增 `F: entry -> L3`（intra(page)、inter[0]、intra-page）」，其餘與 develop 相同（Fable 原型 repo2 實測）。contracts/acceptance.md 與 quickstart.md 的 P10 同步。
+- Q: 檢查器 (a) 對 generator／async 被呼叫端如何判定正常返回？ → A（D019）: 依被呼叫端 scope AST 的 `generator`／`async` 旗標判為有正常返回（語法判定、不讀摘要，FR-007 的獨立性不變）；「表示法」(a) 補記，contracts/reachability.md §2 修正，加單元測試——反例 `async function f(){ await f(); } f(); x = 1; console.log(x);`：求解器得 `x: L6 -> L7`（行號依測試程式），純結構重算會誤判 `f` 沒有正常返回而誤報。
+- 其餘 plan 裁決（不改需求）：FR-013 移到 Foundational（檢查器建立後先報紅 P38–P40，再改 lib 轉綠）；階段檢查統一為「允許清單外 0 違反」；全量不變量測試在 Foundational 啟用、允許清單在 US3 定稿；FR-013 的 owner 可達判定採簡單版（`analysisResultOf(owner) === null` 即略過，產品呼叫端皆在 `doAnalysis` 之後），刪「model 未分析時維持現行行為」；P38–P40 修正前的違反以注入重現；D014 的數字改為上述語料實測。
 
 #### 延後釐清
 
@@ -135,6 +141,7 @@
 **成員目標**：賦值目標（`=`、複合賦值、邏輯賦值、`++`／`--`、解構賦值的元素、`for…in`／`for…of` 的左側）中的成員運算式 `E.p` 或 `E[k]`。
 **物件變數**：自成員目標沿 `.object` 鏈一路往左到達的識別字（`o.p`、`o.p.q`、`o[k]`、`o[i].q` 中的 `o`）；鏈中遇到呼叫或其他非成員運算式（`localStorage.getItem(n).p`、`f(a).p`、`this.p`、`(a || b).p`）即**沒有物件變數**——不豁免 FR-001 的 `localStorage` 例外，FR-002 照常把物件運算式中被求值的識別字記為讀取（D013）。
 **可到達（獨立判定）**：在某模型的圖上從 entry 做圖可達，但 (a) 被呼叫端「沒有正常返回」時，不經該呼叫的 return 邊到達 CALL RETURN 節點——「有沒有正常返回」由檢查器自行以同一判定在被呼叫端的圖上重算（被呼叫端的 exit 是否可經非例外路徑到達，遞迴取最小不動點），不讀 `summary.js` 的 normalReturn（它由求解器的 reached 算出，`lib/dujs/summary.js:245`）；
+被呼叫端是 generator 或 async 函式（依其 scope AST 的 `generator`／`async` 旗標，語法判定、不讀摘要）時一律視為有正常返回——呼叫只建立 generator 物件或 promise，立即返回（D019）；
 檢查器的 (a) 分呼叫點：同一呼叫的 CALL 可到達且被呼叫端有正常返回，該呼叫的 CALL RETURN 才可到達（D015；比本款字面嚴格，可達集合是字面可達的子集，故通過即滿足 FR-006）；被呼叫端未捕捉的例外以 CallSiteRecord 的 `exceptionalReturn` 視為從 CALL 出發的例外邊（D014；它由 `lib/dujs/expansion.js` 的 `finishCallRecords` 依圖結構取段 0 呼叫節點的例外目標設定，不是求解器的結果）；
 (b) 迴圈記錄：LOOP 節點可到達時，其 LOOP RETURN 節點可到達（依 LoopRecord，不論圖上有無對應的邊）；事件處理器 exit 到 LOOP RETURN 的邊照常可走；(c) `finally` 的 finallyExit 的正常出邊，只有在該 `finally` 有可到達的非例外進入（try／catch 正常完成，或 `return`／`break`／`continue`）時才可走。
 此判定 MUST 與 `lib/dujs/reachingsolver.js` 的 reached 計算與摘要分開實作（否則 pair 只由 reached 節點產生，檢查必然通過）。適用模型：intra-procedural（呼叫不透明，只套用 (c)）、inter-procedural、intra-page、inter-page（套用 (a)(b)(c)）。
@@ -205,7 +212,7 @@
 2. **Given** P8（事件處理器 `h` 中 `o.m();` L9，處理器 `k` 讀 `x` L12），**When** 分析，**Then** intra-page 有 `x: L4 -> L12`（並保留 `x: L1 -> L12`，因 `k` 可能先於 `h` 執行）。
 3. **Given** P9（頁面先 `o.p = 1;` L8），**When** 分析，**Then** `o.m()`（L10）連結，有 `x: L4 -> L13`；沒有 `x: L1 -> L13`（需 US1）。
 4. **Given** P7（`let o` 在頁面上有兩個定義），**When** 分析，**Then** 結果與 `develop` 相同：不連結，有 `x: L1 -> L15`。
-5. **Given** P10（`o = new F()`，`F` 是函式），**When** 分析，**Then** 結果與 `develop` 相同：不連結。
+5. **Given** P10（`o = new F()`，`F` 是函式），**When** 分析，**Then** 不連結（與 `develop` 同），有 `x: L1 -> L11`；另因 FR-002（US1），L3 `F.prototype.m = …` 讀取 `F`，intra(page)、inter-procedural（inter[0]）與 intra-page 新增 `F: entry -> L3`——此 pair 以外與 `develop` 相同（D018）。
 6. **Given** P11（函式內 `var o = new B();` 遮蔽外層），**When** 分析，**Then** 結果與 `develop` 相同：連結 `B` 的 `m`，有 `x: L9 -> L18`。
 7. **Given** P6（`var o = new A()`），**When** 分析，**Then** 結果與 `develop` 相同：不連結（D002：放寬只適用 `const`／`let`；`var` 的 `undefined` 初值使頁面定義數為 2）。
 8. **Given** MDN `a05-assessment-main.js`，**When** 分析，**Then** `loop()` 中的 `evilBall.draw()`、`evilBall.checkBounds()`、`evilBall.collisionDetect()` 連結到 `EvilCircle` 的對應方法。

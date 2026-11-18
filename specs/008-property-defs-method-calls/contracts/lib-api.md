@@ -22,7 +22,7 @@ PageBinding.prototype.isLogicalAssignmentTarget(node) -> boolean    // R2-4：no
 - `findGENSet`：成員目標不定義任何變數，物件變數（R1 (b)，沿 `.object` 鏈到達的 Identifier）為 domain `localStorage` Var 時維持 develop（`left.object` 是 Identifier 時定義它）；巢狀賦值的遞迴條件為「develop 會定義左側」（R1 (d)）。
 - `getDefinedVariables`（私有）：`MemberExpression` 目標只在 `object` 是 Identifier 且 `isLocalStorageObject` 時回傳該 Var。
 - `findUSESet`：`=` 的非解構成員目標先讀物件運算式與計算鍵（`isLogicalAssignmentTarget(left)` 為真或豁免時不讀）；解構賦值另讀 `bindingPattern.getMemberTargetReads(left)`（豁免者略過）。p-use／c-use 依既有的條件模式與引數深度規則。
-- `findDUPairs`（US3，FR-013、D017）：第二段（deferred p-use 與 `puseOwners` 的配對）只在 owner 依求解器可到達時配對——model 已有分析結果且 `model.analysisResultOf(owner) === null`（`doAnalysis` 只為 reached 節點存結果）時略過該 owner；model 尚未分析時維持現行行為。第一段（c-use、節點自己的 p-use）不變；intra-procedural 模型沒有 deferred p-use，不受影響。理由見 research R14。
+- `findDUPairs`（US3，FR-013、D017）：第二段（deferred p-use 與 `puseOwners` 的配對）只在 owner 依求解器可到達時配對——`model.analysisResultOf(owner) === null`（`doAnalysis` 只為 reached 節點存結果）時略過該 owner（簡單版：公開 API 無法區分未分析與未 reached，產品呼叫端皆在 `doAnalysis` 之後，不另處理未分析）。第一段（c-use、節點自己的 p-use）不變；intra-procedural 模型沒有 deferred p-use，不受影響。理由見 research R14。
 - `computeKILLSet`、`isVisibleToCallee` 的介面不變。
 
 ## 4. `lib/dujs/bindingpattern.js`（新增方法）

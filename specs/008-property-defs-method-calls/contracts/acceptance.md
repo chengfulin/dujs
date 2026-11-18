@@ -10,13 +10,13 @@
 | US1-6 | 同上 | pages/s1…s9 | 輸出四行（intra(page 1)、storage nodes、inter-page localStorage、inter-page (all)）與 `probes/pages/baseline-develop.txt` 對應段落**逐字相同**（以同一份 baseline 檔讀入比對，不手抄期望） |
 | US1-16 | 同上 | p42 | L2 的 GEN 為空、L2 的 USE 含 `localStorage` 與 `n`（D013）；`n: L1 -> L2`、`o: L1 -> L2`、`console: entry -> L3`；`localStorage` 的 pair 以實跑為準寫入測試（develop 慣例下頁面無定義時無 pair）；儲存定義節點數 0（與 develop 同） |
 | US1-14、US1-15 | 同上 | pages/s10…s14 | inter-page (all) 與第一頁 intra-page 的斷言；s13、s14 的 `inter-page localStorage` 行與 baseline 相同；儲存定義節點數 |
-| US2-1…13 | 同上 | p5、p6、p7、p8、p9、p10、p11、p26、p28、p34、p35、p36 | 「與 develop 相同」者以 `probes/baseline-develop.txt` 該程式的行逐字比對（characterization）；連結者斷言 `o.m()` 的 call 邊連到 `A` 的 `m`（不含 constructor） |
+| US2-1…13 | 同上 | p5、p6、p7、p8、p9、p10、p11、p26、p28、p34、p35、p36 | 「與 develop 相同」者以 `probes/baseline-develop.txt` 該程式的行逐字比對（characterization）；P10（US2-5，D018）不逐字：不連結、有 `x: L1 -> L11`，且 intra(page)、inter[0]、intra-page 各多 `F: entry -> L3`（FR-002），其餘 pair 與 baseline 相同；連結者斷言 `o.m()` 的 call 邊連到 `A` 的 `m`（不含 constructor） |
 | US2-8 | 同上 | `specs/006-eslint-scope/mdn/corpus/a05-assessment-main.js` | `loop()` 中三個 `evilBall` 呼叫的 call 邊連到 `EvilCircle` 的 `draw`、`checkBounds`、`collisionDetect` |
 | US3-1…3 | `tests/dujs/reachability.js`（新） | p13、p14、p15、p16、p17、p18、p19、p20 | pair 斷言（守門）＋檢查器全開無違反 |
 | US3-4 | `tests/dujs/reachabilityinvariant.js`（新） | probes008 全部（含 pages）、golden fixture、MDN 語料 | contracts/reachability.md §5–§6；允許清單 `tests/dujs/cases/reachability-allowlist.json` |
 | US3-5 | `tests/dujs/reachability.js` | p21、p23、p24 | 結果與 baseline 相同；全開違反、關掉 (c) 兩端可達、見證 `nonExceptionalEntries: 0` |
 | US3-6 | 同上 | p13（注入） | contracts/reachability.md §6 |
-| US3-7（FR-013） | `tests/dujs/reachability.js`（pair 斷言）＋`tests/dujs/defuseanalyzer.js`（擴充，`findDUPairs` 單元） | p38、p39、p40 | inter-procedural 與 intra-page 沒有決策節點的 p-use pair（spec 所列），保留段 0 的 c-use；intra-procedural（頁面）與 `probes/baseline-develop.txt` 逐字相同；檢查器全開無違反。單元：owner 可到達時照常配對（`if (h(a))`，`h` 會返回）、owner 不可到達時略過、model 未分析時維持現行行為 |
+| US3-7（FR-013） | `tests/dujs/reachability.js`（pair 斷言）＋`tests/dujs/defuseanalyzer.js`（擴充，`findDUPairs` 單元） | p38、p39、p40 | inter-procedural 與 intra-page 沒有決策節點的 p-use pair（spec 所列），保留段 0 的 c-use；intra-procedural（頁面）與 `probes/baseline-develop.txt` 逐字相同；檢查器全開無違反。單元：owner 可到達時照常配對（`if (h(a))`，`h` 會返回）、owner 不可到達時略過。排程在 Foundational（[US3／FR-013]），先由檢查器報紅 |
 | US3-8（D015） | `tests/dujs/reachability.js` | p41 | pair 與 baseline 相同；L10 的 CALL、CALL RETURN 與 L11 不在可達集合（contracts/reachability.md §6） |
 | P22（SC-002：結果不變） | `tests/dujs/propertydefs.js` | p22 | 與 baseline 逐字相同 |
 | FR-003 摘要 | `tests/dujs/summary.js`（擴充） | 內嵌：被呼叫端 `function g() { o.p = 1; }` | `o` ∉ `summaryOf(g).gen`、∉ `mustKill`，`o` ∈ `upwardExposed`；`*.matching.json` 的 `summaries` 同步 |

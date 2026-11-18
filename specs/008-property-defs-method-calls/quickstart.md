@@ -23,7 +23,7 @@ node specs/008-property-defs-method-calls/probes/run.js
 node specs/008-property-defs-method-calls/probes/run-pages.js
 ```
 
-對照 spec「探測結果」與各情境：例如 P1 有 `o: L7 -> L9`、`x: L4 -> L10`，沒有 `o: L8 -> L9`；P5 有 `x: L4 -> L12`；P6、P7、P10、P26、P28、P35、P36 與 `probes/baseline-develop.txt` 相同；
+對照 spec「探測結果」與各情境：例如 P1 有 `o: L7 -> L9`、`x: L4 -> L10`，沒有 `o: L8 -> L9`；P5 有 `x: L4 -> L12`；P6、P7、P26、P28、P35、P36 與 `probes/baseline-develop.txt` 相同；P10 不連結、有 `x: L1 -> L11`，另因 FR-002 多 `F: entry -> L3`（intra(page)、inter[0]、intra-page，D018），其餘與 baseline 相同；
 P21、P23、P24、P41 與 baseline 相同；P38–P40 的 inter／intra-page 沒有決策節點的 p-use pair（`f: entry -> L5>L6:T` 等，FR-013），intra(page) 與 baseline 相同；P42 有 `n: L1 -> L2`（D013）；`run-pages.js` 的 s1–s9 輸出與 `probes/pages/baseline-develop.txt` 逐行相同。
 
 ## 3. 可到達檢查器（US3）
