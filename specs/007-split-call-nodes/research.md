@@ -83,9 +83,10 @@ FR-007 的「新增的節點或邊型別」答案為「無」。
 **Decision**：
 - **讀取**：每個被讀的 `Identifier` 歸到「後序位置在它之前的呼叫點個數」那一段。`findUSESet` 改為「規則來源節點」與「結果節點」分開：段節點以 N 的原節點為規則來源（`usedExpressionsOf(N)`、N 是否為決策節點），
   只收歸段索引等於自己的 Identifier。
-- **定義**：`findGENSet` 另記 `generatedAt`（VarDef → 完成該定義的 AST 節點：AssignmentExpression、VariableDeclarator、UpdateExpression、具名函式／class 運算式本身、for-in/of 頭、CatchClause）；
+- **定義**：`findGENSet` 另記 `generatedAt`（VarDef → 完成該定義的 AST 節點：AssignmentExpression、VariableDeclarator、UpdateExpression、具名函式／class 運算式本身、for-in/of 頭、catch 參數〔`CatchClause` 的 `param` AST，不是 `CatchClause` 本身；`defuseanalyzer.findGENSet` 實作如此〕）；
   定義歸到該 AST 節點後序位置之前的呼叫點個數那一段。**class 名稱特例**：`ClassDeclaration` 的名稱與 class 運算式的內部名稱在其 static 成員執行前綁定，歸到「以該 class 的 static 呼叫點結尾」的那一段
   ——這把現行的 `keepGenerateAtCallSite` 與 `splitByInnerClassName` 統一成同一條位置規則（兩者刪除；既有測試 `classfields.js` 等作為守門，預期零差異）。
+  static 成員的 scope 名稱以實際 CLI 核對（Polish T064）：`var A = class { static y = g(); };`（`g` 內 `x = 1;`）的 static 欄位初始化式是 scope `$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0`，頁面的 inter-procedural 模型為 `$PAGE_0 → $ANONYMOUS_FUN_0 → g`，intra-page 得 `x: L3 -> L7`；前面多一個箭頭函式時名稱依原始碼順序變為 `$ANONYMOUS_FUN_1`，與單元測試（`tests/dujs/callsplit.js`、`splitcallnodes.js`）以合成程式斷言的命名一致。
 - **once-loop 的迴圈變數**：`for…in`／`for…of` 頭完成的迴圈變數定義與左側的讀取每次迭代發生，不屬任何段，留在 N 副本（`segmentOfVarDef` 對它們回傳 null；data-model §1、§4）。
 - 段節點的 GEN 為原節點 GEN 中歸到該段的 VarDef 在攤平圖的對應（`flatVarDefOf`；摘要圖用原 VarDef）；KILL 仍由求解器依 GEN 計算。
 

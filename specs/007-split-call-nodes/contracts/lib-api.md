@@ -5,7 +5,7 @@
 ## 1. `lib/dujs/callsplit.js`（新，MIT）
 
 ```js
-planOf(node, scopeTree[, predicate]) -> SegmentPlan // data-model §1；WeakMap 快取（鍵＝原節點，再依 predicate 分開），結果凍結
+planOf(node, scopeTree) -> SegmentPlan           // data-model §1；WeakMap 快取（鍵＝原節點），結果凍結；列出全部呼叫點
 evaluatedExpressionsOf(node) -> Array<AST>       // R2 步驟 1
 evaluationOrder(expressions) -> Map<AST, number> // 後序位置（data-model §5）
 segmentThrows(plan, j) -> boolean                // R6；等同 plan.throws[j]，供單元測試直接呼叫
@@ -13,11 +13,8 @@ THROW_TYPES                                      // 與 lib/esgraph/index.js 的
 reset()                                          // 清快取（tests/helpers/analyze.js 的 reset 呼叫）
 ```
 
-- **暫時項（DECISION 006 Q2；`planOf` 的 predicate 參數由 T016 加入、`stagedCallSite` 由 T025 加入，T048 移除兩者）**：`predicate(entry, node, shape) -> boolean`，`entry` 為候選的 `{expression, kind, callees}`。回傳 false 的呼叫點不進 `callSites`，
-  `segmentCount`、`segmentOf`、`segmentOfVarDef`、`throws` 依留下的呼叫點重算（被篩掉的呼叫運算式視同一般運算）。沒給 predicate 時列出全部呼叫點（Foundational 的單元測試 T011 以此驗證全列舉與 `once-*`）。
-  快取依 predicate 分開（`WeakMap<原節點, Map<predicate, plan>>`），同一原節點以不同 predicate 查詢不會互相污染。
-  predicate 本身是 `callresolver.stagedCallSite`（暫時匯出，T025 加入）：US1 只留 develop 會連結的呼叫點（`entry.expression === callExpressionOf(node)`，即 `astNode` 本身是 Call／New 或欄位初始化式的 `return` 引數，callresolver.js:158-172；或 `kind === 'class-static'`），且 `shape` 為 `once-*` 時一律不留；
-  US2（T038）只保留「`once-*` 一律不留」；US3（T048）刪除 `stagedCallSite` 與本參數的使用。由 `modelbuilder` 以參數傳入；下游（`hierarchy`、`expansion`、`defuseanalyzer`）只用 `edge.plan`／`segment.plan`，不自行呼叫 `planOf`。
+- 下游（`hierarchy`、`expansion`、`defuseanalyzer`）只用 `edge.plan`／`segment.plan`，不自行呼叫 `planOf`；`planOf` 由 `modelbuilder` 與 `callresolver.calleeScopesOf` 呼叫。
+  （US1–US2 曾有的階段性 predicate 參數與 `callresolver.stagedCallSite`〔DECISION 006 Q2〕已於 T048 移除，快取改為單層 `WeakMap<原節點, plan>`。）
 - 只讀原節點（`astNode`、`split`、`true`／`false`、`exception`、`discriminantThrowTarget`、`parent`、`reachIns`、`generatedAt`），不修改任何節點。
 - entry／exit 節點、沒有 `astNode` 的節點回傳 `callSites` 為空的 plan。
 - 呼叫點列舉排除 data-model §5「不列為呼叫點」的位置：`?.` 之後的部分、解構樣式內的預設值（參數本身的預設值除外；catch 參數的預設值同屬此類）、for-in/of 左側、留在 `case` 節點內的 test（未拆分者或拆分後的末端運算元；拆出的非末端運算元照常列入，DECISION 007）（這些位置中 class 的 static 成員也不列入——相對 develop 的行為變更，data-model §5）；
@@ -29,18 +26,17 @@ reset()                                          // 清快取（tests/helpers/an
 
 ```js
 calleeScopesOfExpression(node, expression, scopeTree) -> Array<Scope>   // 新：單一呼叫運算式
-calleeScopesOf(node, scopeTree) -> Array<Scope>                         // 語意改（T037）：planOf(node, scopeTree, stagedCallSite).callSites 的 callees 依序串接；T048 起不帶 predicate
-stagedCallSite(entry, node, shape) -> boolean                            // 暫時（T025 加入、T038 縮小、T048 刪除），見 §1
+calleeScopesOf(node, scopeTree) -> Array<Scope>                         // 語意改（T037）：planOf(node, scopeTree).callSites 的 callees 依序串接
 ```
 
 - `calleeScopesOfExpression`：`CallExpression`（成員 callee 走 `calleeScopesOfMethodCall`）或 `NewExpression`（`calleeScopesOfNew`）；解析規則不變（004 FR-018、005 FR-005 D2）。
 - `calleeScopesOfMethodCall` 的 `new F().m()` 分支只回傳 `[method]`（R7）；`new F()` 由 `NewExpression` 自己成為呼叫點。
-- `callExpressionOf` 的欄位初始化式特例（`dujsFieldInitializer`）刪除（一般列舉涵蓋；T037 與 T038 同一階段，T038 同時把 `stagedCallSite` 縮小到只排除 `once-*`，不留下依賴該特例的中間狀態）。
+- `callExpressionOf` 的欄位初始化式特例（`dujsFieldInitializer`）刪除（一般列舉涵蓋，T037）。`scopetree.js` 仍設 `dujsFieldInitializer` 標記，lib 已無讀者（只剩 `tests/dujs/newcallsite.js` 檢查）。
 - **循環 require**：`callsplit` 頂層 require `callresolver`（`calleeScopesOfExpression`）；`calleeScopesOf` 要用 `callsplit.planOf`，故在函式內延後 `require('./callsplit')`（先例：defuseanalyzer.js:324 的 `isOpenHandler`），不在檔頭 require。
 
 ## 3. `lib/dujs/modelbuilder.js`（修改）
 
-- `getInterProceduralModelStartFromTheScope`：每個節點改用 `callsplit.planOf(node, scopeTree, callResolver.stagedCallSite)`（T048 起不帶 predicate）；依 `plan.callSites` 逐一、每個呼叫點內依 `callees` 逐一 `hierarchy.addCallEdge`，
+- `getInterProceduralModelStartFromTheScope`：每個節點改用 `callsplit.planOf(node, scopeTree)`；依 `plan.callSites` 逐一、每個呼叫點內依 `callees` 逐一 `hierarchy.addCallEdge`，
   傳入 `{callSite, calleeModel, back, plan, callIndex, lastOfCallSite}`；`findStaticMemberScopesOfClassesAtNode`、`isClassDeclarationNode`、`expressionsEvaluatedAtNode`、`preEvaluatedAt` 與 `keepGenerateAtCallSite` 刪除（class static 成員改為 `class-static` 呼叫點；後兩者的唯一呼叫者是 `findStaticMemberScopesOfClassesAtNode`，同在 T025 刪除以免 `no-unused-vars`）。
 - `once-loop` 的 `enteringPrev` 由 plan 提供（`branchsplitter` 匯出 `isInsideLoopBody` 供 `callsplit` 使用；只新增匯出）。
 

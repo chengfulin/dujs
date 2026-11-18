@@ -1828,7 +1828,8 @@ describe('expansion of feature 005 (Q-a, CallSiteRecord, expandShallow)', functi
 });
 
 /// feature 007 T022 (data-model §4, contracts/lib-api.md §5, §6): the segments of a node with call sites in
-/// the flat graph built by the builder (US1: the call sites of develop, by the phase predicate)
+/// the flat graph built by the builder (written in US1 for the call sites of develop; the phase predicate
+/// limiting them was removed by T048, so every call site of the plan is listed)
 describe('segments of the nodes with calls (feature 007 US1)', function () {
 	'use strict';
 	var defUseAnalyzer = require('../../lib/dujs/defuseanalyzer');
@@ -2176,8 +2177,10 @@ describe('exception edges of the segments (feature 007 US4)', function () {
 		(decision.true !== null && decision.false !== null).should.be.true();
 		(built.model.flatNodeOf(edge.callNode).exception === built.catchCopy).should.be.true();
 		(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
-		/// the original decision node is not changed
-		(edge.callSite.exception === edge.plan.throwTarget).should.be.true();
+		/// the original decision node is not changed: its exception edge is still connected and both
+		/// branches are kept
+		edge.callSite.next.indexOf(edge.plan.throwTarget).should.not.eql(-1);
+		(edge.callSite.true !== null && edge.callSite.false !== null).should.be.true();
 	});
 
 	it('should keep the exception edge of the copy of if (f() > 1) (segment 1 throws)', function () {

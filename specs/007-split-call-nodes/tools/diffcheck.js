@@ -26,13 +26,20 @@
  *   CALL node of a record takes "call (<callSiteLine><path>)", where <path>
  *   is the branch path of the label of its CALL RETURN when that one already
  *   carries one ("callReturn (6:T)", KI §15, kept as is); a plain CALL RETURN
- *   takes "callReturn (<callSiteLine>)". Every other label keeps its plain
- *   form, and the suffixes of equal labels are given again as
- *   cfggraphconverter does (a normal node "3a", a typed node "call (4)_a"), in
- *   the node order of the file.
+ *   takes "callReturn (<callSiteLine>)". Only these rewritten labels get the
+ *   suffixes of equal labels again, as cfggraphconverter does ("call (4)_a"),
+ *   in the node order of the file; every other label is kept as it is (the
+ *   cumulative suffixes of develop such as "16abab", "entry_b_d_a_b_a_b",
+ *   T067).
  * - A difference that disappears only because of the rewriting is listed as
  *   one "~" difference of the file (graph unit) or of the variable (row unit,
  *   when every pair difference of that variable disappears), category 標記.
+ *   A *.graph.dot or *.matching.json that differs only in its node numbers
+ *   after the rewriting is 共通 (T067).
+ * - 連結（層級新增） (T067, §2): a + pair of a *.dupairs.dot whose model is
+ *   only in this branch (by file name in its level of the page), the model
+ *   + being 連結, and the same pair string in a base intra-pages/*.dupairs.dot
+ *   of the same page (rewritten by §1); the note column names that file.
  * - Duplicate rows (data-model §6): per *.dupairs.dot and per row, the
  *   occurrences of a normalized pair after its first; the base side after the
  *   rewriting.
@@ -61,7 +68,8 @@
  *   id with their keys sorted; the decision node is a normal successor of the
  *   CALL RETURN of the base with a "true"/"false" out-edge. The exception
  *   edge of the decision may move to the CALL (DECISION 012 Q1) when the
- *   condition of the only decision on the call site line is itself the call.
+ *   condition of the only decision on the call site line is itself the call
+ *   (a LogicalExpression starting on that line counts as a decision).
  *   The report lists "callNode → target（record id）" in the note column,
  *   with "；移除 decision → target" for a moved edge.
  * - The pin table counts + and − of pairs, rows and models; "~" is listed by
@@ -82,7 +90,7 @@ var ROOT = path.resolve(__dirname, '..', '..', '..'),
 	FEATURE = path.resolve(__dirname, '..'),
 	MDN_CORPUS = path.join(ROOT, 'specs', '006-eslint-scope', 'mdn'),
 	MDN_BASE = path.join(FEATURE, 'mdn', 'baseline-develop'),
-	ORDER = ['連結', '求值順序（判別式）', '求值順序（可迭代）', '求值順序', '返回後例外（決策返回不拋錯）', '返回後例外',
+	ORDER = ['連結', '連結（層級新增）', '求值順序（判別式）', '求值順序（可迭代）', '求值順序', '返回後例外（決策返回不拋錯）', '返回後例外',
 		'§37', '§38', '§41', '§43', '§44', '§46', '標記', '共通（段0例外）', '共通'],
 	FR_OF = {
 		'連結': 'FR-001', '求值順序': 'FR-002–FR-004', '返回後例外': 'FR-005', '§44': 'FR-001 例外', '§46': 'FR-001 例外',
@@ -133,21 +141,6 @@ function graphNodes(text) {
 		}
 	});
 	return nodes;
-}
-
-/**
- * A label without the suffix telling apart same labels
- * @param {string} label
- * @returns {string}
- */
-function plainOf(label) {
-	'use strict';
-	var normal = /^(\d+(?::[TF]+)?)[a-z]+$/.exec(label);
-	if (normal) {
-		return normal[1];
-	}
-	var typed = /^(.+)_[a-z]+$/.exec(label);
-	return typed ? typed[1] : label;
 }
 
 /**
@@ -202,18 +195,26 @@ function rewriteLabels(text, matching) {
 	if (rewritten.size === 0) {
 		return {text: text, map: map};
 	}
+	// only the rewritten labels get their suffixes again; every other label
+	// (such as the cumulative suffixes of develop, "16abab") is kept as is
 	var plains = nodes.map(function (node) {
-			return rewritten.get(node.id) || plainOf(node.label);
+			return rewritten.has(node.id) ? rewritten.get(node.id) : null;
 		}),
 		counts = new Map(),
 		seen = new Map(),
 		newOf = new Map();
 	plains.forEach(function (plain) {
-		counts.set(plain, (counts.get(plain) || 0) + 1);
+		if (plain !== null) {
+			counts.set(plain, (counts.get(plain) || 0) + 1);
+		}
 	});
 	nodes.forEach(function (node, index) {
 		var plain = plains[index],
 			label = plain;
+		if (plain === null) {
+			newOf.set(node.id, node.label);
+			return;
+		}
 		if (counts.get(plain) > 1) {
 			var order = seen.get(plain) || 0;
 			seen.set(plain, order + 1);
@@ -811,7 +812,8 @@ function categoriesOf(diff, info) {
 			found.add('連結');
 		}
 		if (diff.labelOnly) {
-			found.add('標記');
+			// differing only in node numbers after the rewriting (T067)
+			found.add('共通');
 		}
 		if (diff.segment0) {
 			found.add('共通（段0例外）');
@@ -880,7 +882,8 @@ function recordsById(text) {
 }
 
 /**
- * Decisions whose condition starts on a line of the sources, each with
+ * Decisions whose condition starts on a line of the sources (and the
+ * LogicalExpressions starting on that line, which branch as well), each with
  * whether the condition is itself a call (the condition without its
  * parentheses is a CallExpression or a NewExpression, so nothing of it is
  * evaluated after its last call)
@@ -908,6 +911,9 @@ function decisionsAt(sources, line) {
 			if (test && test.loc.start.line === line) {
 				found.push({lastIsCall: node.type !== 'SwitchStatement' &&
 					(test.type === 'CallExpression' || test.type === 'NewExpression')});
+			} else if (node.type === 'LogicalExpression' && node.loc.start.line === line) {
+				// &&, || and ?? branch in the CFG too: one more decision on the line
+				found.push({lastIsCall: false});
 			}
 		});
 	}
@@ -1209,7 +1215,15 @@ function compareCase(spec) {
 			return base006.pairParts(item.content).name;
 		}));
 	}
-	function compareRows(located, rawBefore, before, after) {
+	// pairs of the *.dupairs.dot files of this branch only in it (by name)
+	function newOnlyPairs(group) {
+		return group.next.filter(function (file) {
+			return group.base.indexOf(file) === -1;
+		}).map(function (file) {
+			return {file: file, pairs: new Set(pairsOf(rowsOf([file], null)))};
+		});
+	}
+	function compareRows(located, rawBefore, before, after, newOnly) {
 		base006.multisetDiff(before.map(function (row) {
 			return row.name;
 		}), after.map(function (row) {
@@ -1221,7 +1235,13 @@ function compareCase(spec) {
 			rawNames = namesOf(base006.multisetDiff(pairsOf(rawBefore), pairsOf(after))),
 			names = namesOf(pairDiffs);
 		pairDiffs.forEach(function (item) {
-			push(located, 'pair', item.sign, item.content, base006.pairParts(item.content).name);
+			var levelNew = item.sign !== '+' ? [] : newOnly.filter(function (entry) {
+				return entry.pairs.has(item.content);
+			}).map(function (entry) {
+				return entry.file;
+			});
+			push(located, 'pair', item.sign, item.content, base006.pairParts(item.content).name,
+				levelNew.length > 0 ? {levelNew: levelNew} : null);
 		});
 		Array.from(rawNames).sort().forEach(function (name) {
 			if (!names.has(name)) {
@@ -1235,14 +1255,18 @@ function compareCase(spec) {
 		};
 		group.base.sort(byIndex);
 		group.next.sort(byIndex);
+		var newOnly = newOnlyPairs(group);
 		if (group.base.length === group.next.length) {
 			group.next.forEach(function (file, position) {
 				var baseFile = [group.base[position]];
-				compareRows(base006.locate(file), rowsOf(baseFile, false), rowsOf(baseFile, true), rowsOf([file], null));
+				compareRows(base006.locate(file), rowsOf(baseFile, false), rowsOf(baseFile, true), rowsOf([file], null),
+					newOnly.filter(function (entry) {
+						return entry.file === file;
+					}));
 			});
 		} else {
 			compareRows({page: group.page, file: group.level + '*.dupairs.dot'}, rowsOf(group.base, false),
-				rowsOf(group.base, true), rowsOf(group.next, null));
+				rowsOf(group.base, true), rowsOf(group.next, null), newOnly);
 		}
 	});
 	var sources = spec.pageSources.map(sourceFactsOf),
@@ -1268,10 +1292,42 @@ function compareCase(spec) {
 		mergeOutputFacts(pageOutputs.map(function (item) {
 			return item.next;
 		}).concat([interNext])), {base: interBase, next: interNext});
+	// 連結（層級新增） (§2, T067): the model + of the file is 連結, and the
+	// pair is in a base intra-pages/*.dupairs.dot of the same page
+	function levelNewBaseOf(diff) {
+		var intraPages = diff.page === 'inter-page' ? [] : baseFiles.filter(function (file) {
+			return file.indexOf(diff.page + '/intra-pages/') === 0 && /\.dupairs\.dot$/.test(file);
+		});
+		var modelLinked = diff.levelNew.some(function (file) {
+			var located = base006.locate(file);
+			return diffs.some(function (other) {
+				return other.unit === 'model' && other.sign === '+' && other.page === located.page &&
+					other.content === located.file && other.categories.indexOf('連結') !== -1;
+			});
+		});
+		if (!modelLinked) {
+			return null;
+		}
+		return intraPages.filter(function (file) {
+			return pairsOf(base006.parseDupairs(baseTextOf(file))).indexOf(diff.content) !== -1;
+		})[0] || null;
+	}
 	var staticRows = [];
 	diffs.forEach(function (diff) {
 		var info = infos[diff.page];
 		diff.categories = info ? categoriesOf(diff, info) : [];
+	});
+	diffs.forEach(function (diff) {
+		var levelNewBase = diff.levelNew ? levelNewBaseOf(diff) : null;
+		if (levelNewBase) {
+			diff.levelNewBase = levelNewBase;
+			diff.categories = ORDER.filter(function (category) {
+				return category === '連結（層級新增）' || diff.categories.indexOf(category) !== -1;
+			});
+		}
+	});
+	diffs.forEach(function (diff) {
+		var info = infos[diff.page];
 		if (info && diff.unit === 'pair') {
 			info.staticRows.forEach(function (row) {
 				if (staticRelated(row, pairOf(diff.content))) {
@@ -1390,6 +1446,9 @@ function buildReport(results) {
 				return item.callNode + ' → ' + item.target + '（' + item.id + '）' +
 					(item.removed ? '；移除 ' + item.removed + ' → ' + item.target : '');
 			}).join('；') + (others.length > 0 ? '（亦符：' + others.join('、') + '）' : '');
+		}
+		if (diff.levelNewBase) {
+			note += (note ? '；' : '') + '層級新增：對應基準檔 ' + diff.levelNewBase;
 		}
 		lines.push('| ' + [index + 1, diff.caseName, diff.page, diff.file, diff.unit, diff.sign, '`' + diff.content + '`',
 			category, FR_OF[mainCategory(category)] || '', note].join(' | ') + ' |');

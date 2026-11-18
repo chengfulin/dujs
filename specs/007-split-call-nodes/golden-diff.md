@@ -523,6 +523,7 @@ CLI 標記（DECISION 005 Q1 A，FR-007）：`call (<行>[:路徑])`、`callRetu
 - P25 部分驗收：`throw f();` 只核對 `x: L1 -> L9` 與 `f` 的 call 邊（US2-10）；`x: L3 -> L9` 需返回後段的 exception 邊，待 US4（DECISION 006 Q1）。US2 期間段 1 無出邊，分析未拋錯、求解正常。
 - 重複列數：`expected` 新增 inter-procedural 模型帶來新的重複列（inter-page／intra-pages +26、inter-procedurals/0–2 各 +4），不設門檻（KI §43）。
 - T040 實際改動的既有測試檔：`tests/dujs/cfggraphconverter.js`、`tests/dujs/newcallsite.js`、`tests/dujs/methodcalls.js`、`tests/dujs/exceptionsummary.js`、`tests/dujs/expansion.js`、`tests/dujs/modelbuilder.js`、`tests/dujs/paramdefaults.js`、`tests/dujs/paramsandnew.js`、`tests/dujs/scopeguards.js`、`tests/dujs/scoperesolution.js`、`tests/dujs/splitcallnodes.js`（T066 守門輔助函式）、`tests/dujs/callsplit.js`（T011 補 `callees` 斷言）。
+- T035 列出的 `tests/dujs/relaxedcallee.js` 經查不需修改：其中唯一的 `new C().m();` 不是 `calleeScopesOf` 的斷言對象（該測試只斷言 `m` 內 `K()` 的被呼叫端與 pair），拆成兩個呼叫點後期望不變，相對 `edc22d5` 無改動（Polish T064 核對）。
 - MDN：mdn-diff.md 不在本階段範圍（於 Polish T059 重產）。本階段曾試跑 `diffcheck mdn --verify`：exit 1，889 個問題（873 筆 US2 新增的 `連結`／`共通` 差異尚未記錄、16 筆重複列數不符），沒有無類別列，也沒有 intra-procedurals 失敗，屬預期中的尚未重產。MDN 無類別 7 筆＝已查證的工具缺口，產品輸出正確；mdn-diff 於 T059 前置任務（T067）後重產（DECISION 011）。
 
 ### 雜湊變化表（舊→新 sha256 前 12 碼）

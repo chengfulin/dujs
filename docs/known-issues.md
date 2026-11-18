@@ -48,6 +48,17 @@ of `try`…`finally` (§35). It records its behavior changes, limits and finding
 in §35–§43. §16 and §22 (3) are planned for feature `007`; §22 (1), §22 (5) and
 §23 for feature `008`; §22 (4) for a separate feature on the storage model.
 
+Feature `007-split-call-nodes` (`specs/007-split-call-nodes/`) splits a node
+with calls into "before the call" and "after the return" segments in the
+inter-procedural, intra-page and inter-page models. It fixes §16 (the
+arguments and the reads of a condition are evaluated before the callee runs)
+and §22 (3) (calls inside expressions are call sites), with the note on §10
+(`return g();` is connected) and a note on §36 (only call statements never
+throw after the return). It records its limits and behavior changes in
+§44–§48 (the reads and calls of a `case` test, the behavior changes of the
+segments, the positions that are not call sites, the exception edges of the
+split discriminant nodes, and the crash of a `switch` without `case`).
+
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
 
@@ -265,6 +276,9 @@ intra-procedural model). With the body `g();` the call is connected and
 In the program below, `return g();` is still not connected, because it is not
 a call statement (only the arrow function becomes a scope; the pairs are
 unchanged); treating such calls as call-sites is a follow-up item in §22.
+**Fixed** by feature `007-split-call-nodes` (§22 (3)): `return g();` is now a
+call site and `d: L1 -> L3` is found
+(`specs/007-split-call-nodes/probes/p4-ki10-return.js`).
 The description below is the behavior before the fix.
 
 ```js
@@ -424,7 +438,19 @@ branch path in `FlowNode.labelPath` (a split node has `labelPath === split.path`
 a CALL RETURN node takes the `labelPath` of its call site); only the label is
 ambiguous (review #8).
 
-### 16. The call of a decision node is inserted before it (partly fixed by `003-hierarchical-models`)
+### 16. The call of a decision node is inserted before it (partly fixed by `003-hierarchical-models`; fixed by `007-split-call-nodes`)
+
+**Fixed** by feature `007-split-call-nodes` (FR-002, FR-003, US1): a node with
+calls is split into segments in evaluation order (§45). The part of a
+condition evaluated before the call (the callee, the arguments and the
+operands on their left) is in the segment before the call, so the callee sees
+the definitions made there; the reads of the condition are still p-uses of the
+decision node, but get the definitions valid when they are evaluated. In the
+first program below the pair is now `x: L5 -> L3` and `x: L1 -> L3` is gone
+(`specs/007-split-call-nodes/probes/p1-ki16.js`); the call statement
+`f(x = 1);` is fixed the same way (`x: L5 -> L3`, P12). The second program
+still gives `a: L2 -> L3` and `a: L2 -> L6` (P2). The description below is
+the behavior before the fix.
 
 **Planned for feature `007`** (decision D1 of feature `005-summary-analysis`),
 together with §22 (3): both need a statement node split into "before the
@@ -747,7 +773,7 @@ statements are included.
 
 ## Found by feature `004-fix-remaining-issues`
 
-### 22. Strict resolution of `f()` and follow-up items (found by `004-fix-remaining-issues`; (2) fixed by `006-eslint-scope`)
+### 22. Strict resolution of `f()` and follow-up items (found by `004-fix-remaining-issues`; (2) fixed by `006-eslint-scope`; (3) fixed by `007-split-call-nodes`)
 
 **Note (feature `005-summary-analysis`, D2, FR-005)**: in a function, `f();`
 with no definition of `f` reaching the call in the function is now connected
@@ -829,7 +855,17 @@ variable.** In `var B = class Q { static s = Q; };` there is no pair for `Q`;
 the same holds for the name of a named function expression used in its own
 body.
 
-(3) **Calls inside other expressions should also be call-sites** (planned
+(3) **Fixed** by feature `007-split-call-nodes` (FR-001, US2): every call
+dujs can resolve is a call site wherever it is in a node (assignments,
+variable initializers, `return`, `throw`, conditions, parameter default
+values, field initializers, arrow function bodies, arguments of other calls),
+except the positions of §44 and §46; `new F().m()` is two call sites. The
+resolution rules are unchanged. For `var x = 0;` L1 / `function g() {` L2 /
+`x = 1;` L3 / `return 2;` L4 / `}` L5 / `var y = g();` L6 /
+`console.log(x, y);` L7 the pairs are now `x: L3 -> L7` and `y: L6 -> L7`, and
+`x: L1 -> L7` is gone (`specs/007-split-call-nodes/probes/p3-assign.js`); the
+program of §10 gives `d: L1 -> L3`. The original description follows.
+**Calls inside other expressions should also be call-sites** (planned
 for feature `007`, with §16). Only call
 statements (`f();`, `new F();`, the method calls of §7, and the value of an
 instance field that is itself `this.m()` or `new B()`) are connected;
@@ -1236,6 +1272,23 @@ callee returns normally, the statement does not throw (decision Q-a), and an
 exception the callee does not catch carries the definitions valid where it is
 thrown in the callee.
 
+**Note (feature `007-split-call-nodes`, FR-005)**: "once the callee returns
+normally, the statement does not throw" holds only for a call statement
+(nothing that may throw is evaluated after the return). With calls inside
+expressions, each segment of the node (§45) is checked on its own: the part
+evaluated after a return may throw when it contains an assignment, a binary,
+unary or member expression, or another call, and then its exception edge
+carries the definitions valid before that part, including those of the
+callee. In `try { var y = f().p; } catch (e) { … }` (`p20-after-return-throws.js`)
+the `catch` gets both the definitions before the call and those of `f`
+(`.p` throws after the return); `x = f();` in `try` also throws after the
+return (the assignment; `p29-assign-try.js` gives `x: L3 -> L9`), while
+`var y = f();` does not (`p30-var-try.js`). A decision node whose condition is
+only the call, `if (f())`, no longer throws after the return: its exception
+edge is removed and the pair `x: L3 -> L11` of `p35-if-call-try.js` (a
+definition of `f` reaching the `catch`) disappears. This is a behavior change
+of feature `007` (§45).
+
 ### 37. Generators and async functions have a conservative summary
 
 A generator function runs only when it is iterated, and an async function
@@ -1396,3 +1449,209 @@ the call in the handler), but per copy, the copy of the page cannot read
 the page, the pairs are listed once. In the MDN allowance updater
 (`s10-allowance-updater`) the pairs of `shoppingDone` at L17 are listed twice
 for this reason. Status: presentation of the duplicated nodes, not fixed.
+
+## Found by feature `007-split-call-nodes`
+
+The programs below are in `specs/007-split-call-nodes/probes/` unless given
+inline; run them with `node specs/007-split-call-nodes/probes/run.js <file>`.
+The results before the feature are those of `develop` (`edc22d5`), recorded in
+`probes/baseline-develop.txt`. The golden outputs and the MDN examples were
+checked against `edc22d5` (`specs/007-split-call-nodes/golden-diff.md`,
+`specs/007-split-call-nodes/mdn-diff.md`): every new or removed pair is a newly
+connected call site or a change of evaluation order, every example still
+completes, and the intra-procedural pairs are unchanged. The MDN check found
+no new issue.
+
+### 44. The reads and calls of a `case` test are not modeled
+
+A `case` test that stays in the `case` node (a test that is not split, such as
+`case x:` or `case g():`, or the last operand of a split test) is not
+evaluated by the model: its reads have no pair and its calls are not
+connected. This is a pre-existing limit (`develop` does the same) and is left
+to a later feature. In `p16-switch.js` (`case x:` at L7) there is no pair of
+`x` used at L7.
+
+**Behavior change** (DECISION 005 Q3 A): `develop` connected the
+static members of a class in such a test (it ran the static scope of
+`case class { static y = g(); }:` before the `case` node); feature `007` does
+not, like any other call in the test:
+
+```js
+var x = 0;
+function g() {
+  x = 1;
+  return 1;
+}
+switch (1) {
+  case class { static y = g(); }:
+    console.log(x);
+}
+```
+
+`develop` connects the static scope `$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0` to the
+page and gives `g: entry -> L7`; with `007` the page model has no call edge
+and that pair is gone (the static scope only has its own inter-procedural
+model, `$ANONYMOUS_FUN_0 -> g`). The golden outputs and the MDN examples have
+no instance (0 rows in the "class static 不再連結" tables of `golden-diff.md`
+and `mdn-diff.md`); `tests/dujs/splitcallnodes.js` (T066) pins the behavior.
+
+Not covered by this section (DECISION 007): the operands that the branch
+splitter takes out of a `case` test, other than the last one, are ordinary
+decision nodes and are modeled, as in `develop`: in `case g() && 1:` the call
+`g()` is connected (`x: L3 -> L8` in the program above with this test, as
+in `develop`), and in `case a && b:` the read of `a` is a p-use of the split
+decision node; the static members of a class in such an operand are still
+connected.
+
+Two limits found with DECISION 007, not handled by `007`:
+
+- `switch (f()) { case a && 1: … }`: when the test of the first `case` is
+  split, there is no first `case` node to evaluate the discriminant before,
+  so the discriminant is not evaluated once (§45) and `f()` is not connected.
+  `develop` does not connect it either (not a regression); in this form the
+  discriminant is not "evaluated once" (FR-004).
+- The nodes split from a `case` test have no exception target (`throwTarget`
+  of their plan is `null`) and no exception edge, as in `develop`; this is
+  kept (see also §47).
+
+### 45. Behavior changes of the segments (feature `007`)
+
+**Segments.** In the inter-procedural, intra-page and inter-page models
+(and the summaries of the callees) a node with call sites is split into
+segments in JavaScript evaluation order (operands and arguments from left to
+right, arguments before the call, the target of a compound assignment read
+first): segment 0 before the first call, segment j between the return of the
+j-th call and the next call, and the last segment after the last return.
+Every read and definition belongs to the segment in which it is evaluated:
+in `f(x = 1)` the callee sees `x = 1`; in `x = f()` the definition of `x` is
+after the return; in `x += f()` and `if (x < f())` the read of `x` is before
+the call; in `h(f())` the call of `f` comes first. No node or edge type is
+added: for a statement (also a declaration, `return`, `throw`, a parameter or
+field initialization) segment 0 is the copy of the node (a CALL node) and the
+later segments are the nodes the calls return to (the CALL RETURN node of a
+call, shown as a CALL node `call (<line>)` when it also starts the next call
+of the node, as in a chain of callees); for a decision node a CALL node is
+inserted before it (segment 0) and the decision node is the last segment. The
+reads of a condition made before the call stay p-uses of the decision node
+(same labels, e.g. `L6>L7:T`) but get the definitions valid when they are
+evaluated; other reads are c-uses of the segment node, also of a CALL or
+CALL RETURN node. In `.dot` outputs every CALL and CALL RETURN node is
+labeled `call (<line>)` and `callReturn (<line>)` (with `:<path>` in a split
+branch, and `_a`, `_b`, … for the same label); each call site has its own
+record in `*.matching.json` (`seq` in evaluation order), and `beforeDecision`
+is `true` for the first call of a node whose segment 0 is an inserted CALL
+node (a decision node, a `switch` discriminant or the right side of a
+`for…in`/`for…of`). The intra-procedural model is not split (calls stay
+opaque) and its pairs are unchanged.
+
+**The definition end of a definition made after the return is labeled
+`call (<line>)`**, not `callReturn (<line>)` (DECISION 011): the definition
+end names the node the definition belongs to, which is the copy of the
+statement (a CALL node), although the definition is made by the CALL RETURN
+node after the callee returns. For example `var y = f();` at L6 gives
+`y: call (7) -> 8` in the CLI output (CLI lines are one more than the source
+lines), and the MDN example `a07-prototypes-person` gives
+`reuben: call (15) -> 16` for `const reuben = new Person("Reuben");`. Such a
+pair does not mean that the variable is defined before the call.
+
+**Evaluated once.** A `switch` discriminant that is not split and has call
+sites is evaluated once, by a CALL / CALL RETURN chain inserted before the
+first `case` node; every `case` with a test still records its own p-use of
+the reads of the discriminant, with the definitions valid when the
+discriminant is evaluated (`p24-switch-two-case.js`: `x: L1 -> L3` and no
+`x: L3 -> L3`; `p32-switch-read-before.js`). The right side of a
+`for…in`/`for…of` with call sites is evaluated once before the loop, entered
+only from outside the loop; the loop variable and the reads of the left side
+stay at the loop node and happen on every iteration (`p15b-for-of-once.js`
+has no `x: L7 -> L3`). An already split discriminant (`switch (a && b)`,
+split by the branch splitter in every model) keeps its single p-use; the two
+rules coexist, since unifying them either way would change the
+intra-procedural pairs.
+
+**Decision nodes do not throw after the return.** Each segment has its own
+exception edge (§36 note): a segment ending with a call may throw; the last
+segment may throw only when it evaluates something that may throw
+(`f().p`, `x = f()`, `f() > x`), and the last segment of `throw f();` always
+throws (`p25-throw.js` gives `x: L3 -> L9`). A decision node whose condition
+is only the call, `if (f())`, has no exception edge after the return any
+more, so `p35-if-call-try.js` loses `x: L3 -> L11`. The `exceptionalReturn`
+of a call record, also for a decision node or `throw`, is the exception
+target of the segment-0 node (following it when its incoming edges are
+redirected to the LOOP node or to the CALL node inserted before a decision
+node; DECISION 012 Q2).
+
+### 46. Positions that are not call sites
+
+The following calls are not call sites, even when the callee could be
+resolved; their reads and definitions are still placed in segments (except
+the left side of `for…in`/`for…of`, which stays at the loop node). `develop`
+does not connect these calls either:
+
+- the left side of `for…in`/`for…of` (the object or key of a member target,
+  default values of a destructuring pattern): `for (o[g()] of a)`,
+  `for (var [z = g()] of a)` (an exception of FR-001, DECISION 005 Q2 A);
+- positions evaluated only conditionally inside one node: after `?.` in an
+  optional chain (`c?.m(f())`, `c?.[f()]`, both `f()` and `.m()`), and default
+  values inside a destructuring pattern (`var [z = f()] = c`,
+  `var {z = f()} = c`, also in assignments and `catch` parameters; the default
+  value of a parameter itself is a call site). One node cannot express "may
+  not run"; connecting such a call would treat it as always run, and the
+  definitions of the callee would kill reachable pairs;
+- a call whose callee, or the receiver of a method call, is a variable defined
+  earlier in the same node (`var f = h; f = g, f();`,
+  `var o = new A(), r = o.m();` connects only `new A()`): the callee is
+  resolved with the definitions reaching the start of the node, so it would
+  be connected to the old definition (`h`) (guard). `f(f = g)` is connected,
+  since the callee is read before the definition.
+
+**Behavior change** (DECISION 006 Q4, required fix 3): the static members of
+a class in these positions are not connected either, while `develop`
+connected them: `var [z = class { static y = g(); }] = c`,
+`catch ({a = class { static y = g(); }})`, `c?.m(class { static y = g(); })`,
+`for (o[class { static y = g(); }] of c)`. For example, with `var x = 0;`
+L1, `function g() { x = 1; return 1; }` on L2–L5, `var c = [];` L6,
+`var [z = class { static y = g(); }] = c;` L7 and `console.log(x);` L8,
+`develop` connects the static scope and gives `g: entry -> L7`; `007` does
+not. The golden outputs and the MDN examples have no instance (0 rows in the
+"class static 不再連結" tables of `golden-diff.md` and `mdn-diff.md`);
+`tests/dujs/splitcallnodes.js` (T066) pins the four cases.
+
+### 47. Exception edges of the split discriminant nodes
+
+The nodes split from a `switch` discriminant (`switch (a && f())`) have no
+exception edge in `develop`: the first `case` node has no exception target
+they could inherit. `007` does not change the intra-procedural graph: the
+branch splitter only copies the `discriminantThrowTarget` attribute of the
+first `case` (the exception target of the `switch`) to these nodes. In the
+upper models a split node with call sites gets the exception edges of its
+segments (§45) to that target; a split node without calls still has no
+exception edge, as in `develop`. The nodes split from a `case` test have no
+target at all (§44).
+
+Note on a comment of `lib/dujs/reachingsolver.js` (lines 266–269, left
+unchanged by `007`, which does not modify that file): "a CALL NODE before a
+decision and a later call of a chain have no exception edge" is no longer
+exact. Since `007` the CALL node inserted before a decision node (segment 0)
+has an exception edge, and the CALL RETURN node that starts the next call
+site of the same node has one when its segment may throw; only the callees
+chained in one call site (the field initializers and the constructor of
+`new A()`) keep CALL RETURN nodes without exception edges. The code is not
+affected: the `exceptionalReturn` of a record is reached when the node with
+the call edge is, whether or not that node also has the exception edge.
+
+### 48. A `switch` without `case` makes the analysis throw (pre-existing)
+
+```js
+function f() {
+  return 1;
+}
+switch (f()) {
+}
+```
+
+The analysis fails with `Cannot read properties of undefined (reading 'type')`
+while the CFG is built, in `develop` and in `007` alike; it fails the same way
+without a call (`var a = 1; switch (a) {}`). The rule "the discriminant is
+evaluated before the first `case`" (§45) does not apply, since there is no
+first `case`; `007` makes no plan for it and adds no other failure
+(`tests/dujs/splitcallnodes.js`, T044 (d)). Not fixed.

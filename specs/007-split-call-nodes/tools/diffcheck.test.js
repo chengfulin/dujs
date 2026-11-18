@@ -1,6 +1,6 @@
 /*
  * Self test of specs/007-split-call-nodes/tools/diffcheck.js
- * (contracts/diff-check.md §1–§5, tasks T005 (a)–(i)) on synthetic output
+ * (contracts/diff-check.md §1–§5, tasks T005 (a)–(i), T067 (a)–(c)) on synthetic output
  * directories and inline source code. Not part of npm test; run with:
  *   npx mocha specs/007-split-call-nodes/tools/diffcheck.test.js
  *
@@ -298,7 +298,7 @@ describe('diffcheck 007', function () {
 			});
 			assert.strictEqual(find(result, 'row', '~', 'x'), undefined);
 		});
-		it('renames the suffixes of same labels by the rules of 007', function () {
+		it('renames the suffixes of same rewritten labels by the rules of 007', function () {
 			var graph = graphDot([['n1', 'call_a'], ['n2', 'callReturn_a'], ['n3', 'call_b'], ['n4', 'callReturn_b'],
 					['n5', 'call_c'], ['n6', 'callReturn_c'], ['n7', '3a'], ['n8', '3b']]),
 				rewritten = diffcheck.rewriteLabels(graph, JSON.parse(matchingJson([
@@ -306,11 +306,64 @@ describe('diffcheck 007', function () {
 				])));
 			assert.strictEqual(rewritten.map.get('call_a'), 'call (4)_a');
 			assert.strictEqual(rewritten.map.get('callReturn_b'), 'callReturn (4)_b');
-			// the call without a record keeps its type label, now alone
-			assert.strictEqual(rewritten.map.get('call_c'), 'call');
+			// the call without a record is not rewritten: its label is kept as is (T067)
+			assert.strictEqual(rewritten.map.get('call_c'), 'call_c');
 			assert.strictEqual(rewritten.map.get('3a'), '3a');
 			assert.ok(rewritten.text.indexOf('n3 [label="call (4)_b"') !== -1);
 			assert.strictEqual(diffcheck.rewriteCell('(call_a,(3b,callReturn_b))', rewritten.map), '(call (4)_a,(3b,callReturn (4)_b))');
+		});
+		// T067 (a): only the rewritten CALL / CALL RETURN labels get their
+		// suffixes again; the cumulative suffixes of develop are kept
+		it('keeps every label that is not rewritten, with the cumulative suffixes of develop', function () {
+			var graph = graphDot([['n1', 'entry_b_d_a_b_a_b'], ['n2', '16abab'], ['n3', 'call_a'], ['n4', 'callReturn_a'],
+					['n5', 'call_b'], ['n6', 'exit_b'], ['n7', '16abac']]),
+				rewritten = diffcheck.rewriteLabels(graph, JSON.parse(matchingJson([[4, 'f', 'n3', 'n4']])));
+			assert.strictEqual(rewritten.map.get('entry_b_d_a_b_a_b'), 'entry_b_d_a_b_a_b');
+			assert.strictEqual(rewritten.map.get('16abab'), '16abab');
+			assert.strictEqual(rewritten.map.get('16abac'), '16abac');
+			assert.strictEqual(rewritten.map.get('exit_b'), 'exit_b');
+			assert.strictEqual(rewritten.map.get('call_b'), 'call_b');
+			// a single rewritten call takes no suffix
+			assert.strictEqual(rewritten.map.get('call_a'), 'call (4)');
+			assert.strictEqual(rewritten.map.get('callReturn_a'), 'callReturn (4)');
+			assert.ok(rewritten.text.indexOf('n2 [label="16abab"') !== -1);
+			assert.ok(rewritten.text.indexOf('n3 [label="call (4)"') !== -1);
+		});
+		it('a graph equal after rewriting only the call labels is 標記, the cumulative suffixes kept', function () {
+			var result = comparePage('function f() {}\nvar x;\n\nf();\nx;\n', {
+				'intra-pages/0.graph.dot': graphDot([['n1', 'entry'], ['n2', '2abab'], ['n3', 'call'], ['n4', 'callReturn'],
+					['n5', '2abac']]),
+				'intra-pages/0.matching.json': matching
+			}, {
+				'intra-pages/0.graph.dot': graphDot([['n1', 'entry'], ['n2', '2abab'], ['n3', 'call (4)'],
+					['n4', 'callReturn (4)'], ['n5', '2abac']]),
+				'intra-pages/0.matching.json': matching
+			});
+			assert.deepStrictEqual(find(result, 'graph', '~', 'intra-pages/0.graph.dot').categories, ['標記']);
+		});
+		it('a different suffix of a label that is not rewritten is not 標記', function () {
+			// before T067 "2abab"/"2abac" were renumbered to "2a"/"2b", which hid this difference
+			var result = comparePage('function f() {}\nvar x;\n\nf();\nx;\n', {
+				'intra-pages/0.graph.dot': graphDot([['n1', 'entry'], ['n2', '2abab'], ['n3', 'call'], ['n4', 'callReturn'],
+					['n5', '2abac']]),
+				'intra-pages/0.matching.json': matching
+			}, {
+				'intra-pages/0.graph.dot': graphDot([['n1', 'entry'], ['n2', '2a'], ['n3', 'call (4)'],
+					['n4', 'callReturn (4)'], ['n5', '2b']]),
+				'intra-pages/0.matching.json': matching
+			});
+			assert.strictEqual(find(result, 'graph', '~', 'intra-pages/0.graph.dot').categories.indexOf('標記'), -1);
+		});
+		it('a graph differing only in node numbers after the rewriting is 共通, not 標記', function () {
+			var result = comparePage('function f() {}\nvar x;\n\nf();\nx;\n', {
+				'intra-pages/0.graph.dot': baseGraph,
+				'intra-pages/0.matching.json': matching
+			}, {
+				'intra-pages/0.graph.dot': graphDot([['n11', 'entry'], ['n12', '2'], ['n13', 'call (4)'], ['n14', 'callReturn (4)'],
+					['n15', '5'], ['n16', 'exit']], [['n12', 'n13', ''], ['n13', 'n14', ''], ['n14', 'n15', '']]),
+				'intra-pages/0.matching.json': matching
+			});
+			assert.deepStrictEqual(find(result, 'graph', '~', 'intra-pages/0.graph.dot').categories, ['共通']);
 		});
 		it('keeps a label with a path (KI §15) and puts its path on the call', function () {
 			var graph = graphDot([['n1', 'call'], ['n2', 'callReturn (6:T)']]),
@@ -483,6 +536,51 @@ describe('diffcheck 007', function () {
 				});
 			assert.deepStrictEqual(find(result, 'pair', '+', 'x: 1 -> 3').categories, ['§43']);
 		});
+		// T067 (b): a + pair of a model only in this branch (its model + being
+		// 連結) found with the same (variable, def, use) in the base intra-pages
+		describe('連結（層級新增）', function () {
+			var source = 'var x = 1;\nx;\nfunction f() {}\n\nf();\n',
+				calls = matchingJson([[5, '$DOMAIN.$PAGE_0.f', 'n5', 'n6']]),
+				intra = dupairsDot([['x', ['(1,2)']]]);
+			function run(options) {
+				var base = {
+						'intra-pages/0.matching.json': options.linked === false ? calls : matchingJson([]),
+						'intra-pages/0.dupairs.dot': options.baseIntra || intra
+					},
+					next = {
+						'intra-pages/0.matching.json': calls,
+						'intra-pages/0.dupairs.dot': intra,
+						'inter-procedurals/0.dupairs.dot': dupairsDot([['x', [options.pair || '(1,2)']]])
+					};
+				if (options.baseModel) {
+					base['inter-procedurals/0.dupairs.dot'] = options.baseModel;
+				}
+				return page(source, base, next);
+			}
+			it('holds for the pair of a new model found in the base intra-pages, and names that file', function () {
+				var result = run({}),
+					results = [result],
+					report = diffcheck.buildReport(results);
+				assert.ok(find(result, 'model', '+', 'inter-procedurals/0.dupairs.dot').categories.indexOf('連結') !== -1);
+				assert.deepStrictEqual(find(result, 'pair', '+', 'x: 1 -> 2').categories, ['連結（層級新增）']);
+				assert.ok(/\| 連結（層級新增） \| FR-001 \| 層級新增：對應基準檔 page0\/intra-pages\/0\.dupairs\.dot \|/.test(report), report);
+				assert.deepStrictEqual(diffcheck.verifyRecord(results, fillNotes(report)), []);
+			});
+			it('does not hold for a pair missing in the base intra-pages', function () {
+				var result = run({baseIntra: dupairsDot([['x', ['(1,3)']]])});
+				assert.deepStrictEqual(find(result, 'pair', '+', 'x: 1 -> 2').categories, []);
+			});
+			it('does not hold when the model is also in the base', function () {
+				var result = run({baseModel: dupairsDot([['x', []]])});
+				assert.strictEqual(find(result, 'model', '+', 'inter-procedurals/0.dupairs.dot'), undefined);
+				assert.deepStrictEqual(find(result, 'pair', '+', 'x: 1 -> 2').categories, []);
+			});
+			it('does not hold when the model + is not 連結', function () {
+				var result = run({linked: false});
+				assert.deepStrictEqual(find(result, 'model', '+', 'inter-procedurals/0.dupairs.dot').categories, []);
+				assert.deepStrictEqual(find(result, 'pair', '+', 'x: 1 -> 2').categories, []);
+			});
+		});
 		it('共通: a graph equal after removing the node numbers', function () {
 			var result = comparePage('var x;\n', {
 				'intra-pages/0.graph.dot': graphDot([['n1', 'entry'], ['n2', 'exit']], [['n1', 'n2', '']])
@@ -588,6 +686,19 @@ describe('diffcheck 007', function () {
 				'var x = 1;\nfunction f() {}\nif (f() ? 1 : 0) {\n  x;\n} else {}\n'].forEach(function (source) {
 				assert.deepStrictEqual(categories(run({newEdges: moved, source: source})), [], source);
 			});
+		});
+		// US4 review: &&, || and ?? branch in the CFG, so they count as decisions on the line (e)
+		it('does not hold for a moved edge with a logical expression on the call site line', function () {
+			['var x = 1, y, a, b;\nfunction f() {}\nif (f()) { y = a && b;\n  x;\n} else {}\n',
+				'var x = 1, y, a, b;\nfunction f() {}\nif (f()) { y = a || b;\n  x;\n} else {}\n',
+				'var x = 1, y, a, b;\nfunction f() {}\nif (f()) { y = a ?? b;\n  x;\n} else {}\n',
+				'var x = 1;\nfunction f() {}\nif (f() && x) {\n  x;\n} else {}\n'].forEach(function (source) {
+				assert.deepStrictEqual(categories(run({newEdges: moved, source: source})), [], source);
+			});
+			// a logical expression on another line does not matter
+			assert.deepStrictEqual(categories(run({newEdges: moved,
+				source: 'var x = 1, y, a, b;\nfunction f() {}\nif (f()) {\n  y = a && b;\n} else {}\n'})),
+				['共通（段0例外）', '共通']);
 		});
 		it('does not hold for a removal without the new edge of the record', function () {
 			assert.deepStrictEqual(categories(run({newEdges: baseEdges.filter(function (edge) {

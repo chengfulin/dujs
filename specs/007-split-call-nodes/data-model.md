@@ -5,7 +5,7 @@
 ## 1. SegmentPlan（`lib/dujs/callsplit.js`，R2、R3、R6）
 
 每個 intra-procedural 原節點（`FlowNode`，非 entry／exit）一份，`planOf(node, scopeTree)` 計算後以 WeakMap（鍵＝原節點）快取，凍結。
-**暫時項（US1–US2，DECISION 006 Q2）**：`planOf(node, scopeTree, predicate)` 可帶第三個參數，篩掉的呼叫點不進 `callSites`，`segmentCount`、`segmentOf`、`segmentOfVarDef`、`throws` 都依留下的呼叫點重算（被篩掉的呼叫運算式視同一般運算）；沒給 predicate 時列出全部呼叫點。快取依 predicate 分開（同一原節點、不同 predicate 各一份 plan）。機制與移除時點見 plan「階段性的呼叫點篩選」與 contracts/lib-api.md §1。
+US1–US2 期間 `planOf` 曾帶階段性 predicate（DECISION 006 Q2），已於 T048 移除：`planOf(node, scopeTree)` 一律列出全部呼叫點，快取為單層（鍵＝原節點）。
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
@@ -97,13 +97,13 @@
 | 巢狀 Function／Arrow／class body 內部 | 不走訪（屬於自己的 scope） |
 | Conditional／Logical | 不應出現（已由 branchsplitter 拆分）；若出現（不可拆分的位置）視為一般運算由左至右，並記錄於單元測試的 characterization |
 
-**不列為呼叫點**（即使 callee 可解析；這些位置中的讀取與定義仍依後序位置歸段）：
+**不列為呼叫點**（即使 callee 可解析；這些位置中的讀取與定義仍依後序位置歸段——`for…in`／`for…of` 左側除外：左側不在 `expressions` 內，其讀取與迴圈變數定義不屬任何段、留在 N 副本，同 §1 的不變式與 §4 的 `once-loop`）：
 
 | 位置 | 例 | 理由 | 與 develop | KI |
 |------|----|------|------------|----|
 | 條件求值而未被拆分的位置：`ChainExpression` 中第一個 `optional: true` 節點之後求值的部分 | `c?.m(f())`（`f()` 與 `.m()`）、`c?.[f()]`、`c?.m(class { static y = g(); })` | 單一節點內無法表示「可能不執行」；列為呼叫點會把呼叫當成必定執行，callee 的定義錯殺可實現的 pair | 一般呼叫相同（不連結）；**class static 成員為行為變更（不連結）**（develop 經 `expressionsEvaluatedAtNode` 連結） | §46（R13 L5、L2'） |
 | 條件求值而未被拆分的位置：解構樣式內 `AssignmentPattern` 的預設值（參數本身的預設值除外，依 spec Assumptions 視為一定求值；catch 參數的解構預設值同屬此列） | `var [z = f()] = c`、`var {z = f()} = c`、`[z = f()] = c`、`var [z = class { static y = g(); }] = c`、`catch ({a = class { static y = g(); }})` | 同上 | 一般呼叫相同（不連結）；**class static 成員為行為變更（不連結）**（develop 經 `expressionsEvaluatedAtNode` 連結） | §46（R13 L5、L2'） |
-| `for…in`／`for…of` 左側 | `for (o[g()] of a)`、`for (var [z = g()] of a)`、`for (o[class { static y = g(); }] of c)` | FR-001 的明文例外（DECISION 005 Q2 A） | 一般呼叫相同（不連結）；**class static 成員為行為變更（不連結）**（develop 的 `expressionsEvaluatedAtNode` 取 `ast.left`） | §46（R13 L1、L2'） |
+| `for…in`／`for…of` 左側（不在 `expressions` 內，不後序編號、不歸段；讀取與迴圈變數定義留在 N 副本，§1、§4） | `for (o[g()] of a)`、`for (var [z = g()] of a)`、`for (o[class { static y = g(); }] of c)` | FR-001 的明文例外（DECISION 005 Q2 A） | 一般呼叫相同（不連結）；**class static 成員為行為變更（不連結）**（develop 的 `expressionsEvaluatedAtNode` 取 `ast.left`） | §46（R13 L1、L2'） |
 | 留在 `case` 節點內的 test（未拆分者或拆分後的末端運算元；含 class static 成員；拆出的非末端運算元是一般決策節點、照常建模，class static 仍連結，DECISION 007） | `case g():`、`case class { static y = g(); }:` | Clarifications「case test 不建模」；static 成員為 DECISION 005 Q3 A | 一般呼叫相同；**class static 為行為變更**（develop 連結） | §44（R13 L2） |
 | 防護：callee 為識別字、或成員呼叫的 receiver 為識別字，且同一節點中該變數有 `generatedAt` 的後序位置早於此識別字的讀取 | `var f = h; f = g, f();`、`var o = new A(), r = o.m();` 的 `o.m()` | 解析讀節點開始時的 ReachIn，會錯連到舊定義（`f = h` → `h`，develop 沒有此錯誤 pair）；`f(f = g)` 的定義在 callee 讀取之後，不受影響 | 相同（不連結） | §46（R13 L3） |
 
@@ -112,7 +112,7 @@
 golden-diff／mdn-diff 以 diffcheck 計數其實例（contracts/diff-check.md §2「class static 行為變更」），有實例時於簽核時列出。
 
 **catch 參數**：`CatchClause` 節點的 `evaluatedExpressionsOf` 為 `[param]`（沒有參數的 `catch {}` 為空）。依程式現況：develop 的 `expressionsEvaluatedAtNode` 對 `CatchClause` 取 `ast.param`（modelbuilder.js:298-299）、
-`usedExpressionsOf` 在 catch 節點讀參數的預設值與 computed key（usedexpressions.js:72-78）、`findGENSet` 在 catch 節點定義參數的變數——讀取與定義都在 catch 節點，故 `param` 必須在 `expressions` 內，`segmentOf` 才對這些讀取與定義有定義。
+`usedExpressionsOf` 在 catch 節點讀參數的預設值與 computed key（usedexpressions.js:72-78）、`findGENSet` 在 catch 節點定義參數的變數（`generatedAt` 記的是 `param` AST，不是 `CatchClause` 本身）——讀取與定義都在 catch 節點，故 `param` 必須在 `expressions` 內，`segmentOf` 才對這些讀取與定義有定義。
 參數中的解構預設值屬上表第二列（不列為呼叫點），computed key 中的呼叫依一般規則是呼叫點。
 
 ## 6. 差異紀錄（`golden-diff.md`、`mdn-diff.md`）

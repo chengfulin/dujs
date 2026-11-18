@@ -32,7 +32,7 @@ P35 沒有 `x: L3 -> L11`；P23 與 `probes/baseline-develop.txt` 相同（SC-00
 node bin/dujs.js -js specs/007-split-call-nodes/probes/p6-two-calls.js
 ```
 
-在輸出目錄的 inter-procedural／intra-page 模型檢查：`.graph.dot` 中 L10 有兩組 `call`／`callReturn`（依求值順序串接，標為 `call (11)`、`callReturn (11)`（DECISION 005 Q1 A），CLI 行號＝檔案行號＋1）；
+在輸出目錄的 inter-procedural／intra-page 模型檢查：`.graph.dot` 中 L10 有兩個呼叫點依求值順序串接（標為 `call (11)_a`、`call (11)_b` 與一個 `callReturn (11)`：`f` 返回的節點同時是 `g` 的呼叫來源，依既有串接行為改型為 CALL，與 develop 對串接呼叫的處理相同；DECISION 005 Q1 A，CLI 行號＝檔案行號＋1）；
 `*.matching.json` 的 `calls` 每條 return 邊恰對應一個 record（`seq` 依求值順序）；沒有新的節點或邊型別。
 
 ## 4. golden 與 MDN 差異
