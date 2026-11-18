@@ -122,6 +122,17 @@ describe('dotreader', function () {
 			});
 		});
 
+		it('should throw on attributes not separated by a comma and a space', function () {
+			// The attribute list n1 [...] must be `key="value", key="value"`;
+			// a missing separator or a lone comma is out of the dialect.
+			['n1 [label="a" shape="box"]', 'n1 [label="a",shape="box"]', 'n1 [label="a";shape="box"]',
+				'n1 -> n2 [label="a"color="red"]'].forEach(function (line) {
+				(function () {
+					dotReader.readDot(dotOf(['digraph CFG {', line, '}']));
+				}).should.throw('unsupported DOT line: ' + line);
+			});
+		});
+
 		it('should throw on a label with a real newline', function () {
 			(function () {
 				dotReader.readDot(dotOf(['digraph CFG {', 'n1 [label="a', 'b"]', '}']));
