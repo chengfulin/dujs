@@ -1,0 +1,36 @@
+=== s1-eq.js
+intra(page 1): console: entry -> L3 | localStorage: L2 -> L3
+storage nodes (page 1): 2
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L2 -> L1 | localStorage: L2 -> L3
+=== s2-plus.js
+intra(page 1): console: entry -> L3 | localStorage: L1 -> L2 | localStorage: L2 -> L3
+storage nodes (page 1): 2
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L2 | localStorage: L2 -> L1 | localStorage: L2 -> L3
+=== s3-logic.js
+intra(page 1): console: entry -> L3 | localStorage: L1 -> L2>L2:F | localStorage: L1 -> L2>L3:T | localStorage: L1 -> L3 | localStorage: L2:F -> L3
+storage nodes (page 1): 2
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L2>L2:F | localStorage: L1 -> L2>L3:T | localStorage: L1 -> L3 | localStorage: L2:F -> L1 | localStorage: L2:F -> L3
+=== s4-computed.js
+intra(page 1): console: entry -> L4 | localStorage: L3 -> L4
+storage nodes (page 1): 2
+inter-page localStorage: localStorage: L2 -> L1 | localStorage: L3 -> L1 | localStorage: L3 -> L4
+=== s5-destructuring.js
+intra(page 1): a: L1 -> L3 | console: entry -> L4 | localStorage: L3 -> L4
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L2 -> L1 | localStorage: L3 -> L4
+=== s6-for-in.js
+intra(page 1): a: L1 -> L3 | console: entry -> L4 | localStorage: L2 -> L3 | localStorage: L3 -> L3 | localStorage: L3 -> L4
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L2 -> L1 | localStorage: L2 -> L3 | localStorage: L3 -> L3 | localStorage: L3 -> L4
+=== s7-update.js
+intra(page 1): console: entry -> L3 | localStorage: L1 -> L2 | localStorage: L1 -> L3
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L2 | localStorage: L1 -> L3
+=== s8-deep.js
+intra(page 1): console: entry -> L3 | localStorage: L1 -> L3
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L3
+=== s9-nested.js
+intra(page 1): console: entry -> L4 | localStorage: L3 -> L4
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L2 -> L1 | localStorage: L3 -> L4

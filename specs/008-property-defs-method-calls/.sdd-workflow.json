@@ -1,0 +1,12 @@
+{
+  "feature": "008-property-defs-method-calls",
+  "brief": {
+    "artifact_url": "https://claude.ai/artifact/KDbgiNTnWC9WqodAxEecLY"
+  },
+  "steps": {
+    "specify": {
+      "done": true,
+      "decisions": "D001–D005"
+    }
+  }
+}
