@@ -45,8 +45,8 @@ description: "Task list for feature 009-mermaid-markdown-output"
 
 **Purpose**: 抽出上層模型標題函式（`<n>.md` 標題、總覽連結、`.hierarchy.dot` label 共用；research R2），`.dot` 輸出不變。
 
-- [ ] T004 擴充 `tests/dujs/hierarchydot.js`（FR-001、D001-3；此時應失敗）：`hierarchyTitleOf(model)` 對 inter-procedural 回傳 `inter-procedural: <String(main scope)>`（如 `inter-procedural: $DOMAIN.$PAGE_0.sumAll`）、intra-page 回傳 `intra-page: <String(main scope)>`、inter-page 回傳 `inter-page`；沒有 hierarchy 或未知層級時拋錯（與 `convertHierarchyToDot` 相同訊息）；且 `convertHierarchyToDot(model)` 第三行恰為 `label = "` + `escapeLabel(hierarchyTitleOf(model))` + `"`
-- [ ] T005 修改 `lib/dujs/hierarchydot.js`（依賴 T004）：抽出並匯出 `hierarchyTitleOf(model)`，**同時匯出 `escapeLabel`**（目前只匯出 `convertHierarchyToDot`；T004、T006 要用，D005-N1），`convertHierarchyToDot` 改用 `hierarchyTitleOf`（輸出 byte 不變）；T004 全綠；golden 不需重產（共通約定的 byte-identical 檢查 exit 0）
+- [X] T004 擴充 `tests/dujs/hierarchydot.js`（FR-001、D001-3；此時應失敗）：`hierarchyTitleOf(model)` 對 inter-procedural 回傳 `inter-procedural: <String(main scope)>`（如 `inter-procedural: $DOMAIN.$PAGE_0.sumAll`）、intra-page 回傳 `intra-page: <String(main scope)>`、inter-page 回傳 `inter-page`；沒有 hierarchy 或未知層級時拋錯（與 `convertHierarchyToDot` 相同訊息）；且 `convertHierarchyToDot(model)` 第三行恰為 `label = "` + `escapeLabel(hierarchyTitleOf(model))` + `"`
+- [X] T005 修改 `lib/dujs/hierarchydot.js`（依賴 T004）：抽出並匯出 `hierarchyTitleOf(model)`，**同時匯出 `escapeLabel`**（目前只匯出 `convertHierarchyToDot`；T004、T006 要用，D005-N1），`convertHierarchyToDot` 改用 `hierarchyTitleOf`（輸出 byte 不變）；T004 全綠；golden 不需重產（共通約定的 byte-identical 檢查 exit 0）
 
 **Checkpoint**: `hierarchyTitleOf` 可用；`npm test` 全綠、lint 0、golden 與 `274257a` byte-identical。User story 可開始。
 

@@ -118,6 +118,74 @@ describe('hierarchydot', function () {
 		});
 	});
 
+	// specs/009-mermaid-markdown-output FR-001, D001-3: the title shared by the DOT and Markdown outputs
+	describe('hierarchyTitleOf', function () {
+		/**
+		 * Models of each level of a page whose sumAll calls add
+		 * @returns {Array} [inter-procedural model of sumAll, intra-page model, inter-page model]
+		 */
+		function modelsOfEachLevel() {
+			analyze([
+				'var s = 0;',
+				'function sumAll() {',
+				'  function add() {',
+				'    s = s + 1;',
+				'  }',
+				'  add();',
+				'}',
+				'sumAll();'
+			].join('\n'));
+			return [
+				interProceduralModelOf('$DOMAIN.$PAGE_0.sumAll'),
+				pageModelsOf().intraPageModels[0],
+				modelCtrl.interPageModel
+			];
+		}
+
+		it('should be the level and the main scope for an inter-procedural model', function () {
+			hierarchyDot.hierarchyTitleOf(modelsOfEachLevel()[0])
+				.should.eql('inter-procedural: $DOMAIN.$PAGE_0.sumAll');
+		});
+
+		it('should be the level and the main scope for an intra-page model', function () {
+			hierarchyDot.hierarchyTitleOf(modelsOfEachLevel()[1]).should.eql('intra-page: $DOMAIN.$PAGE_0');
+		});
+
+		it('should be the level only for the inter-page model', function () {
+			hierarchyDot.hierarchyTitleOf(modelsOfEachLevel()[2]).should.eql('inter-page');
+		});
+
+		it('should throw the Errors of convertHierarchyToDot', function () {
+			analyze('var a = 1;');
+			var plain = pageModelsOf().intraProceduralModels[0],
+				unknown = {hierarchy: {level: 'bogus'}};
+			(function () {
+				hierarchyDot.hierarchyTitleOf(plain);
+			}).should.throw('The model has no hierarchy');
+			(function () {
+				hierarchyDot.convertHierarchyToDot(plain);
+			}).should.throw('The model has no hierarchy');
+			(function () {
+				hierarchyDot.hierarchyTitleOf(unknown);
+			}).should.throw('Unknown level of the hierarchy: bogus');
+			(function () {
+				hierarchyDot.convertHierarchyToDot(unknown);
+			}).should.throw('Unknown level of the hierarchy: bogus');
+		});
+
+		it('should be the escaped label of the third line of the DOT representation', function () {
+			modelsOfEachLevel().forEach(function (model) {
+				linesOf(hierarchyDot.convertHierarchyToDot(model))[2].should.eql(
+					'label = "' + hierarchyDot.escapeLabel(hierarchyDot.hierarchyTitleOf(model)) + '"'
+				);
+			});
+		});
+
+		it('should escape the double quotes and backslashes with escapeLabel', function () {
+			hierarchyDot.escapeLabel('a"b\\c').should.eql('a\\"b\\\\c');
+		});
+	});
+
 	// spec US2 scenario 1: main -> f -> g
 	describe('inter-procedural', function () {
 		var dot;
