@@ -40,6 +40,12 @@
         "Foundational": {
           "reviewed": true,
           "committed": true
+        },
+        "Polish": {
+          "reviewed": true,
+          "validated_all": true,
+          "committed": true,
+          "pending": "T070 使用者簽核"
         }
       },
       "stories": {

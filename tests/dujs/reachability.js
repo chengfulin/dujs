@@ -39,6 +39,16 @@ function checker() {
 }
 
 /**
+ * A string with the characters special in a regular expression escaped
+ * @param {string} text
+ * @returns {string}
+ */
+function escapeRegExp(text) {
+	'use strict';
+	return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Source code of a probe program
  * @param {string} name file name in tests/dujs/cases/probes008
  * @returns {string}
@@ -1020,7 +1030,7 @@ describe('reachability checker (contracts/reachability.md)', function () {
 					});
 					(function () {
 						checker().assertInvariant([result], []);
-					}).should.throw(new RegExp(each.pairs[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+					}).should.throw(new RegExp(escapeRegExp(each.pairs[0])));
 					/// in the allowlist they still fail: with (c) off they are still violations (criterion 2)
 					(function () {
 						checker().assertInvariant([result], each.pairs.map(function (pair) {
@@ -1222,7 +1232,7 @@ describe('reachability checker (contracts/reachability.md)', function () {
 					/// without the allowlist the violations fail the invariant
 					(function () {
 						checker().assertInvariant(results, []);
-					}).should.throw(new RegExp(each.pair.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+					}).should.throw(new RegExp(escapeRegExp(each.pair)));
 				});
 			});
 		});

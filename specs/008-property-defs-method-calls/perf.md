@@ -45,3 +45,39 @@ Setup（T005，2026-11-18），在 MDN 快照（T004）完成之後單獨執行�
 | MDN 語料（中位數） | 159.0 |
 | golden CLI（4 case 中位數合計） | 21622.0 |
 | **總分析時間**（MDN＋golden） | **21781.0** |
+
+## 008
+
+Polish（T064，2026-11-18，HEAD `8cda1f0`；工作樹 `lib/` 與 HEAD 相同），同機、同法量測（同 develop 基準：MDN 以 `node specs/006-eslint-scope/tools/perf.js .`；golden 各 case 的 CLI 在 scratchpad 空目錄各跑 3 次取中位數）。在 T063 的 `diffcheck.js mdn --report`／`--verify` 跑完之後單獨執行，量測期間未同時執行其他 CPU 密集工作。檢查器（`tests/helpers/reachability.js`）只在 `npm test` 執行，不計入。
+
+### MDN 語料
+
+| 輪次 | 總時間（ms） |
+|------|--------------|
+| 1 | 198.2 |
+| 2 | 155.4 |
+| 3 | 149.4 |
+| **中位數** | **155.4** |
+
+### golden fixture 的 CLI 時間
+
+結束碼皆 0。
+
+| case | 頁面 | 輪次（ms） | 中位數（ms） | develop 中位數（ms） | 比值 |
+|------|------|------------|--------------|----------------------|------|
+| expected | `page0/app.js`；`page1/report.js` | 7042.7、7033.9、7066.6 | **7042.7** | 7030.0 | 1.002 |
+| expected-es2015 | `es2015/app.js` | 4792.6、4779.2、4792.4 | **4792.4** | 3747.3 | 1.279 |
+| expected-interprocedural | `interprocedural/app.js` | 4089.5、4106.8、4212.0 | **4106.8** | 4074.0 | 1.008 |
+| expected-fixes004 | `fixes004/app.js` | 6766.0、6719.1、6684.4 | **6719.1** | 6770.7 | 0.992 |
+
+expected-es2015 增加約 1.0 s：US2 的 FR-004 放寬使 `list.render(…)` 連到 `render`，CLI 多輸出 `page0/inter-procedurals/2.*`、`3.*` 兩個模型（含 `.png` 繪製），inter-page／intra-page 模型也多了 `render` 的節點；其他 case 的輸出不變，時間在量測誤差內。
+
+### 合計與比值（SC-006）
+
+| 項目 | develop（ms） | 008（ms） | 比值（008 ÷ develop） |
+|------|---------------|-----------|------------------------|
+| MDN 語料（中位數） | 159.0 | 155.4 | 0.977 |
+| golden CLI（4 case 中位數合計） | 21622.0 | 22661.0 | 1.048 |
+| **總分析時間**（MDN＋golden） | **21781.0** | **22816.4** | **1.048** |
+
+判定：總分析時間 22816.4 ms ≤ develop × 2（43562.0 ms），比值 1.048，符合 SC-006。
