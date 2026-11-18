@@ -162,15 +162,15 @@ description: "Task list for feature 008-property-defs-method-calls"
 
 ### Tests for User Story 3
 
-- [ ] T057 [US3] 擴充 `tests/dujs/reachability.js`：US3 情境 1–3 的 pair 斷言（P13 intra-page 只有 `A: L2 -> L8`；P14、P15、P18、P19、P20 沒有 spec 所列無返回呼叫之後的 pair，P14 intra(f) 仍有 `y: L4 -> L5`；P16、P17 與 develop 相同 `x: L4 -> L7`、`x: L6 -> L4`）＋檢查器全開無違反
-- [ ] T058 [US3] 擴充 `tests/dujs/reachability.js`：US3 情境 5 的 pair 斷言——P21、P23、P24 結果與 `probes/baseline-develop.txt` 相同（P21 `x: L1 -> L11`、P23 `x: L11 -> L14`、P24 `x: L1 -> L11`），並由允許清單放行（檢查器部分已由 T018 涵蓋，兩者都保留）
-- [ ] T059 [US3] 擴充 `tests/dujs/reachability.js`：US3 情境 7 的 pair 斷言（FR-013）——P38、P39、P40 的 inter-procedural 與 intra-page 沒有 spec 所列的決策節點 p-use pair，仍有 P38、P40 的 `f: entry -> L3`、P39 的 `f: entry -> L3`、`f: entry -> L8`；intra-procedural（頁面）與 `probes/baseline-develop.txt` 逐字相同；檢查器全開無違反
-- [ ] T060 [US3] 擴充 `tests/dujs/reachability.js`：US3 情境 8 的 pair 斷言——P41 的 pair 與 baseline 相同（inter-procedural 只有 `h: entry -> L8`、`r: entry -> L6`、`r: entry -> L9`；可達集合已由 T014 涵蓋）
+- [X] T057 [US3] 擴充 `tests/dujs/reachability.js`：US3 情境 1–3 的 pair 斷言（P13 intra-page 只有 `A: L2 -> L8`；P14、P15、P18、P19、P20 沒有 spec 所列無返回呼叫之後的 pair，P14 intra(f) 仍有 `y: L4 -> L5`；P16、P17 與 develop 相同 `x: L4 -> L7`、`x: L6 -> L4`）＋檢查器全開無違反
+- [X] T058 [US3] 擴充 `tests/dujs/reachability.js`：US3 情境 5 的 pair 斷言——P21、P23、P24 結果與 `probes/baseline-develop.txt` 相同（P21 `x: L1 -> L11`、P23 `x: L11 -> L14`、P24 `x: L1 -> L11`），並由允許清單放行（檢查器部分已由 T018 涵蓋，兩者都保留）
+- [X] T059 [US3] 擴充 `tests/dujs/reachability.js`：US3 情境 7 的 pair 斷言（FR-013）——P38、P39、P40 的 inter-procedural 與 intra-page 沒有 spec 所列的決策節點 p-use pair，仍有 P38、P40 的 `f: entry -> L3`、P39 的 `f: entry -> L3`、`f: entry -> L8`；intra-procedural（頁面）與 `probes/baseline-develop.txt` 逐字相同；檢查器全開無違反
+- [X] T060 [US3] 擴充 `tests/dujs/reachability.js`：US3 情境 8 的 pair 斷言——P41 的 pair 與 baseline 相同（inter-procedural 只有 `h: entry -> L8`、`r: entry -> L6`、`r: entry -> L9`；可達集合已由 T014 涵蓋）
 
 ### 允許清單定稿
 
-- [ ] T061 [US3] 依 US1／US2 後的最終行為定稿 `tests/dujs/cases/reachability-allowlist.json`（US3 情境 4、SC-005、FR-008）：重跑全量不變量，每項通過差分判準、`witness` 與當次輸出逐字相同、無過期項；關掉 (c) 仍違反者依 FR-008 修正（屬本 feature 範圍）或停止並發 DECISION；golden 的允許清單項逐項寫入 `specs/008-property-defs-method-calls/golden-diff.md` 的「可到達性允許清單」節（程式、模型、pair、見證，與 json 相同；`--verify` 仍 exit 0）；MDN 項留待 T063 寫入 `mdn-diff.md`；P21、P23、P24 的見證與 probes 項目供 T066 寫入 KI §38
-- [ ] T062 [US3] US3 階段檢查：`npm test` 全綠、`npm run lint` 0、不變量允許清單外 0 違反與 0 過期；golden `--verify` exit 0（本階段不改 golden）；`node specs/008-property-defs-method-calls/probes/run.js` 全量對照 SC-002（P1–P21、P23–P42 符合情境、P22 不變）
+- [X] T061 [US3] 依 US1／US2 後的最終行為定稿 `tests/dujs/cases/reachability-allowlist.json`（US3 情境 4、SC-005、FR-008）：重跑全量不變量，每項通過差分判準、`witness` 與當次輸出逐字相同、無過期項；關掉 (c) 仍違反者依 FR-008 修正（屬本 feature 範圍）或停止並發 DECISION；golden 的允許清單項逐項寫入 `specs/008-property-defs-method-calls/golden-diff.md` 的「可到達性允許清單」節（程式、模型、pair、見證，與 json 相同；`--verify` 仍 exit 0）；MDN 項留待 T063 寫入 `mdn-diff.md`；P21、P23、P24 的見證與 probes 項目供 T066 寫入 KI §38
+- [X] T062 [US3] US3 階段檢查：`npm test` 全綠、`npm run lint` 0、不變量允許清單外 0 違反與 0 過期；golden `--verify` exit 0（本階段不改 golden）；`node specs/008-property-defs-method-calls/probes/run.js` 全量對照 SC-002（P1–P21、P23–P42 符合情境、P22 不變）
 
 **Checkpoint**: 全部 user story 完成；允許清單定稿並附見證。
 

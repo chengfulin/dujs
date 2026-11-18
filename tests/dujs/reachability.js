@@ -1043,4 +1043,227 @@ describe('reachability checker (contracts/reachability.md)', function () {
 			});
 		});
 	});
+
+	describe('US3 pair assertions (T057–T060)', function () {
+		var BASELINE = path.join(__dirname, '..', '..', 'specs', '008-property-defs-method-calls', 'probes',
+				'baseline-develop.txt'),
+			ALLOWLIST = path.join(__dirname, 'cases', 'reachability-allowlist.json');
+
+		/**
+		 * Pairs of a line of the probe runner output ("<label>: a | b", "" for none)
+		 * @param {string} line
+		 * @returns {Array}
+		 */
+		function pairsOfLine(line) {
+			var text = line.substring(line.indexOf(': ') + 2);
+			return text === '' ? [] : text.split(' | ');
+		}
+
+		/**
+		 * The develop pairs of a probe in specs/008-property-defs-method-calls/probes/baseline-develop.txt
+		 * (output of probes/run.js on develop 2035c93)
+		 * @param {string} name file name of the probe
+		 * @returns {Object} {inter: the inter-procedural model of the page, intraPage, intra: intra(page)}
+		 */
+		function baselineOf(name) {
+			var section = fs.readFileSync(BASELINE, 'utf8').split(/^=== /m).filter(function (each) {
+					return each.split('\n')[0] === name;
+				}),
+				result = {};
+			section.length.should.equal(1, 'one section of ' + name + ' in baseline-develop.txt');
+			section[0].split('\n').slice(1).forEach(function (line) {
+				if (/^inter\[\d+\] \(\$DOMAIN\.\$PAGE_0, /.test(line)) {
+					result.inter = pairsOfLine(line);
+				} else if (/^intra\(page\): /.test(line)) {
+					result.intra = pairsOfLine(line);
+				} else if (/^intra-page /.test(line)) {
+					result.intraPage = pairsOfLine(line);
+				}
+			});
+			return result;
+		}
+
+		/**
+		 * The inter-procedural models of a program and its intra-page model
+		 * @param {Object} models modelsOf
+		 * @returns {Array} entries
+		 */
+		function interAndIntraPage(models) {
+			return models.list.filter(function (entry) {
+				return entry.model.level === 'inter-procedural';
+			}).concat([models.intraPage]);
+		}
+
+		/**
+		 * None of the pairs is among the pairs of a model
+		 * @param {Array} pairs
+		 * @param {Array} absent
+		 */
+		function expectAbsent(pairs, absent) {
+			absent.forEach(function (pair) {
+				pairs.should.not.containEql(pair);
+			});
+		}
+
+		/**
+		 * Every model of a program has no violation with (a)(b)(c) on
+		 * @param {Object} models modelsOf
+		 */
+		function expectNoViolation(models) {
+			models.list.forEach(function (entry) {
+				var result = checker().check(entry.model, entry.programId, entry.modelName);
+				pairsOf(result.violations).should.eql([], entry.programId + ' ' + entry.modelName + ' has no violation');
+				checker().assertInvariant([result], []);
+			});
+		}
+
+		describe('T057: US3 scenarios 1-3 (no pair after a call never returning; P16, P17 as develop)', function () {
+			it('P13: the intra-page model has only A: L2 -> L8; no pair of x or console at L9', function () {
+				var models = modelsOf(probe('p13-ki22-5.js'), 'probes008/p13-ki22-5.js');
+				analyze.pairsOfModel(models.intraPage.model).should.eql(['A: L2 -> L8']);
+				interAndIntraPage(models).forEach(function (entry) {
+					expectAbsent(analyze.pairsOfModel(entry.model), ['x: L5 -> L9', 'x: L1 -> L9', 'console: entry -> L9']);
+				});
+				expectNoViolation(models);
+			});
+
+			[
+				{name: 'p14-rec-inner.js', absent: ['y: L4 -> L5', 'x: L5 -> L8']},
+				{name: 'p15-mutual.js', absent: ['x: L2 -> L5', 'console: entry -> L5']},
+				{name: 'p18-method-loop.js', absent: ['x: L11 -> L9']},
+				{name: 'p19-try.js', absent: ['x: L10 -> L14']}
+			].forEach(function (each) {
+				it(each.name + ': no ' + each.absent.join(', ') + ' in the inter-procedural and intra-page models', function () {
+					var models = modelsOf(probe(each.name), 'probes008/' + each.name);
+					models.inter.should.be.ok();
+					interAndIntraPage(models).forEach(function (entry) {
+						expectAbsent(analyze.pairsOfModel(entry.model), each.absent);
+					});
+					expectNoViolation(models);
+				});
+			});
+
+			it('P14: the intra-procedural model of f (calls opaque) still has y: L4 -> L5', function () {
+				var models = modelsOf(probe('p14-rec-inner.js'), 'probes008/p14-rec-inner.js');
+				analyze.pairsOfModel(models.intra('$PAGE_0.f').model).should.eql(['y: L4 -> L5']);
+			});
+
+			it('P18: the unreachable x = 1 (L11) reaches L9 only in the intra-procedural model; the exit label of each model', function () {
+				var models = modelsOf(probe('p18-method-loop.js'), 'probes008/p18-method-loop.js');
+				analyze.pairsOfModel(models.intra().model).should.containEql('x: L11 -> L9');
+				/// the false branch of the loop: exit in the inter-procedural model, Lnull in the intra-page model
+				analyze.pairsOfModel(models.inter.model).should.containEql('c: L1 -> L8>exit:F');
+				analyze.pairsOfModel(models.intraPage.model).should.containEql('c: L1 -> L8>Lnull:F');
+			});
+
+			it('P20: the only pair of x is x: L1 -> L10 (intra-page); the inter-procedural models of the handlers have none', function () {
+				var models = modelsOf(probe('p20-handler.js'), 'probes008/p20-handler.js'),
+					pairsOfX = function (entry) {
+						return analyze.pairsOfModel(entry.model).filter(function (pair) {
+							return pair.indexOf('x: ') === 0;
+						});
+					};
+				(models.inter === null).should.be.true();
+				pairsOfX(models.intraPage).should.eql(['x: L1 -> L10']);
+				interAndIntraPage(models).forEach(function (entry) {
+					pairsOfX(entry).should.not.containEql('x: L7 -> L10');
+					pairsOfX(entry).forEach(function (pair) {
+						pair.should.equal('x: L1 -> L10');
+					});
+				});
+				expectNoViolation(models);
+			});
+
+			[
+				{name: 'p16-cond-rec.js', pair: 'x: L4 -> L7'},
+				{name: 'p17-rec-loop-fn.js', pair: 'x: L6 -> L4'}
+			].forEach(function (each) {
+				it(each.name + ': the pairs are those of develop (' + each.pair + ')', function () {
+					var models = modelsOf(probe(each.name), 'probes008/' + each.name),
+						develop = baselineOf(each.name);
+					analyze.pairsOfModel(models.inter.model).should.eql(develop.inter);
+					analyze.pairsOfModel(models.intraPage.model).should.eql(develop.intraPage);
+					analyze.pairsOfModel(models.intra().model).should.eql(develop.intra);
+					upperModels(models).forEach(function (entry) {
+						analyze.pairsOfModel(entry.model).should.containEql(each.pair);
+					});
+					expectNoViolation(models);
+				});
+			});
+		});
+
+		describe('T058: US3 scenario 5 (P21, P23, P24 as develop, let through by the allowlist)', function () {
+			[
+				{name: 'p21-finally.js', pair: 'x: L1 -> L11'},
+				{name: 'p23-finally-summary.js', pair: 'x: L11 -> L14'},
+				{name: 'p24-finally-throw.js', pair: 'x: L1 -> L11'}
+			].forEach(function (each) {
+				it(each.name + ': the pairs are those of develop (' + each.pair + ') and the allowlist lets the violations through', function () {
+					var program = 'probes008/' + each.name,
+						models = modelsOf(probe(each.name), program),
+						develop = baselineOf(each.name),
+						allowlist = JSON.parse(fs.readFileSync(ALLOWLIST, 'utf8')).filter(function (item) {
+							return item.program === program;
+						});
+					analyze.pairsOfModel(models.inter.model).should.eql(develop.inter);
+					analyze.pairsOfModel(models.intraPage.model).should.eql(develop.intraPage);
+					analyze.pairsOfModel(models.intra().model).should.eql(develop.intra);
+					var results = models.list.map(function (entry) {
+						return checker().check(entry.model, entry.programId, entry.modelName);
+					});
+					upperModels(models).forEach(function (entry) {
+						analyze.pairsOfModel(entry.model).should.containEql(each.pair);
+						var items = allowlist.filter(function (item) {
+							return item.model === entry.modelName && item.pair === each.pair;
+						});
+						items.length.should.equal(1, 'allowlist item ' + entry.modelName + ' ' + each.pair);
+					});
+					checker().assertInvariant(results, allowlist);
+					/// without the allowlist the violations fail the invariant
+					(function () {
+						checker().assertInvariant(results, []);
+					}).should.throw(new RegExp(each.pair.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+				});
+			});
+		});
+
+		describe('T059: US3 scenario 7 (FR-013; P38, P39, P40)', function () {
+			[
+				{name: 'p38-if-norecall.js', absent: ['f: entry -> L5>L6:T', 'f: entry -> L5>L8:F'], kept: ['f: entry -> L3']},
+				{name: 'p39-if-nested-norecall.js', absent: ['g: entry -> L8>L9:T', 'g: entry -> L8>L11:F'],
+					kept: ['f: entry -> L3', 'f: entry -> L8']},
+				{name: 'p40-while-norecall.js', absent: ['f: entry -> L5>L6:T', 'f: entry -> L5>L8:F'], kept: ['f: entry -> L3']}
+			].forEach(function (each) {
+				it(each.name + ': no ' + each.absent.join(', ') + '; still ' + each.kept.join(', ') + '; intra(page) as develop', function () {
+					var models = modelsOf(probe(each.name), 'probes008/' + each.name),
+						develop = baselineOf(each.name);
+					interAndIntraPage(models).forEach(function (entry) {
+						expectAbsent(analyze.pairsOfModel(entry.model), each.absent);
+					});
+					upperModels(models).forEach(function (entry) {
+						analyze.pairsOfModel(entry.model).should.eql(each.kept);
+					});
+					/// develop had them in the upper models
+					develop.inter.should.containDeep(each.absent);
+					develop.intraPage.should.containDeep(each.absent);
+					/// intra-procedural (page): calls opaque, unchanged
+					analyze.pairsOfModel(models.intra().model).should.eql(develop.intra);
+					analyze.pairsOfModel(models.intra().model).should.containDeep(each.absent);
+					expectNoViolation(models);
+				});
+			});
+		});
+
+		describe('T060: US3 scenario 8 (P41 as develop)', function () {
+			it('p41-call-after-norecall.js: the inter-procedural model has only h: entry -> L8, r: entry -> L6, r: entry -> L9', function () {
+				var models = modelsOf(probe('p41-call-after-norecall.js'), 'probes008/p41-call-after-norecall.js'),
+					develop = baselineOf('p41-call-after-norecall.js');
+				analyze.pairsOfModel(models.inter.model).should.eql(['h: entry -> L8', 'r: entry -> L6', 'r: entry -> L9']);
+				analyze.pairsOfModel(models.inter.model).should.eql(develop.inter);
+				analyze.pairsOfModel(models.intraPage.model).should.eql(develop.intraPage);
+				analyze.pairsOfModel(models.intra().model).should.eql(develop.intra);
+				expectNoViolation(models);
+			});
+		});
+	});
 });

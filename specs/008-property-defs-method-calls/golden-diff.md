@@ -152,9 +152,9 @@ pair 以「頁 × 層級」的聯集比對（D022）；某行兩側同模型 `.g
 
 golden 的允許清單項（FR-008）逐項列於此，與 `tests/dujs/cases/reachability-allowlist.json` 相同（T061 填入；`--verify` 不核對本節）。
 
-| 程式 | 模型 | pair | 見證 |
-|------|------|------|------|
-| （尚無） |  |  |  |
+無（golden 沒有允許清單項）。
+
+查核方式（T061，US1／US2 後的最終行為）：`npx mocha tests/dujs/reachabilityinvariant.js` 通過——probes008（含 `pages/`）、golden fixture（`tests/golden/golden.js` 的各 goldenCase 頁面）與 MDN 語料的每個模型以檢查器 (a)(b)(c) 全開執行 `check`，再以 `assertInvariant` 對照允許清單：允許清單外 0 違反、0 過期，每項通過差分判準（關掉 (c) 後兩端皆可達）且 `witness` 與當次輸出逐字相同。允許清單共 18 項，`program` 全為 `probes008/p21-finally.js`、`probes008/p23-finally-summary.js`、`probes008/p24-finally-throw.js`（各 6 項：inter-procedural、intra-page、inter-page 各 2 個 pair），沒有 `golden/…` 項；golden 的模型全開無違反。PRB 項的見證寫入 KI §38（T066），MDN 項（目前亦無）由 T063 寫入 `mdn-diff.md`。
 
 ## Setup
 
