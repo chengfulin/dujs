@@ -6,7 +6,7 @@ Then the tool can compute all valid Def-Use pairs and dataflow anomalies.
 
 ## Requirements
 - Node.js 24 or later (see `.nvmrc`)
-- [Graphviz](http://www.graphviz.org) (optional): if the `dot` executable is on your `PATH`, the `.dot` outputs are also rendered to PNG
+- A Markdown viewer with Mermaid support (GitHub, VS Code, ...) to view the outputs; `out-*/` is excluded by `.gitignore` and never appears on GitHub, so open the outputs in a local viewer
 
 ## Dependency
 [espree](https://github.com/eslint/js/tree/main/packages/espree): JavaScript parser producing ESTree AST<br>
@@ -26,20 +26,22 @@ npm run doc        # generate API docs into doc/
 inter-procedural sample (nested calls, a call in a decision and event
 handlers) and a sample of the fixes of feature `004-fix-remaining-issues`
 (conditions, `new` statements, class method calls and recursion, parameter
-defaults, static members) and compares all generated `.dot` files (four
-models) with `tests/golden/expected/`, `tests/golden/expected-es2015/`,
+defaults, static members) and compares all generated `.dot`,
+`.matching.json` and `.md` files (four models) with
+`tests/golden/expected/`, `tests/golden/expected-es2015/`,
 `tests/golden/expected-interprocedural/` and
 `tests/golden/expected-fixes004/`. Besides the flat graphs
 (`<k>.graph.dot`) and def-use pairs (`<k>.dupairs.dot`), each inter-procedural,
 intra-page and inter-page model has a hierarchy graph (`<k>.hierarchy.dot`:
 functions, main program, LOOP, event handlers, pages and the domain, with call,
-return, loop, onEvent, loadStorage and saveStorage edges), referred to in the
-HTML report before the flat graph. `tests/golden/manifest.json` records the
-sha256 of every `.dot` file produced before the hierarchical refactor
-(`baseline`, which must stay byte-identical) and the `.dot` files added since
-(`added`). After an intended change to the analysis, regenerate the expected
-outputs with `UPDATE_GOLDEN=1 npm test` and review the diff; the manifest is
-never updated automatically.
+return, loop, onEvent, loadStorage and saveStorage edges), shown before the
+flat graph in the model Markdown `<k>.md`. `tests/golden/manifest.json`
+records the sha256 of every `.dot` file produced before the hierarchical
+refactor (`baseline`, which must stay byte-identical) and the files added
+since (`added`, including the names of the `.md` files: the model files and
+the overview `README.md` of each fixture). After an intended change to the
+analysis, regenerate the expected outputs with `UPDATE_GOLDEN=1 npm test` and
+review the diff; the manifest is never updated automatically.
 
 Existing lint violations are recorded in `eslint-suppressions.json`
 (ESLint bulk suppressions), so only new violations fail `npm run lint`. After
@@ -74,8 +76,17 @@ Exit status:
 Each model is written as `<n>.graph.dot` (the flattened statement-level
 graph) and `<n>.dupairs.dot` (the def-use pairs); the inter-procedural,
 intra-page and inter-page models also have `<n>.hierarchy.dot` (the models
-they are built from) and `<n>.matching.json`. The `.png` files are drawn
-from the `.dot` files with Graphviz `dot`.
+they are built from) and `<n>.matching.json`. Each model also has a Markdown
+file `<n>.md`: its title, the hierarchy graph (when the model has one), the
+flat graph and the def-use pairs, with the graphs drawn as Mermaid diagrams.
+The `README.md` at the root of the output directory is the overview: the
+source code of each page and links to every `<n>.md`. A graph over 500 edges
+or 50,000 characters in Mermaid is shown as tables instead, with a link to its
+`.dot` file.
+
+Output changes: since feature `009-mermaid-markdown-output`, dujs no longer
+writes `report.html` or `.png` files and does not need Graphviz; open the
+overview `README.md` and the model files `<n>.md` instead.
 
 `<n>.matching.json` (format `dujs-matching/1`) pairs every call edge with its
 return edges, and the event loop with the handlers it runs: each record of

@@ -77,6 +77,8 @@ h<a> -> h<b> [<邊樣式>]
 
 ## 4. HTML 報告（FR-009）
 
+> Superseded by specs/009-mermaid-markdown-output（report.html 移除；順序改由 contracts/overview-readme.md 與 model-markdown.md 規定）
+
 - `outputWriter` 新增陣列：`interProceduralHierarchyImageFilePaths[page][k]`、`intraPageHierarchyImageFilePaths[page][k]`、
   `interPageHierarchyImageFilePaths[k]`（png 路徑；與既有陣列同樣由 `writeImageFileFromDotFile` 回傳，不論 Graphviz 是否安裝）。
 - `reportGenerator` 在 `createInterProceduralReportForAPage`、`createIntraPageReportForAPage`、`createInterPageReportForAPage` 的每個模型區塊

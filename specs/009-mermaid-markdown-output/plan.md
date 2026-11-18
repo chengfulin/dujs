@@ -119,7 +119,7 @@ golden expected 以 `UPDATE_GOLDEN=1 npm test` 產生後人工審閱；manifest 
 |-------|------|------|
 | US1（P1）模型 Markdown | 三個新模組、`hierarchyTitleOf`、outputwriter 寫 `<n>.md`、devDependency、單元＋golden `.md` 測試、manifest `added` | 無（Setup：devDependency 與 `tests/helpers/mermaid.js`） |
 | US2（P2）總覽＋移除 report.html | `writeOverview`、cli 改呼叫、刪 `reportgenerator.js`＋suppression、刪 `pageJSSourFilePaths`、golden／cli 測試改查總覽、golden 加 `README.md` | US1（連結目標 `<n>.md` 須存在） |
-| US3（P3）移除 Graphviz／PNG＋README | 刪 `writeImageFileFromDotFile`、`_testonly_` 掛鉤、12 個 `*ImageFilePaths`；無 Graphviz 測試；README 改寫（contracts/docs-split.md §1）；003／004 契約標 superseded | US2（`report.html` 是 PNG 路徑屬性的唯一讀者，須先移除報告，否則報告缺圖或引用不存在的屬性） |
+| US3（P3）移除 Graphviz／PNG＋README | 刪 `writeImageFileFromDotFile`、`_testonly_` 掛鉤、11 個 `*ImageFilePaths`（實測 11 個，含拼錯的 `intraPageDUPairsmageFilePaths`；原記 12 個有誤）；無 Graphviz 測試；README 改寫（contracts/docs-split.md §1）；003／004 契約標 superseded | US2（`report.html` 是 PNG 路徑屬性的唯一讀者，須先移除報告，否則報告缺圖或引用不存在的屬性） |
 | US4（P4）README 拆分 | `docs/*.md`、README 精簡＋`## Background`（論文緣起與連結）、`readme-map.md`、`tools/readmecheck.js`（不進 `npm test`）、`tests/docs/links.js`、`test` script 加 `tests/docs/*.js` | US3（同一份 README，先改 Graphviz／PNG 敘述再拆）；清單依 D003 定案（contracts/docs-split.md §2） |
 
 US1 完成時可獨立交付（`.md` 與 `.png`／`report.html` 並存）；US2 完成後 `report.html` 消失但 PNG 仍可能產生；US3 收尾。

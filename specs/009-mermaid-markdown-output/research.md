@@ -70,7 +70,7 @@
 ## R7 總覽的資料來源（無共享狀態）
 
 - **Decision**：`outputWriter.writeOverview(sourceContents)` 依 `scopeCtrl.pageScopeTrees` × `modelCtrl.getPageModels(...)` 的 `intraProceduralModels`／`interProceduralModels`／`intraPageModels` 與 `modelCtrl.interPageModel` 列舉，與寫模型檔的迴圈同序同編號；原始碼由 CLI 傳入的 `sourceContents` 取得，不讀 `src.js`、不用 prototype 上的共享陣列。
-- **Rationale**：現有 12 個 `*ImageFilePaths` 與 `pageJSSourFilePaths` 定義在 prototype 上、跨次執行共享（測試需手動覆寫）；改為從模型列舉可去掉這類狀態，且編號與檔名必然一致（SC-005）。
+- **Rationale**：現有 11 個 `*ImageFilePaths`（實測 11 個，含拼錯的 `intraPageDUPairsmageFilePaths`；原記 12 個有誤） 與 `pageJSSourFilePaths` 定義在 prototype 上、跨次執行共享（測試需手動覆寫）；改為從模型列舉可去掉這類狀態，且編號與檔名必然一致（SC-005）。
 - **連帶**：`pageJSSourFilePaths` 只供 `reportgenerator` 使用，隨 FR-012 一併移除（spec A7 已列）；`eslint-suppressions.json` 的 `lib/dujs/reportgenerator.js` 項目隨檔案刪除而移除（`npx eslint . --prune-suppressions`）。
 
 ## R8 MDN 驗收工具（FR-016）

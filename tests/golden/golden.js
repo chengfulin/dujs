@@ -258,6 +258,13 @@ function goldenCase(title, pages, expectedDir) {
 			fs.existsSync(path.join(outDir, 'report.html')).should.eql(false);
 		});
 
+		// FR-013, FR-014, US3 scenario 3, US2 scenario 3: no image file among all the files of the
+		// output directory (not only the golden files); the .dot files are still written, which
+		// 'should generate the same set of files' covers
+		it('writes no .png and no .svg file', function () {
+			listFiles(outDir, /\.png$|\.svg$/).should.eql([]);
+		});
+
 		// SC-005, contracts/overview-readme.md §3
 		it('links only existing files in the overview', function () {
 			var destinations = linkDestinationsOf(fs.readFileSync(path.join(outDir, 'README.md'), 'utf8'));

@@ -245,17 +245,9 @@ describe('CLI', function () {
 		/// specs/009-mermaid-markdown-output spec G-2, plan「有意的取捨」(D005-A6): a DOT text that
 		/// cannot be read fails the run (exit 1) and removes the output directory
 		describe('when reading a DOT graph throws', function () {
-			var originalReadDot, calls,
-				arrays = ['intraProceduralGraphImageFilePaths', 'intraProceduralDUPairsImageFilePaths', 'interProceduralGraphImageFilePaths',
-					'interProceduralDUPairsImageFilePaths', 'interProceduralHierarchyImageFilePaths',
-					'intraPageGraphImageFilePaths', 'intraPageDUPairsmageFilePaths', 'intraPageHierarchyImageFilePaths',
-					'interPageGraphImageFilePaths', 'interPageDUPairsImageFilePaths', 'interPageHierarchyImageFilePaths'];
+			var originalReadDot, calls;
 
 			before(function () {
-				/// own arrays on the singleton, so the shared prototype arrays stay untouched
-				arrays.forEach(function (name) {
-					outputWriter[name] = [];
-				});
 				analyze.reset();
 				outputWriter._testonly_._resetRootOutputDirectory();
 				calls = 0;
@@ -268,9 +260,6 @@ describe('CLI', function () {
 
 			after(function () {
 				dotReader.readDot = originalReadDot;
-				arrays.forEach(function (name) {
-					delete outputWriter[name];
-				});
 				analyze.reset();
 				outputWriter._testonly_._resetRootOutputDirectory();
 			});
@@ -335,26 +324,13 @@ describe('CLI', function () {
 
 		/// specs/009-mermaid-markdown-output FR-011, FR-012: the overview README.md replaces report.html
 		describe('README.md (overview)', function () {
-			/// the image path arrays are written by the four write*AnalysisResultFiles until US3 removes them
-			var arrays = ['intraProceduralGraphImageFilePaths', 'intraProceduralDUPairsImageFilePaths',
-				'interProceduralGraphImageFilePaths', 'interProceduralDUPairsImageFilePaths',
-				'interProceduralHierarchyImageFilePaths', 'intraPageGraphImageFilePaths', 'intraPageDUPairsmageFilePaths',
-				'intraPageHierarchyImageFilePaths', 'interPageGraphImageFilePaths', 'interPageDUPairsImageFilePaths',
-				'interPageHierarchyImageFilePaths'];
 			var source = 'function f(a) {\n  return a;\n}\nvar b = f(1);\n';
 
 			beforeEach(function () {
-				/// own arrays on the singleton, so the shared prototype arrays stay untouched
-				arrays.forEach(function (name) {
-					outputWriter[name] = [];
-				});
 				analyze.reset();
 			});
 
 			afterEach(function () {
-				arrays.forEach(function (name) {
-					delete outputWriter[name];
-				});
 				analyze.reset();
 			});
 
@@ -390,19 +366,63 @@ describe('CLI', function () {
 		});
 	});
 
+	/// specs/009-mermaid-markdown-output FR-013, data-model §5: dujs runs no external program
+	/// and keeps no image file paths
+	describe('no external program (feature 009 US3)', function () {
+		var ROOT = path.resolve(__dirname, '../..');
+
+		/// (a) static check of the sources: a require of child_process, or a call of
+		/// spawnSync/execSync/execFile (a destructured import); comments that only
+		/// mention them do not count, nor does RegExp.prototype.exec
+		it('should not use child_process in lib/ and bin/dujs.js', function () {
+			var sources = listFiles(path.join(ROOT, 'lib')).filter(function (file) {
+				return /\.js$/.test(file);
+			}).map(function (file) {
+				return 'lib/' + file;
+			}).concat(['bin/dujs.js']);
+			sources.length.should.be.above(1);
+			var found = [];
+			sources.forEach(function (file) {
+				var text = fs.readFileSync(path.join(ROOT, file), 'utf8');
+				[/require\(\s*['"](?:node:)?child_process['"]\s*\)/, /\b(?:spawnSync|execSync|execFile|execFileSync)\s*\(/].forEach(function (pattern) {
+					var match = pattern.exec(text);
+					if (match) {
+						found.push(file + ': ' + match[0]);
+					}
+				});
+			});
+			found.should.eql([]);
+		});
+
+		/// (d) no image writer and no image file path properties; DUPairsmageFilePaths
+		/// is the misspelled name of the removed intraPageDUPairsmageFilePaths, kept
+		/// on purpose so that the old property cannot come back
+		it('should have no image writer and no *ImageFilePaths properties', function () {
+			outputWriter._testonly_.should.not.have.property('_writeImageFileFromDotFile');
+			Object.getOwnPropertyNames(Object.getPrototypeOf(outputWriter)).filter(function (name) {
+				return /ImageFilePaths$|DUPairsmageFilePaths$/.test(name);
+			}).should.eql([]);
+		});
+	});
+
 	/// T065: contracts/cli.md §4, child processes of bin/dujs.js
 	describe('bin/dujs.js (contracts/cli.md §4)', function () {
-		/// US5-4 runs 20 analyses with graphviz dot (about 13 s measured)
+		/// US5-4 runs 20 analyses
 		this.timeout(60000);
 		var dir;
 
 		/**
 		 * Run bin/dujs.js synchronously in the directory of the test
 		 * @param {Array} argv
+		 * @param {Object} [env] environment of the child process (default: inherited)
 		 * @returns {Object} Result of spawnSync
 		 */
-		function spawnBin(argv) {
-			return childProcess.spawnSync(process.execPath, [BIN].concat(argv), {cwd: dir, encoding: 'utf8'});
+		function spawnBin(argv, env) {
+			var options = {cwd: dir, encoding: 'utf8'};
+			if (env) {
+				options.env = env;
+			}
+			return childProcess.spawnSync(process.execPath, [BIN].concat(argv), options);
 		}
 
 		/**
@@ -488,6 +508,53 @@ describe('CLI', function () {
 			files.should.not.containEql('report.html');
 			files.should.containEql('page0/src.js');
 			files.should.containEql('inter-page/0.graph.dot');
+		});
+
+		/// specs/009-mermaid-markdown-output FR-013, SC-004, US3 scenarios 1-3: no Graphviz, no .png
+		describe('without Graphviz (feature 009 US3)', function () {
+			/// only the directory of node in PATH, so no dot can be found
+			var ONLY_NODE_ENV = Object.assign({}, process.env, {PATH: path.dirname(process.execPath)});
+
+			/**
+			 * Assert the outputs of one run: no .png, a <n>.md for each <n>.graph.dot, the overview
+			 * @param {Array} files
+			 */
+			function shouldHaveMarkdownOutputs(files) {
+				files.filter(function (file) {
+					return /\.png$/.test(file);
+				}).should.eql([]);
+				var dots = files.filter(function (file) {
+					return /\.graph\.dot$/.test(file);
+				});
+				dots.should.not.be.empty();
+				dots.forEach(function (file) {
+					files.should.containEql(file.replace(/\.graph\.dot$/, '.md'));
+				});
+				files.should.containEql('README.md');
+			}
+
+			/**
+			 * Run bin/dujs.js on ok.js and assert exit 0, an empty stderr and the outputs
+			 * @param {Object} [env]
+			 */
+			function shouldRunWithMarkdownOutputs(env) {
+				var result = spawnBin(['-js', 'ok.js'], env);
+				result.status.should.eql(0);
+				result.stderr.should.eql('');
+				var dirs = outDirsIn(dir);
+				dirs.should.have.length(1);
+				shouldHaveMarkdownOutputs(listFiles(path.join(dir, dirs[0])));
+			}
+
+			/// (b) the default PATH (Graphviz may be installed)
+			it('should write no .png with the default PATH', function () {
+				shouldRunWithMarkdownOutputs();
+			});
+
+			/// (c) PATH with only node
+			it('should exit with 0 and write the .dot and .md files with only node in PATH', function () {
+				shouldRunWithMarkdownOutputs(ONLY_NODE_ENV);
+			});
 		});
 
 		/// feature 007 T068 (DECISION 013): 27 or more nodes with one label in a graph used to make

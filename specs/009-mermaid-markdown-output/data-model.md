@@ -42,7 +42,7 @@
 
 ## 5. 移除的狀態（FR-012、FR-013）
 
-`OutputWriter.prototype` 的 12 個 `*ImageFilePaths`、`pageJSSourFilePaths`；`writeImageFileFromDotFile` 與 `_testonly_._writeImageFileFromDotFile`；`lib/dujs/reportgenerator.js` 整檔。
+`OutputWriter.prototype` 的 11 個 `*ImageFilePaths`（實測 11 個，含拼錯的 `intraPageDUPairsmageFilePaths`；原記 12 個有誤）、`pageJSSourFilePaths`；`writeImageFileFromDotFile` 與 `_testonly_._writeImageFileFromDotFile`；`lib/dujs/reportgenerator.js` 整檔。
 
 ## 6. Golden manifest（`tests/golden/manifest.json`，結構不變）
 
