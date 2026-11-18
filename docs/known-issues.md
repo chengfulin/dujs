@@ -1901,6 +1901,23 @@ are by line, so the effect is bounded (the line and the variable are still
 compared). The tool is left unchanged; this was decided in the main session
 of the feature.
 
+Two more criteria of the tool are too wide (found at the sign-off review of
+`golden-diff.md` and `mdn-diff.md`; the categories and the tool are left
+unchanged):
+
+- The trigger of `成員目標（不再殺除）` merges the definitions by variable
+  name across different declarations. In MDN `a05-assessment-main` the
+  trigger `ball L86、L154` joins the `ball` of `Ball.collisionDetect` (L79)
+  and the one of `EvilCircle.collisionDetect` (L147); the pairs
+  `ball: 147 -> (148,147)` and the like (net differences #51–#56) are
+  really caused by the relaxation (FR-004): the old definition at L154
+  (`ball.exists = false`) would be redefined by the loop head at L147, and
+  the pairs were missing only because `collisionDetect` was not linked.
+- The position condition of `放寬` / `外溢` (a use after the call line) also
+  holds for differences unrelated to the link: in golden, `input: 39 -> 41`
+  (#18, #39, #49, #65) also matches `放寬`, while its main category
+  `成員目標（新增讀取）` is the right one.
+
 ### 53. Behavior changes and limits of feature `008`
 
 Besides the fixes of §22 (1), §22 (5) and §23, feature `008` changes these

@@ -148,6 +148,12 @@ pair 以「頁 × 層級」的聯集比對（D022）；某行兩側同模型 `.g
 | expected-es2015 | page0 | 成員目標 | 定義性成員目標 input L41；state L23、L33 | 7 | 0 | 同 inter-page：intra-pages 4 筆 `state: 4 -> …`（含 `call (25)`、`call (34)`）與 `input: 39 -> 41`；inter-procedurals、intra-procedurals 只有 `input: 39 -> 41`（`addTodo`／`init` 的單函式模型無 L4 的定義可到達）；與 US1 相同 | 草擬，待簽核（#39、#49、#59、#60、#61、#62、#65） |
 | expected-es2015 | page0 | 屬性寫入→讀取損失 | 定義性成員目標 input L41；state L23、L33 | 0 | 10 | 同 inter-page：intra-pages 5 筆；inter-procedurals `state: 23 -> 24`、`23 -> 25`（`addTodo`）；intra-procedurals `23 -> 24`、`23 -> 25`（`addTodo`）與 `33 -> 34`（`init`）；與 US1 相同 | 草擬，待簽核（#43、#44、#54、#55、#56、#57、#58、#66、#67、#68） |
 
+
+### 簽核備註（D026，主對話＋Fable 裁判獨立核對）
+
+- #18、#39、#49、#65（`input: 39 -> 41`）的「亦符：放寬」是位置條件過度涵蓋，與 FR-004 無關；主類別「成員目標（新增讀取）」正確。工具判準過寬記於 `docs/known-issues.md` §52。
+- 歸「成員目標（修正）」者屬 FR-009 已聲明的語法層判定（見「分類說明」）。
+
 ## 可到達性允許清單
 
 golden 的允許清單項（FR-008）逐項列於此，與 `tests/dujs/cases/reachability-allowlist.json` 相同（T061 填入；`--verify` 不核對本節）。
