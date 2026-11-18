@@ -148,18 +148,18 @@ description: "Task list for feature 007-split-call-nodes"
 
 ### Tests for User Story 3（先寫）
 
-- [ ] T043 [US3] 在 `tests/dujs/splitcallnodes.js` 新增 US3-1…12（p6、p7、p8、p9、p11、p15＋p15b、p16、p17、p24、p26、p28、p32）；US3-9 斷言 `f` 只有一條 call 邊且前插在第一個 `case` 之前；US3-12 斷言各 `case` 各一筆 p-use、讀判別式求值當下的定義
-- [ ] T044 [US3] 在 `tests/dujs/splitcallnodes.js` 新增守門：(a) clarify Q4：`for (;; f())`、`do { } while (f())`（develop 已連結，不退步）、`var y = c ?? f();`、`var y = c || f();`（`f` 只在該分支呼叫，同 P17）；(b) 先例並存（R5）：`switch (a && b)`（無呼叫，pair 與 develop 相同、只記一次）、`switch (a && f())`、`for (v of a && f())`（含呼叫的拆分葉依 R1 拆段、`case` 不讀判別式）；(c) once-loop 迴圈變數（data-model §4）：`for (var v of f()) { use(v); v = 2; }`——`f` 只在進入迴圈前呼叫一次、`use(v)` 讀到迴圈頭的定義、沒有 `v = 2` → `use(v)` 的 pair；巢狀迴圈與 `continue` 下的 `enteringPrev`；(d) `switch (f()) {}`（KI §48，R13 L6）：007 不比 develop 差——若仍拋錯，只能是 develop 的同一錯誤（`Cannot read properties of undefined`），不得出現其他失敗模式；若能完成分析，更新本測試並在 Polish 更新 KI §48
-- [ ] T045 [P] [US3] 擴充 `tests/dujs/matching.js`：p32、p15 每條 return 邊恰對應一個 record；`beforeDecision` 對決策節點、switch 判別式、for-of 右側皆為 `true`
-- [ ] T046 [P] [US3] 擴充 `tests/dujs/expansion.js`：`once-switch` 把第一個 `case` 副本的全部前驅改指向段 0、各 `case` 副本設 `discriminantSplit`（原節點不動）、段 0 exception 邊連到 `copyOf(discriminantThrowTarget)`；`once-loop` 只改「來源的原節點屬 `enteringPrev`」的前驅（CALL／CALL RETURN 以 `segment.source` 比對）、迴圈副本設 `loopRightSplit`、迴圈本體回邊仍直接回到迴圈節點
+- [X] T043 [US3] 在 `tests/dujs/splitcallnodes.js` 新增 US3-1…12（p6、p7、p8、p9、p11、p15＋p15b、p16、p17、p24、p26、p28、p32）；US3-9 斷言 `f` 只有一條 call 邊且前插在第一個 `case` 之前；US3-12 斷言各 `case` 各一筆 p-use、讀判別式求值當下的定義
+- [X] T044 [US3] 在 `tests/dujs/splitcallnodes.js` 新增守門：(a) clarify Q4：`for (;; f())`、`do { } while (f())`（develop 已連結，不退步）、`var y = c ?? f();`、`var y = c || f();`（`f` 只在該分支呼叫，同 P17）；(b) 先例並存（R5）：`switch (a && b)`（無呼叫，pair 與 develop 相同、只記一次）、`switch (a && f())`、`for (v of a && f())`（含呼叫的拆分葉依 R1 拆段、`case` 不讀判別式）；(c) once-loop 迴圈變數（data-model §4）：`for (var v of f()) { use(v); v = 2; }`——`f` 只在進入迴圈前呼叫一次、`use(v)` 讀到迴圈頭的定義、沒有 `v = 2` → `use(v)` 的 pair；巢狀迴圈與 `continue` 下的 `enteringPrev`；(d) `switch (f()) {}`（KI §48，R13 L6）：007 不比 develop 差——若仍拋錯，只能是 develop 的同一錯誤（`Cannot read properties of undefined`），不得出現其他失敗模式；若能完成分析，更新本測試並在 Polish 更新 KI §48
+- [X] T045 [P] [US3] 擴充 `tests/dujs/matching.js`：p32、p15 每條 return 邊恰對應一個 record；`beforeDecision` 對決策節點、switch 判別式、for-of 右側皆為 `true`
+- [X] T046 [P] [US3] 擴充 `tests/dujs/expansion.js`：`once-switch` 把第一個 `case` 副本的全部前驅改指向段 0、各 `case` 副本設 `discriminantSplit`（原節點不動）、段 0 exception 邊連到 `copyOf(discriminantThrowTarget)`；`once-loop` 只改「來源的原節點屬 `enteringPrev`」的前驅（CALL／CALL RETURN 以 `segment.source` 比對）、迴圈副本設 `loopRightSplit`、迴圈本體回邊仍直接回到迴圈節點
 
 ### Implementation for User Story 3
 
-- [ ] T047 [US3] 修改 `lib/dujs/callsplit.js`：確認／補齊 `once-switch` 的 `owners`（所有有 test 的 `case`）、`throwTarget` 取 `discriminantThrowTarget`、`once-loop` 的 `enteringPrev` 與 `segmentOfVarDef` 對迴圈變數回傳 null；沒有 `case` 的 `switch` 不形成 plan
-- [ ] T048 [US3] 移除階段性 predicate（DECISION 006 Q2 (d)）：`lib/dujs/modelbuilder.js` 改呼叫 `callsplit.planOf(node, scopeTree)`（不帶 predicate）、`lib/dujs/callresolver.js` 刪除 `stagedCallSite`、`calleeScopesOf` 不帶 predicate、`lib/dujs/callsplit.js` 刪除 `planOf` 的 predicate 參數與依 predicate 分開的快取、`tests/dujs/callsplit.js` 刪除 T011 的 predicate 案例（contracts/lib-api.md §1 的暫時項自此不再適用）；`once-loop` 的 `enteringPrev` 經 plan 帶到呼叫邊（依賴 T047）
-- [ ] T049 [US3] 修改 `lib/dujs/expansion.js` 的 `replayCall`：`once-switch`／`once-loop` 的前插段鏈與前驅改向（data-model §4）、在 N 副本（及同一 switch 其他 `case` 副本）設 `discriminantSplit`／`loopRightSplit`、段 k 的 normal 邊 → N 副本、段 0 exception 邊連 `copyOf(plan.throwTarget)`（依賴 T048）
-- [ ] T050 [US3] 執行 `node specs/007-split-call-nodes/probes/run.js`，確認 US3 各 probe 與 spec 一致、US1／US2 不退步（P25 仍只核對 `x: L1 -> L9`，`x: L3 -> L9` 待 US4）；FR-006 守門全綠
-- [ ] T051 [US3] golden：依「共通約定」更新並重產累積淨差異到 `specs/007-split-call-nodes/golden-diff.md` 的「US3」敘述節（預期 `求值順序`／子標 `判別式`、`可迭代`；先例 switch 零差異；US1–US2 的 for-in/of 右側 class static 過渡 − 項應消失；「class static 不再連結」表的實例數寫入敘述節），`--verify` exit 0；`npm test`、`npm run lint` 全綠
+- [X] T047 [US3] 修改 `lib/dujs/callsplit.js`：確認／補齊 `once-switch` 的 `owners`（所有有 test 的 `case`）、`throwTarget` 取 `discriminantThrowTarget`、`once-loop` 的 `enteringPrev` 與 `segmentOfVarDef` 對迴圈變數回傳 null；沒有 `case` 的 `switch` 不形成 plan
+- [X] T048 [US3] 移除階段性 predicate（DECISION 006 Q2 (d)）：`lib/dujs/modelbuilder.js` 改呼叫 `callsplit.planOf(node, scopeTree)`（不帶 predicate）、`lib/dujs/callresolver.js` 刪除 `stagedCallSite`、`calleeScopesOf` 不帶 predicate、`lib/dujs/callsplit.js` 刪除 `planOf` 的 predicate 參數與依 predicate 分開的快取、`tests/dujs/callsplit.js` 刪除 T011 的 predicate 案例（contracts/lib-api.md §1 的暫時項自此不再適用）；`once-loop` 的 `enteringPrev` 經 plan 帶到呼叫邊（依賴 T047）
+- [X] T049 [US3] 修改 `lib/dujs/expansion.js` 的 `replayCall`：`once-switch`／`once-loop` 的前插段鏈與前驅改向（data-model §4）、在 N 副本（及同一 switch 其他 `case` 副本）設 `discriminantSplit`／`loopRightSplit`、段 k 的 normal 邊 → N 副本、段 0 exception 邊連 `copyOf(plan.throwTarget)`（依賴 T048）
+- [X] T050 [US3] 執行 `node specs/007-split-call-nodes/probes/run.js`，確認 US3 各 probe 與 spec 一致、US1／US2 不退步（P25 仍只核對 `x: L1 -> L9`，`x: L3 -> L9` 待 US4）；FR-006 守門全綠
+- [X] T051 [US3] golden：依「共通約定」更新並重產累積淨差異到 `specs/007-split-call-nodes/golden-diff.md` 的「US3」敘述節（預期 `求值順序`／子標 `判別式`、`可迭代`；先例 switch 零差異；US1–US2 的 for-in/of 右側 class static 過渡 − 項應消失；「class static 不再連結」表的實例數寫入敘述節），`--verify` exit 0；`npm test`、`npm run lint` 全綠
 
 **Checkpoint**: US3 完成——多呼叫點串接、switch 判別式與 for-in/of 右側只求值一次。
 

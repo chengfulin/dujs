@@ -217,7 +217,7 @@ describe('exceptions leaving a callee (feature 005 US3)', function () {
 			}
 			model.graph[2].forEach(function (node) {
 				if (node.line === 11) {
-					require('../../lib/dujs/callsplit').planOf(node, result.scopeTree, callResolver.stagedCallSite)
+					require('../../lib/dujs/callsplit').planOf(node, result.scopeTree)
 						.callSites.map(function (entry) {
 							return entry.kind + ':' + entry.callees.length;
 						}).should.eql(['new:1', 'call:1']);

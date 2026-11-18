@@ -6,10 +6,9 @@
  * Original dujs code, MIT License (see LICENSE).
  *
  * Each program is analyzed with tests/helpers/analyze.js; the plan of a node
- * of the intra-procedural model is computed without a predicate (every call
- * site is listed, once-* shapes included) unless a test gives one. The
- * phase predicate (DECISION 006 Q2) is temporary: its cases are removed by
- * T048.
+ * of the intra-procedural model is computed (every call site is listed,
+ * once-* shapes included; the phase predicate of DECISION 006 Q2 was removed
+ * by T048).
  */
 var should = require('should');
 var analyze = require('../helpers/analyze'),
@@ -29,7 +28,6 @@ var PAGE = '$DOMAIN.$PAGE_0',
  * @param {Object} [options]
  * @param {string} [options.scope] Scope name, default the page
  * @param {Function} [options.pick] (FlowNode) -> boolean, default any node of the line
- * @param {Function} [options.predicate] Phase predicate of planOf
  * @returns {Object} {plan, node, result, source, text(ast), find(text, type), sites()}
  */
 function planAt(lines, line, options) {
@@ -38,8 +36,7 @@ function planAt(lines, line, options) {
 	var source = PRELUDE.concat(lines).join('\n'),
 		result = analyze(source),
 		node = nodeAt(result, options.scope || PAGE, line, options.pick),
-		plan = (options.predicate === undefined) ? callsplit.planOf(node, result.scopeTree) :
-			callsplit.planOf(node, result.scopeTree, options.predicate);
+		plan = callsplit.planOf(node, result.scopeTree);
 	return wrap(plan, node, result, source);
 }
 
@@ -568,6 +565,20 @@ describe('callsplit (feature 007)', function () {
 			p.defsOf('v').length.should.eql(1);
 			should(p.plan.segmentOfVarDef(p.defsOf('v')[0])).equal(null);
 		});
+
+		/// the left side is evaluated by the copy of the loop node on each iteration (data-model §4)
+		it('should give null for the reads of the left side and a segment for the right side', function () {
+			var p = planAt(['var o = {}, a = [];', 'for (o[a.length] of f(a)) {', '}'], 5, {pick: ofType('ForOfStatement')});
+			p.sites().should.eql(['f(a):call']);
+			should(p.plan.segmentOf(p.node.astNode.left.object)).equal(null);
+			should(p.plan.segmentOf(p.node.astNode.left.property.object)).equal(null);
+			p.plan.segmentOf(p.find('f(a)')).should.eql(0);
+		});
+
+		it('should list every call site of the once-* shapes', function () {
+			planAt(['for (var v of f()) {', '}'], 4, {pick: ofType('ForOfStatement')}).sites().should.eql(['f():call']);
+			planAt(['switch (f()) {', 'case 1:', '}'], 5, {pick: isFirstCase}).sites().should.eql(['f():call']);
+		});
 	});
 
 	describe('planOf cache', function () {
@@ -586,43 +597,6 @@ describe('callsplit (feature 007)', function () {
 			var p = planAt(['for (var v of f()) {', '}'], 4, {pick: ofType('ForOfStatement')});
 			p.node.loopRightSplit.should.eql(false);
 			should(p.node.segment).equal(null);
-		});
-	});
-
-	/// temporary (DECISION 006 Q2): removed with the predicate by T048
-	describe('phase predicate (temporary)', function () {
-		it('should list every call site without a predicate, once-* included', function () {
-			planAt(['for (var v of f()) {', '}'], 4, {pick: ofType('ForOfStatement')}).sites().should.eql(['f():call']);
-			planAt(['switch (f()) {', 'case 1:', '}'], 5, {pick: isFirstCase}).sites().should.eql(['f():call']);
-		});
-
-		it('should recompute the segments from the call sites kept', function () {
-			var calls = [], source = PRELUDE.concat(['h(g());']).join('\n');
-			function notG(entry, node, shape) {
-				calls.push([entry.kind, entry.callees.length > 0, FlowNode.isFlowNode(node), shape]);
-				return source.slice(entry.expression.range[0], entry.expression.range[1]) !== 'g()';
-			}
-			var p = planAt(['h(g());'], 4, {predicate: notG});
-			p.sites().should.eql(['h(g()):call']);
-			p.plan.segmentCount.should.eql(2);
-			p.plan.segmentOf(p.find('g', 'Identifier')).should.eql(0);
-			p.plan.segmentOf(p.find('g()')).should.eql(0);
-			p.plan.throws.length.should.eql(2);
-			calls.length.should.be.above(0);
-			calls[0].should.eql(['call', true, true, 'statement']);
-		});
-
-		it('should cache the plans with and without a predicate apart', function () {
-			function none() {
-				return false;
-			}
-			var p = planAt(['h(g());'], 4),
-				filtered = callsplit.planOf(p.node, p.result.scopeTree, none);
-			filtered.should.not.equal(p.plan);
-			filtered.callSites.should.eql([]);
-			callsplit.planOf(p.node, p.result.scopeTree, none).should.equal(filtered);
-			callsplit.planOf(p.node, p.result.scopeTree).should.equal(p.plan);
-			p.plan.callSites.length.should.eql(2);
 		});
 	});
 });

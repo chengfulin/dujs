@@ -611,3 +611,36 @@ CLI 標記（DECISION 005 Q1 A，FR-007）：`call (<行>[:路徑])`、`callRetu
 | tests/dujs/scopeguards.js | should keep the scope names and the model counts of named-expr.js | interProcedural 1 | 2（`return fact(n);` 自遞迴，新增以 fact 為根的模型） | FR-001 |
 | tests/dujs/scoperesolution.js | should define the names of named expressions where they are evaluated (named-expr) | 每個 inter-procedural 模型都有 `Q: L1 -> L2`、`fact: L4 -> L5` | 只檢查以頁面為根的模型（fact 自遞迴模型無這兩個定義） | FR-001 |
 | tests/dujs/splitcallnodes.js | US1: class static members in the positions not listed as call sites（5 例）› shouldNotConnect | 任何模型都沒有 call 邊 | 頁面不連到 static scope；唯一允許的 call 邊為 static scope 自身模型 → `g`（`static y = g();` 的初始化式呼叫，US2） | FR-001（KI §44／§46） |
+
+## US3
+
+### 變化說明
+
+`once-switch`／`once-loop` 形狀接上模型建構：移除階段性 predicate（DECISION 006 Q2 (d)，T048：`callresolver.stagedCallSite` 刪除，`modelbuilder` 與 `calleeScopesOf` 改呼叫 `callsplit.planOf(node, scopeTree)`，`planOf` 去掉 predicate 參數、快取改為單層 `WeakMap<原節點, plan>`）；
+`switch` 判別式（未拆分且含呼叫點）在第一個 `case` 前插段鏈、只求值一次，各有 test 的 `case` 副本設 `discriminantSplit`（原節點不動），判別式的讀取以延後 p-use 記在每個有 test 的 `case`、讀求值當下的定義（clarify Q2 A'）；
+`for…in`／`for…of` 右側在迴圈節點前插段鏈，只改「來源原節點屬 `enteringPrev`」的前驅（CALL／CALL RETURN 以 `segment.source` 比對），迴圈副本設 `loopRightSplit`，本體回邊仍回到迴圈副本；迴圈變數與左側的讀取留在迴圈副本（`callsplit.segmentOf` 對 once-loop 左側的 AST 回傳 null，T047）。
+段 0 的 exception 邊連到 `copyOf(plan.throwTarget)`（判別式為 `discriminantThrowTarget`）；段 1…k 的 exception 邊仍待 US4。
+
+- golden 結果：**累積淨差異與 US2 完全相同**（380 筆，`--report` 的淨差異、重複列數、釘選與簽核、class static 表逐列相同）；`UPDATE_GOLDEN=1` 後 `tests/golden/expected*` 與 `manifest.json` 無任何位元組變化。原因：golden fixture 中只有兩處 `switch`／`for…of`（`page0/app.js:37` `switch (m)`、`es2015/app.js:29` `for (const { id } of saved ?? [])`），判別式與右側皆無可解析的呼叫點，`once-*` 形狀的 plan 為 k = 0、不拆分。
+- 類別計數：同 US2（`連結` 304、`求值順序` 16、`標記` 42、`共通` 15、`共通（段0例外）` 3）；本階段新增的子標 `判別式`、`可迭代` 在 golden 皆 0 例；無成立類別、`返回後例外`、`§44`／`§46` 皆 0。
+- 先例 switch（`switch (a && b)`，已拆分判別式）：golden 無此形狀；以 `tests/dujs/splitcallnodes.js`「US3: guards」守門（pair 與 develop 逐字相同、只記一次；`switch (a && f())`、`for (v of a && f())` 的含呼叫拆分葉依 R1 拆段、`case`／迴圈不再讀判別式／右側）。
+- US1–US2 的 for-in/of 右側 class static 過渡 − 項：golden 與 MDN 皆 0 例（自本階段 once-loop 連結；`for (var v of [class { static y = g(); }])` 已恢復連結並得 `x: L3 -> L8`，以探測確認）。
+- 「class static 不再連結」：golden 0 例（機器區塊表為「無」）。
+- KI §48（`switch (f()) {}`）：仍拋 develop 的同一錯誤（`Cannot read properties of undefined (reading 'type')`，esgraph 建圖時），沒有其他失敗模式（T044 (d) 守門）；沒有 `case` 的 `switch` 沒有第一個 `case` 節點，判別式不屬任何節點、不形成 plan。
+- probes（T050）：相對 US2 只有 P15、P15b、P16、P24、P32 的 inter-procedural／intra-page 結果改變，皆與 spec US3 情境一致；其餘 probe 輸出逐字不變，FR-006 守門全綠。
+- MDN（`diffcheck mdn --report`，僅檢查，mdn-diff.md 未更新）：輸出與 US2 狀態逐字相同（873 筆；7 筆無成立類別為 US2 已記錄的工具缺口，待 T067）。
+
+### 雜湊變化表（舊→新 sha256 前 12 碼）
+
+| case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
+|------|------|---------------------------|------|
+| （全部） | （無） | 不變 | golden fixture 無含呼叫的 `switch` 判別式或 for-in/of 右側 |
+
+### 單元測試期望
+
+| 檔案 | 測試名 | 舊期望 | 新期望 | FR |
+|------|--------|--------|--------|----|
+| tests/dujs/callsplit.js | phase predicate (temporary) › should list every call site without a predicate, once-* included | 不給 predicate 時全列舉 | 改名移到 `segmentOfVarDef of once-loop › should list every call site of the once-* shapes`（同一期望，predicate 已不存在） | FR-004（DECISION 006 Q2 (d)） |
+| tests/dujs/callsplit.js | phase predicate (temporary) › should recompute the segments from the call sites kept | 篩掉 `g()` 後 k = 1、`g` 在段 0 | 刪除（T048 移除 predicate） | DECISION 006 Q2 (d) |
+| tests/dujs/callsplit.js | phase predicate (temporary) › should cache the plans with and without a predicate apart | 有／無 predicate 的 plan 分開快取 | 刪除（快取改為單層，`planOf cache` 測試仍斷言以原節點快取、`reset()` 清除） | DECISION 006 Q2 (d) |
+| tests/dujs/exceptionsummary.js | carries the exceptional definitions of the later call of a chain to the catch and to the exit | `planOf(node, scopeTree, callResolver.stagedCallSite)` 的呼叫點為 `new:1`、`call:1` | `planOf(node, scopeTree)`（不帶 predicate），期望不變 | FR-001 |

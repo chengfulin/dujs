@@ -567,6 +567,212 @@ describe('splitting the nodes with calls (feature 007)', function () {
 			shouldHavePairsInModels(result, [PAGE, PAGE + '.g'], ['x: L3 -> L12', 'a: L1 -> L11>L11:T'], ['x: L1 -> L12']);
 		});
 	});
+
+	/// User Story 3 (T043): the reads, definitions and calls of a node in evaluation order; the discriminant
+	/// of a switch and the right side of for-in/for-of are evaluated once
+	describe('US3: evaluation order in a node and evaluated once', function () {
+		var F = [PAGE, PAGE + '.f'];
+
+		it('US3-1 should give x: L3 -> L7, not x: L1 -> L7 (p6, var y = f() + g();)', function () {
+			var result = analyzeProbe('p6-two-calls'),
+				scopes = [PAGE, PAGE + '.f', PAGE + '.g'];
+			shouldHavePairsInModels(result, scopes, ['x: L3 -> L7'], ['x: L1 -> L7']);
+			callEdgesOf(interModelOf(result, scopes)).should.eql([
+				PAGE + ' L10 -> ' + PAGE + '.f',
+				PAGE + ' L10 -> ' + PAGE + '.g'
+			]);
+		});
+
+		it('US3-2 should give x: L3 -> L7, not x: L1 -> L7 (p7, h(f());)', function () {
+			var result = analyzeProbe('p7-nested-arg'),
+				scopes = [PAGE, PAGE + '.f', PAGE + '.h'];
+			shouldHavePairsInModels(result, scopes, ['x: L3 -> L7'], ['x: L1 -> L7']);
+			callEdgesOf(interModelOf(result, scopes)).should.eql([
+				PAGE + ' L9 -> ' + PAGE + '.f',
+				PAGE + ' L9 -> ' + PAGE + '.h'
+			]);
+		});
+
+		it('US3-3 should give x: L3 -> L6>L7:T and x: L3 -> L7, no pair of x from L1 (p8, if (f() > x))', function () {
+			var result = analyzeProbe('p8-cond-after');
+			shouldHavePairsInModels(result, F, ['x: L3 -> L6>L7:T', 'x: L3 -> L7'], []);
+			interPairsOf(result, F).concat(result.intraPage()).filter(function (pair) {
+				return /^x: L1 -> /.test(pair);
+			}).should.eql([]);
+		});
+
+		it('US3-4 should give x: L1 -> L6>L7:T and x: L3 -> L7, not x: L3 -> L6>L7:T nor x: L1 -> L7 (p9)', function () {
+			shouldHavePairsInModels(analyzeProbe('p9-cond-before'), F, ['x: L1 -> L6>L7:T', 'x: L3 -> L7'],
+				['x: L3 -> L6>L7:T', 'x: L1 -> L7']);
+		});
+
+		it('US3-5 should give n: L1 -> L3, n: L3 -> L3 and n: L3 -> L7, not n: L1 -> L7 (p11, while (next() > 0))', function () {
+			shouldHavePairsInModels(analyzeProbe('p11-while'), [PAGE, PAGE + '.next'],
+				['n: L1 -> L3', 'n: L3 -> L3', 'n: L3 -> L7'], ['n: L1 -> L7']);
+		});
+
+		it('US3-6 should give x: L3 -> L7, not x: L1 -> L7 (p15, for (var v of f()))', function () {
+			var result = analyzeProbe('p15-for-of');
+			shouldHavePairsInModels(result, F, ['x: L3 -> L7'], ['x: L1 -> L7']);
+			callEdgesOf(interModelOf(result, F)).should.eql([PAGE + ' L6 -> ' + PAGE + '.f']);
+		});
+
+		/// f is called once, before entering the loop: the definition of the loop body does not reach it
+		it('US3-6 should give x: L1 -> L3, not x: L7 -> L3 (p15b, the iterable is evaluated once)', function () {
+			shouldHavePairsInModels(analyzeProbe('p15b-for-of-once'), F, ['x: L1 -> L3'], ['x: L7 -> L3']);
+		});
+
+		/// the read of x by the case test is not modeled (KI §44)
+		it('US3-7 should give x: L3 -> L8, not x: L1 -> L8 (p16, switch (f()))', function () {
+			shouldHavePairsInModels(analyzeProbe('p16-switch'), F, ['x: L3 -> L8'], ['x: L1 -> L8']);
+		});
+
+		it('US3-8 should give x: L1 -> L8 and x: L4 -> L8 (p17, var y = c && f();)', function () {
+			shouldHavePairsInModels(analyzeProbe('p17-short-circuit'), F, ['x: L1 -> L8', 'x: L4 -> L8'], []);
+		});
+
+		/// the discriminant is evaluated once, before the first case: one call edge from the first case node
+		/// (L7), entering a CALL NODE inserted before it
+		it('US3-9 should give x: L1 -> L3, not x: L3 -> L3 (p24, switch (f()) with two cases)', function () {
+			var result = analyzeProbe('p24-switch-two-case'),
+				edges = interModelOf(result, F).hierarchy.edges.filter(function (edge) {
+					return edge.kind === 'call';
+				});
+			shouldHavePairsInModels(result, F, ['x: L1 -> L3'], ['x: L3 -> L3']);
+			callEdgesOf(interModelOf(result, F)).should.eql([PAGE + ' L7 -> ' + PAGE + '.f']);
+			edges.length.should.eql(1);
+			edges[0].beforeDecision.should.eql(true);
+			edges[0].callSite.astNode.type.should.eql('SwitchCase');
+			edges[0].callSite.parent.cases[0].should.equal(edges[0].callSite.astNode);
+			edges[0].plan.shape.should.eql('once-switch');
+		});
+
+		it('US3-10 should give x: L1 -> L8 and x: L4 -> L8 (p26, var y = c ? f() : 2;)', function () {
+			shouldHavePairsInModels(analyzeProbe('p26-conditional'), F, ['x: L1 -> L8', 'x: L4 -> L8'], []);
+		});
+
+		it('US3-11 should give x: L1 -> L6 and x: L6 -> L7, not x: L3 -> L6 (p28, x += f();)', function () {
+			shouldHavePairsInModels(analyzeProbe('p28-compound'), F, ['x: L1 -> L6', 'x: L6 -> L7'], ['x: L3 -> L6']);
+		});
+
+		/// clarify Q2 A': each case keeps a p-use of the discriminant, reading the definitions when it is evaluated
+		it('US3-12 should give x: L1 -> L7>L8:T and x: L3 -> L8, not x: L3 -> L7>L8:T nor x: L1 -> L8 (p32)', function () {
+			var result = analyzeProbe('p32-switch-read-before');
+			shouldHavePairsInModels(result, F, ['x: L1 -> L7>L8:T', 'x: L3 -> L8'], ['x: L3 -> L7>L8:T', 'x: L1 -> L8']);
+			interPairsOf(result, F).should.containEql('x: L1 -> L7>exit:F');
+		});
+
+		it('US3-12 should give a p-use of the discriminant at each case (switch (x + f()) with two cases)', function () {
+			var result = analyze([
+				'var x = 0;',
+				'function f() {',
+				'  x = 1;',
+				'  return 1;',
+				'}',
+				'switch (x + f()) {',
+				'case 1:',
+				'  console.log(x);',
+				'  break;',
+				'case 2:',
+				'  console.log(x);',
+				'}'
+			].join('\n'));
+			shouldHavePairsInModels(result, F, ['x: L1 -> L7>L8:T', 'x: L1 -> L7>L10:F', 'x: L1 -> L10>L11:T',
+				'x: L3 -> L8', 'x: L3 -> L11'], ['x: L3 -> L7>L8:T', 'x: L3 -> L10>L11:T', 'x: L1 -> L8', 'x: L1 -> L11']);
+			callEdgesOf(interModelOf(result, F)).should.eql([PAGE + ' L7 -> ' + PAGE + '.f']);
+		});
+	});
+
+	/// T044: guards of User Story 3
+	describe('US3: guards', function () {
+		var F = [PAGE, PAGE + '.f'];
+
+		/// (a) clarify Q4: connected by develop already, or as P17
+		it('should keep x: L1 -> L6 and x: L3 -> L6 of for (; n < 1; f()) (as develop)', function () {
+			var result = analyze(['var x = 0, n = 0;', 'function f() {', '  x = 1;', '}', 'for (; n < 1; f()) {',
+				'  console.log(x);', '}'].join('\n'));
+			shouldHavePairsInModels(result, F, ['x: L1 -> L6', 'x: L3 -> L6', 'f: entry -> L5'], []);
+			callEdgesOf(interModelOf(result, F)).should.eql([PAGE + ' L5 -> ' + PAGE + '.f']);
+		});
+
+		it('should keep x: L7 -> L3 of do { } while (f()) (as develop)', function () {
+			var result = analyze(['var x = 0;', 'function f() {', '  console.log(x);', '  return false;', '}', 'do {',
+				'  x = 1;', '} while (f());'].join('\n'));
+			shouldHavePairsInModels(result, F, ['x: L7 -> L3', 'f: entry -> L8>L7:T'], ['x: L1 -> L3']);
+			interPairsOf(result, F).should.containEql('f: entry -> L8>exit:F');
+		});
+
+		['??', '||'].forEach(function (operator) {
+			it('should give x: L1 -> L8 and x: L4 -> L8 of var y = c ' + operator + ' f(); (as p17)', function () {
+				var result = analyze(['var x = 0;', 'var c = 0;', 'function f() {', '  x = 1;', '  return 1;', '}',
+					'var y = c ' + operator + ' f();', 'console.log(x);'].join('\n'));
+				shouldHavePairsInModels(result, F, ['x: L1 -> L8', 'x: L4 -> L8', 'f: entry -> L7:F'], []);
+			});
+		});
+
+		/// (b) research R5: the split discriminant (the precedent) and the once-switch shape stand together
+		it('should keep the pairs of develop of switch (a && b) (no call, read once)', function () {
+			var result = analyze(['var x = 0, a = 1, b = 2;', 'switch (a && b) {', '  case 1:', '    console.log(x);',
+				'    break;', '  case 2:', '    x = 2;', '}'].join('\n'));
+			result.intraPage().should.eql(['a: L1 -> L2>L2:T', 'a: L1 -> L2>L3:F', 'b: L1 -> L2:T',
+				'console: entry -> L4', 'x: L1 -> L4']);
+		});
+
+		it('should split the leaf f() of switch (a && f()) and not read the discriminant at the cases', function () {
+			var result = analyze(['var x = 0, a = 1;', 'function f() {', '  x = 1;', '  return 1;', '}',
+				'switch (a && f()) {', '  case 1:', '    console.log(x);', '    break;', '  case 2:', '    x = 2;', '}'
+			].join('\n'));
+			var expected = ['a: L1 -> L6>L6:T', 'a: L1 -> L6>L7:F', 'console: entry -> L8', 'f: entry -> L6:T',
+				'x: L1 -> L8', 'x: L3 -> L8'];
+			interPairsOf(result, F).should.eql(expected);
+			result.intraPage().should.eql(expected);
+			callEdgesOf(interModelOf(result, F)).should.eql([PAGE + ' L6 -> ' + PAGE + '.f']);
+		});
+
+		it('should split the leaf f() of for (var v of a && f()) and not read the right side at the loop', function () {
+			var result = analyze(['var x = 0, a = [1];', 'function f() {', '  x = 1;', '  return [1];', '}',
+				'for (var v of a && f()) {', '  console.log(x);', '}'].join('\n'));
+			var expected = ['a: L1 -> L6>L6:F', 'a: L1 -> L6>L6:T', 'console: entry -> L7', 'f: entry -> L6:T',
+				'x: L1 -> L7', 'x: L3 -> L7'];
+			interPairsOf(result, F).should.eql(expected);
+			result.intraPage().should.eql(expected);
+			callEdgesOf(interModelOf(result, F)).should.eql([PAGE + ' L6 -> ' + PAGE + '.f']);
+		});
+
+		/// (c) data-model §4: the loop variable is defined on each iteration at the copy of the loop node
+		it('should call f() of for (var v of f()) once and read the loop variable defined by the loop head', function () {
+			var result = analyze(['var x = 0;', 'function f() {', '  console.log(x);', '  return [1];', '}',
+				'function use(p) {', '}', 'for (var v of f()) {', '  use(v);', '  v = 2;', '  x = 2;', '}'].join('\n')),
+				scopes = [PAGE, PAGE + '.f', PAGE + '.use'];
+			shouldHavePairsInModels(result, scopes, ['v: L8 -> L9', 'x: L1 -> L3', 'f: entry -> L8>L9:T'],
+				['v: L10 -> L9', 'x: L11 -> L3']);
+			callEdgesOf(interModelOf(result, scopes)).should.eql([
+				PAGE + ' L8 -> ' + PAGE + '.f',
+				PAGE + ' L9 -> ' + PAGE + '.use'
+			]);
+		});
+
+		/// the inner loop is entered from the body of the outer loop; its back edge and continue do not call f
+		it('should call f() of an inner for-of once per entering, not on its back edge nor continue', function () {
+			var result = analyze(['var x = 0;', 'function f() {', '  console.log(x);', '  return [1];', '}',
+				'for (var i of [1, 2]) {', '  x = i;', '  for (var v of f()) {', '    if (v) continue;', '    x = 3;',
+				'  }', '}'].join('\n'));
+			shouldHavePairsInModels(result, F, ['x: L7 -> L3'], ['x: L1 -> L3', 'x: L10 -> L3']);
+			callEdgesOf(interModelOf(result, F)).should.eql([PAGE + ' L8 -> ' + PAGE + '.f']);
+		});
+
+		/// (d) KI §48, research R13 L6: no worse than develop, which throws this error
+		it('should fail on switch (f()) {} only as develop does (KI §48)', function () {
+			var error = null;
+			try {
+				analyze(['var x = 0;', 'function f() {', '  x = 1;', '  return 1;', '}', 'switch (f()) {', '}'].join('\n'));
+			} catch (err) {
+				error = err;
+			}
+			(error === null || /Cannot read properties of undefined/.test(error.message)).should.eql(true,
+				'unexpected failure: ' + (!!error ? error.message : ''));
+		});
+	});
 });
 
 /**

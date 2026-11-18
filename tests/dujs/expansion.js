@@ -1995,3 +1995,88 @@ describe('segments of the nodes with calls (feature 007 US1)', function () {
 		edge.lastOfCallSite.should.be.true();
 	});
 });
+
+/// feature 007 T046 (data-model §4, research R5): the once-switch and once-loop shapes in the flat graph
+describe('segments evaluated once (feature 007 US3)', function () {
+	'use strict';
+	after(analyze.reset);
+
+	/**
+	 * The inter-procedural model of the page and its call edges
+	 * @param {Array} lines
+	 * @returns {Object} {model, edges}
+	 */
+	function pageModelOf(lines) {
+		var result = analyze(lines.join('\n')),
+			models = modelCtrl.collectionOfPageModels.get(result.scopeTree).interProceduralModels.filter(function (model) {
+				return model.mainlyRelatedScope === result.scopeTree.root;
+			});
+		models.should.have.length(1);
+		return {
+			model: models[0],
+			edges: models[0].hierarchy.edges.filter(function (edge) {
+				return edge.kind === 'call';
+			})
+		};
+	}
+
+	it('should insert the segments of switch (f()) before the first case and set discriminantSplit on the case copies', function () {
+		var built = pageModelOf(['function f() {', '  return 1;', '}', 'try {', '  switch (f()) {', '    case 1:',
+				'      break;', '    case 2:', '      break;', '    default:', '  }', '} catch (e) {', '}']),
+			model = built.model;
+		built.edges.should.have.length(1);
+		var edge = built.edges[0],
+			plan = edge.plan,
+			firstCase = edge.callSite,
+			callNode = model.flatNodeOf(edge.callNode),
+			callReturn = model.flatNodeOf(edge.callReturn),
+			firstCopy = model.flatNodeOf(firstCase);
+		plan.shape.should.eql('once-switch');
+		edge.beforeDecision.should.be.true();
+		plan.owners.should.have.length(2);
+		/// every predecessor of the first case enters segment 0; the last segment returns to the first case
+		firstCopy.prev.should.eql([callReturn]);
+		callNode.prev.length.should.be.above(0);
+		callNode.segment.index.should.eql(0);
+		callReturn.segment.index.should.eql(1);
+		/// the case copies with a test do not read the discriminant again; the originals are not changed
+		plan.owners.forEach(function (owner) {
+			model.flatNodeOf(owner).discriminantSplit.should.be.true();
+			owner.discriminantSplit.should.be.false();
+		});
+		/// segment 0 throws to the copy of the exception target of the switch (the catch clause)
+		firstCase.discriminantThrowTarget.astNode.type.should.eql('CatchClause');
+		(callNode.exception === model.flatNodeOf(firstCase.discriminantThrowTarget)).should.be.true();
+	});
+
+	it('should redirect only the predecessors of for (var v of f()) out of the loop body', function () {
+		var built = pageModelOf(['function f() {', '  return [1];', '}', 'function g() {', '}', 'var x = 0;', 'g();',
+				'for (var v of f()) {', '  x = v;', '  g();', '}']),
+			model = built.model,
+			loopEdge = built.edges.filter(function (edge) {
+				return edge.plan.shape === 'once-loop';
+			})[0],
+			plan = loopEdge.plan,
+			callNode = model.flatNodeOf(loopEdge.callNode),
+			callReturn = model.flatNodeOf(loopEdge.callReturn),
+			loopCopy = model.flatNodeOf(loopEdge.callSite);
+		/// the entering predecessor (g(); at L7) is the CALL RETURN NODE of g, whose source is in enteringPrev
+		plan.enteringPrev.map(function (node) {
+			return node.line;
+		}).should.eql([7]);
+		callNode.prev.should.have.length(1);
+		callNode.prev[0].segment.source.line.should.eql(7);
+		/// the loop copy is reached by the last segment and by the back edge of its body (g(); at L10)
+		loopCopy.prev.should.have.length(2);
+		(loopCopy.prev.indexOf(callReturn) !== -1).should.be.true();
+		loopCopy.prev.filter(function (prev) {
+			return prev !== callReturn;
+		})[0].segment.source.line.should.eql(10);
+		loopCopy.loopRightSplit.should.be.true();
+		loopEdge.callSite.loopRightSplit.should.be.false();
+		/// the loop variable is defined at the loop copy, not in a segment
+		loopCopy.generate.values().map(function (vardef) {
+			return vardef.variable.name;
+		}).should.eql(['v']);
+	});
+});

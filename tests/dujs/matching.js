@@ -320,6 +320,41 @@ describe('call matching (feature 005, User Story 1 scenario 5)', function () {
 		});
 	});
 
+	describe('call sites evaluated once and before a decision (feature 007 User Story 3)', function () {
+		it('should map every return edge to a call return to exactly one record (p32, p15)', function () {
+			['p32-switch-read-before.js', 'p15-for-of.js'].forEach(function (probe) {
+				var models = upperModelsOf(analyzeProbe007(probe));
+				models.length.should.be.above(0, probe);
+				models.forEach(function (model) {
+					var records = recordsOf(model), returns = 0;
+					model.graph[2].forEach(function (node) {
+						node.return.forEach(function (target) {
+							if (target.type === FlowNode.LOOP_NODE_TYPE) {
+								return;
+							}
+							returns += 1;
+							records.filter(function (record) {
+								return record.exit === node && record.callReturn === target;
+							}).should.have.length(1, probe + ': return edge to ' + target);
+						});
+					});
+					returns.should.eql(records.length);
+				});
+			});
+		});
+
+		/// if (f() > x) at L6, switch (x + f()) at L6 (the call site is the first case, L7), for (var v of f()) at L6
+		[['p8-cond-after.js', 6], ['p32-switch-read-before.js', 7], ['p15-for-of.js', 6]].forEach(function (each) {
+			it('should record the call of ' + each[0] + ' as before a decision', function () {
+				var records = recordsOf(interProceduralModelOfPage(analyzeProbe007(each[0])));
+				records.should.have.length(1);
+				records[0].beforeDecision.should.be.true();
+				records[0].callSiteLine.should.eql(each[1]);
+				lastPartOf(records[0].calleeScope.name).should.eql('f');
+			});
+		});
+	});
+
 	describe('*.matching.json of the CLI', function () {
 		var output;
 
