@@ -14,7 +14,7 @@ description: "Task list for feature 008-property-defs-method-calls"
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**：可並行（不同檔案、不依賴未完成的任務）
-- **[Story]**：所屬 user story（US1–US3）；Foundational 中 FR-013 的任務依 plan 標 `[US3／FR-013]`
+- **[Story]**：所屬 user story（US1–US3）；Foundational 中 FR-013 的任務依 plan 標 `[US3／FR-013]`——**刻意例外**（plan 裁決：FR-013 移到 Foundational，緊接檢查器之後先紅後綠；需求歸屬仍是 US3），不屬格式錯誤，analyze 不報
 - 路徑皆相對 repo 根 `/Users/chengfulin/Documents/Personal/dujs`；git 一律 `git -C /Users/chengfulin/Documents/Personal/dujs`
 
 ## 共通約定（每個任務都適用）
@@ -75,6 +75,8 @@ description: "Task list for feature 008-property-defs-method-calls"
 
 - [ ] T022 新增 `tests/dujs/reachabilityinvariant.js` 的 MDN 語料載入與其失敗測試（**D016**；依賴 T021）：直接讀 `specs/006-eslint-scope/mdn/corpus`（依 `pages.json`，先例 `tests/dujs/splitcallnodes.js:24`），以 `crypto` 計算每檔 sha256 並與 `specs/006-eslint-scope/mdn/README.md`「sha256（全碼）」區塊逐檔比對；單元測試以暫存目錄複本斷言三種情形皆**失敗**（不得 `skip`／`pending`）：缺檔、`.js` 檔數 ≠ 33、sha256 不符
 - [ ] T023 在 `tests/dujs/reachabilityinvariant.js` 實作全量檢查（同檔，依賴 T022；US3 情境 4、SC-005）：對 `tests/dujs/cases/probes008/`（含 `pages/`，兩頁以 `//// page` 切開）、`tests/golden/fixtures`（頁面組合同 `tests/golden/golden.js`）、MDN 語料的每個模型執行 `check`，以 `assertInvariant` 對照 `tests/dujs/cases/reachability-allowlist.json`；`program` 命名依 contracts/reachability.md §4（`probes008/<檔名>`、`golden/<case>`、`mdn/<id>`）
+> **implement 交接（不 commit 區間）**：T024 起到 T026 完成前，全量不變量測試刻意為紅（先紅後綠，P38–P40），`npm test` 不會全綠——**此區間不得 commit**；最早在 T026 轉綠（`npm test` 全綠）後才可 commit（主對話裁決）。
+
 - [ ] T024 建立暫行允許清單 `tests/dujs/cases/reachability-allowlist.json`（依賴 T023；D003、D005、FR-008）：列入 P21、P23、P24 的每個違反（程式、模型、pair）與全量檢查實測到、**通過差分判準**（全開違反且關掉 (c) 兩端皆可達）的 finallyExit 根因項（含 golden、MDN），`witness` 取自檢查器當次輸出逐字填入，`note` 註明 KI §38 形態；執行 `npx mocha tests/dujs/reachabilityinvariant.js`，**預期紅**且允許清單外的違反恰為 P38、P39、P40 在 inter-procedural 與 intra-page 的決策節點 p-use pair（P38 `f: entry -> L5>L6:T`、`f: entry -> L5>L8:F`；P39 `g: entry -> L8>L9:T`、`g: entry -> L8>L11:F`；P40 同 P38 形式），把紅的輸出摘要記入 `specs/008-property-defs-method-calls/golden-diff.md` 的 Foundational 敘述節；**若出現其他關掉 (c) 仍違反的項目，停止並回報**（FR-008：屬本 feature 範圍者修正，否則 DECISION）
 
 ### FR-013（先紅後綠）
