@@ -1,0 +1,12 @@
+{
+  "feature": "009-mermaid-markdown-output",
+  "brief": {
+    "note": "依 orchestrator 決策協定，不產簡報、不發布 Artifact；判斷點以 DECISION REQUEST 交回主 session 裁決"
+  },
+  "steps": {
+    "specify": {
+      "done": true,
+      "decisions": "D001"
+    }
+  }
+}
