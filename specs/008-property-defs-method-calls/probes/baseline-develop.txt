@@ -198,6 +198,12 @@ intra(page): console: entry -> L10 | g: entry -> L9 | x: L1 -> L10
 intra($ANONYMOUS_FUN_0): 
 intra(g): 
 intra-page (nodes 13): console: entry -> L10 | f: L3 -> L7 | g: entry -> L9 | x: L1 -> L10
+=== p37-method-prop-call.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+intra(page): console: entry -> L8 | o: L2 -> L5 | q: L6 -> L7 | x: L1 -> L8
+intra($ANONYMOUS_FUN_0): 
+intra($ANONYMOUS_FUN_1): 
+intra-page (nodes 10): console: entry -> L8 | o: L2 -> L5 | q: L6 -> L7 | x: L1 -> L8
 === p4-storage-object.js
 scopes: $DOMAIN.$PAGE_0
 intra(page): console: entry -> L4 | localStorage: L1 -> L4 | o: L3 -> L4

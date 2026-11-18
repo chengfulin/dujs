@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [x] No [NEEDS CLARIFICATION] markers remain（D001–D010 已裁決）
+- [x] No [NEEDS CLARIFICATION] markers remain（D001–D011 已裁決）
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,4 +31,4 @@
 
 ## Notes
 
-- D001–D010 裁決已寫入 spec Clarifications（specify：D001–D005；clarify：D006–D010）。
+- D001–D011 裁決已寫入 spec Clarifications（specify：D001–D005；clarify：D006–D011）。
