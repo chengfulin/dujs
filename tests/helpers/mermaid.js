@@ -142,9 +142,125 @@ function diagramOf(text) {
 	});
 }
 
+/**
+ * Shape names of the facts, by the vertex type of mermaid
+ * @type {Object}
+ */
+var SHAPE_OF_VERTEX_TYPE = {
+	square: 'box',
+	stadium: 'ellipse',
+	doublecircle: 'doublecircle'
+};
+
+/**
+ * Facts of a graph: the multisets of nodes and edges as sorted keys and the
+ * number of nodes of each shape
+ * @param {Array} nodes {id, label, shape}
+ * @param {Array} edges {from, to, label}
+ * @returns {{nodes: Array<string>, edges: Array<string>, shapes: Object}}
+ */
+function factsOf(nodes, edges) {
+	'use strict';
+	var shapes = {box: 0, ellipse: 0, doublecircle: 0};
+	nodes.forEach(function (node) {
+		shapes[node.shape] = (shapes[node.shape] || 0) + 1;
+	});
+	return {
+		nodes: nodes.map(function (node) {
+			return JSON.stringify([node.id, node.label]);
+		}).sort(),
+		edges: edges.map(function (edge) {
+			return JSON.stringify([edge.from, edge.to, edge.label]);
+		}).sort(),
+		shapes: shapes
+	};
+}
+
+/**
+ * Value of a quoted DOT attribute in an attribute list, decoded (\" and \\)
+ * @param {string} attrs
+ * @param {string} key
+ * @returns {string|undefined}
+ */
+function dotAttributeOf(attrs, key) {
+	'use strict';
+	var match = new RegExp('(?:^|, )' + key + ' ?= ?"((?:[^"\\\\]|\\\\.)*)"').exec(attrs);
+	return match ? match[1].replace(/\\(["\\])/g, '$1') : undefined;
+}
+
+/**
+ * Facts of a DOT graph written by dujs, read by simple regular expressions
+ * independent of lib/dujs/dotreader.js (plan「測試策略」, SC-003). The
+ * default node line `node [shape="box"]` is not a node (D005-A9).
+ * @param {string} dotText
+ * @returns {{nodes: Array<string>, edges: Array<string>, shapes: Object}}
+ */
+function dotFactsOf(dotText) {
+	'use strict';
+	var nodes = [],
+		edges = [];
+	dotText.split('\n').forEach(function (line) {
+		var edgeMatch = /^(\w+) -> (\w+) \[(.*)\]$/.exec(line),
+			nodeMatch = /^(\w+) \[(.*)\]$/.exec(line);
+		if (edgeMatch) {
+			edges.push({
+				from: edgeMatch[1],
+				to: edgeMatch[2],
+				label: dotAttributeOf(edgeMatch[3], 'label') || ''
+			});
+		} else if (nodeMatch && nodeMatch[1] !== 'node') {
+			nodes.push({
+				id: nodeMatch[1],
+				label: dotAttributeOf(nodeMatch[2], 'label') || '',
+				shape: dotAttributeOf(nodeMatch[2], 'shape') || 'box'
+			});
+		}
+	});
+	return factsOf(nodes, edges);
+}
+
+/**
+ * Facts of a Mermaid flowchart by the official parser (shapes by the vertex
+ * type: square, stadium and doublecircle as box, ellipse and doublecircle)
+ * @param {string} text
+ * @returns {Promise<{nodes: Array<string>, edges: Array<string>, shapes: Object}>}
+ */
+function mermaidFactsOf(text) {
+	'use strict';
+	return diagramOf(text).then(function (diagram) {
+		return factsOf(diagram.vertices.map(function (vertex) {
+			return {
+				id: vertex.id,
+				label: vertex.label,
+				shape: SHAPE_OF_VERTEX_TYPE[vertex.type] || vertex.type
+			};
+		}), diagram.edges);
+	});
+}
+
+/**
+ * Texts of all ```mermaid blocks of a Markdown text (without the fences)
+ * @param {string} markdown
+ * @returns {Array<string>}
+ */
+function mermaidBlocksOf(markdown) {
+	'use strict';
+	var blocks = [],
+		pattern = /^```mermaid\n([\s\S]*?)\n```$/gm,
+		match = pattern.exec(markdown);
+	while (match) {
+		blocks.push(match[1]);
+		match = pattern.exec(markdown);
+	}
+	return blocks;
+}
+
 module.exports = {
 	load: load,
 	parse: parse,
 	diagramOf: diagramOf,
-	decode: decode
+	decode: decode,
+	dotFactsOf: dotFactsOf,
+	mermaidFactsOf: mermaidFactsOf,
+	mermaidBlocksOf: mermaidBlocksOf
 };

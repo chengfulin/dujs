@@ -1,6 +1,6 @@
 # Contract：模型 Markdown 檔 `<n>.md`
 
-適用：`lib/dujs/markdownoutput.js` `modelMarkdown(model, level, dots)`、`outputwriter` 的寫出。對應：FR-001、FR-002、FR-005、FR-007、A1；research R2、R6。
+適用：`lib/dujs/markdownoutput.js` `modelMarkdown(model, level, dots, modelIndex)`（`modelIndex` 選用、預設 0，用於降級提示連到 `<n>.<kind>.dot`；US1 審查 R2 補記）、`outputwriter` 的寫出。fail-fast（US1 審查 R2 補記）：`modelTitleOf` 遇未知 level 拋 `Unknown level of the model: <level>`；`dotreader` 對 id 為 DOT 關鍵字（`node`／`edge`／`graph`／`digraph`／`subgraph`／`strict`）的節點行拋 `unsupported DOT line`（檔頭 `node [shape="box"]` 先被略過）；`mermaidgraph` 對節點明寫 `shape="box"` 拋錯（box 僅對應「無 shape」）。對應：FR-001、FR-002、FR-005、FR-007、A1；research R2、R6。
 
 ## 1. 位置與產生時機
 
@@ -32,7 +32,7 @@
 - 降級時整個 mermaid fence 由提示＋表格取代（不把表格放在 mermaid fence 內；與 data-model §2、tasks T009 一致，D005-A8b）。
 - mermaid fence 固定三個反引號：Mermaid 區塊文字不可能含反引號（mermaid-graph.md §2.3 已實體化）。
 
-## 3. Markdown 儲存格／行內文字規則（`codeSpan`、`cell`）
+## 3. Markdown 儲存格／行內文字規則（`codeSpan`、`cell`、`rowOf`；實作於 `lib/dujs/markdowntext.js`，US1 審查 S1–S3）
 
 - `codeSpan(s)`：`k` = max(1, s 中最長反引號連續數 + 1)；s 首或尾為反引號或空白時，兩側各補一個空白；結果 `` `…` ``（k 個反引號）。空字串 → 空儲存格（不輸出 code span）。
 - `cell(pieces)`：每個 piece 先依 `\n` 拆段，各段 `codeSpan`，以 `<br/>` 連接；最後把整格的 `|` 換成 `\|`。

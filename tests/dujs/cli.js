@@ -19,7 +19,9 @@ var fs = require('fs'),
 var cli = require('../../lib/dujs/cli'),
 	outputWriter = require('../../lib/dujs/outputwriter'),
 	reportGenerator = require('../../lib/dujs/reportgenerator'),
-	defuseAnalysisExecutor = require('../../lib/dujs/defuseanalysisexecutor');
+	defuseAnalysisExecutor = require('../../lib/dujs/defuseanalysisexecutor'),
+	dotReader = require('../../lib/dujs/dotreader'),
+	analyze = require('../helpers/analyze');
 
 var BIN = path.resolve(__dirname, '../../bin/dujs.js');
 
@@ -235,6 +237,51 @@ describe('CLI', function () {
 				result.stderr.should.eql('dujs: analysis failed: stub failure\n');
 				seenDirs.should.have.length(1);
 				seenSource.should.eql(true);
+				outDirsIn(workDir).should.eql([]);
+			});
+		});
+
+		/// specs/009-mermaid-markdown-output spec G-2, plan「有意的取捨」(D005-A6): a DOT text that
+		/// cannot be read fails the run (exit 1) and removes the output directory
+		describe('when reading a DOT graph throws', function () {
+			var originalReadDot, calls,
+				arrays = ['pageJSSourFilePaths', 'intraProceduralGraphImageFilePaths',
+					'intraProceduralDUPairsImageFilePaths', 'interProceduralGraphImageFilePaths',
+					'interProceduralDUPairsImageFilePaths', 'interProceduralHierarchyImageFilePaths',
+					'intraPageGraphImageFilePaths', 'intraPageDUPairsmageFilePaths', 'intraPageHierarchyImageFilePaths',
+					'interPageGraphImageFilePaths', 'interPageDUPairsImageFilePaths', 'interPageHierarchyImageFilePaths'];
+
+			before(function () {
+				/// own arrays on the singleton, so the shared prototype arrays stay untouched
+				arrays.forEach(function (name) {
+					outputWriter[name] = [];
+				});
+				analyze.reset();
+				outputWriter._testonly_._resetRootOutputDirectory();
+				calls = 0;
+				originalReadDot = dotReader.readDot;
+				dotReader.readDot = function () {
+					calls += 1;
+					throw new Error('unsupported DOT line: stub');
+				};
+			});
+
+			after(function () {
+				dotReader.readDot = originalReadDot;
+				arrays.forEach(function (name) {
+					delete outputWriter[name];
+				});
+				analyze.reset();
+				outputWriter._testonly_._resetRootOutputDirectory();
+			});
+
+			it('should exit with 1 and remove the output directory', function () {
+				this.timeout(30000);
+				var result = run(['-js', 'ok.js']);
+				calls.should.be.above(0);
+				result.status.should.eql(1);
+				result.stdout.should.eql('');
+				result.stderr.should.eql('dujs: analysis failed: unsupported DOT line: stub\n');
 				outDirsIn(workDir).should.eql([]);
 			});
 		});
