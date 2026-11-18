@@ -161,6 +161,14 @@ describe('pre-refactor characterization (probes)', function () {
 		},
 		a2: {
 			interProcedural: [
+				/// 007 US2: init() of the static field a is a call site of its initializer
+				{
+					scopes: [
+						'$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0',
+						'$DOMAIN.$PAGE_0.init'
+					],
+					pairs: []
+				},
 				{
 					scopes: [
 						'$DOMAIN.$PAGE_0.h',
@@ -174,6 +182,7 @@ describe('pre-refactor characterization (probes)', function () {
 					scopes: [
 						'$DOMAIN.$PAGE_0',
 						'$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0',
+						'$DOMAIN.$PAGE_0.init', /// 007 US2
 						'$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1',
 						'$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2',
 						'$DOMAIN.$PAGE_0.h',
@@ -1923,6 +1932,42 @@ describe('segments of the nodes with calls (feature 007 US1)', function () {
 		callReturn.reachIns = callNode.reachIns;
 		defUseAnalyzer.findDUPairs(model);
 		countOfF().should.eql(2);
+	});
+
+	/// feature 007 T036 (moved from T022 (b); from US2 f() of x < f() is a call site): x is read before the call,
+	/// so its p-use is deferred from the CALL NODE (segment 0) to the decision, paired once for each branch
+	it('(b2) should defer the p-use of x of if (x < f()) from the CALL NODE to the decision (007 US2)', function () {
+		var built = pageModelOf(['var x = 0;', 'function f() {', '  x = 1;', '  return 1;', '}', 'if (x < f()) {',
+				'  x = 2;', '}']),
+			model = built.model,
+			edge = built.edgesAt(6)[0],
+			decision = model.flatNodeOf(edge.callSite),
+			callNode = model.flatNodeOf(edge.callNode);
+		edge.beforeDecision.should.be.true();
+		callNode.segment.index.should.eql(0);
+		namesOf(callNode.deferredPuse).should.eql(['f', 'x']);
+		namesOf(callNode.cuse).should.eql([]);
+		(callNode.puseOwners[0] === decision).should.be.true();
+		decision.segment.index.should.eql(1);
+		namesOf(decision.deferredPuse).should.eql([]);
+		namesOf(decision.puse).should.eql([]);
+		var pairs = analyze.pairsOfModel(model);
+		pairs.should.containEql('x: L1 -> L6>L7:T');
+		pairs.should.containEql('x: L1 -> L6>exit:F');
+		/// x of f (L3) is not read by the condition
+		pairs.should.not.containEql('x: L3 -> L6>L7:T');
+		function countOfX() {
+			var count = 0;
+			model.dupairs.forEach(function (pairsOfVar, variable) {
+				if (variable.name === 'x') {
+					count += pairsOfVar.size;
+				}
+			});
+			return count;
+		}
+		countOfX().should.eql(2);
+		defUseAnalyzer.findDUPairs(model);
+		countOfX().should.eql(2);
 	});
 
 	it('(c) (d) should connect the CALL NODE before a decision in try to the copy of the catch node', function () {

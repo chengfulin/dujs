@@ -295,6 +295,47 @@ describe('summary (feature 005, User Story 1)', function () {
 				fs.rmSync(dir, {recursive: true, force: true});
 			}
 		});
+
+		/// feature 007 T036 (moved from T021; from US2 f() of x < f() is a call site): x is read before f is
+		/// called, a p-use of the decision deferred from the CALL NODE (segment 0), upward-exposed in k
+		it('should hold the deferred p-use x of if (x < f()) in the callee k (007 US2)', function () {
+			this.timeout(60000);
+			var code = [
+				'var x = 0;',
+				'function f() {',
+				'  return 1;',
+				'}',
+				'function k() {',
+				'  if (x < f()) {',
+				'  }',
+				'}',
+				'k();'
+			].join('\n');
+			namesOf(summaryOf(analyzeAndSummarize(code), 'k').upwardExposed).should.containEql('x');
+			var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dujs-summary-')),
+				input = path.join(dir, 'k.js');
+			try {
+				fs.writeFileSync(input, code, 'utf8');
+				var run = childProcess.spawnSync(process.execPath,
+					[path.join(__dirname, '..', '..', 'bin', 'dujs.js'), '-js', input], {cwd: dir, encoding: 'utf8'});
+				run.status.should.eql(0, run.stderr);
+				var out = fs.readdirSync(dir).filter(function (name) {
+					return name.indexOf('out-') === 0;
+				})[0];
+				var interDir = path.join(dir, out, 'page0', 'inter-procedurals'),
+					ofK = null;
+				fs.readdirSync(interDir).filter(function (name) {
+					return /\.matching\.json$/.test(name);
+				}).forEach(function (name) {
+					var summaries = JSON.parse(fs.readFileSync(path.join(interDir, name), 'utf8')).summaries;
+					ofK = ofK || summaries[PAGE + '.k'] || null;
+				});
+				(!!ofK).should.eql(true, 'no summary of k');
+				ofK.upwardExposed.should.containEql('x');
+			} finally {
+				fs.rmSync(dir, {recursive: true, force: true});
+			}
+		});
 	});
 
 	describe('fixpoint of a strongly connected component', function () {

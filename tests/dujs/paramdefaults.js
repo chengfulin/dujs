@@ -115,14 +115,15 @@ describe('Parameter default values (004 US4)', function () {
 			]);
 		});
 
-		// US4 #1': return g(); is not a call statement, so it is not connected (plan U1 = A)
-		it('US4-1prime should make the arrow function a scope without connecting return g()', function () {
+		// US4 #1': return g(); was not a call statement, so it was not connected (plan U1 = A);
+		// feature 007 User Story 2 (KI §10, P4): return g(); is a call site, d: L1 -> L3
+		it('US4-1prime should make the arrow function a scope and connect return g() (feature 007)', function () {
 			var result = analyzeProbe('us4-1'),
 				arrow = PAGE + '.f.$ANONYMOUS_FUN_0';
 			result.scopeNames().should.eql([PAGE, PAGE + '.f', arrow]);
 			(intraModelOf(result, arrow) !== null).should.eql(true);
-			result.intraPage().should.eql(['f: entry -> L6', 'g: L2 -> L4']);
-			result.interProceduralScopes().should.eql([[PAGE, PAGE + '.f']]);
+			result.intraPage().should.eql(['d: L1 -> L3', 'f: entry -> L6', 'g: L2 -> L4']);
+			result.interProceduralScopes().should.eql([[PAGE + '.f', arrow], [PAGE, PAGE + '.f', arrow]]);
 		});
 
 		// US4 #2: a function expression in a default inside a pattern is a scope as well

@@ -143,7 +143,8 @@ describe('Arguments of new and parameters with default values', function () {
 
 		// the synthetic body is not enumerable; a default value which is a
 		// function is a child scope of the function (004 FR-006, research R7),
-		// and its body is not a use of the initialization node
+		// and its body is not a use of the initialization node; feature 007 User Story 2: return g(); is a
+		// call site, the read of d in the arrow function is connected (KI §10)
 		it('should make a default value which is an arrow function a child scope', function () {
 			var result = analyze([
 				'var d = 1;',
@@ -161,7 +162,7 @@ describe('Arguments of new and parameters with default values', function () {
 			f.ast.dujsBodyWithParamInits.type.should.eql('BlockStatement');
 			pairsOf(result.intraProcedural(PAGE + '.f'), 'g').should.eql(['g: L3 -> L5']);
 			pairsOf(result.intraProcedural(PAGE + '.f'), 'd').should.eql([]);
-			pairsOf(result.intraPage(), 'd').should.eql([]);
+			pairsOf(result.intraPage(), 'd').should.eql(['d: L1 -> L3']);
 		});
 
 		// characterization: a pattern parameter with its own default and a

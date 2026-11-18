@@ -340,7 +340,7 @@ function outputFactsOf(dir) {
 		var text = fs.readFileSync(path.join(dir, file), 'utf8'),
 			graph = base005.parseGraph(text);
 		if (/(^|\/)intra-procedurals\//.test(file)) {
-			var title = /^label = "[^"[]*\[ (.*) \]"/m.exec(text),
+			var title = /^label = "[^"[]*\[ (.*) \]"/m.exec(text) || /^label = "function (\S+)"/m.exec(text),
 				lines = [];
 			graph.labels.forEach(function (label) {
 				var line = base006.lineOf(label);

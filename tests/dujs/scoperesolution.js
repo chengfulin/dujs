@@ -78,9 +78,13 @@ describe('Scope resolution (feature 006, US2)', function () {
 
 	/// US2-1
 	it('should define the names of named expressions where they are evaluated (named-expr)', function () {
+		/// feature 007 User Story 2: return fact(n); is a call site, the model rooted at fact (self recursion,
+		/// no definition of Q nor fact) is not checked
 		var result = analyzeProbe('named-expr.js'),
 			present = ['Q: L1 -> L2', 'fact: L4 -> L5'],
-			models = interProceduralModelsOf(result);
+			models = interProceduralModelsOf(result).filter(function (model) {
+				return String(model.mainlyRelatedScope) === '$DOMAIN.$PAGE_0';
+			});
 		models.length.should.be.above(0);
 		models.forEach(function (model) {
 			checkPairs(analyze.pairsOfModel(model), present, []);

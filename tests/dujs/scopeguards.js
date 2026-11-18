@@ -21,7 +21,9 @@ var SCOPE_NAMES = JSON.parse(fs.readFileSync(path.join(PROBES, 'scopenames.json'
  * Inter-procedural models expected for the probes whose model counts change
  * (D5 and FR-013, spec US4-3 and US4-10): annexb and link-n10 do not link
  * their calls any more; link-n4, link-n8a and link-n9 link new K()/new A() to
- * the constructor of the class, which adds a model rooted at the caller
+ * the constructor of the class, which adds a model rooted at the caller;
+ * feature 007 User Story 2: return fact(n); of named-expr is a call site, the
+ * self recursion of fact adds a model rooted at fact
  * @type {Object}
  */
 var CHANGED_INTER_PROCEDURAL_COUNTS = {
@@ -29,7 +31,8 @@ var CHANGED_INTER_PROCEDURAL_COUNTS = {
 	'link-n10.js': 0,
 	'link-n4.js': 2,
 	'link-n8a.js': 2,
-	'link-n9.js': 2
+	'link-n9.js': 2,
+	'named-expr.js': 2
 };
 
 /**

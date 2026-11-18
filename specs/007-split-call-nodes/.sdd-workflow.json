@@ -54,11 +54,19 @@
           "validated": true,
           "reviewed": true,
           "committed": true
+        },
+        "US2": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
         }
       },
       "decisions": [
         "DECISION 007",
-        "DECISION 008"
+        "DECISION 008",
+        "DECISION 009",
+        "DECISION 010",
+        "DECISION 011"
       ]
     }
   },

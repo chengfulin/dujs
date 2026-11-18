@@ -234,6 +234,10 @@ describe('callsplit (feature 007)', function () {
 			p.pos('new F()').should.be.below(p.pos('x = 1'));
 			p.pos('x = 1').should.be.below(p.pos('new F().m(x = 1)'));
 			p.plan.segmentOfVarDef(p.defsOf('x')[0]).should.eql(1);
+			/// T037: new F() calls the constructor, .m() only m (scopes in source order: constructor, m)
+			p.plan.callSites.map(function (entry) {
+				return entry.callees.map(String);
+			}).should.eql([[PAGE + '.$ANONYMOUS_FUN_0'], [PAGE + '.$ANONYMOUS_FUN_1']]);
 		});
 
 		it('should list a class with static members as a call site, its name bound before', function () {

@@ -1,0 +1,17 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="8">Def-Use pairs</td></tr><tr><td>raw</td><td>(entry_b,54)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>parsed</td><td>(54,60)</td><td>(56,60)</td><td>(52,60)</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>e</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>items</td><td>(call (64),call (65))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>list</td><td>(entry_c,(18b,call (19)))</td><td>(entry_c,(18b,21))</td><td>(entry_c,call (19))</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>sum</td><td>(call (19),call (19))</td><td>(17,call (19))</td><td>(call (19),21)</td><td>(17,21)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>i</td><td>(18c,(18b,call (19)))</td><td>(18c,(18b,21))</td><td>(18a,(18b,call (19)))</td><td>(18a,(18b,21))</td><td>(18c,call (19))</td><td>(18a,call (19))</td><td>(18c,18c)</td><td>(18a,18c)</td></tr>
+<tr><td>value</td><td>(entry_d,(8,9))</td><td>(entry_d,(8,11))</td><td>(entry_d,9)</td><td>(entry_d,11)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>result</td><td>(9,13)</td><td>(11,13)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

@@ -388,6 +388,29 @@ describe('diffcheck 007', function () {
 			assert.ok(find(result, 'pair', '+', 'x: 1 -> 3').categories.indexOf('連結') !== -1);
 			assert.ok(find(result, 'pair', '+', 'x: 1 -> 6').categories.indexOf('連結') !== -1);
 		});
+		// The title of a named function is `function <scope>` (lib/dujs/graphics.js); T042, DECISION 009/010
+		it('連結: the lines of a callee titled function <scope>, and no range without a known title', function () {
+			var source = 'var x = 1;\nfunction f() {\n  x;\n}\nvar y = f();\nx;\n',
+				named = graphDot([['n1', 'entry'], ['n2', '3'], ['n3', 'exit']], [], 'function $DOMAIN.$PAGE_0.f'),
+				untitled = graphDot([['n1', 'entry'], ['n2', '3'], ['n3', 'exit']], [], ''),
+				facts = diffcheck.outputFactsOf(writeDir({'intra-procedurals/1.graph.dot': named})),
+				none = diffcheck.outputFactsOf(writeDir({'intra-procedurals/1.graph.dot': untitled}));
+			assert.deepStrictEqual(facts.ranges.get('$DOMAIN.$PAGE_0.f'), {start: 3, end: 3});
+			assert.strictEqual(none.ranges.size, 0);
+			function compare(callee) {
+				return page(source, {
+					'intra-pages/0.matching.json': matchingJson([]),
+					'intra-pages/0.dupairs.dot': dupairsDot([['x', []]]),
+					'intra-procedurals/1.graph.dot': callee
+				}, {
+					'intra-pages/0.matching.json': matchingJson([[5, '$DOMAIN.$PAGE_0.f', 'n5', 'n6']]),
+					'intra-pages/0.dupairs.dot': dupairsDot([['x', ['(1,3)']]]),
+					'intra-procedurals/1.graph.dot': callee
+				});
+			}
+			assert.ok(find(compare(named), 'pair', '+', 'x: 1 -> 3').categories.indexOf('連結') !== -1);
+			assert.strictEqual(find(compare(untitled), 'pair', '+', 'x: 1 -> 3').categories.indexOf('連結'), -1);
+		});
 		it('求值順序: def or use on a call site line; 判別式 and 可迭代', function () {
 			var calls = matchingJson([[2, '$DOMAIN.$PAGE_0.f', 'n5', 'n6']]),
 				result = page('var x = 1;\nf(x);\nfunction f() {}\n', {

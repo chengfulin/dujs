@@ -6,41 +6,62 @@
     {
       "id": "c1",
       "seq": 1,
+      "callSiteLine": 17,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+      "callNode": "n33",
+      "entry": "n34",
+      "exit": "n36",
+      "callReturn": "n37",
+      "exceptionalReturn": "n41",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
       "callSiteLine": 40,
       "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
-      "callNode": "n50",
-      "entry": "n51",
-      "exit": "n58",
-      "callReturn": "n59",
-      "exceptionalReturn": "n61",
+      "callNode": "n54",
+      "entry": "n55",
+      "exit": "n62",
+      "callReturn": "n63",
+      "exceptionalReturn": "n65",
       "back": false,
       "beforeDecision": false
     }
   ],
   "loops": [
     {
-      "loop": "n37",
-      "loopReturn": "n47",
+      "loop": "n41",
+      "loopReturn": "n51",
       "handlers": [
         {
           "scope": "$DOMAIN.$PAGE_0.init",
-          "entry": "n39",
-          "exit": "n46"
+          "entry": "n43",
+          "exit": "n50"
         },
         {
           "scope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4",
-          "entry": "n48",
-          "exit": "n61"
+          "entry": "n52",
+          "exit": "n65"
         }
       ]
     }
   ],
   "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    },
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
       "normalReturn": true,
       "conservative": false,
       "gen": [
-        "state@n55"
+        "state@n59"
       ],
       "mustKill": [],
       "upwardExposed": [
@@ -50,14 +71,14 @@
         "state"
       ],
       "exceptional": [
-        "state@n55"
+        "state@n59"
       ]
     },
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4": {
       "normalReturn": true,
       "conservative": false,
       "gen": [
-        "state@n55"
+        "state@n59"
       ],
       "mustKill": [],
       "upwardExposed": [
@@ -69,15 +90,15 @@
         "state"
       ],
       "exceptional": [
-        "state@n55"
+        "state@n59"
       ]
     },
     "$DOMAIN.$PAGE_0.init": {
       "normalReturn": true,
       "conservative": true,
       "gen": [
-        "nextId@n43",
-        "state@n44"
+        "nextId@n47",
+        "state@n48"
       ],
       "mustKill": [],
       "upwardExposed": [
@@ -87,8 +108,8 @@
         "nextId"
       ],
       "exceptional": [
-        "nextId@n43",
-        "state@n44"
+        "nextId@n47",
+        "state@n48"
       ]
     }
   }

@@ -214,6 +214,7 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 		calleesAt(result, PAGE, 4).should.eql([ANONYMOUS + '0']);
 	});
 
+	/// feature 007 User Story 2: new A() and .m() are two call sites, chained in evaluation order
 	it('should resolve new A().m() to the fields, the constructor and then m', function () {
 		var result = analyze([
 			'class A {',
@@ -225,10 +226,11 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 			'new A().k();'
 		].join('\n'));
 		calleesAt(result, PAGE, 6).should.eql([ANONYMOUS + '0', ANONYMOUS + '1', ANONYMOUS + '2']);
-		/// k is not a method of A: only the fields and the constructor
+		/// k is not a method of A: only the fields and the constructor (of the call site new A())
 		calleesAt(result, PAGE, 7).should.eql([ANONYMOUS + '0', ANONYMOUS + '1']);
 	});
 
+	/// feature 007 User Story 2: F of the call site new F(); .m() of a function F is not resolved
 	it('should resolve new F().m() of a function F to F only', function () {
 		var result = analyze(['function F() {}', 'new F().m();'].join('\n'));
 		calleesAt(result, PAGE, 2).should.eql([PAGE + '.F']);
@@ -429,12 +431,13 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 		calleesAt(result, PAGE, 15).should.eql([]);
 		calleesAt(result, PAGE, 16).should.eql([]);
 		calleesAt(result, PAGE, 17).should.eql([]);
-		/// pairs as before the fix (var o = new A(); is not a call-site)
+		/// pairs as before the fix; feature 007 User Story 2: var o = new A(); is a call site, connected to the
+		/// initializer of the field h (it creates the arrow function, x is not defined)
 		result.intraPage().should.eql([
 			'A: L2 -> L14', 'console: entry -> L18', 'o: L14 -> L15', 'o: L14 -> L16', 'o: L14 -> L17',
 			'x: L1 -> L18'
 		]);
-		result.interProceduralScopes().should.eql([]);
+		result.interProceduralScopes().should.eql([[PAGE, ANONYMOUS + '3']]);
 	});
 });
 
@@ -535,8 +538,16 @@ describe('callResolver.calleeScopesOfExpression (feature 007 R7)', function () {
 		expressionCalleesAt(result, source, PAGE, 4, 'o?.m()').should.eql([]);
 	});
 
-	it('should keep calleeScopesOf of new A().m() unchanged in this phase', function () {
-		var result = analyze(['class A {', '  constructor() {}', '  m() {}', '}', 'new A().m();'].join('\n'));
+	/// feature 007 User Story 2 (T037): calleeScopesOf chains the call sites new A() (the constructor) and
+	/// .m() (m only, calleeScopesOfExpression of the outer call)
+	it('should chain the call sites new A() and .m() of new A().m() (feature 007 User Story 2)', function () {
+		var source = ['class A {', '  constructor() {}', '  m() {}', '}', 'new A().m();', 'function F() {}', 'new F().m();'].join('\n'),
+			result = analyze(source);
 		calleesAt(result, PAGE, 5).should.eql([ANONYMOUS + '0', ANONYMOUS + '1']);
+		expressionCalleesAt(result, source, PAGE, 5, 'new A().m()').should.eql([ANONYMOUS + '1']);
+		expressionCalleesAt(result, source, PAGE, 5, 'new A()').should.eql([ANONYMOUS + '0']);
+		/// new F().m() of a function F: F by new F(), nothing by .m()
+		calleesAt(result, PAGE, 7).should.eql([PAGE + '.F']);
+		expressionCalleesAt(result, source, PAGE, 7, 'new F().m()').should.eql([]);
 	});
 });

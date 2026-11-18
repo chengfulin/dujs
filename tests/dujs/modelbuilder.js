@@ -819,10 +819,13 @@ describe('ModelBuilder upper models as hierarchies', function () {
 				return String(model.mainlyRelatedScope) === '$DOMAIN.$PAGE_0.h';
 			})[0];
 			var original = registeringNodeAt(modelOfH, 4);
-			pageModels.interProceduralModels.length.should.be.above(1);
-			pageModels.interProceduralModels.forEach(function (model) {
+			/// 007 US2: the model of the static field a of A and init (init() is a call site) does not hold h
+			var containing = pageModels.interProceduralModels.filter(function (model) {
+				return model.flatNodeOf(original) !== null;
+			});
+			containing.length.should.be.above(1);
+			containing.forEach(function (model) {
 				(model.analysisResultOf(original) === null).should.be.true();
-				(model.flatNodeOf(original) !== null).should.be.true();
 			});
 			original.reachIns.size.should.be.above(0);
 			shouldBeSameObjects(lookup(original).values(), original.reachIns.values());
