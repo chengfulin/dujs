@@ -80,3 +80,26 @@ lib 與 `2035c93` 相同（`git diff --quiet 2035c93 -- lib` 為 0），golden �
 | 檔案 | 測試名 | 舊期望 | 新期望 | FR |
 |------|--------|--------|--------|----|
 | （無） |  |  |  |  |
+
+## Foundational
+
+### 變化說明
+
+#### T025：全量不變量先報紅（FR-013 修正前）
+
+`npx mocha tests/dujs/reachabilityinvariant.js`（probes008 56 個程式、golden 4 個 case（頁面組合同 `tests/golden/golden.js`）、MDN 32 個 id，共 92 個程式、569 個模型）在暫行允許清單 `tests/dujs/cases/reachability-allowlist.json` 下為紅：`1 failing`，`Reachability invariant (contracts/reachability.md §5): 18 failure(s)`，全部為「violation not in the allowlist」，無過期項、無見證不符。
+
+- 允許清單 18 項：P21、P23、P24 各 6 項（inter-procedural、intra-page、inter-page 三個模型 × 兩個 pair：P21／P24 `x: L1 -> L11`、`console: entry -> L11`；P23 `x: L11 -> L14`、`console: entry -> L14`），全部全開違反且關掉 (c) 後兩端皆可達（`eligible`），`witness` 取自檢查器當次輸出（P21／P24 `[{"scope":"$DOMAIN.$PAGE_0","line":10,"nonExceptionalEntries":0}]`，P23 `[{"scope":"$DOMAIN.$PAGE_0.g","line":10,"nonExceptionalEntries":0}]`），`note` 註明 KI §38 形態。golden 與 MDN 沒有任何違反（無 finallyExit 根因項）。
+- 允許清單外 18 項，恰為 P38–P40 決策節點的 deferred p-use pair（關掉 (c) 仍違反，不符允許清單資格；FR-013 修正）：
+
+| 程式 | 模型 | pair | 不可到達端 |
+|------|------|------|------------|
+| probes008/p38-if-norecall.js | inter-procedural[1]、intra-page[0]、inter-page | `f: entry -> L5>L6:T`、`f: entry -> L5>L8:F` | decision、target |
+| probes008/p39-if-nested-norecall.js | inter-procedural[1]、intra-page[0]、inter-page | `g: entry -> L8>L9:T`、`g: entry -> L8>L11:F` | decision、target |
+| probes008/p40-while-norecall.js | inter-procedural[1]、intra-page[0]、inter-page | `f: entry -> L5>L6:T`、`f: entry -> L5>L8:F` | decision、target |
+
+inter-page 模型含頁面的全部節點，同一組 pair 亦在其中報出（tasks T025 字面只列 inter-procedural 與 intra-page；允許清單依實測收錄 inter-page 的 P21、P23、P24 項）。除上列外，沒有其他關掉 (c) 仍違反的項目。
+
+#### T027：FR-013 修正後轉綠
+
+`lib/dujs/defuseanalyzer.js` 的 `findDUPairs` 第二段略過不可到達的 owner（`analysisResultOf(owner) === null`）後，全量不變量允許清單外 0 違反、0 過期（上表 18 項含 inter-page 皆消失）；golden、MDN 0 筆差異；`probes/run.js` 相對 baseline 只有 P38–P40 的 inter[1]／intra-page 行各少兩筆 p-use pair。

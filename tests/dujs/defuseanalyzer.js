@@ -361,3 +361,111 @@ describe('DefUseAnalyzer.findGENSet generatedAt (feature 007 R3)', function () {
             'n@FunctionExpression:function n() {}']);
     });
 });
+
+/**
+ * findDUPairs pairs the deferred p-uses (feature 007) with the branches of an
+ * owner only when the owner is reached by the solver (feature 008 FR-013, D017,
+ * US3 scenario 7, contracts/lib-api.md §3, research R14): a decision node after
+ * a call never returning normally has no p-use pair; the c-uses of the segment
+ * 0 and the intra-procedural model are unchanged.
+ */
+describe('DefUseAnalyzer.findDUPairs deferred p-uses of an unreachable owner (feature 008 FR-013)', function () {
+    "use strict";
+    var analyze = require('../helpers/analyze'),
+        PAGE = '$DOMAIN.$PAGE_0',
+        RECURSION = 'var x = 0;\nfunction f() {\n  f();\n}\n';
+
+    afterEach(function () {
+        analyze.reset();
+    });
+
+    /**
+     * Pairs of the inter-procedural model of the page, of the intra-page model
+     * and of the intra-procedural model of the page
+     * @param {string} source
+     * @returns {Object} {inter, intraPage, intra, interModel}
+     */
+    function pairsOf(source) {
+        var result = analyze(source),
+            pageModels = modelCtrl.collectionOfPageModels.get(result.scopeTree),
+            interModels = pageModels.interProceduralModels.filter(function (model) {
+                return model.mainlyRelatedScope.name === PAGE;
+            });
+        interModels.length.should.eql(1);
+        return {
+            inter: analyze.pairsOfModel(interModels[0]),
+            intraPage: result.intraPage(),
+            intra: result.intraProcedural(),
+            interModel: interModels[0]
+        };
+    }
+
+    /**
+     * Assert the pairs of the inter-procedural and intra-page models
+     * @param {Object} pairs pairsOf
+     * @param {Array} present pairs in both
+     * @param {Array} absent pairs in neither
+     */
+    function expectUpper(pairs, present, absent) {
+        [pairs.inter, pairs.intraPage].forEach(function (list) {
+            list.should.containDeep(present);
+            absent.forEach(function (pair) {
+                list.should.not.containEql(pair);
+            });
+        });
+    }
+
+    it('should pair the deferred p-uses of a reachable owner: if (a < h(a)) and if (h(a)), h returning', function () {
+        var source = 'var a = 1;\nfunction h(v) {\n  return v;\n}\nif (a < h(a)) {\n  a = 2;\n}\nconsole.log(a);\n',
+            pairs = pairsOf(source);
+        expectUpper(pairs, ['a: L1 -> L5>L6:T', 'a: L1 -> L5>L8:F', 'h: entry -> L5>L6:T', 'h: entry -> L5>L8:F'], []);
+        analyze.reset();
+        pairs = pairsOf('var a = 1;\nfunction h(v) {\n  return v;\n}\nif (h(a)) {\n  a = 2;\n}\nconsole.log(a);\n');
+        expectUpper(pairs, ['a: L1 -> L5', 'h: entry -> L5>L6:T', 'h: entry -> L5>L8:F'], []);
+    });
+
+    it('should not pair the deferred p-uses of the decision of if (f()), f never returning', function () {
+        var pairs = pairsOf(RECURSION + 'if (f()) {\n  x = 1;\n}\nconsole.log(x);\n'),
+            decision = pairs.interModel.graph[2].filter(function (node) {
+                return node.line === 5 && !!node.true && !!node.false;
+            });
+        expectUpper(pairs, ['f: entry -> L3'], ['f: entry -> L5>L6:T', 'f: entry -> L5>L8:F']);
+        /// the owner is not reached by the solver: no analysis result
+        decision.length.should.eql(1);
+        should(pairs.interModel.analysisResultOf(decision[0])).be.null();
+        /// intra-procedural: the call is opaque, the p-use pairs are unchanged
+        pairs.intra.should.eql(['console: entry -> L8', 'f: entry -> L5>L6:T', 'f: entry -> L5>L8:F', 'x: L1 -> L8',
+            'x: L6 -> L8']);
+    });
+
+    it('should not pair the deferred p-uses of a variable read before f() in the condition: if (a < f())', function () {
+        var pairs = pairsOf('var a = 1;\nfunction f() {\n  f();\n}\nif (a < f()) {\n  a = 2;\n}\nconsole.log(a);\n');
+        expectUpper(pairs, ['f: entry -> L3'], ['a: L1 -> L5>L6:T', 'a: L1 -> L5>L8:F', 'f: entry -> L5>L6:T',
+            'f: entry -> L5>L8:F']);
+        pairs.intra.should.containDeep(['a: L1 -> L5>L6:T', 'a: L1 -> L5>L8:F', 'f: entry -> L5>L6:T',
+            'f: entry -> L5>L8:F']);
+    });
+
+    it('should not pair the deferred p-uses of the decision of while (f()), f never returning', function () {
+        var pairs = pairsOf(RECURSION + 'while (f()) {\n  x = 1;\n}\nconsole.log(x);\n');
+        expectUpper(pairs, ['f: entry -> L3'], ['f: entry -> L5>L6:T', 'f: entry -> L5>L8:F']);
+        pairs.intra.should.eql(['console: entry -> L8', 'f: entry -> L5>L6:T', 'f: entry -> L5>L8:F', 'x: L1 -> L8',
+            'x: L6 -> L8']);
+    });
+
+    it('should not pair the deferred p-uses of the decision of if (g(f())), f never returning', function () {
+        var pairs = pairsOf(RECURSION + 'function g(v) {\n  return v;\n}\nif (g(f())) {\n  x = 1;\n}\nconsole.log(x);\n');
+        expectUpper(pairs, ['f: entry -> L3', 'f: entry -> L8'], ['g: entry -> L8>L9:T', 'g: entry -> L8>L11:F']);
+        pairs.intra.should.eql(['console: entry -> L11', 'f: entry -> L8', 'g: entry -> L8>L11:F', 'g: entry -> L8>L9:T',
+            'x: L1 -> L11', 'x: L9 -> L11']);
+    });
+
+    it('should keep every node of the intra-page model of a program without calls analyzed (no owner skipped)', function () {
+        var result = analyze('var a = 1;\nif (a) {\n  a = 2;\n}\nconsole.log(a);\n'),
+            model = modelCtrl.collectionOfPageModels.get(result.scopeTree).intraPageModels[0];
+        model.graph[2].forEach(function (node) {
+            should(model.analysisResultOf(node)).not.be.null();
+        });
+        result.intraPage().should.containDeep(['a: L1 -> L2>L3:T', 'a: L1 -> L2>L5:F']);
+    });
+});
