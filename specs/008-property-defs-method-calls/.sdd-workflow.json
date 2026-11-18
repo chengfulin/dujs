@@ -42,7 +42,13 @@
           "committed": true
         }
       },
-      "stories": {}
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      }
     }
   }
 }

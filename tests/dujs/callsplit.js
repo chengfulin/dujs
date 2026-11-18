@@ -183,7 +183,9 @@ describe('callsplit (feature 007)', function () {
 			p.pos('i', 'Identifier').should.be.below(p.pos('f()'));
 			p.pos('f()').should.be.below(p.pos('a[i] = f()'));
 			p.plan.segmentOf(p.find('i', 'Identifier')).should.eql(0);
-			p.plan.segmentOfVarDef(p.defsOf('a')[0]).should.eql(1);
+			/// feature 008 FR-001: a[i] = f() does not define a; its object a is read in segment 0 (FR-002)
+			p.defsOf('a').should.eql([]);
+			p.plan.segmentOf(p.find('a', 'Identifier')).should.eql(0);
 		});
 
 		it('should evaluate F and a before new F(a)', function () {

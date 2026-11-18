@@ -22,9 +22,7 @@
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
       "normalReturn": true,
       "conservative": false,
-      "gen": [
-        "state@n122"
-      ],
+      "gen": [],
       "mustKill": [],
       "upwardExposed": [
         "list",
@@ -32,9 +30,7 @@
         "saveTodos",
         "state"
       ],
-      "exceptional": [
-        "state@n122"
-      ]
+      "exceptional": []
     }
   }
 }

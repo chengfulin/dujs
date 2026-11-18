@@ -288,8 +288,8 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 		calleesAt(result, PAGE, 6).should.eql([ANONYMOUS + '1']);
 	});
 
-	/// README: o.p = 1 defines o and the definition is not new A()
-	it('should not resolve o.m() after a property assignment o.p = 1', function () {
+	/// feature 008 FR-001 (US1-1, P1): o.p = 1 does not define o, so new A() reaches o.m()
+	it('should resolve o.m() after a property assignment o.p = 1 to m', function () {
 		var result = analyze([
 			'class A {',
 			'  m() {}',
@@ -298,7 +298,7 @@ describe('callResolver.calleeScopesOf of method calls (research R2, clarifier M5
 			'o.p = 1;',
 			'o.m();'
 		].join('\n'));
-		calleesAt(result, PAGE, 6).should.eql([]);
+		calleesAt(result, PAGE, 6).should.eql([ANONYMOUS + '0']);
 	});
 
 	/// o is declared and not defined before o.m()

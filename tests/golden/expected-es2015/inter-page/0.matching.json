@@ -60,9 +60,7 @@
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
       "normalReturn": true,
       "conservative": false,
-      "gen": [
-        "state@n156"
-      ],
+      "gen": [],
       "mustKill": [],
       "upwardExposed": [
         "list",
@@ -70,16 +68,12 @@
         "saveTodos",
         "state"
       ],
-      "exceptional": [
-        "state@n156"
-      ]
+      "exceptional": []
     },
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4": {
       "normalReturn": true,
       "conservative": false,
-      "gen": [
-        "state@n156"
-      ],
+      "gen": [],
       "mustKill": [],
       "upwardExposed": [
         "addTodo",
@@ -89,27 +83,24 @@
         "saveTodos",
         "state"
       ],
-      "exceptional": [
-        "state@n156"
-      ]
+      "exceptional": []
     },
     "$DOMAIN.$PAGE_0.init": {
       "normalReturn": true,
       "conservative": true,
       "gen": [
-        "nextId@n144",
-        "state@n145"
+        "nextId@n144"
       ],
       "mustKill": [],
       "upwardExposed": [
         "Math",
         "list",
         "loadTodos",
-        "nextId"
+        "nextId",
+        "state"
       ],
       "exceptional": [
-        "nextId@n144",
-        "state@n145"
+        "nextId@n144"
       ]
     }
   }

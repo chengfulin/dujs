@@ -29,6 +29,36 @@ pair 以「頁 × 層級」的聯集比對（D022）；某行兩側同模型 `.g
 
 | # | case | 頁 | 檔案／層級 | 單位 | ± | 內容 | 類別 | FR | 說明 |
 |---|------|----|------------|------|---|------|------|----|------|
+| 1 | expected-es2015 | inter-page | 0.matching.json | matching | ~ | `0.matching.json` | 成員目標（摘要） | FR-003 | 摘要 $ANONYMOUS_FUN_3.gen −state@n156、$ANONYMOUS_FUN_3.exceptional −state@n156、$ANONYMOUS_FUN_4.gen −state@n156、$ANONYMOUS_FUN_4.exceptional −state@n156、init.gen −state@n145、init.exceptional −state@n145、init.upwardExposed +state |
+| 2 | expected-es2015 | page0 | inter-procedurals/1.matching.json | matching | ~ | `inter-procedurals/1.matching.json` | 成員目標（摘要） | FR-003 | 摘要 $ANONYMOUS_FUN_3.gen −state@n122、$ANONYMOUS_FUN_3.exceptional −state@n122 |
+| 3 | expected-es2015 | page0 | intra-pages/0.matching.json | matching | ~ | `intra-pages/0.matching.json` | 成員目標（摘要） | FR-003 | 摘要 $ANONYMOUS_FUN_3.gen −state@n59、$ANONYMOUS_FUN_3.exceptional −state@n59、$ANONYMOUS_FUN_4.gen −state@n59、$ANONYMOUS_FUN_4.exceptional −state@n59、init.gen −state@n48、init.exceptional −state@n48、init.upwardExposed +state |
+| 4 | expected-es2015 | inter-page | *.dupairs.dot | pair | + | `input: 39 -> 41` | 成員目標（新增讀取） | FR-002 | 亦符：成員目標（不再殺除） |
+| 5 | expected-es2015 | inter-page | *.dupairs.dot | pair | - | `state: 23 -> 23` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 6 | expected-es2015 | inter-page | *.dupairs.dot | pair | - | `state: 23 -> 24` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 7 | expected-es2015 | inter-page | *.dupairs.dot | pair | - | `state: 23 -> 25` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 8 | expected-es2015 | inter-page | *.dupairs.dot | pair | - | `state: 33 -> 23` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 9 | expected-es2015 | inter-page | *.dupairs.dot | pair | - | `state: 33 -> 34` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 10 | expected-es2015 | inter-page | *.dupairs.dot | pair | + | `state: 4 -> 24` | 成員目標（不再殺除） | FR-001 | 不再殺除：L23／L33 的 `state.todos = …` 不再定義 `state`，L4 的 `const state` 越過它們到達此讀取 |
+| 11 | expected-es2015 | inter-page | *.dupairs.dot | pair | + | `state: 4 -> 25` | 成員目標（不再殺除） | FR-001 | 不再殺除：L23／L33 的 `state.todos = …` 不再定義 `state`，L4 的 `const state` 越過它們到達此讀取 |
+| 12 | expected-es2015 | inter-page | *.dupairs.dot | pair | + | `state: 4 -> 33` | 成員目標（新增讀取） | FR-002 | 亦符：成員目標（不再殺除） |
+| 13 | expected-es2015 | inter-page | *.dupairs.dot | pair | + | `state: 4 -> 34` | 成員目標（不再殺除） | FR-001 | 不再殺除：L23／L33 的 `state.todos = …` 不再定義 `state`，L4 的 `const state` 越過它們到達此讀取 |
+| 14 | expected-es2015 | page0 | inter-procedurals/*.dupairs.dot | pair | + | `input: 39 -> 41` | 成員目標（新增讀取） | FR-002 | 亦符：成員目標（不再殺除） |
+| 15 | expected-es2015 | page0 | inter-procedurals/*.dupairs.dot | pair | - | `state: 23 -> 24` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 16 | expected-es2015 | page0 | inter-procedurals/*.dupairs.dot | pair | - | `state: 23 -> 25` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 17 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | + | `input: 39 -> 41` | 成員目標（新增讀取） | FR-002 | 亦符：成員目標（不再殺除） |
+| 18 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | - | `state: 23 -> 23` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 19 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | - | `state: 23 -> 24` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 20 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | - | `state: 23 -> 25` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 21 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | - | `state: 33 -> 23` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 22 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | - | `state: 33 -> 34` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 23 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | + | `state: 4 -> 24` | 成員目標（不再殺除） | FR-001 | 不再殺除：L23／L33 的 `state.todos = …` 不再定義 `state`，L4 的 `const state` 越過它們到達此讀取 |
+| 24 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | + | `state: 4 -> 25` | 成員目標（不再殺除） | FR-001 | 不再殺除：L23／L33 的 `state.todos = …` 不再定義 `state`，L4 的 `const state` 越過它們到達此讀取 |
+| 25 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | + | `state: 4 -> 33` | 成員目標（新增讀取） | FR-002 | 亦符：成員目標（不再殺除） |
+| 26 | expected-es2015 | page0 | intra-pages/*.dupairs.dot | pair | + | `state: 4 -> 34` | 成員目標（不再殺除） | FR-001 | 不再殺除：L23／L33 的 `state.todos = …` 不再定義 `state`，L4 的 `const state` 越過它們到達此讀取 |
+| 27 | expected-es2015 | page0 | intra-procedurals/*.dupairs.dot | pair | + | `input: 39 -> 41` | 成員目標（新增讀取） | FR-002 | 亦符：成員目標（不再殺除） |
+| 28 | expected-es2015 | page0 | intra-procedurals/*.dupairs.dot | pair | - | `state: 23 -> 24` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 29 | expected-es2015 | page0 | intra-procedurals/*.dupairs.dot | pair | - | `state: 23 -> 25` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
+| 30 | expected-es2015 | page0 | intra-procedurals/*.dupairs.dot | pair | - | `state: 33 -> 34` | 屬性寫入→讀取損失 | D001、FR-009 | member read [todos] overlaps write [todos] |
 
 ## 段結構改變行
 
@@ -54,6 +84,12 @@ pair 以「頁 × 層級」的聯集比對（D022）；某行兩側同模型 `.g
 
 | case | 頁 | 類別 | 觸發 | + | − | 說明 | 簽核 |
 |------|----|------|------|---|---|------|------|
+| expected-es2015 | inter-page | 成員目標（摘要） | 定義性成員目標 input L41；state L23、L33 | 1 | 6 | `state.todos = …`（L23、L33）不再定義 `state`：`addTodo`（$ANONYMOUS_FUN_3）、其呼叫者 $ANONYMOUS_FUN_4 與 `init` 的 gen／exceptional 移除 `state@n`；`init` 在 L33、L34 讀 `state` 且函式內無定義，upwardExposed 新增 `state` | 草擬，待簽核（#1） |
+| expected-es2015 | page0 | 成員目標（摘要） | 定義性成員目標 input L41；state L23、L33 | 1 | 8 | 同 inter-page：intra-pages/0 與 inter-page 相同（gen／exceptional −`state@n` 6 筆、`init.upwardExposed +state`）；inter-procedurals/1（`addTodo`）只有 `$ANONYMOUS_FUN_3` 的 gen／exceptional −`state@n122` | 草擬，待簽核（#2、#3） |
+| expected-es2015 | inter-page | 成員目標 | 定義性成員目標 input L41；state L23、L33 | 5 | 0 | L41 `input.value = ''` 改為讀取 `input`（+`input: 39 -> 41`）；L23、L33 的 `state.todos = …` 不再殺除 `state`，L4 的 `const state` 到達 L24、L25、L34，L33 本身成為 `state` 的讀取（+`state: 4 -> 33`） | 草擬，待簽核（#4、#10、#11、#12、#13） |
+| expected-es2015 | inter-page | 屬性寫入→讀取損失 | 定義性成員目標 input L41；state L23、L33 | 0 | 5 | L23、L33 的 `state.todos = …` 原為 `state` 的定義，到達 L23（下一次呼叫 `addTodo` 時）、L24、L25、L34 對 `state.todos` 的讀取；008 不追屬性，這些 pair 消失（讀取路徑 [todos] 與寫入路徑 [todos] 相同，語意上確有資料流，D001 接受的損失） | 草擬，待簽核（#5、#6、#7、#8、#9） |
+| expected-es2015 | page0 | 成員目標 | 定義性成員目標 input L41；state L23、L33 | 7 | 0 | 同 inter-page：intra-pages 4 筆 `state: 4 -> …` 與 `input: 39 -> 41`；inter-procedurals、intra-procedurals 只有 `input: 39 -> 41`（`addTodo`／`init` 的單函式模型無 L4 的定義可到達） | 草擬，待簽核（#14、#17、#23、#24、#25、#26、#27） |
+| expected-es2015 | page0 | 屬性寫入→讀取損失 | 定義性成員目標 input L41；state L23、L33 | 0 | 10 | 同 inter-page：intra-pages 5 筆；inter-procedurals `state: 23 -> 24`、`23 -> 25`（`addTodo`）；intra-procedurals `23 -> 24`、`23 -> 25`（`addTodo`）與 `33 -> 34`（`init`） | 草擬，待簽核（#15、#16、#18、#19、#20、#21、#22、#28、#29、#30） |
 
 ## 可到達性允許清單
 
@@ -103,3 +139,42 @@ inter-page 模型含頁面的全部節點，同一組 pair 亦在其中報出（
 #### T027：FR-013 修正後轉綠
 
 `lib/dujs/defuseanalyzer.js` 的 `findDUPairs` 第二段略過不可到達的 owner（`analysisResultOf(owner) === null`）後，全量不變量允許清單外 0 違反、0 過期（上表 18 項含 inter-page 皆消失）；golden、MDN 0 筆差異；`probes/run.js` 相對 baseline 只有 P38–P40 的 inter[1]／intra-page 行各少兩筆 p-use pair。
+
+## US1
+
+### 變化說明
+
+- **T047 golden**：`UPDATE_GOLDEN=1 npx mocha tests/golden/golden.js` 只改 `expected-es2015` 的 9 檔（`inter-page/0`、`page0/intra-pages/0` 的 `.dupairs.dot` 與 `.matching.json`，`page0/inter-procedurals/1` 的 `.dupairs.dot` 與 `.matching.json`，`page0/intra-procedurals/4`、`5`、`6` 的 `.dupairs.dot`）；`expected`、`expected-interprocedural`、`expected-fixes004` 不變，`.graph.dot`／`.hierarchy.dot` 皆不變，檔案集合不變（`manifest.json` 的 `added` 不增刪）。`diffcheck.js golden --report` 相對 `2035c93` 共 30 筆，全部在 `tests/golden/fixtures/es2015/app.js`，觸發點只有三行（dot 行號＝fixture 行號＋1）：
+  - L23 `state.todos = [...state.todos, …]`（`addTodo`）與 L33 `state.todos = saved`（`init`）不再定義 `state`：`屬性寫入→讀取損失` 15 筆（inter-page 5、page0 10：自 L23／L33 出發到 L23、L24、L25、L34 讀 `state.todos` 的 pair 消失；讀寫路徑皆為 `[todos]`，語意上有資料流，D001 接受）；`成員目標（不再殺除）` 6 筆（L4 `const state` 越過 L23／L33 到達 L24、L25、L34，只在 inter-page 與 intra-pages）；`成員目標（新增讀取）` 2 筆（`state: 4 -> 33`，L33 本身讀 `state`）；`成員目標（摘要）` 3 筆 matching `~`（gen／exceptional 移除 `state@n`，`init.upwardExposed +state`）。
+  - L41 `input.value = ''` 不再定義 `input`、改為讀取：`成員目標（新增讀取）` 4 筆 `input: 39 -> 41`（inter-page、inter-procedurals、intra-pages、intra-procedurals 各 1）。
+  - 類別分布：`成員目標（新增讀取）` 6、`成員目標（不再殺除）` 6、`成員目標（摘要）` 3、`屬性寫入→讀取損失` 15；`成員目標（修正）`、`成員目標（列消失）`、`外溢` 為 0（`app.js` 沒有 `o.p = …; o.m()` 形態，也沒有因 US1 新增的呼叫連結）；無歸不進類別者、無 `無法到達`。
+  - 段結構改變行 0 列（無列需簽核）；重複列數兩側相同。`--verify` exit 0。
+- **MDN（只檢查，不寫 mdn-diff）**：`diffcheck.js mdn --report` exit 0，428 筆，全部歸類：`成員目標（新增讀取）` 185、`屬性寫入→讀取損失` 78、`成員目標（不再殺除）` 69、`成員目標（修正）` 54、`成員目標（摘要）` 35、`成員目標（列消失）` 7；段結構改變行 0 列；32 個 id 的 CLI exit code 兩側皆 0。
+
+- **T044 實際修改的既有測試**（以 `npm test` 失敗清單為準，與 Fable 原型實測的 5 處相同，無清單外失敗）：`tests/dujs/callsplit.js`、`tests/dujs/globals.js`、`tests/dujs/methodcalls.js`、`tests/dujs/scopeguards.js`（期望資料在 `tests/dujs/cases/probes006/developpairs.json` 的 `op.js`）、`tests/dujs/splitcallnodes.js`。皆為「成員賦值定義物件變數」的舊行為；`callsplit.js` 的失敗是 `segmentOfVarDef(undefined)` 拋「no AST completing the definition」（`a[i] = f()` 不再定義 `a`），不是「no evaluation position」，未觸發 DECISION。
+- **T045 probes**：`probes/pages/` s1–s9 與 `probes/pages/baseline-develop.txt` 逐行相同；s10–s14 的儲存定義節點數與 s13、s14 的 `inter-page localStorage` 行不變。`probes/run.js` 相對 Foundational（HEAD）有變的只有 P1–P4、P9、P10、P12、P25、P27、P29–P33、P37、P42；US2 守門 probes（P6、P7、P11、P26、P28、P35、P36）與 P38–P40 不變；P10 只新增 `F: entry -> L3`（D018）。輸出與 Fable 原型 US1 實跑（`probes-us1.txt`）逐行相同。
+- **T046 全量不變量**：允許清單外 0 違反、0 過期；`tests/dujs/cases/reachability-allowlist.json` 不變（US1 沒有新增或消除 finallyExit 根因的 pair）。
+
+### 雜湊變化表（舊→新 sha256 前 12 碼）
+
+`manifest.json` 的 `baseline` 手動重算寫回（UPDATE_GOLDEN 不寫 manifest）；`added` 檔名不增刪（`page0/inter-procedurals/1.dupairs.dot` 與三個 `.matching.json` 屬 `added`，不記雜湊）。
+
+| case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
+|------|------|---------------------------|------|
+| expected-es2015 | inter-page/0.dupairs.dot | `9d5aa27d6be3` → `cc3dd31f7778` | `state` 列：−23→23、23→24、23→25、33→23、33→34，+4→24、4→25、4→33、4→34；`input` 列 +39→41 |
+| expected-es2015 | page0/intra-pages/0.dupairs.dot | `9d5aa27d6be3` → `cc3dd31f7778` | 同 inter-page（單頁，兩檔內容相同） |
+| expected-es2015 | page0/intra-procedurals/4.dupairs.dot | `aa0b6c7fb261` → `0dcd53f7bfe2` | `addTodo`：`state` 列（23→24、23→25）消失 |
+| expected-es2015 | page0/intra-procedurals/5.dupairs.dot | `1592472c32bd` → `502f5cc8258d` | `init`：`state` 列（33→34）消失 |
+| expected-es2015 | page0/intra-procedurals/6.dupairs.dot | `5c180512507b` → `4ab6953479de` | click handler：`input` 列 +39→41 |
+| 其他 case／檔案 | （全部） | 不變 |  |
+
+### 單元測試期望
+
+| 檔案 | 測試名 | 舊期望 | 新期望 | FR |
+|------|--------|--------|--------|----|
+| tests/dujs/callsplit.js | should evaluate the object and the property of a[i] = f() before f() | `segmentOfVarDef(defsOf('a')[0])` 為 1（`a[i] = f()` 定義 `a`） | `defsOf('a')` 為 `[]`；`a` 的讀取在段 0 | FR-001、FR-002 |
+| tests/dujs/globals.js | should define the undeclared names written by for-in, ++ and G.p = v (plan-u4) → 更名 …and read G of G.p = v (plan-u4) | 含 `Math: L7 -> L8`、`location: L9 -> L10` | 含 `Math: entry -> L7`、`Math: entry -> L8`、`location: entry -> L9`、`location: entry -> L10`；不含前兩者 | FR-001、FR-002 |
+| tests/dujs/methodcalls.js | should not resolve o.m() after a property assignment o.p = 1 → 更名 should resolve o.m() after a property assignment o.p = 1 to m | callee `[]` | callee `[$ANONYMOUS_FUN_0]`（`A` 的 `m`，US1-1／P1） | FR-001 |
+| tests/dujs/cases/probes006/developpairs.json（tests/dujs/scopeguards.js：should give the pairs of develop for op.js） | op.js 的 intraPage、interProcedural[0] | `o: L7 -> L8` | `o: L6 -> L7`、`o: L6 -> L8` | FR-001、FR-002 |
+| tests/dujs/splitcallnodes.js | should not connect g() of for (o[g()] of a) {} (as develop) → 去掉「(as develop)」 | 含 `o: L9 -> L9`；無 `g` 的 pair | 無 `o: L9 -> L9`；新增 `g: entry -> L9>L10:F`、`g: entry -> L9>L9:T`（鍵 `g()` 在迴圈節點讀取，同 `for (var [z = g()] of a)`）；仍無 call 邊 | FR-001、FR-002 |
+| tests/dujs/propertydefs.js | US1-16 should give the localStorage pairs of P42 of the actual run (characterization) | 佔位 `[]`（Fable 原型值，TODO(T045)） | 實跑值 `[]`：intra、inter、intraPage 皆無 `localStorage` 的 pair | FR-002（D013） |

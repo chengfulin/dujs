@@ -2,32 +2,32 @@ digraph structs {
 node [shape="plaintext"]
 struct1 [label=<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-<tr><td>Variable</td><td COLSPAN="6">Def-Use pairs</td></tr><tr><td>window</td><td>(entry_a,37)</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>document</td><td>(entry_a,call (17))</td><td>(entry_a,38)</td><td>(entry_a,39)</td><td></td><td></td><td></td></tr>
-<tr><td>String</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>console</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>init</td><td>(entry_a,37)</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Math</td><td>(entry_a,31)</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>loadTodos</td><td>(2,29)</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>saveTodos</td><td>(2,24)</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>state</td><td>(33,34)</td><td>(4,23)</td><td>(33,23)</td><td>(23,23)</td><td>(23,24)</td><td>(23,25)</td></tr>
-<tr><td>nextId</td><td>(31,31)</td><td>(5,31)</td><td>(5,23)</td><td>(31,23)</td><td></td><td></td></tr>
-<tr><td>TodoList</td><td>(7,call (17))</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>TodoList</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>root</td><td>(entry_b,9)</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>list</td><td>(call (17),34)</td><td>(call (17),25)</td><td></td><td></td><td></td><td></td></tr>
-<tr><td>addTodo</td><td>(19a,call (40))</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>saved</td><td>(29,(30a,30b))</td><td>(29,(30a,30b))</td><td>(29,33)</td><td></td><td></td><td></td></tr>
-<tr><td>id</td><td>(30b,31)</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>input</td><td>(39,call (40))</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>title</td><td>(19b,(20,21))</td><td>(19b,(20,23))</td><td>(19b,23)</td><td></td><td></td><td></td></tr>
+<tr><td>Variable</td><td COLSPAN="5">Def-Use pairs</td></tr><tr><td>window</td><td>(entry_a,37)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,call (17))</td><td>(entry_a,38)</td><td>(entry_a,39)</td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>init</td><td>(entry_a,37)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Math</td><td>(entry_a,31)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>loadTodos</td><td>(2,29)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>saveTodos</td><td>(2,24)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>state</td><td>(4,33)</td><td>(4,34)</td><td>(4,23)</td><td>(4,24)</td><td>(4,25)</td></tr>
+<tr><td>nextId</td><td>(31,31)</td><td>(5,31)</td><td>(5,23)</td><td>(31,23)</td><td></td></tr>
+<tr><td>TodoList</td><td>(7,call (17))</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>TodoList</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>root</td><td>(entry_b,9)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>list</td><td>(call (17),34)</td><td>(call (17),25)</td><td></td><td></td><td></td></tr>
+<tr><td>addTodo</td><td>(19a,call (40))</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>saved</td><td>(29,(30a,30b))</td><td>(29,(30a,30b))</td><td>(29,33)</td><td></td><td></td></tr>
+<tr><td>id</td><td>(30b,31)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>input</td><td>(39,call (40))</td><td>(39,41)</td><td></td><td></td><td></td></tr>
+<tr><td>title</td><td>(19b,(20,21))</td><td>(19b,(20,23))</td><td>(19b,23)</td><td></td><td></td></tr>
 </TABLE>
 >];
 }

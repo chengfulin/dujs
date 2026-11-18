@@ -784,3 +784,68 @@ describe('summary (feature 005, User Story 1)', function () {
 		});
 	});
 });
+
+/**
+ * FR-003 (feature 008 User Story 1, research R4; contracts/acceptance.md
+ * "FR-003 summary"): a member target in a callee is a use, not a definition,
+ * of its object variable, so the summary of the callee neither generates nor
+ * must-kills it, and holds it as an upward-exposed use; the summaries of
+ * *.matching.json are the same.
+ */
+describe('summary of a callee writing a property o.p = 1 (feature 008 FR-003)', function () {
+	'use strict';
+	var CODE = [
+		'var o = {};',
+		'function g() {',
+		'  o.p = 1;',
+		'}',
+		'g();',
+		'console.log(o);'
+	].join('\n');
+
+	after(function () {
+		analyze.reset();
+		summaryModule().reset();
+	});
+
+	it('should not hold o in the gen and the mustKill of g, and hold it as upward-exposed', function () {
+		var summary = summaryOf(analyzeAndSummarize(CODE), 'g');
+		namesOf(summary.mustKill).should.not.containEql('o');
+		defsOf(summary.gen).filter(function (def) {
+			return def.split('@')[0] === 'o';
+		}).should.eql([]);
+		namesOf(summary.upwardExposed).should.containEql('o');
+	});
+
+	it('should give the same summary of g in *.matching.json', function () {
+		this.timeout(60000);
+		var dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dujs-summary-')),
+			input = path.join(dir, 'g.js');
+		try {
+			fs.writeFileSync(input, CODE, 'utf8');
+			var run = childProcess.spawnSync(process.execPath,
+				[path.join(__dirname, '..', '..', 'bin', 'dujs.js'), '-js', input], {cwd: dir, encoding: 'utf8'});
+			run.status.should.eql(0, run.stderr);
+			var out = fs.readdirSync(dir).filter(function (name) {
+				return name.indexOf('out-') === 0;
+			})[0];
+			var interDir = path.join(dir, out, 'page0', 'inter-procedurals'),
+				ofG = null;
+			fs.readdirSync(interDir).filter(function (name) {
+				return /\.matching\.json$/.test(name);
+			}).forEach(function (name) {
+				var summaries = JSON.parse(fs.readFileSync(path.join(interDir, name), 'utf8')).summaries;
+				ofG = ofG || summaries[PAGE + '.g'] || null;
+			});
+			(!!ofG).should.eql(true, 'no summary of g');
+			/// gen items are "<variable>@<node id>"
+			ofG.gen.filter(function (item) {
+				return item.split('@')[0] === 'o';
+			}).should.eql([]);
+			ofG.mustKill.should.not.containEql('o');
+			ofG.upwardExposed.should.containEql('o');
+		} finally {
+			fs.rmSync(dir, {recursive: true, force: true});
+		}
+	});
+});

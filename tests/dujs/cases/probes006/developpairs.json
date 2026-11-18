@@ -129,7 +129,8 @@
 			"console: entry -> L10",
 			"console: entry -> L8",
 			"f: entry -> L11",
-			"o: L7 -> L8",
+			"o: L6 -> L7",
+			"o: L6 -> L8",
 			"u: L9 -> L10",
 			"x: entry -> L2"
 		],
@@ -138,7 +139,8 @@
 				"console: entry -> L10",
 				"console: entry -> L8",
 				"f: entry -> L11",
-				"o: L7 -> L8",
+				"o: L6 -> L7",
+				"o: L6 -> L8",
 				"u: L9 -> L10",
 				"x: entry -> L2"
 			]
