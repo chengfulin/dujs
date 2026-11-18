@@ -65,7 +65,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>成員賦值與方法呼叫</h1>
-<div class="meta">feature 008-property-defs-method-calls · spec · 第 1 輪（首建）· 2026-11-18（D001–D005 已裁決）</div>
+<div class="meta">feature 008-property-defs-method-calls · spec · 第 2 輪（clarify）· 2026-11-18（D001–D010 已裁決）</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -176,6 +176,9 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <h2>工程師要決定的事</h2>
 
+<h3>本輪變更（clarify）</h3>
+<p>Clarifications 新增「Session 2026-11-18（clarify）」：D006–D010、SC-007（文件條目逐項核對）、延後釐清（inter-page 可到達判定的起點與例外邊交 plan）。改動小節：FR-001、FR-009、US1 情境 2／4／13–15、US2 情境 13、Success Criteria、Edge Cases。</p>
+
 <h3>驗收條件盤點</h3>
 <div class="box"><table>
 <tr><th>Story</th><th>驗收條件</th><th>判定</th><th>出處</th></tr>
@@ -206,6 +209,11 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>D003</td><td>是否修 P21（<code>finally</code> 只由例外進入）</td><td>A（附條件）：不修；P21、P23、P24 為 §38 根因，列允許清單與陽性對照；§22 (5) 寫成「除 §38 的 <code>finally</code> 情形外已修」</td><td>Clarifications D003；FR-006～FR-008、FR-011</td></tr>
 <tr><td>D004</td><td><code>localStorage</code> 儲存定義保留範圍</td><td>A（改措辭）：物件變數為 <code>localStorage</code> 的成員目標，定義與使用一律與 develop 相同，整個豁免 FR-001／FR-002；凍結表與兩頁探測 <code>probes/pages/</code> 為驗收基準；缺口記入 KI §22 (4)</td><td>Clarifications D004；表示法；FR-001、FR-002、FR-011 (e)</td></tr>
 <tr><td>D005</td><td>允許清單由誰判定</td><td>A（附前提）：檢查器差分判準（全開違反、關掉 (c) 後可達）＋見證＋過期項失敗；(a) 的無正常返回由檢查器自行重算</td><td>Clarifications D005；FR-007、FR-008、SC-005</td></tr>
+<tr><td>D006</td><td>差異中「損失」與「修正」如何區分</td><td>A：損失＝屬性層級模型（選項 B）會保留的 pair（同一屬性路徑）；計算鍵、路徑前綴重疊、同行多敘述、整個物件讀取預設歸損失；<code>o.m()</code> 歸修正；由 008 新寫的 diffcheck 機械判定</td><td>FR-009</td></tr>
+<tr><td>D007</td><td>inter-page 是否要有自己的驗收</td><td>A：新增兩頁 probe s10，<code>run-pages.js</code> 加印 <code>inter-page (all)</code></td><td>US1 情境 14</td></tr>
+<tr><td>D008</td><td><code>localStorage</code> 例外的判定</td><td>A：Var 同一性；被遮蔽、頁面宣告、別名不豁免；<code>window.localStorage.*</code> 屬 <code>window</code></td><td>FR-001；US1 情境 15</td></tr>
+<tr><td>D009</td><td><code>f(a).p = 1</code> 的呼叫</td><td>A：仍連結，保留 <code>o: L1 -> L3</code>、<code>v: entry -> L3</code></td><td>US1 情境 13</td></tr>
+<tr><td>D010</td><td>P36 是否獨立情境</td><td>A：補 US2 情境 13</td><td>US2 情境 13</td></tr>
 <tr><td>—</td><td>測試 helper 的 <code>Lnull</code> 標記（P18）</td><td>不修，記入 known-issues</td><td>Clarifications；FR-011 (d)</td></tr>
 </table></div>
 

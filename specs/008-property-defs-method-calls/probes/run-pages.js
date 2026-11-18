@@ -3,8 +3,8 @@
  * the pages of one program separated by a line "//// page". Prints the pairs of
  * the intra-procedural model of the first page, the number of nodes defining
  * the local storage object in the intra-page model of the first page
- * (hierarchy.definingLocalStorageNodes) and the localStorage pairs of the
- * inter-page model. Usage (from the repository root):
+ * (hierarchy.definingLocalStorageNodes), the localStorage pairs of the
+ * inter-page model and (feature 008 D007) all its pairs. Usage (from the repository root):
  *   node specs/008-property-defs-method-calls/probes/run-pages.js [file ...]
  */
 var fs = require('fs'),
@@ -28,6 +28,8 @@ function run(file) {
 		console.log('inter-page localStorage: ' + analyze.pairsOfModel(modelCtrl.interPageModel).filter(function (pair) {
 			return /^localStorage:/.test(pair);
 		}).join(' | '));
+		/// feature 008 D007: every pair of the inter-page model (labels do not name the page)
+		console.log('inter-page (all): ' + analyze.pairsOfModel(modelCtrl.interPageModel).join(' | '));
 	} catch (err) {
 		console.log('ERROR: ' + err.message.split('\n')[0]);
 	}

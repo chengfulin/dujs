@@ -7,6 +7,11 @@
     "specify": {
       "done": true,
       "decisions": "D001–D005"
+    },
+    "clarify": {
+      "done": true,
+      "clarifier_findings": 8,
+      "decisions": "D006–D010"
     }
   }
 }
