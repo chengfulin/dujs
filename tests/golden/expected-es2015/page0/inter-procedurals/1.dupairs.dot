@@ -2,8 +2,9 @@ digraph structs {
 node [shape="plaintext"]
 struct1 [label=<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-<tr><td>Variable</td><td COLSPAN="3">Def-Use pairs</td></tr><tr><td>input</td><td>(39,call (40))</td><td>(39,41)</td><td></td></tr>
-<tr><td>title</td><td>(19,(20,21))</td><td>(19,(20,23))</td><td>(19,23)</td></tr>
+<tr><td>Variable</td><td COLSPAN="3">Def-Use pairs</td></tr><tr><td>title</td><td>(19,(20,21))</td><td>(19,(20,23))</td><td>(19,23)</td></tr>
+<tr><td>todos</td><td>(entry_b,12)</td><td></td><td></td></tr>
+<tr><td>visible</td><td>(12,13)</td><td></td><td></td></tr>
 </TABLE>
 >];
 }

@@ -31,7 +31,7 @@
     "implement": {
       "done": false,
       "mode_note": "依序模式（未跑 0P：phase 明文串接、共用熱點檔）",
-      "decisions": "D021–D024",
+      "decisions": "D021–D025",
       "phases": {
         "Setup": {
           "reviewed": true,
@@ -44,6 +44,11 @@
       },
       "stories": {
         "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US2": {
           "validated": true,
           "reviewed": true,
           "committed": true

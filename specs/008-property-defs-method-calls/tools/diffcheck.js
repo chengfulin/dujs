@@ -1,6 +1,6 @@
 /*
  * Difference check of feature 008 (FR-009, FR-010, SC-003, SC-004; D006, D011,
- * D022, D023, D024; contracts/diff-check.md): compare the outputs of develop (2035c93) with
+ * D022, D023, D024, D025; contracts/diff-check.md): compare the outputs of develop (2035c93) with
  * those of this branch and classify every difference with the categories of
  * feature 008 (成員目標, 屬性寫入→讀取損失, 外溢, 放寬, 層級新增, KI classes,
  * 共通). The .dot parsing, locate, baseOf and exitCodesOf are those of
@@ -81,7 +81,12 @@
  *   and that group is paired by name. The *.graph.dot of the summary check
  *   are those of the paired models.
  * - 成員目標（摘要） (D023 (b), matching ~, FR-003): summaries are compared
- *   element by element for the functions on both sides. R(f) is the base line
+ *   element by element for the functions on both sides. Before that (D025),
+ *   each v@n of gen / exceptional is taken as v with the label of node n in
+ *   the *.graph.dot of the same model on its side, and an element whose
+ *   labelled form is on both sides is no difference (a pure renumbering,
+ *   "init.gen −nextId@n144 +nextId@n146" both "31"); with no graph, or no
+ *   node n in it, the node number itself (stricter). R(f) is the base line
  *   range of f (intra-procedural *.graph.dot) and those of its callees along
  *   the base hierarchy call edges, transitively. An element holds when (1)
  *   gen / exceptional −v@n: the line of node n in the base *.graph.dot of the
@@ -974,6 +979,21 @@ function elementParts(element) {
 }
 
 /**
+ * Key of a summary element for the comparison of the two sides (D025): v@n
+ * with node n in the labels of the *.graph.dot of the same model becomes
+ * "v@[label]"; with no such node (no graph) it stays v@n, and an element with
+ * no node (mustKill, upwardExposed) stays as it is
+ * @param {string} element
+ * @param {Map} [labels] node id -> label
+ * @returns {string}
+ */
+function elementKey(element, labels) {
+	'use strict';
+	var parts = elementParts(element);
+	return parts.node !== null && labels && labels.has(parts.node) ? parts.name + '@[' + labels.get(parts.node) + ']' : element;
+}
+
+/**
  * Element differences of the summaries of a matching file (D023 (b), D024,
  * FR-003): each must be (1) a gen / exceptional v@n removed whose node line
  * (base graph) has a 定義性成員目標 of v, (2) a mustKill v removed with such a
@@ -1062,14 +1082,23 @@ function summaryCheck(summary, info, linked) {
 				result.failures.push(text);
 			}
 		}
+		// D025: an element v@n is compared as v with the label of node n in
+		// the *.graph.dot of the same model on its side (no graph or no such
+		// node: the node number itself), so a pure renumbering is no change
 		function changes(field) {
-			var was = list(before, field), now = list(after, field);
-			return {
-				removed: was.filter(function (element) {
-					return now.indexOf(element) === -1;
+			var was = list(before, field), now = list(after, field),
+				wasKeys = was.map(function (element) {
+					return elementKey(element, summary.baseLabels);
 				}),
-				added: now.filter(function (element) {
-					return was.indexOf(element) === -1;
+				nowKeys = now.map(function (element) {
+					return elementKey(element, summary.nextLabels);
+				});
+			return {
+				removed: was.filter(function (element, index) {
+					return nowKeys.indexOf(wasKeys[index]) === -1;
+				}),
+				added: now.filter(function (element, index) {
+					return wasKeys.indexOf(nowKeys[index]) === -1;
 				})
 			};
 		}
@@ -1313,7 +1342,7 @@ function mainCategory(category) {
  * @param {string} next *.matching.json of this branch
  * @param {string|null} baseGraph *.graph.dot of the same model in the base
  * @param {string|null} nextGraph *.graph.dot of the same model in this branch
- * @returns {Object|null} {restEqual, base, next, baseLines, nextLines}
+ * @returns {Object|null} {labelEqual, restEqual, base, next, baseLines, nextLines, baseLabels, nextLabels}
  */
 function summaryInput(raw, next, baseGraph, nextGraph) {
 	'use strict';
@@ -1334,11 +1363,15 @@ function summaryInput(raw, next, baseGraph, nextGraph) {
 		});
 		return lines;
 	}
-	function labelled(summaries, text) {
+	function labelsOf(text) {
 		var labels = new Map();
 		(text === null ? [] : graphNodes(text)).forEach(function (node) {
 			labels.set(node.id, node.label);
 		});
+		return labels;
+	}
+	function labelled(summaries, text) {
+		var labels = labelsOf(text);
 		return JSON.stringify(summaries, function (key, value) {
 			return typeof value === 'string' ? value.replace(/@(n\d+)$/, function (whole, id) {
 				return '@' + (labels.has(id) ? labels.get(id) : id);
@@ -1354,7 +1387,9 @@ function summaryInput(raw, next, baseGraph, nextGraph) {
 		base: base,
 		next: now,
 		baseLines: linesOf(baseGraph),
-		nextLines: linesOf(nextGraph)
+		nextLines: linesOf(nextGraph),
+		baseLabels: labelsOf(baseGraph),
+		nextLabels: labelsOf(nextGraph)
 	};
 }
 

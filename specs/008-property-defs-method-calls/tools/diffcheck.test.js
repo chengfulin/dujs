@@ -1360,4 +1360,54 @@ describe('diffcheck 008', function () {
 			});
 		});
 	});
+
+	describe('(j) D025 summary elements compared by node label', function () {
+		function summaryOf(fields) {
+			return Object.assign({normalReturn: true, conservative: false, gen: [], mustKill: [], upwardExposed: [], exceptional: []}, fields);
+		}
+		var INIT = '$DOMAIN.$PAGE_0.init',
+			source = 'var para = document.querySelector(\'p\'), nextId = 0;\nfunction init() {\n  para.textContent = \'x\';\n' +
+				'  nextId = 1;\n  nextId = 2;\n}\ninit();\n';
+		/**
+		 * init() loses para of the member target on L3 (成員目標（摘要）) and its
+		 * nextId element is renumbered: base nextId@<baseId>, 008 nextId@<nextId>
+		 * @param {Array} baseNode [id, label] of the nextId node in the base graph
+		 * @param {Array} nextNode [id, label] of the nextId node in the graph of this branch
+		 * @param {boolean} [graphs] write the *.graph.dot files (default true)
+		 * @returns {Object} the matching ~ difference
+		 */
+		function run(baseNode, nextNode, graphs) {
+			function files(node, fields) {
+				var result = {
+					'intra-pages/0.matching.json': matchingJson([[7, INIT]], {'$DOMAIN.$PAGE_0.init': summaryOf(fields)}),
+					'intra-procedurals/1.graph.dot': calleeGraph(INIT, [3, 4, 5])
+				};
+				if (graphs !== false) {
+					result['intra-pages/0.graph.dot'] = graphDot([['n1', 'entry'], ['n3', '3'], node, ['n99', 'exit']]);
+				}
+				return result;
+			}
+			var result = comparePage(source,
+				files(baseNode, {gen: ['para@n3', 'nextId@' + baseNode[0]], exceptional: ['nextId@' + baseNode[0]], mustKill: ['para', 'nextId']}),
+				files(nextNode, {gen: ['nextId@' + nextNode[0]], exceptional: ['nextId@' + nextNode[0]], mustKill: ['nextId'], upwardExposed: ['para']}));
+			return find(result, 'matching', '~', 'intra-pages/0.matching.json');
+		}
+		it('12: a pure renumbering of an element (init.gen −nextId@n144 +nextId@n146, both "5") is no element difference', function () {
+			var diff = run(['n144', '5'], ['n146', '5']);
+			assert.deepStrictEqual(diff.categories, ['成員目標（摘要）']);
+			assert.deepStrictEqual(diff.summaryResult.failures, []);
+			assert.deepStrictEqual(diff.summaryResult.items, ['init.gen −para@n3', 'init.mustKill −para', 'init.upwardExposed +para']);
+		});
+		it('13: -nextId@n4 +nextId@n5 of other labels ("4", "5") is still checked element by element', function () {
+			// the base node is on L4 (nextId = 1, no member target): gen −nextId@n4 fails
+			var other = run(['n4', '4'], ['n5', '5']);
+			assert.deepStrictEqual(other.categories, []);
+			assert.ok(has(other.summaryResult.failures, 'init.gen −nextId@n4'), other.summaryResult.failures);
+			assert.ok(has(other.summaryResult.failures, 'init.gen +nextId@n5'), other.summaryResult.failures);
+			// no graph: the node numbers themselves (stricter)
+			var bare = run(['n144', '5'], ['n146', '5'], false);
+			assert.deepStrictEqual(bare.categories, []);
+			assert.ok(has(bare.summaryResult.failures, 'init.gen +nextId@n146'), bare.summaryResult.failures);
+		});
+	});
 });

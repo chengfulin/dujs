@@ -1,35 +1,30 @@
 {
   "format": "dujs-matching/1",
   "level": "interProcedural",
-  "mainScope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4",
+  "mainScope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
   "calls": [
     {
       "id": "c1",
       "seq": 2,
-      "callSiteLine": 40,
-      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
-      "callNode": "n117",
-      "entry": "n118",
-      "exit": "n125",
-      "callReturn": "n126",
-      "exceptionalReturn": "n128",
+      "callSiteLine": 25,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n79",
+      "entry": "n80",
+      "exit": "n83",
+      "callReturn": "n84",
+      "exceptionalReturn": "n85",
       "back": false,
       "beforeDecision": false
     }
   ],
   "loops": [],
   "summaries": {
-    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1": {
       "normalReturn": true,
       "conservative": false,
       "gen": [],
       "mustKill": [],
-      "upwardExposed": [
-        "list",
-        "nextId",
-        "saveTodos",
-        "state"
-      ],
+      "upwardExposed": [],
       "exceptional": []
     }
   }

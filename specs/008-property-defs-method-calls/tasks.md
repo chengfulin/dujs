@@ -5,7 +5,7 @@ description: "Task list for feature 008-property-defs-method-calls"
 
 # Tasks：成員賦值不是物件變數的定義（KI §22 (1)）、函式中的 `o.m()` 放寬（KI §23）、無法到達的程式碼不產生 pair（KI §22 (5)）
 
-**Input**: `specs/008-property-defs-method-calls/` 的 spec.md（Clarifications D001–D020 為已定決策；D021–D024 為 analyze／implement 中的 Fable 裁決，記於本檔「analyze 裁決（D021–D022）」節；合稱 D001–D024）、plan.md（「實作順序與 story 相依」表與其下條列為排程權威）、research.md（R0–R14）、data-model.md、contracts/（lib-api.md、reachability.md、diff-check.md、acceptance.md）、quickstart.md
+**Input**: `specs/008-property-defs-method-calls/` 的 spec.md（Clarifications D001–D020 為已定決策；D021–D025 為 analyze／implement 中的 Fable 裁決，記於本檔「analyze 裁決（D021–D022）」節；合稱 D001–D025）、plan.md（「實作順序與 story 相依」表與其下條列為排程權威）、research.md（R0–R14）、data-model.md、contracts/（lib-api.md、reachability.md、diff-check.md、acceptance.md）、quickstart.md
 
 **Tests**: 規格要求（§CP-4、SC-001、contracts/acceptance.md），**測試先行**：每個 story／元件先寫測試（預期先失敗；「與 develop 相同」的 characterization 可直接通過），再實作。框架 mocha＋should；驗收測試以 `tests/helpers/analyze.js` 執行，probes 自 `tests/dujs/cases/probes008/` 以 `fs.readFileSync` 讀入，兩頁程式以 `//// page` 行切開（同 `probes/run-pages.js`）。
 
@@ -137,18 +137,18 @@ description: "Task list for feature 008-property-defs-method-calls"
 
 ### Tests for User Story 2（先寫）
 
-- [ ] T048 [US2] 擴充 `tests/dujs/propertydefs.js`：US2 情境 1–7、9–13（P5、P8、P9、P7、P10、P11、P6、P26、P28、P34、P35、P36）；連結者（P5、P8、P9、P34）斷言 `o.m()` 的 call 邊連到 `A` 的 `m`（不含 constructor）與 spec 所列 pair；「與 develop 相同」者（P6、P7、P11、P26、P28、P35、P36）以 `specs/008-property-defs-method-calls/probes/baseline-develop.txt` 該程式的行逐字比對；P10（US2-5，**D018**）不逐字：不連結、有 `x: L1 -> L11`，intra(page)、inter[0]、intra-page 各多 `F: entry -> L3`，其餘 pair 與 baseline 相同；P36 保留 inter-procedural 的 `f: L3 -> L7`（D010）；另補 US1 情境 14 中依賴 FR-004 的部分（D021）：s10 的 inter-page (all) 與第一頁 intra-page 有 `x: L3 -> L13`、沒有 `x: L6 -> L13`
-- [ ] T049 [US2] 擴充 `tests/dujs/propertydefs.js`：US2 情境 8——讀 `specs/006-eslint-scope/mdn/corpus/a05-assessment-main.js`，`loop()` 中 `evilBall.draw()`、`evilBall.checkBounds()`、`evilBall.collisionDetect()` 的 call 邊連到 `EvilCircle` 的 `draw`、`checkBounds`、`collisionDetect`
-- [ ] T050 [P] [US2] 擴充 `tests/dujs/relaxedcallee.js` 與 `tests/dujs/methodcalls.js`：`relaxedClassOfInstance` 的四個條件各一反例（頁面程式碼中的 `o.m()`、`var o`、兩個定義、`new F()` 的函式建構子）與正例（class 放寬的 `A`，FR-018；FR-004 的外層函式宣告 `const o = new A()` 而內層函式呼叫 `o.m()`；class 欄位初始化式中的 `o.m()`，D020 analyze C2）；函式內有到達的定義時沿用嚴格規則（P11 型）
-- [ ] T051 [P] [US2] 擴充 `tests/dujs/matching.js`（FR-005）：P5 中 FR-004 的呼叫每條 return 邊恰對應一個 record，`callSiteLine` 對應 P5 的 L9（依 matching 既有的行號慣例）
+- [X] T048 [US2] 擴充 `tests/dujs/propertydefs.js`：US2 情境 1–7、9–13（P5、P8、P9、P7、P10、P11、P6、P26、P28、P34、P35、P36）；連結者（P5、P8、P9、P34）斷言 `o.m()` 的 call 邊連到 `A` 的 `m`（不含 constructor）與 spec 所列 pair；「與 develop 相同」者（P6、P7、P11、P26、P28、P35、P36）以 `specs/008-property-defs-method-calls/probes/baseline-develop.txt` 該程式的行逐字比對；P10（US2-5，**D018**）不逐字：不連結、有 `x: L1 -> L11`，intra(page)、inter[0]、intra-page 各多 `F: entry -> L3`，其餘 pair 與 baseline 相同；P36 保留 inter-procedural 的 `f: L3 -> L7`（D010）；另補 US1 情境 14 中依賴 FR-004 的部分（D021）：s10 的 inter-page (all) 與第一頁 intra-page 有 `x: L3 -> L13`、沒有 `x: L6 -> L13`
+- [X] T049 [US2] 擴充 `tests/dujs/propertydefs.js`：US2 情境 8——讀 `specs/006-eslint-scope/mdn/corpus/a05-assessment-main.js`，`loop()` 中 `evilBall.draw()`、`evilBall.checkBounds()`、`evilBall.collisionDetect()` 的 call 邊連到 `EvilCircle` 的 `draw`、`checkBounds`、`collisionDetect`
+- [X] T050 [P] [US2] 擴充 `tests/dujs/relaxedcallee.js` 與 `tests/dujs/methodcalls.js`：`relaxedClassOfInstance` 的四個條件各一反例（頁面程式碼中的 `o.m()`、`var o`、兩個定義、`new F()` 的函式建構子）與正例（class 放寬的 `A`，FR-018；FR-004 的外層函式宣告 `const o = new A()` 而內層函式呼叫 `o.m()`；class 欄位初始化式中的 `o.m()`，D020 analyze C2）；函式內有到達的定義時沿用嚴格規則（P11 型）
+- [X] T051 [P] [US2] 擴充 `tests/dujs/matching.js`（FR-005）：P5 中 FR-004 的呼叫每條 return 邊恰對應一個 record，`callSiteLine` 對應 P5 的 L9（依 matching 既有的行號慣例）
 
 ### Implementation for User Story 2
 
-- [ ] T052 [US2] 修改 `lib/dujs/callresolver.js`（FR-004，R7，contracts/lib-api.md §6、data-model §2；依賴 T030、US1）：`classOfInstance` 在沒有到達的定義時呼叫新的私有 `relaxedClassOfInstance(node, variable, scopeTree, index)`，四條件全成立才回傳 classInfo——`isInFunction(node, scopeTree)`、`binding.isRelaxedInstance(variable)`（`let`／`const`）、`definitionsOnThePage(variable, scopeTree).length === 1`、該定義 range 對應 `index.newExpressionsByRange` 的 `new A(…)` 且 `A` 為 Identifier、`resolveVariable(def.fromNode, A, scopeTree)` 給 classInfo；只取 `instanceMethods`（不含 constructor）；匯出項目不變；T048–T051 全綠
-- [ ] T053 [US2] 更新編碼舊行為的既有測試（實際以 `npm test` 失敗清單為準，完成時把實際檔案清單回填到 `golden-diff.md` 的 US2 敘述節），逐處記入「單元測試期望」表（FR-004）
-- [ ] T054 [US2] 執行 `node specs/008-property-defs-method-calls/probes/run.js`，確認 US2 各情境（P5–P11、P26、P28、P34–P36）與 spec 一致，並執行 `probes/run-pages.js` 確認 s10 的 `x: L3 -> L13`、沒有 `x: L6 -> L13`（D021）、US1 各 probe 與 Foundational 的 P38–P40 不退步
-- [ ] T055 [US2] 全量不變量：執行 `npx mocha tests/dujs/reachabilityinvariant.js`；US2 若新增或消除 finallyExit 根因的 pair，更新 `tests/dujs/cases/reachability-allowlist.json`（附見證、過期即刪）；允許清單外 0 違反（關掉 (c) 仍違反者停止並回報，FR-008）
-- [ ] T056 [US2] golden：依「共通約定」更新並重產相對 `2035c93` 的累積淨差異到 `specs/008-property-defs-method-calls/golden-diff.md` 的「US2」敘述節（預期新增 `放寬` 類；新增呼叫點使段後綴位移的行列入「段結構改變行」）；`--verify` exit 0；`npm test`、`npm run lint` 全綠；manifest 依共通約定手動同步（含 `added` 檔名增刪：預期 `expected-es2015` 新增 `page0/inter-procedurals/2.*`、`3.*` 共 8 檔，不記雜湊）；預期 `成員目標`／`放寬` 帶出新模型的 pair 歸 `層級新增` 子標（D022）；另跑 `node specs/008-property-defs-method-calls/tools/diffcheck.js mdn --report`（不寫 mdn-diff），只檢查有無歸不進類別者，有則先處理（D020 C1）
+- [X] T052 [US2] 修改 `lib/dujs/callresolver.js`（FR-004，R7，contracts/lib-api.md §6、data-model §2；依賴 T030、US1）：`classOfInstance` 在沒有到達的定義時呼叫新的私有 `relaxedClassOfInstance(node, variable, scopeTree, index)`，四條件全成立才回傳 classInfo——`isInFunction(node, scopeTree)`、`binding.isRelaxedInstance(variable)`（`let`／`const`）、`definitionsOnThePage(variable, scopeTree).length === 1`、該定義 range 對應 `index.newExpressionsByRange` 的 `new A(…)` 且 `A` 為 Identifier、`resolveVariable(def.fromNode, A, scopeTree)` 給 classInfo；只取 `instanceMethods`（不含 constructor）；匯出項目不變；T048–T051 全綠
+- [X] T053 [US2] 更新編碼舊行為的既有測試（實際以 `npm test` 失敗清單為準，完成時把實際檔案清單回填到 `golden-diff.md` 的 US2 敘述節），逐處記入「單元測試期望」表（FR-004）
+- [X] T054 [US2] 執行 `node specs/008-property-defs-method-calls/probes/run.js`，確認 US2 各情境（P5–P11、P26、P28、P34–P36）與 spec 一致，並執行 `probes/run-pages.js` 確認 s10 的 `x: L3 -> L13`、沒有 `x: L6 -> L13`（D021）、US1 各 probe 與 Foundational 的 P38–P40 不退步
+- [X] T055 [US2] 全量不變量：執行 `npx mocha tests/dujs/reachabilityinvariant.js`；US2 若新增或消除 finallyExit 根因的 pair，更新 `tests/dujs/cases/reachability-allowlist.json`（附見證、過期即刪）；允許清單外 0 違反（關掉 (c) 仍違反者停止並回報，FR-008）
+- [X] T056 [US2] golden：依「共通約定」更新並重產相對 `2035c93` 的累積淨差異到 `specs/008-property-defs-method-calls/golden-diff.md` 的「US2」敘述節（預期新增 `放寬` 類；新增呼叫點使段後綴位移的行列入「段結構改變行」）；`--verify` exit 0；`npm test`、`npm run lint` 全綠；manifest 依共通約定手動同步（含 `added` 檔名增刪：預期 `expected-es2015` 新增 `page0/inter-procedurals/2.*`、`3.*` 共 8 檔，不記雜湊）；預期 `成員目標`／`放寬` 帶出新模型的 pair 歸 `層級新增` 子標（D022）；另跑 `node specs/008-property-defs-method-calls/tools/diffcheck.js mdn --report`（不寫 mdn-diff），只檢查有無歸不進類別者，有則先處理（D020 C1）
 
 **Checkpoint**: US1＋US2 完成；golden 收尾（之後不再改 golden），golden-diff 釘選列與段結構改變行待使用者簽核。
 
@@ -195,6 +195,7 @@ description: "Task list for feature 008-property-defs-method-calls"
 - **D022 = A**：diffcheck 的模型對應以「頁 × 層級」聯集比對 pair（不依模型檔編號逐檔比；es2015 基準 `inter-procedurals/1` 在 008 變成 `3`），並沿 007 判準加 `層級新增` 子標（+ pair 以相同（變數、def、use）存在於基準側同頁 `intra-pages`）。於 T008、T009 實作並附自我測試 fixture，在 T011 首次 commit 前定案（contracts/diff-check.md §1、§2 同步）。
 - **D023 = A 收緊版**（implement Setup，主對話＋Fable）：diffcheck 補 `成員目標（摘要）`（matching `~`，FR-003，四條逐元素判準）、`成員目標（列消失）`（row −，FR-001）、觸發行本身的純改標併入 `外溢`／`放寬` 位置條件；各附正反 fixture，於 T011 首次 commit 前定案（contracts/diff-check.md §2 同步）。
 - **D024 = A 收緊版**（implement Setup，主對話＋Fable）：(b) 加第 5 條（新連結 callee 集合 N(f) 帶出的 gen／exceptional／upwardExposed 新增元素，三項全成立）；matching 檔以頁×層級內 mainScope 配對；共通須摘要標記相同；各附反例 fixture。
+- **D025 = A**（implement US2 T056，主對話；使用者同意修改 008 diffcheck，僅限本項）：摘要逐元素比對前，以同模型 `.graph.dot` 把兩側 `v@n` 換成節點標記，相同即無差異（graph 缺檔沿用原編號）；附正反 fixture；不放寬其他判準。另接受 D022 新模型 pair 主類別為 `放寬`、`層級新增` 列於「亦符」。
 
 ---
 

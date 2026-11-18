@@ -8,48 +8,82 @@
       "seq": 1,
       "callSiteLine": 17,
       "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
-      "callNode": "n130",
-      "entry": "n131",
-      "exit": "n133",
-      "callReturn": "n134",
-      "exceptionalReturn": "n138",
+      "callNode": "n132",
+      "entry": "n133",
+      "exit": "n135",
+      "callReturn": "n136",
+      "exceptionalReturn": "n140",
       "back": false,
       "beforeDecision": false
     },
     {
       "id": "c2",
       "seq": 2,
+      "callSiteLine": 25,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n165",
+      "entry": "n149",
+      "exit": "n152",
+      "callReturn": "n170",
+      "exceptionalReturn": "n171",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 34,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n148",
+      "entry": "n149",
+      "exit": "n152",
+      "callReturn": "n153",
+      "exceptionalReturn": "n154",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 4,
       "callSiteLine": 40,
       "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
-      "callNode": "n151",
-      "entry": "n152",
-      "exit": "n159",
-      "callReturn": "n160",
-      "exceptionalReturn": "n162",
+      "callNode": "n158",
+      "entry": "n159",
+      "exit": "n171",
+      "callReturn": "n172",
+      "exceptionalReturn": "n174",
       "back": false,
       "beforeDecision": false
     }
   ],
   "loops": [
     {
-      "loop": "n138",
-      "loopReturn": "n148",
+      "loop": "n140",
+      "loopReturn": "n155",
       "handlers": [
         {
           "scope": "$DOMAIN.$PAGE_0.init",
-          "entry": "n140",
-          "exit": "n147"
+          "entry": "n142",
+          "exit": "n154"
         },
         {
           "scope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4",
-          "entry": "n149",
-          "exit": "n162"
+          "entry": "n156",
+          "exit": "n174"
         }
       ]
     }
   ],
   "summaries": {
     "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1": {
       "normalReturn": true,
       "conservative": false,
       "gen": [],
@@ -89,7 +123,7 @@
       "normalReturn": true,
       "conservative": true,
       "gen": [
-        "nextId@n144"
+        "nextId@n146"
       ],
       "mustKill": [],
       "upwardExposed": [
@@ -100,7 +134,7 @@
         "state"
       ],
       "exceptional": [
-        "nextId@n144"
+        "nextId@n146"
       ]
     }
   }

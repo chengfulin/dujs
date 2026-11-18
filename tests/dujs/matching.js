@@ -11,6 +11,8 @@
  *   exceptionalReturn of the call of L8), not through its CALL RETURN NODE.
  * - Self consistency: every return edge to a call return of a graph is the
  *   (exit, callReturn) of exactly one record.
+ * - p5-ki23.js (feature 008 User Story 2, FR-005): o.m() of L9 in g, linked
+ *   by FR-004, has one record of its own.
  *
  * The CLI analyzes the page with a header line (src.js), so the lines in its
  * output are one more than the lines of the probe.
@@ -28,7 +30,8 @@ var modelCtrl = require('../../lib/dujs/modelctrl'),
 
 var ROOT = path.join(__dirname, '..', '..'),
 	PROBES005 = path.join(__dirname, 'cases', 'probes005'),
-	PROBES007 = path.join(__dirname, 'cases', 'probes007');
+	PROBES007 = path.join(__dirname, 'cases', 'probes007'),
+	PROBES008 = path.join(__dirname, 'cases', 'probes008');
 
 /// fields of a CallSiteRecord (data-model §4)
 var RECORD_FIELDS = ['callNode', 'callReturn', 'calleeScope', 'exceptionalReturn', 'entry', 'exit',
@@ -220,6 +223,35 @@ describe('call matching (feature 005, User Story 1 scenario 5)', function () {
 					});
 				});
 			});
+		});
+	});
+
+	/// feature 008 User Story 2 (T051, FR-005): o.m() of L9 in g linked by FR-004 (P5)
+	describe('o.m() in a function linked by the only new A() of o (feature 008 User Story 2)', function () {
+		it('should map every return edge to a call return to exactly one record and o.m() of L9 to m (P5)', function () {
+			var result = analyze(fs.readFileSync(path.join(PROBES008, 'p5-ki23.js'), 'utf8'));
+			upperModelsOf(result).forEach(function (model) {
+				var records = recordsOf(model), returns = 0;
+				model.graph[2].forEach(function (node) {
+					node.return.forEach(function (target) {
+						if (target.type === FlowNode.LOOP_NODE_TYPE) {
+							return;
+						}
+						returns += 1;
+						records.filter(function (record) {
+							return record.exit === node && record.callReturn === target;
+						}).should.have.length(1, 'p5: return edge to ' + target);
+					});
+				});
+				returns.should.eql(records.length);
+			});
+			/// the method m of A is $ANONYMOUS_FUN_0; L9 of the probe (the CLI output would give L10)
+			var records = recordsOf(interProceduralModelOfPage(result)).filter(function (record) {
+				return lastPartOf(record.calleeScope.name) === '$ANONYMOUS_FUN_0';
+			});
+			records.should.have.length(1);
+			records[0].callSiteLine.should.eql(9);
+			records[0].callNode.line.should.eql(9);
 		});
 	});
 

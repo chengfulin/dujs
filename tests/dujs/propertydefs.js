@@ -2,7 +2,9 @@
  * Acceptance tests of member targets not defining their object variable
  * (specs/008-property-defs-method-calls, User Story 1, KI §22 (1); FR-001,
  * FR-002, FR-003; D001, D004, D007, D008, D009, D012, D013, D020, D021;
- * contracts/acceptance.md). Original dujs code, MIT License (see LICENSE).
+ * contracts/acceptance.md) and of o.m() in a function linked by the only
+ * new A() definition of o on the page (User Story 2, KI §23; FR-004, FR-005;
+ * D002, D010, D018, D021). Original dujs code, MIT License (see LICENSE).
  *
  * The probe programs are copied verbatim from
  * specs/008-property-defs-method-calls/probes to tests/dujs/cases/probes008
@@ -769,6 +771,139 @@ describe('member targets are uses, not definitions, of their object variable (fe
 			var baseline = baselineSections(BASELINE)['p22-while-true.js'];
 			(!!baseline).should.eql(true, 'no baseline of P22');
 			runLinesOf(probeSource('p22')).should.eql(baseline);
+		});
+	});
+});
+
+/**
+ * Call edges of a result at some lines, without the name of the callee scope:
+ * "L<line of the call-site> -> @L<line of the callee function>"
+ * @param {Object} result
+ * @param {string} source
+ * @param {Array} lines lines of the call-sites
+ * @returns {Array} sorted
+ */
+function callEdgesAtLines(result, source, lines) {
+	'use strict';
+	return callEdgesOf(result, source).filter(function (edge) {
+		return lines.indexOf(Number(/^L(\d+) /.exec(edge)[1])) !== -1;
+	}).map(function (edge) {
+		return edge.replace(/ -> .*@/, ' -> @');
+	}).sort();
+}
+
+describe('o.m() in a function linked by the only new A() definition of o (feature 008 User Story 2)', function () {
+	'use strict';
+	var baseline = baselineSections(BASELINE);
+
+	afterEach(function () {
+		analyze.reset();
+	});
+
+	/**
+	 * The lines of probes/baseline-develop.txt for a probe
+	 * @param {string} file
+	 * @returns {Array}
+	 */
+	function baselineOf(file) {
+		(!!baseline[file]).should.eql(true, 'no baseline of ' + file);
+		return baseline[file];
+	}
+
+	/// T048: US2 scenarios 1-3 and 11 (linked: m of A only, A has no constructor)
+	describe('scenarios 1-3, 11: linked (T048)', function () {
+		it('US2-1 should connect o.m() of g to m of A, giving x: L4 -> L12 (P5)', function () {
+			var source = probeSource('p5'),
+				result = analyze(source);
+			callEdgesOf(result, source).should.eql(['L11 -> g@L8', 'L9 -> $ANONYMOUS_FUN_0@L3']);
+			expectPairs(pairsOfModels(result, true), UPPER, ['x: L4 -> L12'], ['x: L1 -> L12']);
+		});
+
+		/// k may run before h: x: L1 -> L12 is kept
+		it('US2-2 should connect o.m() of the handler h, giving x: L4 -> L12 in the intra-page model (P8)', function () {
+			var source = probeSource('p8'),
+				result = analyze(source);
+			callEdgesAtLines(result, source, [9]).should.eql(['L9 -> @L3']);
+			result.intraPage().should.containDeep(['x: L4 -> L12', 'x: L1 -> L12']);
+		});
+
+		/// needs User Story 1: o.p = 1 of L8 does not define o
+		it('US2-3 should connect o.m() of g after o.p = 1, giving x: L4 -> L13 (P9)', function () {
+			var source = probeSource('p9'),
+				result = analyze(source);
+			callEdgesOf(result, source).should.eql(['L10 -> $ANONYMOUS_FUN_0@L3', 'L12 -> g@L9']);
+			expectPairs(pairsOfModels(result, true), UPPER, ['x: L4 -> L13'], ['x: L1 -> L13']);
+		});
+
+		/// the relaxation ignores the order of execution (temporal dead zone of o)
+		it('US2-11 should connect o.m() of g called before const o = new A(), giving x: L4 -> L12 (P34)', function () {
+			var source = probeSource('p34'),
+				result = analyze(source);
+			callEdgesOf(result, source).should.eql(['L10 -> g@L7', 'L8 -> $ANONYMOUS_FUN_0@L3']);
+			expectPairs(pairsOfModels(result, true), UPPER, ['x: L4 -> L12'], ['x: L1 -> L12']);
+		});
+	});
+
+	/// T048: US2 scenarios 4, 6, 7, 9, 10, 12, 13: the output of develop (characterization)
+	describe('scenarios 4-7, 9, 10, 12, 13: not relaxed (T048)', function () {
+		[
+			['US2-4', 'p7-ki23-two-defs.js'],
+			['US2-6', 'p11-ki23-local-def.js'],
+			['US2-7', 'p6-ki23-var.js'],
+			['US2-9', 'p26-ki23-reassigned.js'],
+			['US2-10', 'p28-ki23-let-reassigned.js'],
+			['US2-12', 'p35-ki23-let-split.js'],
+			['US2-13', 'p36-d2-let-split.js']
+		].forEach(function (each) {
+			it(each[0] + ' should give the develop output of ' + each[1] + ' (characterization)', function () {
+				runLinesOf(probeSource(each[1].replace(/\.js$/, ''))).should.eql(baselineOf(each[1]));
+			});
+		});
+
+		/// D010: f of let f; f = function () {...}; is not relaxed, f: L3 -> L7 kept
+		it('US2-13 should keep f: L3 -> L7 in the inter-procedural model of P36 (D010)', function () {
+			var result = analyze(probeSource('p36')),
+				lists = pairsOfModels(result, true);
+			lists.inter.should.containEql('f: L3 -> L7');
+			expectPairs(lists, ALL, ['x: L1 -> L10'], []);
+		});
+
+		/// D018: not linked; F.prototype.m = ... of L3 reads F (FR-002, User Story 1) in three models
+		it('US2-5 should not connect o.m() of new F(), adding only F: entry -> L3 to develop (P10)', function () {
+			var source = probeSource('p10'),
+				expected = baselineOf('p10-ki23-not-class.js').map(function (line) {
+					return /^(inter\[0\] |intra\(page\):|intra-page )/.test(line) ?
+						line.replace('F: entry -> L6', 'F: entry -> L3 | F: entry -> L6') : line;
+				});
+			expected.join('\n').split('F: entry -> L3').should.have.length(4);
+			runLinesOf(source).should.eql(expected);
+			var result = analyze(source);
+			callEdgesAtLines(result, source, [8]).should.eql([]);
+			expectPairs(pairsOfModels(result, true), ALL, ['x: L1 -> L11', 'F: entry -> L3'], []);
+		});
+	});
+
+	/// T048, D021: the pairs of x of US1 scenario 14 need FR-004 (o.m() of g linked)
+	describe('scenario 14 of User Story 1: the pairs of x of s10 (T048, D021)', function () {
+		it('US1-14 should give x: L3 -> L13 and not x: L6 -> L13 in the inter-page model and the intra-page model of page 1', function () {
+			var run = runPages('s10-two-pages-method.js');
+			[['inter-page', run.interPage], ['intra-page of page 1', run.intraPage]].forEach(function (each) {
+				each[1].should.containEql('x: L3 -> L13', each[0] + ': ' + each[1].join(' | '));
+				each[1].should.not.containEql('x: L6 -> L13', each[0]);
+			});
+		});
+	});
+
+	/// T049: US2 scenario 8, the MDN assessment of "Object building practice"
+	describe('scenario 8: MDN a05-assessment-main.js (T049)', function () {
+		it('US2-8 should connect evilBall.draw(), checkBounds() and collisionDetect() of loop() to EvilCircle', function () {
+			this.timeout(60000);
+			var source = fs.readFileSync(path.join(__dirname, '..', '..', 'specs', '006-eslint-scope', 'mdn', 'corpus',
+					'a05-assessment-main.js'), 'utf8'),
+				result = analyze(source);
+			/// draw L119, checkBounds L127 and collisionDetect L145 of class EvilCircle (L93)
+			callEdgesAtLines(result, source, [198, 199, 200]).should.eql(['L198 -> @L119', 'L199 -> @L127',
+				'L200 -> @L145']);
 		});
 	});
 });
