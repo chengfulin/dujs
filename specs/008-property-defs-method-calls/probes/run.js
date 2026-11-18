@@ -4,7 +4,7 @@
  * and the def-use pairs of the page intra-procedural, every inter-procedural
  * and the intra-page model. Usage (from the repository root):
  *   node specs/008-property-defs-method-calls/probes/run.js [probe.js ...]
- * Without arguments every *.js probe of this directory (except run.js) runs.
+ * Without arguments every p*.js probe of this directory runs.
  * The output is the "current behavior" recorded in research.md.
  */
 var fs = require('fs'),
@@ -26,6 +26,10 @@ function run(file) {
 				model.graph[2].length + '): ' + analyze.pairsOfModel(model).join(' | '));
 		});
 		console.log('intra(page): ' + result.intraProcedural().join(' | '));
+		/// feature 008: the intra-procedural pairs of the other scopes (added after the lines above)
+		result.scopeNames().slice(1).forEach(function (name) {
+			console.log('intra(' + name.split('.').slice(2).join('.') + '): ' + result.intraProcedural(name).join(' | '));
+		});
 		console.log('intra-page (nodes ' + pageModels.intraPageModels[0].graph[2].length + '): ' +
 			result.intraPage().join(' | '));
 	} catch (err) {
@@ -37,7 +41,7 @@ function run(file) {
 var files = process.argv.slice(2);
 if (files.length === 0) {
 	files = fs.readdirSync(__dirname).filter(function (name) {
-		return /\.js$/.test(name) && name !== 'run.js';
+		return /^p.*\.js$/.test(name);
 	}).sort().map(function (name) {
 		return path.join(__dirname, name);
 	});
