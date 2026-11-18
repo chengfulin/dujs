@@ -37,6 +37,7 @@ n81 -> n80 []
 n81 -> n82 [color="red", label="exception"]
 n82 -> n83 [color="blue", label="return"]
 n83 -> n84 []
+n83 -> n86 [color="red", label="exception"]
 n84 -> n74 []
 n85 -> n86 []
 }

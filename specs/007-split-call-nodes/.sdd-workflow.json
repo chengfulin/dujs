@@ -64,6 +64,11 @@
           "validated": true,
           "reviewed": true,
           "committed": true
+        },
+        "US4": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
         }
       },
       "decisions": [
@@ -71,7 +76,8 @@
         "DECISION 008",
         "DECISION 009",
         "DECISION 010",
-        "DECISION 011"
+        "DECISION 011",
+        "DECISION 012"
       ]
     }
   },

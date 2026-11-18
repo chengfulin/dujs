@@ -79,7 +79,7 @@
 - `once-switch`：沒有任何 `case` 的 `switch (f()) {}` 不形成 plan（沒有第一個 `case`）；develop 對它已拋錯（R13 L6）。
 - 前驅：`decision` 與 `once-switch` 把 N 副本的全部前驅改指向段 0；`once-loop` 只改「來源的原節點屬 `enteringPrev`」的前驅（CALL／CALL RETURN 的原節點為其 `segment.source`）。
 - CallSiteRecord（005 data-model）：`callNode`＝該邊的呼叫來源（段 0 節點或前一個 CALL RETURN），`callReturn`、`entry`、`exit`、`seq`、`back` 不變；
-  `exceptionalReturn`＝`throwTarget` 的副本（null 若無）；`beforeDecision` 依 §2。
+  `exceptionalReturn`＝段 0 節點的 exception 目標（＝`throwTarget` 的副本；該目標的入邊被改向時隨之改向：`replayLoop` 的 LOOP 節點，或目標為有前插 CALL 的決策節點時的該 CALL；DECISION 012 Q2）（null 若無）；`beforeDecision` 依 §2。
 
 ## 5. 求值順序規則與呼叫點的範圍（後序，R2）
 

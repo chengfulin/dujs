@@ -229,4 +229,19 @@ describe('exceptions leaving a callee (feature 005 US3)', function () {
 		shouldHavePairsIn(pairsOfCode(classA.concat(['function t() {', '  new A().m();', '}', 'try {', '  t();', '} catch (e) {',
 			'  console.log(x);', '}']).join('\n')), 'new A().m() in t', ['x: L1 -> L16', 'x: L6 -> L16'], []);
 	});
+	/// feature 007 User Story 4 (FR-005, research R6): the segment after the return of f throws by its own
+	/// evaluation (f().p), so the definitions of f reach the exit of t exceptionally and, through the exceptional
+	/// summary of t, the catch of the caller; a call statement f(); does not throw after the return
+	it('carries the definitions of a callee through the segment after its return (007 US4)', function () {
+		var head = ['var x = 1;', 'var o = null;', 'function f() {', '  x = 2;', '  return o;', '}'];
+		shouldHavePairsIn(pairsOfCode(head.concat(['function t() {', '  var y = f().p;', '}', 'try {', '  t();', '} catch (e) {',
+			'  console.log(x);', '}']).join('\n')), 'f().p in t', ['x: L1 -> L13', 'x: L4 -> L13'], []);
+		shouldHavePairsIn(pairsOfCode(head.concat(['function t() {', '  f();', '}', 'try {', '  t();', '} catch (e) {',
+			'  console.log(x);', '}']).join('\n')), 'f(); in t', ['x: L1 -> L13'], ['x: L4 -> L13']);
+		/// if (f()) does not throw after the return (the decision loses its exception edge); if (f().p) does
+		shouldHavePairsIn(pairsOfCode(head.concat(['try {', '  if (f()) {', '  }', '} catch (e) {', '  console.log(x);', '}'])
+			.join('\n')), 'if (f())', ['x: L1 -> L11'], ['x: L4 -> L11']);
+		shouldHavePairsIn(pairsOfCode(head.concat(['try {', '  if (f().p) {', '  }', '} catch (e) {', '  console.log(x);', '}'])
+			.join('\n')), 'if (f().p)', ['x: L1 -> L11', 'x: L4 -> L11'], []);
+	});
 });

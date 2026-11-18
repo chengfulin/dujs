@@ -59,8 +59,11 @@
  * - 共通（段0例外） (DECISION 008): per *.graph.dot "~" difference; the
  *   records are those of the *.matching.json of the same model, compared by
  *   id with their keys sorted; the decision node is a normal successor of the
- *   CALL RETURN of the base with a "true"/"false" out-edge. The report lists
- *   "callNode → target（record id）" in the note column.
+ *   CALL RETURN of the base with a "true"/"false" out-edge. The exception
+ *   edge of the decision may move to the CALL (DECISION 012 Q1) when the
+ *   condition of the only decision on the call site line is itself the call.
+ *   The report lists "callNode → target（record id）" in the note column,
+ *   with "；移除 decision → target" for a moved edge.
  * - The pin table counts + and − of pairs, rows and models; "~" is listed by
  *   its row number only (005 rule). 標記 and 共通 are not pinned.
  *
@@ -877,15 +880,54 @@ function recordsById(text) {
 }
 
 /**
- * Condition 共通（段0例外） of §2 (DECISION 008): the only change of a
- * *.graph.dot is new exception edges from the CALL (segment 0) of a record
- * with beforeDecision true to its exceptionalReturn, the base already having
- * an exception edge to the same target from the decision node after its CALL
- * RETURN.
+ * Decisions whose condition starts on a line of the sources, each with
+ * whether the condition is itself a call (the condition without its
+ * parentheses is a CallExpression or a NewExpression, so nothing of it is
+ * evaluated after its last call)
+ * @param {Array} sources page sources
+ * @param {number} line
+ * @returns {Array} [{lastIsCall}] (null when a source cannot be parsed)
+ */
+function decisionsAt(sources, line) {
+	'use strict';
+	var found = [];
+	for (var i = 0; i < sources.length; ++i) {
+		var ast;
+		try {
+			ast = base006.parse(sources[i]);
+		} catch (ignoredParseError) {
+			return null;
+		}
+		base006.walk(ast, function (node) {
+			var test = null;
+			if (/^(If|While|DoWhile|For)Statement$/.test(node.type) || node.type === 'ConditionalExpression') {
+				test = node.test;
+			} else if (node.type === 'SwitchStatement') {
+				test = node.discriminant;
+			}
+			if (test && test.loc.start.line === line) {
+				found.push({lastIsCall: node.type !== 'SwitchStatement' &&
+					(test.type === 'CallExpression' || test.type === 'NewExpression')});
+			}
+		});
+	}
+	return found;
+}
+
+/**
+ * Condition 共通（段0例外） of §2 (DECISION 008, DECISION 012 Q1): the only
+ * change of a *.graph.dot is new exception edges from the CALL (segment 0)
+ * of a record with beforeDecision true to its exceptionalReturn, the base
+ * already having an exception edge to the same target from the decision node
+ * after its CALL RETURN; that edge of the decision may be removed (moved to
+ * the CALL) when the condition of the decision on the call site line is
+ * itself the call (e)
  * @param {Object} input {baseGraph, newGraph (texts, the base rewritten by §1),
  *   baseDupairs, newDupairs (texts or null, the base rewritten by §1),
- *   baseMatching, newMatching (texts or null)}
- * @returns {Array|null} [{callNode, target, id}] of the new edges, or null
+ *   baseMatching, newMatching (texts or null), sources (page sources of the
+ *   model)}
+ * @returns {Array|null} [{callNode, target, id, removed}] of the new edges
+ *   (removed: the decision node whose edge was removed, or null), or null
  *   when the condition does not hold
  */
 function segment0Exceptions(input) {
@@ -917,7 +959,8 @@ function segment0Exceptions(input) {
 	if (baseRecords === null || newRecords === null) {
 		return null;
 	}
-	// (b) same nodes and labels; no edge removed or redirected
+	// (b) same nodes and labels; no edge redirected, and only the removals
+	// paired below
 	var base = splitGraphLines(input.baseGraph),
 		next = splitGraphLines(input.newGraph);
 	if (base.rest !== next.rest) {
@@ -928,16 +971,37 @@ function segment0Exceptions(input) {
 	}), next.edges.map(function (edge) {
 		return edge.key;
 	}));
-	if (edgeDiff.length === 0 || edgeDiff.some(function (item) {
-		return item.sign !== '+';
-	})) {
+	function parsedOf(sign) {
+		return splitGraphLines(edgeDiff.filter(function (item) {
+			return item.sign === sign;
+		}).map(function (item) {
+			return item.content;
+		}).join('\n')).edges;
+	}
+	var parsed = parsedOf('+'),
+		removed = parsedOf('-'),
+		used = new Map(),
+		result = [];
+	if (parsed.length === 0 || parsed.length + removed.length !== edgeDiff.length) {
 		return null;
 	}
-	var parsed = splitGraphLines(edgeDiff.map(function (item) {
-			return item.content;
-		}).join('\n')).edges,
-		used = new Set(),
-		result = [];
+	// the decision node of a record in the base: the normal successor of its
+	// CALL RETURN with a true/false out-edge and an exception edge to target
+	function decisionsOf(baseRecord, target) {
+		return base.edges.filter(function (out) {
+			if (out.from !== baseRecord.callReturn || out.type !== '') {
+				return false;
+			}
+			var successor = out.to;
+			return base.edges.some(function (item) {
+				return item.from === successor && (item.type === 'true' || item.type === 'false');
+			}) && base.edges.some(function (item) {
+				return item.from === successor && item.to === target && item.type === 'exception';
+			});
+		}).map(function (out) {
+			return out.to;
+		});
+	}
 	// (c) every new edge attributed to exactly one record; (d) once per record
 	for (var i = 0; i < parsed.length; ++i) {
 		var edge = parsed[i];
@@ -955,24 +1019,36 @@ function segment0Exceptions(input) {
 		if (used.has(record.id) || !baseRecord || canonical(baseRecord) !== canonical(record)) {
 			return null;
 		}
-		var decided = base.edges.some(function (out) {
-			if (out.from !== baseRecord.callReturn || out.type !== '') {
-				return false;
-			}
-			var successor = out.to;
-			return base.edges.some(function (item) {
-				return item.from === successor && (item.type === 'true' || item.type === 'false');
-			}) && base.edges.some(function (item) {
-				return item.from === successor && item.to === edge.to && item.type === 'exception';
-			});
-		});
-		if (!decided) {
+		var decisions = decisionsOf(baseRecord, edge.to);
+		if (decisions.length === 0) {
 			return null;
 		}
-		used.add(record.id);
-		result.push({callNode: edge.from, target: edge.to, id: record.id});
+		var item = {callNode: edge.from, target: edge.to, id: record.id, removed: null, decisions: decisions,
+			line: record.callSiteLine};
+		used.set(record.id, item);
+		result.push(item);
 	}
-	return result;
+	// (b) a removed edge: the exception edge of the decision node of a record
+	// to its exceptionalReturn, paired with the new edge of the same record
+	// (same target), at most one per record; (e) the condition of the
+	// decision is itself the call
+	for (var j = 0; j < removed.length; ++j) {
+		var gone = removed[j],
+			owners = result.filter(function (entry) {
+				return gone.type === 'exception' && entry.target === gone.to && entry.decisions.indexOf(gone.from) !== -1;
+			});
+		if (owners.length !== 1 || owners[0].removed !== null) {
+			return null;
+		}
+		var decided = decisionsAt(input.sources || [], owners[0].line);
+		if (decided === null || decided.length !== 1 || !decided[0].lastIsCall) {
+			return null;
+		}
+		owners[0].removed = gone.from;
+	}
+	return result.map(function (entry) {
+		return {callNode: entry.callNode, target: entry.target, id: entry.id, removed: entry.removed};
+	});
 }
 
 /* ---------- §1 comparison ---------- */
@@ -1107,7 +1183,11 @@ function compareCase(spec) {
 				baseDupairs: readText(spec.baseDir, dupairs) === null ? null : baseTextOf(dupairs),
 				newDupairs: readText(spec.newDir, dupairs),
 				baseMatching: readText(spec.baseDir, matching),
-				newMatching: readText(spec.newDir, matching)
+				newMatching: readText(spec.newDir, matching),
+				sources: located.page === 'inter-page' ? spec.pageSources :
+					[spec.pageSources[Number(located.page.replace(/^page/, ''))]].filter(function (source) {
+						return typeof source === 'string';
+					})
 			});
 		}
 		push(located, unit, '~', located.file, null, extra);
@@ -1307,7 +1387,8 @@ function buildReport(results) {
 				return item !== '共通';
 			});
 			note = '段0例外：' + diff.segment0.map(function (item) {
-				return item.callNode + ' → ' + item.target + '（' + item.id + '）';
+				return item.callNode + ' → ' + item.target + '（' + item.id + '）' +
+					(item.removed ? '；移除 ' + item.removed + ' → ' + item.target : '');
 			}).join('；') + (others.length > 0 ? '（亦符：' + others.join('、') + '）' : '');
 		}
 		lines.push('| ' + [index + 1, diff.caseName, diff.page, diff.file, diff.unit, diff.sign, '`' + diff.content + '`',

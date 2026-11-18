@@ -221,8 +221,11 @@ describe('Defects found by the code review of PR #3', function () {
 		var callers = callersOf(page, fEntry);
 		callers.length.should.eql(1);
 		(callers[0].call === fEntry).should.be.true();
-		/// feature 007 US1: the CALL node before the decision (segment 0) has the exception edge of the decision
-		(callers[0].exception === decision[0].exception).should.be.true();
+		/// feature 007 US1: the CALL node before the decision (segment 0) has the exception edge of the decision;
+		/// 007 US4 (research R6): if (f()) does not throw after the return, so the copy of the decision has none
+		/// (to the LOOP NODE of the page, where the exception edges to the exit of the page are redirected)
+		callers[0].exception.type.should.eql(FlowNode.LOOP_NODE_TYPE);
+		(decision[0].exception === null).should.be.true();
 		callers[0].next.length.should.eql(2);
 		fEntry.prev.indexOf(callers[0]).should.not.eql(-1);
 	});

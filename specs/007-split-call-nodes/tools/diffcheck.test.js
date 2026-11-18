@@ -522,7 +522,7 @@ describe('diffcheck 007', function () {
 			if (options.beforeDecision === false) {
 				base['intra-pages/0.matching.json'] = matching(false);
 			}
-			return comparePage('var x = 1;\nfunction f() {}\nif (f()) {\n  x;\n} else {}\n', base, next);
+			return comparePage(options.source || 'var x = 1;\nfunction f() {}\nif (f()) {\n  x;\n} else {}\n', base, next);
 		}
 		function categories(result) {
 			return find(result, 'graph', '~', 'intra-pages/0.graph.dot').categories;
@@ -567,6 +567,45 @@ describe('diffcheck 007', function () {
 				redirected = removed.concat([['n7', 'n6', '']]);
 			assert.deepStrictEqual(categories(run({newEdges: removed})), []);
 			assert.deepStrictEqual(categories(run({newEdges: redirected})), []);
+		});
+		// DECISION 012 Q1: the exception edge of the decision moves to the CALL
+		// when the condition on the call site line is itself the call (e)
+		var moved = added.filter(function (edge) {
+			return !(edge[0] === 'n4' && edge[1] === 'n7');
+		});
+		it('holds when the exception edge of the decision if (f()) moves to the CALL, and lists the removal', function () {
+			var result = run({newEdges: moved}),
+				results = [result],
+				report = diffcheck.buildReport(results);
+			assert.deepStrictEqual(categories(result), ['共通（段0例外）', '共通']);
+			assert.ok(/\| 共通（段0例外） \| — \| 段0例外：n2 → n7（c1）；移除 n4 → n7 \|/.test(report), report);
+			assert.deepStrictEqual(diffcheck.verifyRecord(results, fillNotes(report)), []);
+		});
+		it('does not hold for a moved edge when the condition is not the call (f().ok, !f(), two decisions)', function () {
+			['var x = 1;\nfunction f() {}\nif (f().ok) {\n  x;\n} else {}\n',
+				'var x = 1;\nfunction f() {}\nif (!f()) {\n  x;\n} else {}\n',
+				'var x = 1;\nfunction f() {}\nif (f()) { while (x) {}\n  x;\n} else {}\n',
+				'var x = 1;\nfunction f() {}\nif (f() ? 1 : 0) {\n  x;\n} else {}\n'].forEach(function (source) {
+				assert.deepStrictEqual(categories(run({newEdges: moved, source: source})), [], source);
+			});
+		});
+		it('does not hold for a removal without the new edge of the record', function () {
+			assert.deepStrictEqual(categories(run({newEdges: baseEdges.filter(function (edge) {
+				return !(edge[0] === 'n4' && edge[1] === 'n7');
+			})})), []);
+		});
+		it('does not hold for a removed edge whose target is not the exceptionalReturn', function () {
+			// (the extra edges first: not the same shape after removing the node numbers)
+			var withExit = [['n4', 'n8', 'exception']].concat(baseEdges);
+			assert.deepStrictEqual(categories(run({baseEdges: withExit, newEdges: baseEdges.concat([['n2', 'n7', 'exception']])})), []);
+		});
+		it('does not hold for a removed edge whose source is not the decision node', function () {
+			var fromReturn = [['n3', 'n7', 'exception']].concat(baseEdges);
+			assert.deepStrictEqual(categories(run({baseEdges: fromReturn, newEdges: added})), []);
+		});
+		it('does not hold for two removed edges of the same record', function () {
+			var twice = baseEdges.concat([['n4', 'n7', 'exception']]);
+			assert.deepStrictEqual(categories(run({baseEdges: twice, newEdges: moved})), []);
 		});
 	});
 

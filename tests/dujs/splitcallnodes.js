@@ -409,7 +409,8 @@ describe('splitting the nodes with calls (feature 007)', function () {
 			allCallEdgesOf(result).should.eql([PAGE + ' L6 -> ' + PAGE + '.f']);
 		});
 
-		/// partial (DECISION 006 Q1): x: L3 -> L9 needs the exception edge of the segment after the return (US4, T052)
+		/// partial (DECISION 006 Q1): x: L3 -> L9 needs the exception edge of the segment after the return, asserted
+		/// with User Story 4 (T052, 'US4: the evaluation after a return may throw')
 		it('US2-10 should connect f() of throw f(); and give x: L1 -> L9 (p25, partial)', function () {
 			var result = analyzeProbe('p25-throw');
 			shouldHavePairsInModels(result, F, ['x: L1 -> L9'], []);
@@ -771,6 +772,55 @@ describe('splitting the nodes with calls (feature 007)', function () {
 			}
 			(error === null || /Cannot read properties of undefined/.test(error.message)).should.eql(true,
 				'unexpected failure: ' + (!!error ? error.message : ''));
+		});
+	});
+
+	/// T052 (FR-005, research R6): the segment after a return throws by its own evaluation (plan.throws), carrying
+	/// the definitions made before it (those of the callee included); a call statement and if (f()) do not throw
+	/// after the return
+	describe('US4: the evaluation after a return may throw', function () {
+		var F = [PAGE, PAGE + '.f'];
+
+		it('US4-1 should give x: L4 -> L10 and x: L1 -> L10 (p20, var y = f().p;)', function () {
+			shouldHavePairsInModels(analyzeProbe('p20-after-return-throws'), F, ['x: L4 -> L10', 'x: L1 -> L10'], []);
+		});
+
+		it('US4-2 should give x: L1 -> L10, not x: L4 -> L10 (p20b, f(); does not throw after the return)', function () {
+			shouldHavePairsInModels(analyzeProbe('p20b-stmt-call-try'), F, ['x: L1 -> L10'], ['x: L4 -> L10']);
+		});
+
+		it('US4-3 should give x: L1 -> L9 and x: L3 -> L9, not x: L7 -> L9 (p29, x = f();)', function () {
+			shouldHavePairsInModels(analyzeProbe('p29-assign-try'), F, ['x: L1 -> L9', 'x: L3 -> L9'], ['x: L7 -> L9']);
+		});
+
+		it('US4-4 should give x: L1 -> L9, not x: L3 -> L9 (p30, var y = f(); does not throw after the return)', function () {
+			shouldHavePairsInModels(analyzeProbe('p30-var-try'), F, ['x: L1 -> L9'], ['x: L3 -> L9']);
+		});
+
+		it('US4-5 should give x: L1 -> L11, x: L3 -> L11 and x: L3 -> L7>L8:T (p34, if (f() > x))', function () {
+			shouldHavePairsInModels(analyzeProbe('p34-cond-try'), F, ['x: L1 -> L11', 'x: L3 -> L11', 'x: L3 -> L7>L8:T'],
+				[]);
+		});
+
+		it('US4-6 should give x: L1 -> L11, not x: L3 -> L11, and no exception edge of the decision (p35, if (f()))', function () {
+			var result = analyzeProbe('p35-if-call-try'),
+				model = interModelOf(result, F);
+			shouldHavePairsInModels(result, F, ['x: L1 -> L11'], ['x: L3 -> L11']);
+			var edges = model.hierarchy.edges.filter(function (edge) {
+				return edge.kind === 'call';
+			});
+			edges.should.have.length(1);
+			edges[0].plan.shape.should.eql('decision');
+			edges[0].plan.throws.should.eql([true, false]);
+			var decision = model.flatNodeOf(edges[0].callSite);
+			(decision.exception === null).should.be.true();
+			/// the CALL NODE before it still throws to the catch clause
+			(model.flatNodeOf(edges[0].callNode).exception === model.flatNodeOf(edges[0].callSite.exception)).should.be.true();
+		});
+
+		/// the rest of US2-10 (DECISION 006 Q1): the segment after f() of throw f(); always throws
+		it('US2-10 should give x: L3 -> L9 of throw f(); (p25, the segment after the return throws)', function () {
+			shouldHavePairsInModels(analyzeProbe('p25-throw'), F, ['x: L1 -> L9', 'x: L3 -> L9'], []);
 		});
 	});
 });

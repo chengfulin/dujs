@@ -173,15 +173,15 @@ description: "Task list for feature 007-split-call-nodes"
 
 ### Tests for User Story 4（先寫）
 
-- [ ] T052 [US4] 在 `tests/dujs/splitcallnodes.js` 新增 US4-1…6（p20、p20b、p29、p30、p34、p35）；US4-6 另斷言決策節點副本沒有 exception 出邊；另補 US2-10（p25）的 `x: L3 -> L9`（自 T032 移來，返回後段的 exception 邊；DECISION 006 Q1）
-- [ ] T053 [P] [US4] 擴充 `tests/dujs/exceptionsummary.js` 與 `tests/dujs/expansion.js`：CALL RETURN 段 j≥1 只在 `throws[j]` 為真時有 exception 邊；`decision` 形狀 `throws[k]` 為假時 N 副本無 exception 邊；CallSiteRecord 的 `exceptionalReturn` 為 `copyOf(plan.throwTarget)`（決策副本例外邊被移除時仍正確，無目標時為 null）
+- [X] T052 [US4] 在 `tests/dujs/splitcallnodes.js` 新增 US4-1…6（p20、p20b、p29、p30、p34、p35）；US4-6 另斷言決策節點副本沒有 exception 出邊；另補 US2-10（p25）的 `x: L3 -> L9`（自 T032 移來，返回後段的 exception 邊；DECISION 006 Q1）
+- [X] T053 [P] [US4] 擴充 `tests/dujs/exceptionsummary.js` 與 `tests/dujs/expansion.js`：CALL RETURN 段 j≥1 只在 `throws[j]` 為真時有 exception 邊；`decision` 形狀 `throws[k]` 為假時 N 副本無 exception 邊；CallSiteRecord 的 `exceptionalReturn` 為段 0 節點的 exception 目標（＝`copyOf(plan.throwTarget)`；該目標的入邊被改向時隨之改向：`replayLoop` 的 LOOP 節點，或目標為有前插 CALL 的決策節點時的該 CALL；DECISION 012 Q2）（決策副本例外邊被移除時仍正確，無目標時為 null）
 
 ### Implementation for User Story 4
 
-- [ ] T054 [US4] 修改 `lib/dujs/expansion.js`：`replayCall` 依 `plan.throws` 連段 1…k 的 exception 邊到 `copyOf(plan.throwTarget)`；`decision` 形狀在 `throws[k]` 為假時移除 N 副本的 exception 邊；`finishCallRecords` 的 `exceptionalReturn` 改取 `copyOf(plan.throwTarget)`（依賴 T053）
-- [ ] T055 [US4] 更新編碼舊例外行為的既有測試（`tests/dujs/exceptionsummary.js`、`tests/dujs/expansion.js`、`tests/dujs/finallyflow.js` 等受影響者；實際受影響者以 `npm test` 的失敗清單為準，完成時把實際檔案清單回填到 `golden-diff.md` 的 US4 敘述節），逐處記入「單元測試期望」表；`reachingsolver.js` 不改程式（以既有測試確認）
-- [ ] T056 [US4] 執行 `node specs/007-split-call-nodes/probes/run.js`，確認 US4 各 probe 與 spec 一致、US1–US3 不退步
-- [ ] T057 [US4] golden：依「共通約定」更新並重產累積淨差異到 `specs/007-split-call-nodes/golden-diff.md` 的「US4」敘述節（預期 `返回後例外`、子類 `決策返回不拋錯`，含 P35 型的 − pair 與 P25 的 `x: L3 -> L9`；「class static 不再連結」表的最終實例數寫入敘述節），`--verify` exit 0；`npm test`、`npm run lint` 全綠
+- [X] T054 [US4] 修改 `lib/dujs/expansion.js`：`replayCall` 依 `plan.throws` 連段 1…k 的 exception 邊到 `copyOf(plan.throwTarget)`；`decision` 形狀在 `throws[k]` 為假時移除 N 副本的 exception 邊；`finishCallRecords` 的 `exceptionalReturn` 改取段 0 節點的 exception 目標（＝`copyOf(plan.throwTarget)`；該目標的入邊被改向時隨之改向，DECISION 012 Q2）（依賴 T053）
+- [X] T055 [US4] 更新編碼舊例外行為的既有測試（`tests/dujs/exceptionsummary.js`、`tests/dujs/expansion.js`、`tests/dujs/finallyflow.js` 等受影響者；實際受影響者以 `npm test` 的失敗清單為準，完成時把實際檔案清單回填到 `golden-diff.md` 的 US4 敘述節），逐處記入「單元測試期望」表；`reachingsolver.js` 不改程式（以既有測試確認）
+- [X] T056 [US4] 執行 `node specs/007-split-call-nodes/probes/run.js`，確認 US4 各 probe 與 spec 一致、US1–US3 不退步
+- [X] T057 [US4] golden：依「共通約定」更新並重產累積淨差異到 `specs/007-split-call-nodes/golden-diff.md` 的「US4」敘述節（預期 `返回後例外`、子類 `決策返回不拋錯`，含 P35 型的 − pair 與 P25 的 `x: L3 -> L9`；「class static 不再連結」表的最終實例數寫入敘述節），`--verify` exit 0；`npm test`、`npm run lint` 全綠
 
 **Checkpoint**: 全部 user story 完成；golden 收尾，golden-diff 釘選列待使用者簽核。
 

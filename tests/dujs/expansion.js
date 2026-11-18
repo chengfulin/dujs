@@ -1979,8 +1979,9 @@ describe('segments of the nodes with calls (feature 007 US1)', function () {
 			catchNode = model.flatNodeOf(edge.callSite.exception);
 		edge.callSite.exception.astNode.type.should.eql('CatchClause');
 		(callNode.exception === catchNode).should.be.true();
-		/// the decision keeps its exception edge (develop position until US4); the CALL RETURN NODE has none
-		(decision.exception === catchNode).should.be.true();
+		/// 007 US4 (research R6): if (f()) does not throw after the return, so the decision loses its exception edge;
+		/// the CALL RETURN NODE has none
+		(decision.exception === null).should.be.true();
 		(model.flatNodeOf(edge.callReturn).exception === null).should.be.true();
 	});
 
@@ -2078,5 +2079,164 @@ describe('segments evaluated once (feature 007 US3)', function () {
 		loopCopy.generate.values().map(function (vardef) {
 			return vardef.variable.name;
 		}).should.eql(['v']);
+	});
+});
+
+/// feature 007 T053 (data-model §4, research R6): the exception edges of the segments in the flat graph; the
+/// CALL RETURN NODE of segment j >= 1 throws only when plan.throws[j] is true; the copy of a decision node
+/// (segment k of the decision shape) loses its exception edge when throws[k] is false; the exceptionalReturn of
+/// a CallSiteRecord is the copy of plan.throwTarget
+describe('exception edges of the segments (feature 007 US4)', function () {
+	'use strict';
+	after(analyze.reset);
+
+	/**
+	 * The inter-procedural model of the page, its call edges and the copy of the catch clause (the exception
+	 * target of the node of the first call edge)
+	 * @param {Array} lines
+	 * @returns {Object} {model, edges, catchCopy}
+	 */
+	function pageModelOf(lines) {
+		var result = analyze(lines.join('\n')),
+			models = modelCtrl.collectionOfPageModels.get(result.scopeTree).interProceduralModels.filter(function (model) {
+				return model.mainlyRelatedScope === result.scopeTree.root;
+			});
+		models.should.have.length(1);
+		var edges = models[0].hierarchy.edges.filter(function (edge) {
+			return edge.kind === 'call';
+		});
+		return {
+			model: models[0],
+			edges: edges,
+			catchCopy: !!edges[0].plan.throwTarget ? models[0].flatNodeOf(edges[0].plan.throwTarget) : null
+		};
+	}
+
+	function recordOf(built, edge) {
+		return built.model.callBypassOf(built.model.flatNodeOf(edge.callReturn));
+	}
+
+	var F = ['function f() {', '  return 1;', '}'];
+
+	it('should connect the CALL RETURN NODE of var y = f().p; (segment 1 throws) to the catch', function () {
+		var built = pageModelOf(F.concat(['try {', '  var y = f().p;', '} catch (e) {', '}'])),
+			edge = built.edges[0];
+		edge.plan.throws.should.eql([true, true]);
+		built.catchCopy.astNode.type.should.eql('CatchClause');
+		(built.model.flatNodeOf(edge.callSite).exception === built.catchCopy).should.be.true();
+		(built.model.flatNodeOf(edge.callReturn).exception === built.catchCopy).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+	});
+
+	it('should not connect the CALL RETURN NODE of var y = f(); (segment 1 does not throw)', function () {
+		var built = pageModelOf(F.concat(['try {', '  var y = f();', '} catch (e) {', '}'])),
+			edge = built.edges[0];
+		edge.plan.throws.should.eql([true, false]);
+		(built.model.flatNodeOf(edge.callSite).exception === built.catchCopy).should.be.true();
+		(built.model.flatNodeOf(edge.callReturn).exception === null).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+	});
+
+	it('should connect the segments of h(f()); by throws: segment 1 (calling h) throws, segment 2 does not', function () {
+		var built = pageModelOf(F.concat(['function h(v) {', '}', 'try {', '  h(f());', '} catch (e) {', '}'])),
+			edges = built.edges;
+		edges.should.have.length(2);
+		edges[0].plan.throws.should.eql([true, true, false]);
+		(built.model.flatNodeOf(edges[0].callReturn).segment.index === 1).should.be.true();
+		(built.model.flatNodeOf(edges[0].callReturn).exception === built.catchCopy).should.be.true();
+		(built.model.flatNodeOf(edges[1].callReturn).segment.index === 2).should.be.true();
+		(built.model.flatNodeOf(edges[1].callReturn).exception === null).should.be.true();
+		edges.forEach(function (edge) {
+			(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+		});
+	});
+
+	it('should not connect the CALL RETURN NODE between the chained callees of one call site (new A())', function () {
+		var built = pageModelOf(['var x;', 'class A {', '  y = 1;', '  constructor() {', '  }', '}', 'try {', '  x = new A();',
+				'} catch (e) {', '}']),
+			edges = built.edges;
+		edges.should.have.length(2);
+		edges[0].lastOfCallSite.should.be.false();
+		(built.model.flatNodeOf(edges[0].callReturn).exception === null).should.be.true();
+		/// the last callee returns to segment 1, the assignment, which may throw
+		edges[1].plan.throws.should.eql([true, true]);
+		(built.model.flatNodeOf(edges[1].callReturn).exception === built.catchCopy).should.be.true();
+	});
+
+	it('should remove the exception edge of the copy of if (f()) and keep the exceptionalReturn', function () {
+		var built = pageModelOf(F.concat(['try {', '  if (f()) {', '  }', '} catch (e) {', '}'])),
+			edge = built.edges[0],
+			decision = built.model.flatNodeOf(edge.callSite);
+		edge.plan.shape.should.eql('decision');
+		edge.plan.throws.should.eql([true, false]);
+		(edge.callSite.exception === edge.plan.throwTarget).should.be.true();
+		(decision.exception === null).should.be.true();
+		decision.next.indexOf(built.catchCopy).should.eql(-1);
+		/// the branches of the decision are kept
+		(decision.true !== null && decision.false !== null).should.be.true();
+		(built.model.flatNodeOf(edge.callNode).exception === built.catchCopy).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+		/// the original decision node is not changed
+		(edge.callSite.exception === edge.plan.throwTarget).should.be.true();
+	});
+
+	it('should keep the exception edge of the copy of if (f() > 1) (segment 1 throws)', function () {
+		var built = pageModelOf(F.concat(['try {', '  if (f() > 1) {', '  }', '} catch (e) {', '}'])),
+			edge = built.edges[0];
+		edge.plan.throws.should.eql([true, true]);
+		(built.model.flatNodeOf(edge.callSite).exception === built.catchCopy).should.be.true();
+		(built.model.flatNodeOf(edge.callReturn).exception === null).should.be.true();
+	});
+
+	/// the false edge and the exception edge of a decision may go to the same node (the exit of the page)
+	it('should keep the false edge of if (f()) to the exit when its exception edge to the exit is removed', function () {
+		var built = pageModelOf(F.concat(['if (f()) {', '  f();', '}'])),
+			decision = built.model.flatNodeOf(built.edges[0].callSite),
+			exitOfPage = built.model.graph[1];
+		(decision.exception === null).should.be.true();
+		(decision.false === exitOfPage).should.be.true();
+		decision.next.indexOf(exitOfPage).should.not.eql(-1);
+	});
+
+	it('should set the exceptionalReturn of a node with no exception target to null (a split case test)', function () {
+		var built = pageModelOf(['var c = 1, b = 1;', 'function f() {', '  return 1;', '}', 'switch (c) {', '  case 0:',
+				'    break;', '  case f() && b:', '    break;', '}']),
+			edge = built.edges[0];
+		(edge.plan.throwTarget === null).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === null).should.be.true();
+	});
+
+	it('should set the exceptionalReturn of switch (f()) to the copy of the discriminantThrowTarget', function () {
+		var built = pageModelOf(F.concat(['try {', '  switch (f().p) {', '    case 1:', '      break;', '  }', '} catch (e) {',
+				'}'])),
+			edge = built.edges[0];
+		edge.plan.shape.should.eql('once-switch');
+		(edge.plan.throwTarget === edge.callSite.discriminantThrowTarget).should.be.true();
+		edge.plan.throws.should.eql([true, true]);
+		(built.model.flatNodeOf(edge.callReturn).exception === built.catchCopy).should.be.true();
+		(recordOf(built, edge).exceptionalReturn === built.catchCopy).should.be.true();
+	});
+
+	/// DECISION 012 Q2: the exception target of g() is the decision if (f()) beginning the finally block, whose
+	/// copy is preceded by the CALL NODE of f; the exceptionalReturn of g is that CALL NODE (the target of the
+	/// exception edge of segment 0), not the copy of the decision
+	it('should set the exceptionalReturn of g() in try to the CALL NODE of f of if (f()) beginning the finally', function () {
+		var built = pageModelOf(F.concat(['function g() {', '}', 'try {', '  g();', '} finally {', '  if (f()) {', '  }', '}'])),
+			byLine = function (line) {
+				return built.edges.filter(function (edge) {
+					return edge.callSite.astNode.loc.start.line === line;
+				});
+			},
+			ofG = byLine(7),
+			ofF = byLine(9);
+		ofG.should.have.length(1);
+		ofF.should.have.length(1);
+		ofF[0].plan.shape.should.eql('decision');
+		var callOfF = built.model.flatNodeOf(ofF[0].callNode),
+			record = recordOf(built, ofG[0]);
+		callOfF.type.should.eql(FlowNode.CALL_NODE_TYPE);
+		(built.model.flatNodeOf(ofG[0].callSite).exception === callOfF).should.be.true();
+		(record.exceptionalReturn === callOfF).should.be.true();
+		(record.exceptionalReturn === built.model.flatNodeOf(ofF[0].callSite)).should.be.false();
 	});
 });

@@ -53,7 +53,7 @@ stagedCallSite(entry, node, shape) -> boolean                            // 暫�
 
 - `replayCall(edge, copyOf, records, shallow)`：依 data-model §4 設定段節點的 `segment`、`puseOwners`、GEN（`plan.segmentOfVarDef`，攤平圖經 `flatVarDefOf`、摘要圖用原 VarDef）、exception 邊（`plan.throws`）與前驅改向（`shape`、`enteringPrev`）；
   `once-*` 時在 N 副本（及同一 switch 其他 `case` 副本）設 `discriminantSplit`／`loopRightSplit`。刪除 `splitByInnerClassName`。
-- `finishCallRecords`：`exceptionalReturn` 改取 `copyOf(plan.throwTarget)`。
+- `finishCallRecords`：`exceptionalReturn` 改取段 0 節點的 exception 目標（＝`throwTarget` 的副本；該目標的入邊被改向時隨之改向：`replayLoop` 的 LOOP 節點，或目標為有前插 CALL 的決策節點時的該 CALL；DECISION 012 Q2）。
 - `orderOfCalls`：`beforeDecision` 的插入順序不變（前插 CALL 在前、N 在 CALL RETURN 之後）。
 
 ## 6. `lib/dujs/defuseanalyzer.js`（修改）

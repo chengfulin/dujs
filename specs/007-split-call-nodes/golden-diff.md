@@ -330,11 +330,11 @@ pair 以 (case, 頁, 檔案／層級, 變數) 的集合比對（重複列不產�
 | 315 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | pair | + | `root: entry -> 9` | 連結 | FR-001 |  |
 | 316 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | row | ~ | `addTodo` | 標記 | FR-007 |  |
 | 317 | expected-es2015 | page0 | intra-pages/0.dupairs.dot | row | ~ | `input` | 標記 | FR-007 |  |
-| 318 | expected-interprocedural | inter-page | 0.graph.dot | graph | ~ | `0.graph.dot` | 共通（段0例外） | — | 段0例外：n99 → n109（c3） |
+| 318 | expected-interprocedural | inter-page | 0.graph.dot | graph | ~ | `0.graph.dot` | 共通（段0例外） | — | 段0例外：n99 → n109（c3）；移除 n104 → n109 |
 | 319 | expected-interprocedural | page0 | inter-procedurals/0.graph.dot | graph | ~ | `inter-procedurals/0.graph.dot` | 標記 | FR-007 |  |
-| 320 | expected-interprocedural | page0 | inter-procedurals/1.graph.dot | graph | ~ | `inter-procedurals/1.graph.dot` | 共通（段0例外） | — | 段0例外：n36 → n46（c3） |
+| 320 | expected-interprocedural | page0 | inter-procedurals/1.graph.dot | graph | ~ | `inter-procedurals/1.graph.dot` | 共通（段0例外） | — | 段0例外：n36 → n46（c3）；移除 n41 → n46 |
 | 321 | expected-interprocedural | page0 | inter-procedurals/2.graph.dot | graph | ~ | `inter-procedurals/2.graph.dot` | 標記 | FR-007 |  |
-| 322 | expected-interprocedural | page0 | intra-pages/0.graph.dot | graph | ~ | `intra-pages/0.graph.dot` | 共通（段0例外） | — | 段0例外：n36 → n46（c3） |
+| 322 | expected-interprocedural | page0 | intra-pages/0.graph.dot | graph | ~ | `intra-pages/0.graph.dot` | 共通（段0例外） | — | 段0例外：n36 → n46（c3）；移除 n41 → n46 |
 | 323 | expected-interprocedural | inter-page | 0.dupairs.dot | row | ~ | `addTo` | 標記 | FR-007 |  |
 | 324 | expected-interprocedural | inter-page | 0.dupairs.dot | row | ~ | `log` | 標記 | FR-007 |  |
 | 325 | expected-interprocedural | inter-page | 0.dupairs.dot | row | ~ | `scale` | 標記 | FR-007 |  |
@@ -644,3 +644,47 @@ CLI 標記（DECISION 005 Q1 A，FR-007）：`call (<行>[:路徑])`、`callRetu
 | tests/dujs/callsplit.js | phase predicate (temporary) › should recompute the segments from the call sites kept | 篩掉 `g()` 後 k = 1、`g` 在段 0 | 刪除（T048 移除 predicate） | DECISION 006 Q2 (d) |
 | tests/dujs/callsplit.js | phase predicate (temporary) › should cache the plans with and without a predicate apart | 有／無 predicate 的 plan 分開快取 | 刪除（快取改為單層，`planOf cache` 測試仍斷言以原節點快取、`reset()` 清除） | DECISION 006 Q2 (d) |
 | tests/dujs/exceptionsummary.js | carries the exceptional definitions of the later call of a chain to the catch and to the exit | `planOf(node, scopeTree, callResolver.stagedCallSite)` 的呼叫點為 `new:1`、`call:1` | `planOf(node, scopeTree)`（不帶 predicate），期望不變 | FR-001 |
+
+## US4
+
+### 變化說明
+
+段的 exception 邊依 `plan.throws` 連接（research R6，`lib/dujs/expansion.js` `placeSegments`）：段 j（1 ≤ j < k，及非 `decision` 形狀的 j = k）＝呼叫點 j−1 最後一個被呼叫端的 CALL RETURN 副本，`callsplit.segmentThrows(plan, j)` 為真時連 exception 邊到 `copyOf(plan.throwTarget)`；同一呼叫點串接的中間 CALL RETURN 不連；
+`decision` 形狀在 `throws[k]` 為假時移除決策節點副本的 exception 邊（`removeExceptionEdge`：先收集同目標的非 exception 邊、`disconnect` 後重連，保留例如連到 exit 的 false 邊）。
+`finishCallRecords` 的 `exceptionalReturn` 有 plan 時改取段 0 節點（statement 為 N 的副本、decision／once-* 為前插 CALL）的 exception 目標——即 `copyOf(plan.throwTarget)`，且與該邊一同被 `replayLoop` 轉到 LOOP 節點；不再讀決策副本（其 exception 邊可能已移除）；無 plan（測試手建 hierarchy）沿用第一個 call-site 副本的 exception 目標。
+`lib/dujs/reachingsolver.js` 相對 develop 未改動（含註解，T064）。
+
+- golden 結果：12 個 `.graph.dot` 改變，`.dupairs.dot`、`*.matching.json`、`.hierarchy.dot` 皆無變化（無 pair 差異；golden 沒有 `try` 內返回後拋錯的呼叫點，`返回後例外` 0 例、子類 `決策返回不拋錯` 的 − pair 0 例）。
+  - `expected`、`expected-fixes004`：新呼叫點的 CALL RETURN 新增 exception 邊（返回後段可能拋錯），既有類別（`連結`／`共通`）吸收，機器區塊分類不變。
+  - `expected-interprocedural`（`if (isReady()) {`，fixture L15、dot L16）：決策節點副本的 exception 邊被移除（inter-page `n104 → n109`、inter-procedurals/1 與 intra-pages/0 `n41 → n46`），pair 不變。
+- **段0例外的工具修改（T057，DECISION 012 Q1）**：上述 `expected-interprocedural` 3 筆 graph 差異（淨差異 #318、#320、#322，US1 起為 `共通（段0例外）`）在 US4 後因決策副本 exception 邊被移除，曾不符 §2 條件 (b)「007 側沒有刪除任何邊」；依使用者裁決 DECISION 012 Q1，`diffcheck.js` 的 (b) 只多容許「同一 record 的例外邊從決策節點移到前插 CALL」一種成對刪除，並新增條件 (e)（以 espree 判定該行唯一決策的條件本身就是該呼叫），3 筆重歸 `共通（段0例外）`，說明欄列「；移除 決策節點 → 目標」（contracts/diff-check.md §2 `共通` 列同步）。其餘紀錄的類別欄與 US3 狀態相同，`--verify` exit 0。
+- probes（T056）：相對 US3 只有 P20（+`x: L4 -> L10`）、P25（+`x: L3 -> L9`）、P29（+`x: L3 -> L9`）、P35（−`x: L3 -> L11`）改變，皆與 spec US4 情境（及 US2-10 的剩餘部分）一致；P20b、P30、P34 不變且符合 spec；其餘 probe 逐字不變。004、005 的 probes 輸出逐字不變。
+- 「class static 不再連結」：golden 最終實例數 0（US1–US4 皆 0 例，機器區塊表為「無」）。
+- MDN（`diffcheck mdn --report`，僅檢查，mdn-diff.md 未更新）：輸出與 US3 狀態逐字相同（873 筆；7 筆無成立類別為 US2 已記錄的工具缺口，待 T067）。
+- 實際受影響的測試檔：改動既有期望的為 `tests/dujs/expansion.js`、`tests/dujs/reviewfixes.js`（見下表）；新增測試的為 `tests/dujs/splitcallnodes.js`（US4 describe；US2-10 只改註解，`x: L3 -> L9` 移到新增的 US4 測試）、`tests/dujs/expansion.js`（`exception edges of the segments (feature 007 US4)`，含 DECISION 012 Q2 的 finally 以 `if (f())` 開頭、try 內 `g()` 的 `exceptionalReturn` 為 f 的前插 CALL）、`tests/dujs/exceptionsummary.js`（被呼叫端定義經返回後段的 exceptional summary）；另 `specs/007-split-call-nodes/tools/diffcheck.test.js` 補 DECISION 012 Q1 的正例與反例。`finallyflow.js`、`summary.js`、`summaryanalysis.js`、`model.js`、`matching.js`、`bypass.js`、`cli.js`、`hierarchydot.js` 未受影響。
+
+### 雜湊變化表（舊→新 sha256 前 12 碼）
+
+| case | 檔案 | 舊 sha256（前 12 碼）→ 新 | 說明 |
+|------|------|---------------------------|------|
+| expected | inter-page/0.graph.dot | `00c9f498f944` → `dd6f3bd0c428` | CALL RETURN 新增 exception 邊（返回後段可能拋錯） |
+| expected | page0/inter-procedurals/0.graph.dot | `6887c5b7889d` → `21ac9c6a2f5b` | 同上 |
+| expected | page0/inter-procedurals/1.graph.dot | `46f040fc9986` → `fef6d90b5f87` | 同上 |
+| expected | page0/inter-procedurals/2.graph.dot | `5000db088960` → `412d21c76f4d` | 同上 |
+| expected | page0/inter-procedurals/3.graph.dot | `03d016d6371d` → `f6f5ae639487` | 同上 |
+| expected | page0/intra-pages/0.graph.dot | `e936df52fd10` → `8f57d8c28f8f` | 同上 |
+| expected-interprocedural | inter-page/0.graph.dot | `185d866ffe50` → `c808fcdd4512` | `if (isReady())` 決策副本的 exception 邊移除 |
+| expected-interprocedural | page0/inter-procedurals/1.graph.dot | `8a57faeb1d3f` → `9f5e18e0fb12` | 同上 |
+| expected-interprocedural | page0/intra-pages/0.graph.dot | `ba7aeff8ffc5` → `2730539490a9` | 同上 |
+| expected-fixes004 | inter-page/0.graph.dot | `d4aa1776f59d` → `58cee2944892` | CALL RETURN 新增 exception 邊 |
+| expected-fixes004 | page0/inter-procedurals/2.graph.dot | `4b27d024426e` → `07fdc5c9b7cd` | 同上 |
+| expected-fixes004 | page0/intra-pages/0.graph.dot | `a389e8c0a39d` → `248afe7bde35` | 同上 |
+
+（`tests/golden/manifest.json` 的 `baseline` 同步更新其中 8 個基準檔的雜湊；`expected/page0/inter-procedurals/*` 屬 `added`，manifest 不記雜湊。）
+
+### 單元測試期望
+
+| 檔案 | 測試名 | 舊期望 | 新期望 | FR |
+|------|--------|--------|--------|----|
+| tests/dujs/expansion.js | segments of the nodes with calls (feature 007 US1) › (c) (d) should connect the CALL NODE before a decision in try to the copy of the catch node | `if (f())` 決策副本保留 exception 邊（連 catch 副本） | 決策副本 exception 為 null（`throws[1]` 為假）；前插 CALL 仍連 catch 副本 | FR-005 |
+| tests/dujs/reviewfixes.js | R3 should call the callee before a decision node whose condition is a call | 前插 CALL 的 exception 目標＝決策副本的 exception 目標 | 前插 CALL 的 exception 連到頁面的 LOOP 節點；決策副本 exception 為 null | FR-005 |
