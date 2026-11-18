@@ -146,6 +146,27 @@ describe('Labels of call return nodes (FR-011)', function () {
 			}).sort().should.eql(['call (3)_a', 'call (3)_b', 'callReturn (3)']);
 		});
 	});
+
+	/// feature 007 T068 (DECISION 013): 27 or more nodes with one label used to loop forever in
+	/// computeLabelIndex (heap OOM); the labels stay distinct and the indexes 0-25 keep a-z
+	describe('27 call sites on the same line', function () {
+		var count = 27,
+			code = 'function f() {\n}\n' + new Array(count + 1).join('f(); ');
+		var letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+		['call', 'callReturn'].forEach(function (type) {
+			it('should give the ' + count + ' ' + type + ' nodes distinct labels, a-z for the first 26', function () {
+				var labels = labelsOf(interProceduralModelOf(code), 'toDotWithLabelLine').filter(function (label) {
+					return label.indexOf(type + ' (3)_') === 0;
+				});
+				labels.should.have.length(count);
+				new Set(labels).size.should.eql(count);
+				labels.slice(0, letters.length).should.eql(letters.map(function (letter) {
+					return type + ' (3)_' + letter;
+				}));
+			});
+		});
+	});
 });
 
 /*

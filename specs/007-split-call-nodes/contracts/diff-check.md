@@ -20,7 +20,8 @@
        `.dupairs.dot` 以同一張「舊標記 → 新標記」表改寫；
     3. 改寫後再做 `pair`／`row`／`graph` 比對。只因改寫而消失的差異歸 `標記`；改寫後仍不同者照一般單位比對與分類（call 節點上的 pair 增減歸 `連結`／`求值順序`／`返回後例外`，不得歸 `標記`）；
     4. 基準側找不到 record 的 CALL／CALL RETURN 不改寫（其差異無法歸 `標記`，保守地落入一般分類，必要時失敗）。
-    已知限制：重名後綴由 `diffcheck.js` 的 `computeLabelIndex` 產生，同名節點在 26 個以內（索引 0–25，`a`–`z`）與 lib 的 `cfggraphconverter.js` `computeLabelIndex` 相同；超過 26 個時兩者分歧（lib 的迴圈不更新被除數，索引 ≥ 26 不會結束；工具最多產生 4 個字母後停止），工具不追隨 lib，改寫結果在此情形下不保證與 007 側一致（golden、MDN 皆未出現）。
+    已知限制：重名後綴由 `diffcheck.js` 的 `computeLabelIndex` 產生（工具自己的複本）。lib 的 `cfggraphconverter.js` `computeLabelIndex` 原本迴圈不更新被除數，同名節點 ≥ 27 個（索引 ≥ 26）時不會結束（CLI heap OOM，KI §49），已於 T068 修正（每輪以上一輪的被除數再除，索引 26 → `ba`）；工具的複本維持舊式（最多產生 4 個字母後停止），索引 0–25（`a`–`z`）與 lib 相同，索引 ≥ 26 時與 lib 不一致，改寫結果在此情形下不保證與 007 側一致（golden、MDN 皆無此實例）。
+    工具限制（T068 註記）：`.dupairs.dot` 的 pair 以去掉重名後綴後的集合比對（重複列另計），同一行不同段節點（如 `call (79)_a`…`_f`）上同變數的 pair 去後綴後是同一個字串，因此同一行某一段的 pair 缺漏或多出，只要另一段仍有相同的去後綴 pair，`--verify` 看不出來；這類 pair 只反映在「重複列數」（如 `mdn-diff.md` 的 a04／a05／x01）。
     自我測試（`diffcheck.test.js`）涵蓋：純標記差異歸 `標記`；同一 call 節點上一筆 pair 的定義端改變時**不**歸 `標記`；重名後綴；KI §15 已帶路徑者不改寫；007 側仍為 `call_x` 時零差異（第 0 步不改寫）；`.dupairs.dot` 跟隨同模型 `.graph.dot` 的判定；MDN 基準側以快照中的 `*.matching.json` 改寫，快照缺該檔時 exit 2。
   - **類別**：§2。
 

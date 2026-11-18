@@ -999,7 +999,7 @@ golden（`golden --report`）在 T067 前後逐字相同，`golden --verify` exi
 
 只列、不設門檻（data-model §6、KI §43）。
 
-- a04-bouncing-main-finished、a05-assessment-main、x01-bouncing-cycle 各增 7／8／7：同一行的多個呼叫點（如 a04 L79 `new Ball(random(...), random(...), …, randomRGB(), size)` 的 `call (79)_a`…`call (79)_f`、L19 template literal 的三個 `random(0, 255)`）去掉重名後綴後是同一個標記，同變數的 pair（如 `random: entry -> call (79)`、`size: call (78) -> call (79)`）因此重複。集合比對不受影響。
+- a04-bouncing-main-finished、a05-assessment-main、x01-bouncing-cycle 各增 7／8／7（T068 更正說明）：lib 的輸出沒有重複的 pair（`.dupairs.dot` 每列的格子互不相同）。這些是同一行不同段節點上的不同 pair——如 a04 L79 `new Ball(random(...), random(...), …, randomRGB(), size)` 的 `call (79)_a`…`call (79)_f`、L19 template literal 的三個 `random(0, 255)` 的 `call (19)_a`…`_c`：`(entry_a,call (79)_a)`…`(entry_a,call (79)_d)`、`(call (78),call (79)_a)`／`_b`／`_f` 是不同的 pair，diffcheck 去掉重名後綴後都成為 `random: entry -> call (79)`、`size: call (78) -> call (79)`，因此算成重複。lib 輸出正確。工具限制：pair 以去後綴後的集合比對，同一行某一段的 pair 缺漏或多出（另一段仍有同變數、同行的 pair 時）`--verify` 看不出來（`contracts/diff-check.md` §1）。
 - s10-allowance-updater 的 develop 重複列由 Setup 時的 9 變為 8：T067 起基準側的非呼叫標記不再重編後綴（累積後綴保留），基準側改寫後的重複列數隨之改變；007 側同為 8，增減 0。
 
 ### 雜湊變化表（舊→新 sha256 前 12 碼）

@@ -57,7 +57,10 @@ and §22 (3) (calls inside expressions are call sites), with the note on §10
 throw after the return). It records its limits and behavior changes in
 §44–§48 (the reads and calls of a `case` test, the behavior changes of the
 segments, the positions that are not call sites, the exception edges of the
-split discriminant nodes, and the crash of a `switch` without `case`).
+split discriminant nodes, and the crash of a `switch` without `case`). It
+also fixes §49 (a pre-existing bug of the labels of the `.graph.dot` that
+`007` makes much easier to trigger) and records §50 (a pre-existing
+performance problem, left to a later feature).
 
 Line numbers in the results refer to the analyzed code (`L<n>`); `entry` is
 the entry node of a scope.
@@ -1655,3 +1658,55 @@ without a call (`var a = 1; switch (a) {}`). The rule "the discriminant is
 evaluated before the first `case`" (§45) does not apply, since there is no
 first `case`; `007` makes no plan for it and adds no other failure
 (`tests/dujs/splitcallnodes.js`, T044 (d)). Not fixed.
+
+### 49. 27 or more nodes with one label make the CLI run out of memory (pre-existing, fixed by `007`)
+
+> **Fixed by feature `007-split-call-nodes` (T068, DECISION 013).** The
+> description below is the behavior before the fix.
+
+```js
+function g(v) { return v; }
+function h() { var s = g(1) + g(2); return s; }
+function on0() { var r = h(); }
+document.addEventListener("e0", on0);
+// ... the same for on1 to on8 (9 handlers)
+```
+
+When a graph has 27 or more nodes with the same label, the labels of the
+`.graph.dot` (`toDotWithLabelLine`) are deduplicated by suffixes made by
+`computeLabelIndex` of `lib/dujs/cfggraphconverter.js`. Its loop computed the
+next dividend from the original index instead of the last dividend, so it
+never ended for an index of 26 or more: the suffix grew until the heap ran
+out, and `bin/dujs.js` aborted with exit 134. `develop` has the same bug, but
+`007` makes it much easier to trigger: the call sites inside expressions and
+the split segments give many more `call (<line>)` and `callReturn (<line>)`
+nodes, so a graph reaches 27 nodes with one label in much smaller programs.
+The program above exits 0 in `develop` and exits 134 in
+`007` before the fix.
+
+Fix: the dividend is divided in turn (`Math.floor(divided / 26)`), so the
+index 26 gives `ba`, 27 gives `bb`, and so on; the indexes 0–25 still give
+`a`–`z`, and the golden outputs are unchanged. Tests: the 27 call sites on
+one line in `tests/dujs/cfggraphconverter.js`, and the programs
+`handlers-9.js` and `ten-calls-line.js` run by `bin/dujs.js` in
+`tests/dujs/cli.js`. The copy of the function in the comparison tool
+`specs/007-split-call-nodes/tools/diffcheck.js` keeps the old form (it stops
+after 4 letters), so for an index of 26 or more it differs from the library;
+the golden and MDN outputs have no such label
+(`specs/007-split-call-nodes/contracts/diff-check.md` §1).
+
+### 50. The analysis time grows fast with the functions called by the page code (pre-existing)
+
+```js
+function f0() { return 0; }
+f0();
+function f1() { return 1; }
+f1();
+// ... the same for f2, f3, ...
+```
+
+A file with many functions, each called once by the page code, takes much
+longer to analyze as their number grows: with 14 of them `bin/dujs.js` takes
+about 7 seconds, and with 26 of them it did not finish within 20 seconds, in
+`develop` and in `007` alike (measured for the sign-off of `007`, DECISION
+013). The cause is not analyzed yet. Not fixed; left to a later feature.
