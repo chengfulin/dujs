@@ -59,6 +59,12 @@
           "reviewed": true,
           "committed": true,
           "code_review": "mattpocock code-review 已跑（Standards 9／Spec 3）；sdd-code-reviewer 0 項"
+        },
+        "US4": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true,
+          "code_review": "mattpocock code-review 已跑（Standards 8／Spec 5）；sdd-code-reviewer R1–R2 fixed"
         }
       }
     }

@@ -36,7 +36,7 @@
 
 ## 3. 「內容不遺失」對照表與檢查（FR-018）
 
-- `specs/009-mermaid-markdown-output/readme-map.md`：表格欄 `ID | 原段落（首句摘錄） | 新位置（檔案 + 標題） | 處置 | 理由`；處置為 `搬移`、`改寫` 或 `新增`；`改寫` 必填理由（如「Graphviz／PNG 移除（FR-013）」「HTML 清單改 Markdown（US4 情境 2）」）；`新增` 為原 README 沒有的內容，ID 不佔原段序號：`N1`＝`## Background`（理由「新增（使用者 D003）」，「原段落」欄記載 §2 的三項逐字字串）；`N2`～`N4`＝本 feature 輸出變更引入的新文字——`N2` Requirements 的 Mermaid 檢視器項、`N3` `## Output` 的輸出變更註記（FR-012）、`N4` README 的 `docs/` 章節檔連結清單（理由「新增（本 feature 輸出變更）」，「原段落」欄記載該列須出現的逐字字串或連結）。（D005-A3）原 README 的「段」＝以空行分隔的區塊，`<ul>` 中每個 `<li>`（含巢狀）各算一段。
+- `specs/009-mermaid-markdown-output/readme-map.md`：表格欄 `ID | 原段落（首句摘錄） | 新位置（檔案 + 標題） | 處置 | 理由`；處置為 `搬移`、`改寫` 或 `新增`；`改寫` 必填理由（如「Graphviz／PNG 移除（FR-013）」「HTML 清單改 Markdown（US4 情境 2）」）；`新增` 為原 README 沒有的內容，ID 不佔原段序號：`N1`＝`## Background`（理由「新增（使用者 D003）」，「原段落」欄記載 §2 的三項逐字字串）；`N2`～`N4`＝本 feature 輸出變更引入的新文字——`N2` Requirements 的 Mermaid 檢視器項、`N3` `## Output` 的輸出變更註記（FR-012）、`N4` README 的 `docs/` 章節檔連結清單（理由「新增（本 feature 輸出變更）」，「原段落」欄記載該列須出現的逐字字串或連結）。（D005-A3）`N5` 起＝拆分後各章節檔之間的導覽文字（如 docs/usage.md 開頭的用法區塊、章節間的「See …」連結、README `## Documentation` 的 known-issues 說明；理由「新增（導覽）」，同一檢查機制；US4 審查 R2／P1／P2 補記）。readmecheck 的「標題下」＝該標題行到下一個任何層級的標題為止（US4 審查 P3 收緊）；原段落本身跨多個標題時（如原第 1 段跨 `#dujs` 與 `##Goal`），新位置可依序列多個標題，範圍取各段合併。原 README 的「段」＝以空行分隔的區塊，`<ul>` 中每個 `<li>`（含巢狀）各算一段。
 - `specs/009-mermaid-markdown-output/tools/readmecheck.js`（不進 `npm test`）：
   1. `git show 274257a:README.md` 切段（同上定義）；每段須在對照表恰有一列（以 ID 對應，ID＝段序號）。
   2. `搬移` 段：正規化（去 Markdown／HTML 標記、實體還原、合併空白）後的文字 MUST 為新位置檔案中該標題下正規化文字的子字串。
