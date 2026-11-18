@@ -1,6 +1,6 @@
 # Contract：總覽 `README.md`（輸出目錄根）
 
-適用：`lib/dujs/markdownoutput.js` `overviewMarkdown(pages)`、`outputWriter.writeOverview(sourceContents)`、`lib/dujs/cli.js`。
+適用：`lib/dujs/markdownoutput.js` `overviewMarkdown(pages, interPageModel)`（`pages` 元素為 `{source, intraProceduralModels, interProceduralModels, intraPageModels}`；`interPageModel` 未傳時 Inter-page 段寫 `None.`；US2 實作補記）、`outputWriter.writeOverview(sourceContents)`、`lib/dujs/cli.js`。
 對應：FR-011、FR-012、US2、A2、SC-005；research R7。取代 `report.html`（supersedes 003 `contracts/hierarchy-output.md` §4 契約 #5、004 `contracts/cli.md` §2 第 4 步與 §3 的 report 部分）。
 
 ## 1. 產生時機

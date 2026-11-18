@@ -6,10 +6,12 @@
  * Unit level: cli.run(argv, io) with collected stdout/stderr covers the rows
  * #1-#7 of contracts/cli.md §1 (#7 by a stub of
  * defuseAnalysisExecutor.initialize). OutputWriter keeps its state in module
- * singletons, so a complete analysis (#8) only runs in child processes
+ * singletons, so a complete analysis (#8) mostly runs in child processes
  * (bin/dujs.js), which also cover contracts/cli.md §4 (US5-1...US5-5,
- * SC-004, SC-005). The output directory is relative to process.cwd(): the
- * in-process tests switch into a temporary directory and back.
+ * SC-004, SC-005); the overview test (feature 009 US2) and the DOT read
+ * failure test run one in process, wrapped by analyze.reset(). The output
+ * directory is relative to process.cwd(): the in-process tests switch into a
+ * temporary directory and back.
  */
 var should = require('should');
 var fs = require('fs'),
@@ -18,7 +20,6 @@ var fs = require('fs'),
 	childProcess = require('child_process');
 var cli = require('../../lib/dujs/cli'),
 	outputWriter = require('../../lib/dujs/outputwriter'),
-	reportGenerator = require('../../lib/dujs/reportgenerator'),
 	defuseAnalysisExecutor = require('../../lib/dujs/defuseanalysisexecutor'),
 	dotReader = require('../../lib/dujs/dotreader'),
 	analyze = require('../helpers/analyze');
@@ -245,8 +246,7 @@ describe('CLI', function () {
 		/// cannot be read fails the run (exit 1) and removes the output directory
 		describe('when reading a DOT graph throws', function () {
 			var originalReadDot, calls,
-				arrays = ['pageJSSourFilePaths', 'intraProceduralGraphImageFilePaths',
-					'intraProceduralDUPairsImageFilePaths', 'interProceduralGraphImageFilePaths',
+				arrays = ['intraProceduralGraphImageFilePaths', 'intraProceduralDUPairsImageFilePaths', 'interProceduralGraphImageFilePaths',
 					'interProceduralDUPairsImageFilePaths', 'interProceduralHierarchyImageFilePaths',
 					'intraPageGraphImageFilePaths', 'intraPageDUPairsmageFilePaths', 'intraPageHierarchyImageFilePaths',
 					'interPageGraphImageFilePaths', 'interPageDUPairsImageFilePaths', 'interPageHierarchyImageFilePaths'];
@@ -333,42 +333,59 @@ describe('CLI', function () {
 			outDirsIn(workDir).should.eql([]);
 		});
 
-		describe('report.html', function () {
-			var arrays = ['pageJSSourFilePaths', 'intraProceduralGraphImageFilePaths', 'intraProceduralDUPairsImageFilePaths',
+		/// specs/009-mermaid-markdown-output FR-011, FR-012: the overview README.md replaces report.html
+		describe('README.md (overview)', function () {
+			/// the image path arrays are written by the four write*AnalysisResultFiles until US3 removes them
+			var arrays = ['intraProceduralGraphImageFilePaths', 'intraProceduralDUPairsImageFilePaths',
 				'interProceduralGraphImageFilePaths', 'interProceduralDUPairsImageFilePaths',
 				'interProceduralHierarchyImageFilePaths', 'intraPageGraphImageFilePaths', 'intraPageDUPairsmageFilePaths',
 				'intraPageHierarchyImageFilePaths', 'interPageGraphImageFilePaths', 'interPageDUPairsImageFilePaths',
 				'interPageHierarchyImageFilePaths'];
+			var source = 'function f(a) {\n  return a;\n}\nvar b = f(1);\n';
 
 			beforeEach(function () {
 				/// own arrays on the singleton, so the shared prototype arrays stay untouched
 				arrays.forEach(function (name) {
 					outputWriter[name] = [];
 				});
+				analyze.reset();
 			});
 
 			afterEach(function () {
 				arrays.forEach(function (name) {
 					delete outputWriter[name];
 				});
+				analyze.reset();
 			});
 
-			it('should be written into the actual directory and refer to the images by its name', function () {
+			it('should be written into the actual directory and link the files without its name', function () {
+				this.timeout(30000);
 				fs.mkdirSync(path.join(workDir, base));
 				var dir = outputWriter.createRootOutputDirectory(start);
 				dir.should.eql(base + '_1');
 				outputWriter.createOutputDirectories(0);
-				outputWriter.writeCombinedJSSource('var a = 1;\n', 0);
-				var image = dir + '/page0/intra-procedurals/0.graph.png';
-				outputWriter.intraProceduralGraphImageFilePaths[0] = [image];
-				outputWriter.intraProceduralDUPairsImageFilePaths[0] = [dir + '/page0/intra-procedurals/0.dupairs.png'];
-				outputWriter.interProceduralGraphImageFilePaths[0] = [];
-				outputWriter.intraPageGraphImageFilePaths[0] = [];
-				reportGenerator.createReport();
-				fs.existsSync(path.join(workDir, base, 'report.html')).should.eql(false);
-				var report = fs.readFileSync(path.join(workDir, dir, 'report.html'), 'utf8');
-				report.should.containEql('<img src="../' + image + '"');
-				report.should.not.containEql('src="../' + base + '/');
+				outputWriter.writeCombinedJSSource(source, 0);
+				/// scopeCtrl and modelCtrl are singletons: run the whole analysis and write its files first
+				analyze([source]);
+				outputWriter.writeIntraProceduralAnalysisResultFiles();
+				outputWriter.writeInterProceduralAnalysisResultFiles();
+				outputWriter.writeIntraPageAnalysisResultFiles();
+				outputWriter.writeInterPageAnalysisResultFiles();
+				outputWriter.writeOverview([source]);
+				fs.existsSync(path.join(workDir, base, 'README.md')).should.eql(false);
+				fs.existsSync(path.join(workDir, dir, 'report.html')).should.eql(false);
+				var overview = fs.readFileSync(path.join(workDir, dir, 'README.md'), 'utf8');
+				overview.should.not.containEql(base);
+				overview.indexOf('# dujs analysis results\n').should.eql(0);
+				overview.should.containEql('[`page0/src.js`](page0/src.js)\n\n```js\n' + source + '```\n');
+				var links = overview.match(/\]\([^)]*\)/g).map(function (link) {
+					return link.slice(2, -1);
+				});
+				links.should.containEql('page0/intra-procedurals/0.md');
+				links.should.containEql('inter-page/0.md');
+				links.forEach(function (link) {
+					fs.existsSync(path.join(workDir, dir, link)).should.eql(true, link);
+				});
 			});
 		});
 	});
@@ -467,7 +484,8 @@ describe('CLI', function () {
 			var dirs = outDirsIn(dir);
 			dirs.should.have.length(1);
 			var files = listFiles(path.join(dir, dirs[0]));
-			files.should.containEql('report.html');
+			files.should.containEql('README.md');
+			files.should.not.containEql('report.html');
 			files.should.containEql('page0/src.js');
 			files.should.containEql('inter-page/0.graph.dot');
 		});
@@ -529,15 +547,14 @@ describe('CLI', function () {
 				var dirs = outDirsIn(dir);
 				dirs.should.have.length(2 * rounds);
 				var expectedFiles = listFiles(path.join(dir, dirs[0]));
-				expectedFiles.should.containEql('report.html');
+				expectedFiles.should.containEql('README.md');
+				expectedFiles.should.not.containEql('report.html');
+				var expectedOverview = fs.readFileSync(path.join(dir, dirs[0], 'README.md'), 'utf8');
 				dirs.forEach(function (name) {
 					listFiles(path.join(dir, name)).should.eql(expectedFiles, name);
-					var report = fs.readFileSync(path.join(dir, name, 'report.html'), 'utf8');
-					var refs = report.match(/src="\.\.\/[^/"]+\//g);
-					refs.length.should.be.above(0);
-					refs.forEach(function (ref) {
-						ref.should.eql('src="../' + name + '/', name);
-					});
+					var overview = fs.readFileSync(path.join(dir, name, 'README.md'), 'utf8');
+					overview.should.not.containEql(name);
+					overview.should.eql(expectedOverview, name);
 				});
 			});
 		});

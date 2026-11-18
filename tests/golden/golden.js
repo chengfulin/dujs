@@ -29,13 +29,6 @@ var CLI = path.resolve(__dirname, '../../bin/dujs.js'),
 	MANIFEST = path.join(__dirname, 'manifest.json');
 
 /**
- * Files of the report order test: the .dot files and the call matching files
- * (*.matching.json, feature 005 contracts/matching-output.md §4)
- * @type {RegExp}
- */
-var DOT_FILE = /\.dot$|\.matching\.json$/;
-
-/**
  * Golden files: the .dot files, the call matching files and the Markdown
  * files (.md, specs/009-mermaid-markdown-output FR-008, FR-009a)
  * @type {RegExp}
@@ -66,7 +59,10 @@ function listFiles(dir, pattern) {
 }
 
 /**
- * Run the CLI on the pages in a new temporary working directory
+ * Run the CLI on the pages in a new temporary working directory. The fixtures
+ * are copied into fixtures/ of the working directory and given by relative
+ * paths, so the file names in the source code of the overview README.md
+ * (/// --- start fixtures/<file> ---) do not depend on the checkout location
  * @param {Array} pages Arrays of fixture paths relative to FIXTURES
  * @returns {{workDir: string, outDir: string}}
  */
@@ -77,7 +73,10 @@ function runCli(pages) {
 	pages.forEach(function (files) {
 		args.push('-js');
 		files.forEach(function (file) {
-			args.push(path.join(FIXTURES, file));
+			var copy = path.join(workDir, 'fixtures', file);
+			fs.mkdirSync(path.dirname(copy), {recursive: true});
+			fs.copyFileSync(path.join(FIXTURES, file), copy);
+			args.push(path.posix.join('fixtures', file));
 		});
 	});
 	var run = spawnSync(process.execPath, args, {cwd: workDir, encoding: 'utf8'});
@@ -127,37 +126,57 @@ function toPosix(file) {
 }
 
 /**
- * Image paths referred by a report, in the order of the report: for each
- * page the intra-procedural, inter-procedural and intra-page models (graph
- * then dupairs of each model), then the inter-page model; the hierarchy graph
- * of an upper model (contract #5) before its graph when withHierarchy
- * @param {Array} dotFiles relative paths of the .dot files of an output directory
- * @param {string} prefix prefix of each path (../<output directory>/)
- * @param {boolean} withHierarchy
+ * Destinations of the links ](...) of a Markdown text, in order; the fenced
+ * code blocks (the source code of the overview) are skipped
+ * @param {string} markdown
  * @returns {Array}
  */
-function reportImagePaths(dotFiles, prefix, withHierarchy) {
+function linkDestinationsOf(markdown) {
 	'use strict';
-	var files = dotFiles.map(toPosix);
+	var destinations = [], fence = null;
+	markdown.split('\n').forEach(function (line) {
+		var opening = /^(`{3,})/.exec(line);
+		if (fence !== null) {
+			if (line === fence) {
+				fence = null;
+			}
+			return;
+		}
+		if (opening) {
+			fence = opening[1];
+			return;
+		}
+		var pattern = /\]\(([^)]*)\)/g, match;
+		while ((match = pattern.exec(line)) !== null) {
+			destinations.push(match[1]);
+		}
+	});
+	return destinations;
+}
+
+/**
+ * Links of the overview in the order of contracts/overview-readme.md §2, from
+ * the files of an output directory: for each page by its index, src.js, then
+ * the intra-procedural, inter-procedural and intra-page models by their
+ * numbers; then the inter-page model
+ * @param {Array} files relative paths of the files of an output directory
+ * @returns {Array}
+ */
+function overviewLinksOf(files) {
+	'use strict';
+	var posixFiles = files.map(toPosix);
 	function modelsIn(dir) {
-		return files.filter(function (file) {
-			return path.posix.dirname(file) === dir && /\.graph\.dot$/.test(file);
+		return posixFiles.filter(function (file) {
+			return path.posix.dirname(file) === dir && /^\d+\.md$/.test(path.posix.basename(file));
 		}).map(function (file) {
 			return parseInt(path.posix.basename(file), 10);
 		}).sort(function (first, second) {
 			return first - second;
 		}).map(function (index) {
-			return dir + '/' + index;
+			return dir + '/' + index + '.md';
 		});
 	}
-	function imagesOf(model, upper) {
-		var images = [];
-		if (upper && withHierarchy) {
-			images.push(prefix + model + '.hierarchy.png');
-		}
-		return images.concat([prefix + model + '.graph.png', prefix + model + '.dupairs.png']);
-	}
-	var pages = files.map(function (file) {
+	var pages = posixFiles.map(function (file) {
 		return /^page(\d+)\//.exec(file);
 	}).filter(Boolean).map(function (match) {
 		return parseInt(match[1], 10);
@@ -168,16 +187,12 @@ function reportImagePaths(dotFiles, prefix, withHierarchy) {
 	});
 	var result = [];
 	pages.forEach(function (page) {
-		[['intra-procedurals', false], ['inter-procedurals', true], ['intra-pages', true]].forEach(function (level) {
-			modelsIn('page' + page + '/' + level[0]).forEach(function (model) {
-				[].push.apply(result, imagesOf(model, level[1]));
-			});
-		});
-		modelsIn('inter-page').forEach(function (model) {
-			[].push.apply(result, imagesOf(model, true));
+		result.push('page' + page + '/src.js');
+		['intra-procedurals', 'inter-procedurals', 'intra-pages'].forEach(function (dir) {
+			[].push.apply(result, modelsIn('page' + page + '/' + dir));
 		});
 	});
-	return result;
+	return result.concat(modelsIn('inter-page'));
 }
 
 /**
@@ -237,39 +252,47 @@ function goldenCase(title, pages, expectedDir) {
 			different.should.eql([], 'baseline .dot files missing or changed: ' + different.join(', '));
 		});
 
-		// contract #5 (contracts/hierarchy-output.md §4): checks the HTML only, not the png files (no Graphviz needed)
-		it('references the hierarchy graphs before the flat graphs in the report', function () {
-			var html = fs.readFileSync(path.join(outDir, 'report.html'), 'utf8'),
-				prefix = '../' + path.basename(outDir) + '/',
-				dotFiles = listFiles(outDir, DOT_FILE),
-				hierarchyDiv = /<div class="col-lg-8 col-lg-offset-2 col-sm-12"><img src="[^"]*\.hierarchy\.png" class="center-block"><\/div>/g;
-			function sourcesOf(content) {
-				var sources = [], pattern = /<img src="([^"]*)"/g, match;
-				while ((match = pattern.exec(content)) !== null) {
-					sources.push(match[1]);
-				}
-				return sources;
-			}
-			function positionOf(image) {
-				return html.indexOf('<img src="' + image + '"');
-			}
-			var hierarchies = dotFiles.map(toPosix).filter(function (file) {
-				return /\.hierarchy\.dot$/.test(file);
+		// FR-011, FR-012: the overview README.md replaces report.html
+		it('writes the overview README.md and no report.html', function () {
+			fs.existsSync(path.join(outDir, 'README.md')).should.eql(true);
+			fs.existsSync(path.join(outDir, 'report.html')).should.eql(false);
+		});
+
+		// SC-005, contracts/overview-readme.md §3
+		it('links only existing files in the overview', function () {
+			var destinations = linkDestinationsOf(fs.readFileSync(path.join(outDir, 'README.md'), 'utf8'));
+			destinations.length.should.be.above(0);
+			destinations.forEach(function (destination) {
+				fs.existsSync(path.join(outDir, destination)).should.eql(true, 'no file of the link ' + destination);
 			});
-			hierarchies.length.should.be.above(0);
-			hierarchies.forEach(function (file) {
-				var model = prefix + file.replace(/\.hierarchy\.dot$/, ''),
-					hierarchy = positionOf(model + '.hierarchy.png'),
-					graph = positionOf(model + '.graph.png'),
-					dupairs = positionOf(model + '.dupairs.png');
-				hierarchy.should.be.aboveOrEqual(0, 'no hierarchy graph of ' + file);
-				hierarchy.should.be.below(graph, 'hierarchy graph after the graph of ' + file);
-				graph.should.be.below(dupairs, 'graph after the dupairs of ' + file);
+		});
+
+		// contracts/overview-readme.md §2, §3 (replaces the report order test)
+		it('links the source and the models in the order of the overview', function () {
+			var destinations = linkDestinationsOf(fs.readFileSync(path.join(outDir, 'README.md'), 'utf8')),
+				expected = overviewLinksOf(listFiles(outDir, /\.(js|md)$/));
+			destinations[0].should.eql('page0/src.js');
+			destinations.should.eql(expected);
+		});
+
+		// contracts/overview-readme.md §3: the <n>.md of each <n>.graph.dot linked once, and no other link
+		it('links the Markdown file of each graph exactly once', function () {
+			var destinations = linkDestinationsOf(fs.readFileSync(path.join(outDir, 'README.md'), 'utf8')),
+				graphs = listFiles(outDir, GOLDEN_FILE).map(toPosix).filter(function (file) {
+					return /\.graph\.dot$/.test(file);
+				});
+			graphs.length.should.be.above(0);
+			graphs.forEach(function (file) {
+				var markdownFile = file.replace(/\.graph\.dot$/, '.md');
+				destinations.filter(function (destination) {
+					return destination === markdownFile;
+				}).should.have.length(1, markdownFile);
 			});
-			sourcesOf(html).should.eql(reportImagePaths(dotFiles, prefix, true));
-			var withoutHierarchy = html.replace(hierarchyDiv, '');
-			withoutHierarchy.should.not.containEql('.hierarchy.png');
-			sourcesOf(withoutHierarchy).should.eql(reportImagePaths(dotFiles, prefix, false));
+			destinations.filter(function (destination) {
+				return !/\/src\.js$/.test(destination);
+			}).sort().should.eql(graphs.map(function (file) {
+				return file.replace(/\.graph\.dot$/, '.md');
+			}).sort());
 		});
 
 		it('adds exactly the listed new files', function () {

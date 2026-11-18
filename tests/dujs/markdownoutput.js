@@ -3,7 +3,8 @@
  * specs/009-mermaid-markdown-output contracts/model-markdown.md; FR-001,
  * FR-005, FR-007, FR-010): the title of each level, the order of the
  * sections, the def-use pairs table and the fallback to tables of one graph
- * of a file.
+ * of a file; the overview README.md (contracts/overview-readme.md; FR-011,
+ * A2).
  * Original dujs code, MIT License (see LICENSE).
  */
 require('should');
@@ -85,6 +86,13 @@ function dotOfEdges(count) {
 	}
 	return lines.concat(['}']).join('\n');
 }
+
+/**
+ * Paragraph after the heading of the overview (contracts/overview-readme.md §2)
+ * @type {string}
+ */
+var OVERVIEW_INTRODUCTION = 'Each model is a Markdown file with its graphs in Mermaid; the `.dot` files next to it ' +
+	'are the same graphs. View the files with a Markdown viewer that renders Mermaid (for example GitHub or VS Code).';
 
 var SMALL_GRAPH_DOT = ['digraph cfg {', 'node [shape="box"]', 'label = ""',
 	'n0 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]',
@@ -254,6 +262,209 @@ describe('markdownoutput', function () {
 			it('should be the same for the same input (FR-007)', function () {
 				markdownOf(interProcedural, 'interProcedural').should.eql(markdownOf(interProcedural, 'interProcedural'));
 				markdownOf(intraProcedural, 'intraProcedural').should.eql(markdownOf(intraProcedural, 'intraProcedural'));
+			});
+		});
+
+		describe('overviewMarkdown (contracts/overview-readme.md §2)', function () {
+			it('should list the source and the models of the page, then the inter-page model (FR-011)', function () {
+				var models = pageModels(),
+					page = {
+						source: SOURCE + '\n',
+						intraProceduralModels: models.intraProceduralModels,
+						interProceduralModels: models.interProceduralModels,
+						intraPageModels: models.intraPageModels
+					};
+				markdownOutput.overviewMarkdown([page], interPage).should.eql([
+					'# dujs analysis results',
+					'',
+					OVERVIEW_INTRODUCTION,
+					'',
+					'## Page 0',
+					'',
+					'### Source code',
+					'',
+					'[`page0/src.js`](page0/src.js)',
+					'',
+					'```js',
+					SOURCE,
+					'```',
+					'',
+					'### Intra-procedural',
+					'',
+					'- [`intra-procedural: $DOMAIN.$PAGE_0`](page0/intra-procedurals/0.md)',
+					'- [`intra-procedural: $DOMAIN.$PAGE_0.add`](page0/intra-procedurals/1.md)',
+					'- [`intra-procedural: $DOMAIN.$PAGE_0.sumAll`](page0/intra-procedurals/2.md)',
+					'',
+					'### Inter-procedural',
+					'',
+					'- [`inter-procedural: $DOMAIN.$PAGE_0.sumAll`](page0/inter-procedurals/0.md)',
+					'- [`inter-procedural: $DOMAIN.$PAGE_0`](page0/inter-procedurals/1.md)',
+					'',
+					'### Intra-page',
+					'',
+					'- [`intra-page: $DOMAIN.$PAGE_0`](page0/intra-pages/0.md)',
+					'',
+					'## Inter-page',
+					'',
+					'- [`inter-page`](inter-page/0.md)',
+					''
+				].join('\n'));
+			});
+		});
+	});
+
+	describe('overviewMarkdown with fake models (contracts/overview-readme.md §2, A2)', function () {
+		/**
+		 * Fake intra-procedural model (only String(mainlyRelatedScope) is read)
+		 * @param {string} scopeName
+		 * @returns {Object}
+		 */
+		function intraModel(scopeName) {
+			return {mainlyRelatedScope: variable(scopeName)};
+		}
+
+		/**
+		 * Fake upper model (only the level and the main scope of the hierarchy are read)
+		 * @param {string} level Model.INTER_PROCEDURAL, Model.INTRA_PAGE or Model.INTER_PAGE
+		 * @param {string} [scopeName]
+		 * @returns {Object}
+		 */
+		function upperModel(level, scopeName) {
+			return {hierarchy: {level: level, main: {scope: variable(scopeName)}}};
+		}
+
+		/**
+		 * Page of the overview with no model
+		 * @param {string} source
+		 * @returns {Object}
+		 */
+		function emptyPage(source) {
+			return {source: source, intraProceduralModels: [], interProceduralModels: [], intraPageModels: []};
+		}
+
+		/**
+		 * Source code section of a page in the overview
+		 * @param {string} markdown
+		 * @param {number} pageIndex
+		 * @returns {string} from the link of src.js up to the next heading
+		 */
+		function sourceSectionOf(markdown, pageIndex) {
+			var start = markdown.indexOf('## Page ' + pageIndex + '\n\n### Source code\n\n');
+			start.should.be.aboveOrEqual(0);
+			var section = markdown.slice(start).split('\n\n### Source code\n\n')[1];
+			return section.slice(0, section.indexOf('\n\n### Intra-procedural\n'));
+		}
+
+		it('should list the pages by their index, each level by the model number', function () {
+			var pages = [
+					{
+						source: 'var a = 1;\n',
+						intraProceduralModels: [intraModel('$DOMAIN.$PAGE_0'), intraModel('$DOMAIN.$PAGE_0.f')],
+						interProceduralModels: [upperModel(Model.INTER_PROCEDURAL, '$DOMAIN.$PAGE_0.f')],
+						intraPageModels: [upperModel(Model.INTRA_PAGE, '$DOMAIN.$PAGE_0')]
+					},
+					{
+						source: 'var b = 2;\n',
+						intraProceduralModels: [intraModel('$DOMAIN.$PAGE_1')],
+						interProceduralModels: [],
+						intraPageModels: [upperModel(Model.INTRA_PAGE, '$DOMAIN.$PAGE_1')]
+					}
+				],
+				markdown = markdownOutput.overviewMarkdown(pages, upperModel(Model.INTER_PAGE));
+			markdown.should.eql([
+				'# dujs analysis results',
+				'',
+				OVERVIEW_INTRODUCTION,
+				'',
+				'## Page 0',
+				'',
+				'### Source code',
+				'',
+				'[`page0/src.js`](page0/src.js)',
+				'',
+				'```js',
+				'var a = 1;',
+				'```',
+				'',
+				'### Intra-procedural',
+				'',
+				'- [`intra-procedural: $DOMAIN.$PAGE_0`](page0/intra-procedurals/0.md)',
+				'- [`intra-procedural: $DOMAIN.$PAGE_0.f`](page0/intra-procedurals/1.md)',
+				'',
+				'### Inter-procedural',
+				'',
+				'- [`inter-procedural: $DOMAIN.$PAGE_0.f`](page0/inter-procedurals/0.md)',
+				'',
+				'### Intra-page',
+				'',
+				'- [`intra-page: $DOMAIN.$PAGE_0`](page0/intra-pages/0.md)',
+				'',
+				'## Page 1',
+				'',
+				'### Source code',
+				'',
+				'[`page1/src.js`](page1/src.js)',
+				'',
+				'```js',
+				'var b = 2;',
+				'```',
+				'',
+				'### Intra-procedural',
+				'',
+				'- [`intra-procedural: $DOMAIN.$PAGE_1`](page1/intra-procedurals/0.md)',
+				'',
+				'### Inter-procedural',
+				'',
+				'None.',
+				'',
+				'### Intra-page',
+				'',
+				'- [`intra-page: $DOMAIN.$PAGE_1`](page1/intra-pages/0.md)',
+				'',
+				'## Inter-page',
+				'',
+				'- [`inter-page`](inter-page/0.md)',
+				''
+			].join('\n'));
+		});
+
+		it('should write None. for each level without a model', function () {
+			var markdown = markdownOutput.overviewMarkdown([emptyPage('var a;\n')], upperModel(Model.INTER_PAGE));
+			markdown.should.containEql('### Intra-procedural\n\nNone.\n\n### Inter-procedural\n\nNone.\n\n' +
+				'### Intra-page\n\nNone.\n\n## Inter-page\n\n- [`inter-page`](inter-page/0.md)\n');
+			markdownOutput.overviewMarkdown([emptyPage('var a;\n')]).should.match(/\n## Inter-page\n\nNone\.\n$/);
+		});
+
+		it('should wrap a title with backticks in a longer code span', function () {
+			var page = emptyPage('var a;\n');
+			page.intraProceduralModels = [intraModel('$DOMAIN.$PAGE_0.`f`')];
+			markdownOutput.overviewMarkdown([page]).should.containEql(
+				'- [' + markdownText.codeSpan('intra-procedural: $DOMAIN.$PAGE_0.`f`') +
+				'](page0/intra-procedurals/0.md)\n');
+		});
+
+		// A2: backticks × max(3, the longest run of backticks in the source + 1)
+		it('should fence the source longer than its longest run of backticks', function () {
+			[['var a = 1;\n', '```'], ['var t = `x`;\n', '```'], ['// ```\nvar a;\n', '````'],
+				['var s = "`````";\n', '``````']].forEach(function (sourceAndFence) {
+				var source = sourceAndFence[0], fence = sourceAndFence[1];
+				sourceSectionOf(markdownOutput.overviewMarkdown([emptyPage(source)]), 0).should.eql(
+					'[`page0/src.js`](page0/src.js)\n\n' + fence + 'js\n' + source + fence);
+			});
+		});
+
+		it('should add a newline to the source not ending with one, and keep the source as it is', function () {
+			var source = 'var html = "<b>*a*</b> | [x](y) & #1";\n\nvar b;';
+			sourceSectionOf(markdownOutput.overviewMarkdown([emptyPage(source)]), 0).should.eql(
+				'[`page0/src.js`](page0/src.js)\n\n```js\n' + source + '\n```');
+		});
+
+		it('should end with exactly one newline and use relative POSIX paths', function () {
+			var markdown = markdownOutput.overviewMarkdown([emptyPage('var a;\n\n\n'), emptyPage('')],
+				upperModel(Model.INTER_PAGE));
+			markdown.should.match(/[^\n]\n$/);
+			(markdown.match(/\]\(([^)]*)\)/g) || []).forEach(function (link) {
+				link.should.match(/^\]\((page\d+\/|inter-page\/)[^\\:]*\)$/);
 			});
 		});
 	});

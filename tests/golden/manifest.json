@@ -33,6 +33,7 @@
 			"page1/intra-procedurals/2.graph.dot": "262cfdd60c3ab13a8cffa41b6ae74c23d2ae0fa26da3d73ffd27d5f4eeef88ac"
 		},
 		"added": [
+			"README.md",
 			"inter-page/0.hierarchy.dot",
 			"inter-page/0.matching.json",
 			"inter-page/0.md",
@@ -98,6 +99,7 @@
 			"page0/intra-procedurals/6.graph.dot": "d0fa7c35124abde3b234bad06aac78678adde656420a83939b6b2905cace973d"
 		},
 		"added": [
+			"README.md",
 			"inter-page/0.hierarchy.dot",
 			"inter-page/0.matching.json",
 			"inter-page/0.md",
@@ -161,6 +163,7 @@
 			"page0/intra-procedurals/6.graph.dot": "c76ac88e8f5dfcc64e60ba04973b59b0047637437a886681cd838007e813b059"
 		},
 		"added": [
+			"README.md",
 			"inter-page/0.hierarchy.dot",
 			"inter-page/0.matching.json",
 			"inter-page/0.md",
@@ -231,6 +234,7 @@
 			"page0/intra-procedurals/9.graph.dot": "2d018cef6e7eb50030036889d9258942b93b8432d3c78b4b8e7cd42414f27baf"
 		},
 		"added": [
+			"README.md",
 			"inter-page/0.matching.json",
 			"inter-page/0.md",
 			"page0/inter-procedurals/0.matching.json",
