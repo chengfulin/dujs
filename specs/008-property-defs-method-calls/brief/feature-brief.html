@@ -65,7 +65,7 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <main>
 <h1>成員賦值與方法呼叫</h1>
-<div class="meta">feature 008-property-defs-method-calls · spec · 第 2 輪（clarify）· 2026-11-18（D001–D010 已裁決）</div>
+<div class="meta">feature 008-property-defs-method-calls · spec · 第 3 輪（plan）· 2026-11-18（D001–D017 已裁決）</div>
 <div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
 
 <h2>看懂它</h2>
@@ -176,7 +176,10 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 
 <h2>工程師要決定的事</h2>
 
-<h3>本輪變更（clarify）</h3>
+<h3>本輪變更（plan）</h3>
+<p>plan 產出 plan.md、research.md（R0–R14）、data-model.md、quickstart.md、contracts/{lib-api,reachability,diff-check,acceptance}.md。改動檔：defuseanalyzer、usedexpressions、bindingpattern、scopebinding、callresolver、hierarchy（重構）；檢查器 tests/helpers/reachability.js；008 差異工具 specs/008/tools/（classify.js＋diffcheck.js）。技術選型維持 repo 現況，無偏離。</p>
+
+<h3>前輪變更（clarify）</h3>
 <p>Clarifications 新增「Session 2026-11-18（clarify）」：D006–D010、SC-007（文件條目逐項核對）、延後釐清（inter-page 可到達判定的起點與例外邊交 plan）。改動小節：FR-001、FR-009、US1 情境 2／4／13–15、US2 情境 13、Success Criteria、Edge Cases。</p>
 
 <h3>驗收條件盤點</h3>
@@ -214,6 +217,13 @@ code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
 <tr><td>D008</td><td><code>localStorage</code> 例外的判定</td><td>A：Var 同一性；被遮蔽、頁面宣告、別名不豁免；<code>window.localStorage.*</code> 屬 <code>window</code></td><td>FR-001；US1 情境 15</td></tr>
 <tr><td>D009</td><td><code>f(a).p = 1</code> 的呼叫</td><td>A：仍連結，保留 <code>o: L1 -> L3</code>、<code>v: entry -> L3</code></td><td>US1 情境 13</td></tr>
 <tr><td>D010</td><td>P36 是否獨立情境</td><td>A：補 US2 情境 13</td><td>US2 情境 13</td></tr>
+<tr><td>D011</td><td>使用端是呼叫位置時的分類</td><td>裸識別字 callee／<code>new</code> 運算元歸修正；<code>o.m = fn; o.m()</code> 同路徑歸損失（P37）</td><td>FR-009</td></tr>
+<tr><td>D012</td><td>成員目標右側的巢狀賦值</td><td>維持 develop；通用缺口記新 KI，回歸測試釘住 <code>o.p = x = 1</code></td><td>FR-011 (g)</td></tr>
+<tr><td>D013</td><td>以呼叫開頭的成員鏈</td><td>物件變數沿 <code>.object</code> 鏈；<code>localStorage.getItem(n).p</code> 不豁免（P42）</td><td>表示法；US1 情境 16</td></tr>
+<tr><td>D014</td><td>被呼叫端未捕捉的例外</td><td>檢查器以 exceptionalReturn 為呼叫節點的例外邊並斷言其為圖上目標</td><td>表示法；contracts/reachability</td></tr>
+<tr><td>D015</td><td>返回分呼叫點</td><td>分；可達集合為字面的子集（P41）</td><td>表示法；US3 情境 8</td></tr>
+<tr><td>D016</td><td>MDN 語料進測試</td><td>直接讀 specs/006 語料，缺檔／檔數／sha256 不符即失敗</td><td>FR-007</td></tr>
+<tr><td>D017</td><td><code>if (f())</code> 中 f 無返回仍產生 p-use</td><td>範圍內修正：deferred p-use 只在決策節點可到達時配對（FR-013，P38–P40）</td><td>FR-013；US3 情境 7</td></tr>
 <tr><td>—</td><td>測試 helper 的 <code>Lnull</code> 標記（P18）</td><td>不修，記入 known-issues</td><td>Clarifications；FR-011 (d)</td></tr>
 </table></div>
 

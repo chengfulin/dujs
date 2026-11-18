@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-18
 
-**Status**: Draft（D001–D011 已裁決 2026-11-18）
+**Status**: Draft（D001–D017 已裁決 2026-11-18）
 
 **Input**: User description: "Feature 008 = docs/known-issues.md 的 §22 (1)、§22 (5) 與 §23（見該檔 L20–60 的總覽，以及 §22、§23 本文）。§22 (4)（storage model）不在範圍內。先確認 007 修完後哪些仍未解決，再寫 spec。技術選型維持 repo 現況，不引入新框架或新依賴。慣例沿用 005、006、007：probes 目錄、golden 差異以 tests/golden + diffcheck 記錄、MDN 範例驗收（Advanced JavaScript objects + Core Scripting），新發現記到 docs/known-issues.md。PR 目標 develop。"
 
@@ -22,9 +22,9 @@
 
 | User Story | 來源 |
 |------------|------|
-| US1 | KI §22 (1)；PRB P1–P4、P12、P25、P27、P29–P33 |
+| US1 | KI §22 (1)；PRB P1–P4、P12、P25、P27、P29–P33、P42 |
 | US2 | KI §23、§22 (0)；F005 D1、D2；PRB P5–P11、P26、P28、P34–P36 |
-| US3 | KI §22 (5)、§38；F005 FR-003；PRB P13–P24 |
+| US3 | KI §22 (5)、§38；F005 FR-003；PRB P13–P24、P38–P41 |
 
 ### 範圍決策（USR）
 
@@ -74,6 +74,11 @@
 | P34 | `p34-ki23-tdz.js`（`g();` L10 在 `const o = new A();` L11 之前） | 不連結；有 `x: L1 -> L12` | 放寬忽略執行順序（暫時死區），008 後連結 |
 | P35 | `p35-ki23-let-split.js`（`let o;` L7、`o = new A();` L8） | 不連結；有 `x: L1 -> L13` | 宣告與賦值分開時是否放寬（與 D2 一致，見 P36） |
 | P36 | `p36-d2-let-split.js`（`let f;` L2、`f = function () {…};` L3，函式 `g` 中 `f();` L7） | 不連結；有 `x: L1 -> L10` | D2 對同一形式的現行行為（P35 的對照） |
+| P38 | `p38-if-norecall.js`（`f` 無條件遞迴，`if (f()) {` L5、`x = 1;` L6、`console.log(x);` L8） | inter／intra-page 有 `f: entry -> L3`、`f: entry -> L5>L6:T`、`f: entry -> L5>L8:F`；intra(page) 另有 `x: L1 -> L8`、`x: L6 -> L8` 等 | 決策節點 L5 在無返回呼叫之後不可到達，卻有 deferred p-use 的 pair（§22 (5) 的死碼 pair，D017） |
+| P39 | `p39-if-nested-norecall.js`（`if (g(f())) {` L8、`x = 1;` L9） | inter／intra-page 有 `f: entry -> L8`、`g: entry -> L8>L9:T`、`g: entry -> L8>L11:F` | 同 P38，決策條件中巢狀呼叫（D017） |
+| P40 | `p40-while-norecall.js`（`while (f()) {` L5） | 同 P38 的形式（`f: entry -> L5>L6:T`、`f: entry -> L5>L8:F`） | 同 P38，迴圈條件（D017） |
+| P41 | `p41-call-after-norecall.js`（`h()` 會返回、`r()` 無條件遞迴；`h();` L8、`r();` L9、`h();` L10、`console.log(x);` L11） | inter[1] 只有 `h: entry -> L8`、`r: entry -> L6`、`r: entry -> L9`；intra(page) 有 `h: entry -> L10`、`x: L1 -> L11` | 守門：L10 之後不可到達；檢查器 (a) 的返回分呼叫點（D015） |
+| P42 | `p42-localstorage-call-chain.js`（`var n = 'k', o = 1;` L1、`localStorage.getItem(n).p = o;` L2、`console.log(localStorage);` L3） | 只有 `console: entry -> L3`、`o: L1 -> L2` | 物件運算式是呼叫（`.object` 鏈中斷）時沒有物件變數，不豁免（D013） |
 
 ## Clarifications
 
@@ -107,6 +112,15 @@
 - clarify 裁決（Fable，f477220）：US1 情境 2 的分類改為 4 筆損失、2 筆修正；FR-009 補「整個物件讀取」、同一節點多個成員目標、p-use 與跨 scope；D008 的措辭同步到 FR-002 與凍結表前言；情境 6、14、15 補第四行、intra-page、s14 儲存節點數。
 - Q: 使用端是呼叫位置時，消失的 pair 歸損失還是修正？ → A（D011）：裸識別字作 callee 或 `new` 運算元（P29–P32）歸修正；`o.m = fn; o.m()` 寫入路徑與 callee 路徑相同歸損失（同路徑優先），路徑不同歸修正（P37 正反例）。
 
+### Session 2026-11-18（plan；D012–D017）
+
+- Q: 成員目標右側的巢狀賦值（develop 中 `o.a.b = x = 1`、`this.p = x = 1` 不定義 `x`）要不要修？ → A（D012）: 維持 develop——GEN 只在右側「直接是」賦值／更新且 develop 會定義左側時遞迴（`lib/dujs/defuseanalyzer.js:608-611`），`o.p = x = 1`、`o.p = x++` 仍定義 `x`；這個通用缺口（不限成員目標）記為新 KI（FR-011 (g)），`o.a.b = x = 1`、`this.p = x = 1` 以 characterization 測試釘住；golden／MDN 影響 0 筆。
+- Q: 「物件變數」遇到呼叫根的成員鏈（`localStorage.getItem(n).p = o`）如何判定？ → A（D013）: 沿 `.object` 鏈往左到達的識別字；鏈中遇到呼叫（或 `this`、括號中的其他運算式）即沒有物件變數，不豁免，FR-002 照常把被求值的識別字（`localStorage`、`n`）記為讀取（「表示法」、US1 情境 16、P42）；因此新增的 `localStorage` 讀取帶出的 inter-page pair 歸 FR-002「新增讀取」類（FR-009）。
+- Q: 檢查器如何處理 CallSiteRecord 的 `exceptionalReturn`？ → A（D014）: 視為從呼叫節點出發的例外邊。理由：`exceptionalReturn` 由 `lib/dujs/expansion.js:592-606` 的 `finishCallRecords` 依圖結構設定（段 0 呼叫節點的 `.exception` 目標），求解器只在 `reachingsolver.js:292` 讀它，與 FR-007 的獨立性相容；實測 1278 筆 record 中 1230 筆即 `callNode.exception`，39 筆的呼叫節點沒有例外邊（鏈式呼叫的後段、決策前呼叫），9 筆為 null。條件：「呼叫節點無例外邊」的形態補單元測試；檢查器斷言每個非 null 的 `exceptionalReturn` 都是圖上某節點的 `.exception` 目標（「表示法」）。
+- Q: (a) 的返回要不要分呼叫點？ → A（D015）: 分——同一 record 的 CALL 可到達且被呼叫端有正常返回，CALL RETURN 才可到達。這比「表示法」(a) 的字面嚴格，其可達集合是字面可達的子集，故通過即滿足 FR-006；以 P41 的可達集合測試（L10 的 CALL、CALL RETURN 與 L11 皆不可到達）釘住（US3 情境 8）。
+- Q: 不變量測試的 MDN 語料從哪裡讀？ → A（D016）: 直接讀 `specs/006-eslint-scope/mdn/corpus`（先例 `tests/dujs/splitcallnodes.js:24` 讀 specs 下的檔案）；缺檔或檔數不是 33 時測試失敗、不得 skip，並核對 `specs/006-eslint-scope/mdn/README.md` 記載的 sha256（33 檔、1218 行）。
+- Q: 決策條件中的無返回呼叫（P38–P40）仍產生決策節點的 p-use pair，怎麼處理？ → A（D017）: 納入 US3 修正（FR-013）。根因：007 的 deferred p-use（呼叫之前讀取、記為決策節點的 p-use）在 `defuseanalyzer.findDUPairs`（約 L278-293）以段節點的 reachIns 配對到 owner（決策節點）的兩個分支，不看 owner 是否被求解器 reached；owner 在無返回呼叫之後不可到達，關掉 (c) 仍違反。修正：owner 可到達時才配對（US3 情境 7）；intra-procedural 不拆分，不受影響。
+
 #### 延後釐清
 
 - （M4，交 plan）inter-page 模型的獨立可到達判定以哪些節點為起點（每頁 entry、事件處理器經 LOOP 進入）、例外邊如何辨識（圖上的邊型別），由 plan 定案並寫入 contracts。
@@ -119,8 +133,9 @@
 驗收程式一行一個節點來源。「沒有 X」表示該 pair 不得出現；未列出的 pair 不在該情境檢查範圍。
 
 **成員目標**：賦值目標（`=`、複合賦值、邏輯賦值、`++`／`--`、解構賦值的元素、`for…in`／`for…of` 的左側）中的成員運算式 `E.p` 或 `E[k]`。
-**物件變數**：成員目標最左側的識別字（`o.p`、`o.p.q`、`o[k]` 中的 `o`）。
+**物件變數**：自成員目標沿 `.object` 鏈一路往左到達的識別字（`o.p`、`o.p.q`、`o[k]`、`o[i].q` 中的 `o`）；鏈中遇到呼叫或其他非成員運算式（`localStorage.getItem(n).p`、`f(a).p`、`this.p`、`(a || b).p`）即**沒有物件變數**——不豁免 FR-001 的 `localStorage` 例外，FR-002 照常把物件運算式中被求值的識別字記為讀取（D013）。
 **可到達（獨立判定）**：在某模型的圖上從 entry 做圖可達，但 (a) 被呼叫端「沒有正常返回」時，不經該呼叫的 return 邊到達 CALL RETURN 節點——「有沒有正常返回」由檢查器自行以同一判定在被呼叫端的圖上重算（被呼叫端的 exit 是否可經非例外路徑到達，遞迴取最小不動點），不讀 `summary.js` 的 normalReturn（它由求解器的 reached 算出，`lib/dujs/summary.js:245`）；
+檢查器的 (a) 分呼叫點：同一呼叫的 CALL 可到達且被呼叫端有正常返回，該呼叫的 CALL RETURN 才可到達（D015；比本款字面嚴格，可達集合是字面可達的子集，故通過即滿足 FR-006）；被呼叫端未捕捉的例外以 CallSiteRecord 的 `exceptionalReturn` 視為從 CALL 出發的例外邊（D014；它由 `lib/dujs/expansion.js` 的 `finishCallRecords` 依圖結構取段 0 呼叫節點的例外目標設定，不是求解器的結果）；
 (b) 迴圈記錄：LOOP 節點可到達時，其 LOOP RETURN 節點可到達（依 LoopRecord，不論圖上有無對應的邊）；事件處理器 exit 到 LOOP RETURN 的邊照常可走；(c) `finally` 的 finallyExit 的正常出邊，只有在該 `finally` 有可到達的非例外進入（try／catch 正常完成，或 `return`／`break`／`continue`）時才可走。
 此判定 MUST 與 `lib/dujs/reachingsolver.js` 的 reached 計算與摘要分開實作（否則 pair 只由 reached 節點產生，檢查必然通過）。適用模型：intra-procedural（呼叫不透明，只套用 (c)）、inter-procedural、intra-page、inter-page（套用 (a)(b)(c)）。
 
@@ -152,7 +167,7 @@
 
 **Why this priority**: 這是錯誤的 pair（多報與漏報）且影響呼叫解析；MDN 範例中物件屬性賦值極為常見，修正後 pair 的定義端才正確。也是 US2 能涵蓋 P9 的前提。
 
-**Independent Test**: 以 P1–P4、P12、P25、P27、P29–P33 與 `probes/pages/` 的 s1–s14 執行，比對 intra-procedural、inter-procedural、intra-page、inter-page 的 pair 與連結。
+**Independent Test**: 以 P1–P4、P12、P25、P27、P29–P33、P42 與 `probes/pages/` 的 s1–s14 執行，比對 intra-procedural、inter-procedural、intra-page、inter-page 的 pair 與連結。
 
 **Acceptance Scenarios**:
 
@@ -171,6 +186,7 @@
 13. **Given** P33（`f(a).p = 1;` L5、`o[i].q = 2;` L6），**When** 分析，**Then** 有 `a: L1 -> L5`、`o: L1 -> L6`、`i: L1 -> L6`、`f: entry -> L5`；`f(a)` 仍連結，inter-procedural 與 intra-page 保留 `o: L1 -> L3`、`v: entry -> L3`（D009）；L5、L6 都不定義任何變數。
 14. **Given** `probes/pages/s10-two-pages-method.js`（第一頁：`class A` 的 `m() { x = 1; }` L3、`const o = new A();` L5、`function g` 中 `f(); o.m();` L8–L9、`o.p = 1;` L11、`g();` L12、`localStorage.k = x;` L13；第二頁讀 `y`、`localStorage.k`），**When** 以 `run-pages.js` 分析，**Then** `inter-page (all)` 中第一頁的 pair 有 `o: L5 -> L9`、`o: L5 -> L11`、`x: L3 -> L13`，沒有 `o: L11 -> L9`、`x: L6 -> L13`（develop 有後兩者）；`localStorage: L13 -> L7`（第二頁 L7）與第二頁的 pair 與 develop 相同；第一頁的 intra-page 模型也有 `o: L5 -> L9`、`o: L5 -> L11`、`x: L3 -> L13`，沒有 `o: L11 -> L9`、`x: L6 -> L13`（FR-003 的 intra-page）。標記不含頁別，行號依情境所述頁別解讀。（FR-003、FR-005，D007）
 15. **Given** `probes/pages/` 的 s11–s14（D008），**When** 以 `run-pages.js` 分析，**Then**：s11（函式內 `let localStorage = {};` L3、`localStorage.k = 2;` L4）有 `localStorage: L3 -> L4`、`localStorage: L3 -> L5`，沒有 `localStorage: L4 -> L5`，儲存定義節點數 1；s12（頁面 `var localStorage = {};` L1、`localStorage.k = 2;` L2）有 `localStorage: L1 -> L2`、`localStorage: L1 -> L3`，沒有 `localStorage: L2 -> L3`，儲存定義節點數 0；s13（`var s = localStorage;` L2、`s.k = 2;` L3）有 `s: L2 -> L3`、`s: L2 -> L4`，沒有 `s: L3 -> L4`，儲存定義節點數 1；s14（`window.localStorage.k = 2;` L2、`+= 3` L3、`window.f = 1;` L4）有 `window: entry -> L2`、`window: entry -> L3`、`window: entry -> L4`、`window: entry -> L5`，沒有 `window: L4 -> L5`，儲存定義節點數 1（與 develop 同）；s13、s14 的 `inter-page localStorage` 行與 develop 相同；s11 中 domain `localStorage` 的 pair 不變（`localStorage: L1 -> L1`（第二頁 L1）、`localStorage: L1 -> L8`），被遮蔽或頁面宣告的 `localStorage` 的 pair 依上述改變（`inter-page localStorage` 與 `inter-page (all)` 兩行對應更新）。
+16. **Given** P42（`var n = 'k', o = 1;` L1、`localStorage.getItem(n).p = o;` L2、`console.log(localStorage);` L3），**When** 分析，**Then** L2 不定義任何變數，也不是儲存定義節點（與 develop 同）；L2 讀取 `localStorage` 與 `n`（物件運算式是呼叫，沒有物件變數，不豁免，D013）：有 `n: L1 -> L2`、`o: L1 -> L2`、`console: entry -> L3`。`localStorage` 在頁面上沒有定義時是否產生 pair 依 develop 慣例（develop 中 L3 讀 `localStorage` 也沒有 pair），以實跑為準由實作確認並寫入測試；L2 的讀取以該節點的 USE 集合斷言。develop 只有 `console: entry -> L3`、`o: L1 -> L2`。
 
 ---
 
@@ -204,11 +220,11 @@
 ### User Story 3 - 無法到達的程式碼不產生 pair (Priority: P2)
 
 分析者分析含無條件遞迴（或其他永不正常返回的呼叫）的程式時，dujs 不會為呼叫之後無法到達的程式碼產生 pair，也不會讓其中的定義流到可到達的節點；
-本 feature 以一個與資料流程求解器獨立的可到達性判定，自動檢查 005 之後的殘留，並把查核範圍與結果記入 known-issues。剩餘情形（P21、P23、P24）全屬 KI §38 的 finallyExit 根因，本 feature 不修（D003），列為已知違反並補記到 §38。
+本 feature 以一個與資料流程求解器獨立的可到達性判定，自動檢查 005 之後的殘留，並把查核範圍與結果記入 known-issues。決策條件中的無返回呼叫（P38–P40）仍產生決策節點的 p-use pair，本 feature 修正（FR-013，D017）；其餘剩餘情形（P21、P23、P24）全屬 KI §38 的 finallyExit 根因，本 feature 不修（D003），列為已知違反並補記到 §38。
 
-**Why this priority**: 005 已消除 KI 原例的 pair（P13）；本 story 主要是系統性查核與防回歸，修正量預期小（產品程式碼預期不改；若獨立判定找到 §38 以外的違反，依 FR-008 處理）。
+**Why this priority**: 005 已消除 KI 原例的 pair（P13）；本 story 主要是系統性查核與防回歸，修正量小（產品程式碼只改 deferred p-use 的配對條件，FR-013；若獨立判定找到其他 §38 以外的違反，依 FR-008 處理）。
 
-**Independent Test**: 對 PRB、golden fixture 與 MDN 範例集的每個 intra-procedural（只套用 (c)）、inter-procedural、intra-page、inter-page 模型檢查不變量（FR-007）。
+**Independent Test**: 對 PRB、golden fixture 與 MDN 範例集的每個 intra-procedural（只套用 (c)）、inter-procedural、intra-page、inter-page 模型檢查不變量（FR-007）；以 P38–P41 比對 pair 與可達集合。
 
 **Acceptance Scenarios**:
 
@@ -218,6 +234,8 @@
 4. **Given** PRB、golden fixture 與 MDN 範例集，**When** 以獨立判定（「表示法」的可到達）檢查每個 intra-procedural（只套用 (c)）、inter-procedural、intra-page、inter-page 模型，**Then** 不在允許清單中的違反數為 0；允許清單每一項都通過 FR-008 的差分判準（finallyExit 根因），並附檢查器輸出的見證。
 5. **Given** P21、P23、P24，**When** 分析，**Then** 結果與 `develop` 相同（P21 `x: L1 -> L11`；P23 `x: L11 -> L14`；P24 `x: L1 -> L11`）；檢查器 (a)(b)(c) 全開時把這些 pair 報為違反、關掉 (c) 後兩端皆可達（FR-008 判準的陽性對照），並由允許清單放行。
 6. **Given** 一個注入了兩端不可到達之 pair 的模型（測試中人工加入，不經求解器），**When** 執行不變量檢查且該 pair 不在允許清單，**Then** 檢查失敗（陽性對照，注入方式由 plan 決定）。
+7. **Given** P38（`f` 無條件遞迴，`if (f()) {` L5、`x = 1;` L6、`console.log(x);` L8）、P39（`if (g(f())) {` L8、`x = 1;` L9、`console.log(x);` L11）、P40（`while (f()) {` L5，其餘同 P38），**When** 分析，**Then** inter-procedural 與 intra-page 沒有 P38 的 `f: entry -> L5>L6:T`、`f: entry -> L5>L8:F`，沒有 P39 的 `g: entry -> L8>L9:T`、`g: entry -> L8>L11:F`，沒有 P40 的 `f: entry -> L5>L6:T`、`f: entry -> L5>L8:F`（develop 有，D017）；仍有 P38、P40 的 `f: entry -> L3`，P39 的 `f: entry -> L3`、`f: entry -> L8`（段 0 的讀取可到達）。intra-procedural（頁面）不變（呼叫不透明，仍有上述 p-use pair）；檢查器對三者全開無違反。（FR-013）
+8. **Given** P41（`h()` 會返回、`r()` 無條件遞迴；`h();` L8、`r();` L9、`h();` L10、`console.log(x);` L11），**When** 以檢查器計算 inter-procedural 與 intra-page 模型的可達集合，**Then** L10 的 CALL、CALL RETURN 與 L11 皆不可到達（(a) 分呼叫點，D015；照圖走 return 邊時 `h` 的 exit 經 L8 可到達會使 L10 的 CALL RETURN 誤判可到達）；pair 與 develop 相同（inter-procedural 只有 `h: entry -> L8`、`r: entry -> L6`、`r: entry -> L9`）。
 
 ---
 
@@ -236,6 +254,8 @@
 - FR-001 也影響呼叫解析：函式或 class 的屬性賦值（`f.p = 1`、`A.count = 0`）不再蓋掉 `f`／`A` 的定義，嚴格規則與 D2 的頁面唯一定義計數都不再算它（P29–P32）。
 - 常數條件（`while (true)`、`if (false)`）不求值，兩個分支都算可到達（P22），不在 US3 範圍。
 - intra-procedural 模型中的呼叫不透明：呼叫之後的節點都算可到達（P14 intra(f)）。
+- 決策條件中的呼叫之前讀取的變數（deferred p-use，007）：決策節點不可到達時（條件中的呼叫永不正常返回，P38–P40）不產生 p-use pair；段 0 的 c-use 照常（FR-013）。
+- 成員目標右側的巢狀賦值（`o.a.b = x = 1`、`this.p = x = 1`、`y = (x = 5, 3)` 等）不定義內層變數：develop 的既有缺口，維持不修（D012，FR-011 (g)）。
 - 已知限制照舊、不在本 feature 修正：KI §38（`finally` 多入口；P21、P23、P24 補記，D003）、§41、§42、§43、§44、§48、§50；測試 helper 的 `Lnull` 標記（P18，記入 KI）。
 
 ## Requirements *(mandatory)*
@@ -247,21 +267,23 @@
 - **FR-003**: FR-001、FR-002 MUST 在所有模型（intra-procedural、inter-procedural、intra-page、inter-page）與被呼叫端的摘要中一致適用。[SRC KI §22 (1)；PRB P12]
 - **FR-004**: 在函式（含方法、事件處理器、欄位初始化式等非頁面 scope）中，`o.m(…)` 的 `o` 在該函式的 intra-procedural 模型中沒有到達的定義時，若 `o` 的 binding（可宣告於任何 scope，含外層函式）在整個頁面的所有程式碼中恰有一個定義（依 FR-001，成員賦值不計），且該定義是 `const`／`let` 宣告的 `new A(…)`、`A` 在該定義的節點解析為 class，則 MUST 連到該 class 的實例方法 `m`（不含 constructor，同既有 `o.m()`）。其餘情形沿用既有的嚴格規則（004 FR-018）。[SRC KI §23；F005 D2；PRB P5–P11]
 - **FR-005**: FR-004 的連結 MUST 與其他呼叫點相同地參與 007 的分段、005 的摘要與 call／return 配對資訊（`*.matching.json`），沒有新的節點型別、邊型別或輸出格式；inter-page 模型沿用頁面模型的連結結果（與既有放寬相同）。[SRC F007]
-- **FR-006**: intra-procedural（只套用 (c)）、inter-procedural、intra-page、inter-page 模型中，每個 pair 的定義節點與使用節點 MUST 依「表示法」的獨立判定都可到達，允許清單除外（D003）。[SRC KI §22 (5)、§38；PRB P13–P24]
+- **FR-006**: intra-procedural（只套用 (c)）、inter-procedural、intra-page、inter-page 模型中，每個 pair 的定義節點與使用節點 MUST 依「表示法」的獨立判定都可到達，允許清單除外（D003）。[SRC KI §22 (5)、§38；PRB P13–P24、P38–P41]
 - **FR-007**: MUST 有一個自動化的不變量檢查（測試）驗證 FR-006，涵蓋 PRB、golden fixture 與 MDN 範例集；其可到達判定（含 (a) 的「沒有正常返回」）MUST 自行計算，不呼叫或重用 `reachingsolver` 的 reached 與 `summary` 的 normalReturn，並有陽性對照（P21、P23、P24，US3 情境 5；注入的不可到達 pair，US3 情境 6）。允許清單以明列的（程式、模型、pair）表示，不以規則放行。[SRC KI §22 (5)；D003、D005]
 - **FR-008**: 允許清單的判準 MUST 由檢查器以差分方式執行（D005）：檢查器跑兩次——(a)(b)(c) 全開、只開 (a)(b)；一項 pair 可列入允許清單，若且唯若「全開時違反、關掉 (c) 後兩端皆可達」（finallyExit 根因）。測試 MUST 在下列情形失敗：允許清單項不符此判準；允許清單項已不再違反（過期）；有允許清單以外的違反。
   每項允許清單 MUST 附檢查器輸出的見證（finallyExit 所在 scope 與行號、該 `finally` 可到達的非例外進入邊數 = 0），寫入 `golden-diff.md`／`mdn-diff.md` 或 KI §38，供 validator 重跑比對。關掉 (c) 仍違反者（非 finallyExit 根因）MUST 修正（屬本 feature 範圍者）或發 DECISION 由使用者裁決。P21、P23、P24 MUST 先通過此判準，作為陽性對照。[SRC KI §22 (5)、§38；D005]
 - **FR-009**: golden 的每一處差異 MUST 以差異工具（比對基準固定 `develop` `2035c93`，寫在紀錄的基準行）逐筆記錄於 `specs/008-property-defs-method-calls/golden-diff.md`，對應到本 spec 的 FR 或 KI 節次並分類（「屬性寫入→讀取損失」（D001，如 P25）為獨立分類，不併入修正；判準見下），差異以去重後的 pair 比對並另列重複列數（KI §43）；經使用者簽核後更新 golden 與 `tests/golden/manifest.json`。[SRC USR R2；F007 FR-008]
-  損失判準（D006）：一筆因 FR-001 消失的 pair（定義端是成員目標）為「損失」，若且唯若選項 B（屬性層級模型）會保留它——使用端節點讀取了定義端寫入的同一屬性路徑（P25 L3 讀 L2 寫入的 `o.p`；P4 的 `o: L3 -> L4`；P2 的 `o: L5 -> L6`）；其餘為「修正」（P1 L9 `o.m()` 讀的是 `m` 不是 `p`）。模糊情形明文化並預設歸損失：計算鍵（寫或讀 `o[k]`，如 P2 的 `o: L4 -> L5`）、路徑前綴重疊（寫 `o.p.q` 讀 `o.p`，或反之）、同一行多個敘述。整個物件的讀取（`console.log(o)`，可能讀到任何屬性）歸損失；`o.m()` 歸修正（語法層判定：方法 `m` 內讀 `this.p` 的流動選項 B 也不追，不代表語意上沒有資料流，golden-diff 的分類說明須寫明）；`delete o.p` 讀 `o.p`（同路徑時歸損失）。整個物件的讀取指 `o` 的使用不在成員運算式的物件位置（引數 `console.log(o)`、別名 `var s = o`、`return o`、`if (o)`、`typeof o`），一律損失（P2 `o: L9 -> L11`、P27 `o: L7 -> L8`）。呼叫位置（D011）：裸識別字作 callee 或 `new` 運算元（P29 `f: L5 -> L6`、P30 `f: L5 -> L8`、P31 `A: L7 -> L8`、P32 `f: L5 -> L7`）歸修正（呼叫語法上不讀該屬性路徑）；方法呼叫 `o.m()` 的 callee 路徑與寫入路徑相同（`o.m = fn; o.m()`）時歸損失（同路徑優先，P37 `o: L2 -> L5`），路徑不同時歸修正（P1、P37 `q: L6 -> L7`）。同一節點多個成員目標（`[o.p, o.q] = a`、`o.p = o.q = 1`）：任一寫入路徑符合即損失。使用端為 p-use，或位於被呼叫端（跨 scope）時，用同一語法判定。判準由 `specs/008-property-defs-method-calls/tools/` 的差異工具機械判定（分類邏輯為可 require 的模組、自帶測試，正反例至少含 P1、P25、P4、P2），準則寫入 `contracts/diff-check.md`；plan 評估 007 差異工具已知限制（去後綴集合比對看不出同一行不同段的缺漏，007 T068 (d)）對 FR-002 新增讀取的影響。MDN 差異（FR-010）用同一判準。
+  損失判準（D006）：一筆因 FR-001 消失的 pair（定義端是成員目標）為「損失」，若且唯若選項 B（屬性層級模型）會保留它——使用端節點讀取了定義端寫入的同一屬性路徑（P25 L3 讀 L2 寫入的 `o.p`；P4 的 `o: L3 -> L4`；P2 的 `o: L5 -> L6`）；其餘為「修正」（P1 L9 `o.m()` 讀的是 `m` 不是 `p`）。模糊情形明文化並預設歸損失：計算鍵（寫或讀 `o[k]`，如 P2 的 `o: L4 -> L5`）、路徑前綴重疊（寫 `o.p.q` 讀 `o.p`，或反之）、同一行多個敘述。整個物件的讀取（`console.log(o)`，可能讀到任何屬性）歸損失；`o.m()` 歸修正（語法層判定：方法 `m` 內讀 `this.p` 的流動選項 B 也不追，不代表語意上沒有資料流，golden-diff 的分類說明須寫明）；`delete o.p` 讀 `o.p`（同路徑時歸損失）。整個物件的讀取指 `o` 的使用不在成員運算式的物件位置（引數 `console.log(o)`、別名 `var s = o`、`return o`、`if (o)`、`typeof o`），一律損失（P2 `o: L9 -> L11`、P27 `o: L7 -> L8`）。呼叫位置（D011）：裸識別字作 callee 或 `new` 運算元（P29 `f: L5 -> L6`、P30 `f: L5 -> L8`、P31 `A: L7 -> L8`、P32 `f: L5 -> L7`）歸修正（呼叫語法上不讀該屬性路徑）；方法呼叫 `o.m()` 的 callee 路徑與寫入路徑相同（`o.m = fn; o.m()`）時歸損失（同路徑優先，P37 `o: L2 -> L5`），路徑不同時歸修正（P1、P37 `q: L6 -> L7`）。同一節點多個成員目標（`[o.p, o.q] = a`、`o.p = o.q = 1`）：任一寫入路徑符合即損失。使用端為 p-use，或位於被呼叫端（跨 scope）時，用同一語法判定。物件運算式中新增的讀取（含沒有物件變數的成員目標，如 P42 的 `localStorage.getItem(n).p` 讀 `localStorage`、`n`，D013）帶出的新 pair——包括新增的 `localStorage` 讀取帶出的新 inter-page pair——歸 FR-002「新增讀取」類，不併入 `localStorage` 凍結（D004）。判準由 `specs/008-property-defs-method-calls/tools/` 的差異工具機械判定（分類邏輯為可 require 的模組、自帶測試，正反例至少含 P1、P25、P4、P2），準則寫入 `contracts/diff-check.md`；plan 評估 007 差異工具已知限制（去後綴集合比對看不出同一行不同段的缺漏，007 T068 (d)）對 FR-002 新增讀取的影響。MDN 差異（FR-010）用同一判準。
 - **FR-010**: MDN 範例集（`specs/006-eslint-scope/mdn/corpus` 的 33 個程式）MUST 以本 feature 與 `develop`（`2035c93`）各跑一次，每一個新增或消失的 pair 記錄於 `specs/008-property-defs-method-calls/mdn-diff.md` 並分類（見 SC-004）；新發現的問題記入 `docs/known-issues.md`。[SRC USR R2；F007 FR-009]
 - **FR-011**: `docs/known-issues.md` MUST：
   (a) §22 (1) 加修正說明「`o` 不再被成員賦值定義（部分修正）」，不標為完全修正；新增後續 KI 記錄屬性層級定義（選項 B：`o.p = v` 定義 `o.p`、讀 `o.p` 使用 `o.p`、重新定義 `o` 時殺掉 `o.p`）、其成本（`lib/dujs/var.js:48`、`lib/dujs/defuseanalyzer.js:77`／`:600`、`lib/dujs/outputwriter.js:394-432`）與 all-uses 損失的例子（P25）；
   (b) §23 標為已修正（保留原描述，前加修正說明），並記 `var` 不放寬（D002）；
-  (c) §22 (5) 寫成「除 §38 的 `finally` 情形外已修」，附查核範圍；§38 補記 P21、P23、P24 三種形態，並記窄修候選「`finally` 沒有可到達的非例外進入時，finallyExit 不帶出正常路徑」；
+  (c) §22 (5) 寫成「除 §38 的 `finally` 情形外已修」，附查核範圍與 FR-013 的修正（決策條件中的無返回呼叫，P38–P40）；§38 補記 P21、P23、P24 三種形態，並記窄修候選「`finally` 沒有可到達的非例外進入時，finallyExit 不帶出正常路徑」；
   (d) 記錄測試 helper 對無行號節點標成 `Lnull` 的既有問題（P18）；
   (e) §22 (4) 補記 D004 凍結的 `localStorage` 缺口：`localStorage[k]` 不讀 `k`；`=`、`.a.b`、解構不讀 `localStorage`；解構與 `for…in` 在 intra-procedural 有定義卻不是儲存定義節點；巢狀 `x = (localStorage.k = 1)` 不是儲存定義節點（`probes/pages/`）；
-  (f) §22 標題與開頭的 feature 摘要段落補上本 feature；本 feature 的行為變更、限制與新發現新增章節。[SRC KI §22、§23、§38；USR；D001–D003]
+  (f) §22 標題與開頭的 feature 摘要段落補上本 feature；本 feature 的行為變更、限制與新發現新增章節；
+  (g) 新增 KI 記錄巢狀賦值的通用缺口（D012）：GEN 只在賦值右側「直接是」賦值／更新時遞迴，其餘位置的內層賦值不是定義——形態 `y = (x = 5, 3)`、`y = [x = 6]`、`y = f(x = 7)`、`[y] = x = [8]`、`o.t = [n++]`、`this.p = x = 1`、`f().p = x = 2`、`o.a.b = x++`，現存實例 `tests/golden/fixtures/es2015/app.js:22` 的 `nextId++`（`state.todos = [...state.todos, { id: nextId++, … }]`）；本 feature 維持 develop 行為（`o.p = x = 1`、`o.p = x++` 仍定義 `x`）。[SRC KI §22、§23、§38；USR；D001–D003、D012]
 - **FR-012**: README MUST 同步：Limits 段「assigning to `a.b` defines `a`」改寫為成員賦值是物件變數的使用、不追蹤屬性層級的資料流；解析規則加入函式中 `o.m()` 的放寬與其限制（只 `const`／`let`、宣告與賦值分開不放寬、忽略執行順序）；L173 的兩句過期敘述「`o.m()` … `o` has a property assignment in between (`o.p = 1` defines `o`)」與「`o.m()` in a function when `o` is defined outside it (known-issues §23)」刪除或改寫。[SRC D001、D002；README L173、L175、L187]
+- **FR-013**: deferred p-use（007：決策節點的條件中、呼叫之前讀取的變數，記在段節點、配對到 owner 決策節點的分支）MUST 只在其決策節點（owner）依求解器可到達時產生 pair；owner 不可到達時（條件中的呼叫永不正常返回，P38–P40）不產生該 p-use 的 pair。段節點本身的 c-use 不受影響；intra-procedural 模型不拆分呼叫、沒有 deferred p-use，結果不變。[SRC KI §22 (5)；PRB P38–P40；D017]
 
 ### Key Entities
 
@@ -275,12 +297,12 @@
 ### Measurable Outcomes
 
 - **SC-001**: 本 spec 的全部驗收情境都有對應的自動化測試且通過。
-- **SC-002**: PRB P1–P21、P23–P37 全部得到驗收情境所列的預期結果；P22 結果不變。
+- **SC-002**: PRB P1–P21、P23–P42 全部得到驗收情境所列的預期結果；P22 結果不變。
 - **SC-003**: 既有測試全部通過（編碼舊行為的測試更新並列入 golden-diff）；golden 差異 100% 有對應記錄與分類，且經使用者簽核。
-- **SC-004**: MDN 範例集與 golden fixture 全部能完成分析、不拋錯；每一個相對 `develop` 新增或消失的 pair 都歸入下列之一：「成員目標不是定義（FR-001／FR-002）」「成員目標不是定義對呼叫解析的影響（FR-001 外溢：嚴格規則與 D2／class 放寬的定義計數，P29–P32）」「`o.m()` 放寬（FR-004）」「無法到達（FR-006）」「屬性寫入→讀取損失（D001）」，或 KI 既有限制（需註明節次）；無法歸類者記為新已知問題。MDN `a05-assessment-main.js` 的三個 `evilBall` 方法呼叫連結（US2 情境 8）。
+- **SC-004**: MDN 範例集與 golden fixture 全部能完成分析、不拋錯；每一個相對 `develop` 新增或消失的 pair 都歸入下列之一：「成員目標不是定義（FR-001／FR-002）」「成員目標不是定義對呼叫解析的影響（FR-001 外溢：嚴格規則與 D2／class 放寬的定義計數，P29–P32）」「`o.m()` 放寬（FR-004）」「無法到達（FR-006、FR-013）」「屬性寫入→讀取損失（D001）」，或 KI 既有限制（需註明節次）；無法歸類者記為新已知問題。MDN `a05-assessment-main.js` 的三個 `evilBall` 方法呼叫連結（US2 情境 8）。
 - **SC-005**: FR-007 的不變量檢查在 PRB、golden fixture 與 MDN 範例集上，允許清單以外的違反數為 0、過期的允許清單項為 0；每一項允許清單都通過 FR-008 的差分判準並附見證；陽性對照（P21、P23、P24、注入的 pair）確實被報出。
 - **SC-006**: golden fixture 與 MDN 範例集的總分析時間不超過 `develop` 的 2 倍。
-- **SC-007**: FR-011 (a)–(f) 與 FR-012 的每一項 known-issues／README 修改都有逐項核對紀錄（項目、檔案位置、核對結果），README 的過期敘述（L173、L187）不再出現。
+- **SC-007**: FR-011 (a)–(g) 與 FR-012 的每一項 known-issues／README 修改都有逐項核對紀錄（項目、檔案位置、核對結果），README 的過期敘述（L173、L187）不再出現。
 
 ## Assumptions
 

@@ -12,6 +12,10 @@
       "done": true,
       "clarifier_findings": 8,
       "decisions": "D006–D010"
+    },
+    "plan": {
+      "done": true,
+      "decisions": "D011–D017"
     }
   }
 }

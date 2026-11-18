@@ -204,10 +204,44 @@ intra(page): console: entry -> L8 | o: L2 -> L5 | q: L6 -> L7 | x: L1 -> L8
 intra($ANONYMOUS_FUN_0): 
 intra($ANONYMOUS_FUN_1): 
 intra-page (nodes 10): console: entry -> L8 | o: L2 -> L5 | q: L6 -> L7 | x: L1 -> L8
+=== p38-if-norecall.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+inter[0] ($DOMAIN.$PAGE_0.f, nodes 4): 
+inter[1] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 12): f: entry -> L3 | f: entry -> L5>L6:T | f: entry -> L5>L8:F
+intra(page): console: entry -> L8 | f: entry -> L5>L6:T | f: entry -> L5>L8:F | x: L1 -> L8 | x: L6 -> L8
+intra(f): 
+intra-page (nodes 14): f: entry -> L3 | f: entry -> L5>L6:T | f: entry -> L5>L8:F
+=== p39-if-nested-norecall.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, $DOMAIN.$PAGE_0.g
+inter[0] ($DOMAIN.$PAGE_0.f, nodes 4): 
+inter[1] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, $DOMAIN.$PAGE_0.g, nodes 16): f: entry -> L3 | f: entry -> L8 | g: entry -> L8>L11:F | g: entry -> L8>L9:T
+intra(page): console: entry -> L11 | f: entry -> L8 | g: entry -> L8>L11:F | g: entry -> L8>L9:T | x: L1 -> L11 | x: L9 -> L11
+intra(f): 
+intra(g): v: entry -> L6
+intra-page (nodes 18): f: entry -> L3 | f: entry -> L8 | g: entry -> L8>L11:F | g: entry -> L8>L9:T
 === p4-storage-object.js
 scopes: $DOMAIN.$PAGE_0
 intra(page): console: entry -> L4 | localStorage: L1 -> L4 | o: L3 -> L4
 intra-page (nodes 8): console: entry -> L4 | localStorage: L1 -> L4 | o: L3 -> L4
+=== p40-while-norecall.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f
+inter[0] ($DOMAIN.$PAGE_0.f, nodes 4): 
+inter[1] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.f, nodes 12): f: entry -> L3 | f: entry -> L5>L6:T | f: entry -> L5>L8:F
+intra(page): console: entry -> L8 | f: entry -> L5>L6:T | f: entry -> L5>L8:F | x: L1 -> L8 | x: L6 -> L8
+intra(f): 
+intra-page (nodes 14): f: entry -> L3 | f: entry -> L5>L6:T | f: entry -> L5>L8:F
+=== p41-call-after-norecall.js
+scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.h, $DOMAIN.$PAGE_0.r
+inter[0] ($DOMAIN.$PAGE_0.r, nodes 4): 
+inter[1] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.h, $DOMAIN.$PAGE_0.r, nodes 17): h: entry -> L8 | r: entry -> L6 | r: entry -> L9
+intra(page): console: entry -> L11 | h: entry -> L10 | h: entry -> L8 | r: entry -> L9 | x: L1 -> L11
+intra(h): 
+intra(r): 
+intra-page (nodes 19): h: entry -> L8 | r: entry -> L6 | r: entry -> L9
+=== p42-localstorage-call-chain.js
+scopes: $DOMAIN.$PAGE_0
+intra(page): console: entry -> L3 | o: L1 -> L2
+intra-page (nodes 7): console: entry -> L3 | o: L1 -> L2
 === p5-ki23.js
 scopes: $DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0, $DOMAIN.$PAGE_0.g
 inter[0] ($DOMAIN.$PAGE_0, $DOMAIN.$PAGE_0.g, nodes 11): A: L2 -> L7 | console: entry -> L12 | g: entry -> L11 | o: L7 -> L9 | x: L1 -> L12
