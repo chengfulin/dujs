@@ -1,0 +1,31 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.setWeather
+## intra $DOMAIN.$PAGE_0
+document: entry -> L1
+document: entry -> L2
+select: L1 -> L4
+setWeather: entry -> L4
+## intra $DOMAIN.$PAGE_0.setWeather
+choice: L7 -> L10>L11:T
+choice: L7 -> L10>L14:F
+choice: L7 -> L14>L15:T
+choice: L7 -> L14>L18:F
+choice: L7 -> L18>L19:T
+choice: L7 -> L18>L22:F
+choice: L7 -> L22>L23:T
+choice: L7 -> L22>L26:F
+## intra-page (nodes 20)
+choice: L7 -> L10>L11:T
+choice: L7 -> L10>L14:F
+choice: L7 -> L14>L15:T
+choice: L7 -> L14>L18:F
+choice: L7 -> L18>L19:T
+choice: L7 -> L18>L22:F
+choice: L7 -> L22>L23:T
+choice: L7 -> L22>L26:F
+document: entry -> L1
+document: entry -> L2
+select: L1 -> L4
+select: L1 -> L7
+setWeather: entry -> L4

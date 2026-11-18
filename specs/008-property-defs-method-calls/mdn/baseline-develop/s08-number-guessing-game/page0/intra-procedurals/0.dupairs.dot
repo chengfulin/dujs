@@ -1,0 +1,30 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="5">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry,3)</td><td>(entry,4)</td><td>(entry,5)</td><td>(entry,6)</td><td>(entry,7)</td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>checkGuess</td><td>(entry,43)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>setGameOver</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>resetGame</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Math</td><td>(entry,2)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>randomNumber</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guesses</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>lastResult</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>lowOrHi</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guessSubmit</td><td>(6,43)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guessField</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guessCount</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>resetButton</td><td></td><td></td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

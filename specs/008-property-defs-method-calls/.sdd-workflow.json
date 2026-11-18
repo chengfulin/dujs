@@ -27,6 +27,18 @@
       "remediated": 16,
       "decisions": "D020",
       "notes": "analyze 9（MEDIUM 4、LOW 5）＋clarifier 10（HIGH 2、MEDIUM 5、INFO 3）；I3 基線不升級、S1／I3(spec) 純文字未改"
+    },
+    "implement": {
+      "done": false,
+      "mode_note": "依序模式（未跑 0P：phase 明文串接、共用熱點檔）",
+      "decisions": "D021–D024",
+      "phases": {
+        "Setup": {
+          "reviewed": true,
+          "committed": true
+        }
+      },
+      "stories": {}
     }
   }
 }

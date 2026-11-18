@@ -1,0 +1,99 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_6
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_7
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_8
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_9
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_10
+## intra $DOMAIN.$PAGE_0
+Animal: L15 -> L21
+Example: L67 -> L77
+Person: L1 -> L12
+Person: L1 -> L24
+Person: L1 -> L47
+Professor: L24 -> L43
+Student: L47 -> L63
+giles: L12 -> L14
+myExample: L77 -> L79
+spot: L21 -> L23
+summers: L63 -> L65
+summers: L63 -> L66
+walsh: L43 -> L44
+walsh: L43 -> L46
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+name: entry -> L5
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+name: entry -> L28
+teaches: entry -> L29
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5
+grade: L39 -> L40
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_6
+name: entry -> L51
+year: entry -> L52
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_7
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_8
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_9
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_10
+## inter[0] $DOMAIN.$PAGE_0 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_6 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_7 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_8 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_9
+Animal: L15 -> L21
+Example: L67 -> L77
+Math: entry -> L39
+Person: L1 -> L12
+Person: L1 -> L24
+Person: L1 -> L47
+Professor: L24 -> L43
+Student: L47 -> L63
+console: entry -> L17
+console: entry -> L33
+console: entry -> L40
+console: entry -> L56
+console: entry -> L9
+giles: L12 -> L14
+grade: L39 -> L40
+myExample: L77 -> L79
+name: entry -> L28
+name: entry -> L5
+name: entry -> L51
+spot: L21 -> L23
+summers: L63 -> L65
+summers: L63 -> L66
+teaches: entry -> L29
+walsh: L43 -> L44
+walsh: L43 -> L46
+year: entry -> L52
+## intra-page (nodes 64)
+Animal: L15 -> L21
+Example: L67 -> L77
+Math: entry -> L39
+Person: L1 -> L12
+Person: L1 -> L24
+Person: L1 -> L47
+Professor: L24 -> L43
+Student: L47 -> L63
+console: entry -> L17
+console: entry -> L33
+console: entry -> L40
+console: entry -> L56
+console: entry -> L9
+giles: L12 -> L14
+grade: L39 -> L40
+myExample: L77 -> L79
+name: entry -> L28
+name: entry -> L5
+name: entry -> L51
+spot: L21 -> L23
+summers: L63 -> L65
+summers: L63 -> L66
+teaches: entry -> L29
+walsh: L43 -> L44
+walsh: L43 -> L46
+year: entry -> L52

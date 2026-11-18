@@ -1,0 +1,22 @@
+digraph CFG {
+node [shape="box"]
+label = "function $DOMAIN.$PAGE_0.updateAllowance"
+n51 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n52 [label="16"]
+n53 [label="17"]
+n54 [label="18"]
+n55 [label="23"]
+n56 [label="20"]
+n57 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n51 -> n52 []
+n52 -> n53 []
+n53 -> n54 [label="true"]
+n53 -> n56 [label="false"]
+n53 -> n57 [color="red", label="exception"]
+n54 -> n55 []
+n54 -> n57 [color="red", label="exception"]
+n55 -> n57 []
+n55 -> n57 [color="red", label="exception"]
+n56 -> n55 []
+n56 -> n57 [color="red", label="exception"]
+}

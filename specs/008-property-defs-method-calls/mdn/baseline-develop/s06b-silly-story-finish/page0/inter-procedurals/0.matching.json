@@ -1,0 +1,59 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0.returnRandomStoryString",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 26,
+      "callee": "$DOMAIN.$PAGE_0.randomValueFromArray",
+      "callNode": "n81",
+      "entry": "n82",
+      "exit": "n85",
+      "callReturn": "n86",
+      "exceptionalReturn": "n93",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 27,
+      "callee": "$DOMAIN.$PAGE_0.randomValueFromArray",
+      "callNode": "n87",
+      "entry": "n82",
+      "exit": "n85",
+      "callReturn": "n88",
+      "exceptionalReturn": "n93",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 28,
+      "callee": "$DOMAIN.$PAGE_0.randomValueFromArray",
+      "callNode": "n89",
+      "entry": "n82",
+      "exit": "n85",
+      "callReturn": "n90",
+      "exceptionalReturn": "n93",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.randomValueFromArray": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math"
+      ],
+      "exceptional": []
+    }
+  }
+}

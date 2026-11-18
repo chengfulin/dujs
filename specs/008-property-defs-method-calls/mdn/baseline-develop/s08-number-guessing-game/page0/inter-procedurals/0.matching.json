@@ -1,0 +1,60 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0.checkGuess",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 23,
+      "callee": "$DOMAIN.$PAGE_0.setGameOver",
+      "callNode": "n95",
+      "entry": "n96",
+      "exit": "n103",
+      "callReturn": "n104",
+      "exceptionalReturn": "n119",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 27,
+      "callee": "$DOMAIN.$PAGE_0.setGameOver",
+      "callNode": "n111",
+      "entry": "n96",
+      "exit": "n103",
+      "callReturn": "n112",
+      "exceptionalReturn": "n119",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.setGameOver": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "guessField@n97",
+        "guessSubmit@n98",
+        "resetButton@n100"
+      ],
+      "mustKill": [
+        "guessField",
+        "guessSubmit",
+        "resetButton"
+      ],
+      "upwardExposed": [
+        "document",
+        "resetGame"
+      ],
+      "exceptional": [
+        "guessField@n97",
+        "guessSubmit@n98",
+        "resetButton@n99",
+        "resetButton@n100"
+      ]
+    }
+  }
+}

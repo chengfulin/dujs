@@ -1,0 +1,15 @@
+digraph CFG {
+node [shape="box"]
+label = "page"
+n12 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n13 [label="2"]
+n14 [label="12"]
+n15 [label="24"]
+n16 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n12 -> n13 []
+n13 -> n14 []
+n14 -> n15 []
+n14 -> n16 [color="red", label="exception"]
+n15 -> n16 []
+n15 -> n16 [color="red", label="exception"]
+}
