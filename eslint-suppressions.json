@@ -108,11 +108,6 @@
       "count": 1
     }
   },
-  "lib/dujs/reportgenerator.js": {
-    "strict": {
-      "count": 1
-    }
-  },
   "lib/dujs/scopefactory.js": {
     "strict": {
       "count": 1

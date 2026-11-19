@@ -1,0 +1,77 @@
+{
+  "feature": "009-mermaid-markdown-output",
+  "brief": {
+    "note": "依 orchestrator 決策協定，不產簡報、不發布 Artifact；判斷點以 DECISION REQUEST 交回主 session 裁決"
+  },
+  "steps": {
+    "specify": {
+      "done": true,
+      "decisions": "D001"
+    },
+    "clarify": {
+      "done": true,
+      "clarifier_findings": 10,
+      "decisions": "D001（clarify 問題併入 D001-2～D001-5）"
+    },
+    "plan": {
+      "done": true,
+      "decisions": "D002（使用者追加 US4）、D003（README 拆分清單，使用者確認）、D004（plan 閘門）"
+    },
+    "tasks": {
+      "done": true,
+      "count": 44
+    },
+    "analyze": {
+      "done": true,
+      "findings": 21,
+      "remediated": 19,
+      "decisions": "D005",
+      "notes": "analyze 10（MEDIUM 3、LOW 7）＋clarifier full 11（MEDIUM 8、INFO 3）；不處理 F7（編號排列）、I1（基線不升級）；I2 記入 T011 備註"
+    },
+    "implement": {
+      "done": true,
+      "mode_note": "依序模式（未跑 0P：US1→US2→US3→US4 明文串接，共用熱點檔 outputwriter.js、golden.js、README.md；同 008）",
+      "phases": {
+        "Setup": {
+          "reviewed": true,
+          "committed": true
+        },
+        "Foundational": {
+          "reviewed": true,
+          "committed": true
+        },
+        "Polish": {
+          "reviewed": true,
+          "validated_all": true,
+          "committed": true
+        }
+      },
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true,
+          "code_review": "mattpocock code-review 已跑（Standards 9／Spec 3）；sdd-code-reviewer R1–R3 fixed"
+        },
+        "US2": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true,
+          "code_review": "mattpocock code-review 已跑（Standards 7／Spec 4）；sdd-code-reviewer R1/R3 fixed、R2 延至 US3"
+        },
+        "US3": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true,
+          "code_review": "mattpocock code-review 已跑（Standards 9／Spec 3）；sdd-code-reviewer 0 項"
+        },
+        "US4": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true,
+          "code_review": "mattpocock code-review 已跑（Standards 8／Spec 5）；sdd-code-reviewer R1–R2 fixed"
+        }
+      }
+    }
+  }
+}

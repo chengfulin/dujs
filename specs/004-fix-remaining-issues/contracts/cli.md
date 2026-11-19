@@ -56,6 +56,9 @@ Example:
 2. 依頁面順序讀完所有檔案（`sourceReader.getSourceFromFiles`，內容格式不變）；失敗 → #6。
 3. `outputWriter.createRootOutputDirectory()`（§3），之後才建各頁目錄、寫 `src.js`。
 4. 既有的四階段分析與寫出、`reportGenerator.createReport()`，順序不變。
+
+   > Superseded by specs/009-mermaid-markdown-output：`reportGenerator.createReport()` 與 `report.html` 已移除，改寫總覽 `README.md`（`outputWriter.writeOverview`，contracts/overview-readme.md）；四階段分析與寫出的順序仍有效。
+
 5. 3–4 任一步拋例外 → `fs.rmSync(本次目錄, {recursive: true, force: true})` → #7。
 6. 回傳 0。`io` 預設 `{stdout: process.stdout, stderr: process.stderr, cwd: process.cwd()}`，供測試注入。
 
@@ -66,6 +69,8 @@ Example:
 - `OutputWriter.prototype.ROOT_OUTPUT_DIR` 改為 getter，回傳本次建立的名稱；建立前讀取拋錯（防止在建立前寫檔）。`reportgenerator` 的
   `report.html` 與 `<img src="../<目錄>/...">` 都改用實際名稱。
 
+  > Superseded by specs/009-mermaid-markdown-output：`reportgenerator`／`report.html`（與其 `<img>`）已移除，總覽 `README.md` 只用相對連結、不含目錄名稱；輸出目錄唯一化本身（本節其餘內容）仍有效。
+
 ## 4. 驗收情境（US5、SC-004、SC-005；`tests/dujs/cli.js`，以 `spawnSync`／`spawn` 執行 `bin/dujs.js`，cwd 為暫存目錄）
 
 | # | 命令 | 斷言 |
@@ -75,6 +80,8 @@ Example:
 | US5-3 | `dujs -js ok.js -js missing.js`；`dujs -js bad.js`（`bad.js` 內容為語法錯誤 `var a = ;`） | exit 1；missing：stderr 含 `cannot read missing.js`、未建 `out-*`；bad：stderr 含 `dujs: analysis failed:`、執行後 cwd 沒有 `out-*`（建後刪除） |
 | US5-4／SC-005 | 同一 cwd 以 `spawn` 同時啟動兩次 `dujs -js ok.js`，重複 10 次 | 每次兩者 exit 0；`out-*` 目錄數＝2×次數（每次各新增 2 個不同目錄）；每個目錄的檔案清單相同且 `report.html` 引用自己的目錄名稱 |
 | US5-5 | `dujs -js ok.js` | exit 0；stderr 空；輸出 .dot 與修正前相同（golden 三個 case 照跑即涵蓋） |
+
+> US5-4 superseded by specs/009-mermaid-markdown-output：`report.html` 已移除，「`report.html` 引用自己的目錄名稱」改為每個目錄有總覽 `README.md` 且其內容不含目錄名稱、各目錄的總覽彼此相同；輸出目錄唯一化本身（各次執行得到不同目錄）仍有效。
 
 `bad.js`（SC-004「分析錯誤」）：語法錯誤檔 `var a = ;`。讀檔階段只讀文字，解析在建目錄之後的分析階段才拋錯（修正前的 CLI 實跑：建了
 `out-*`、印 `*** ERROR:  Unexpected token ;  ***`、exit 0），因此走 §1 #7：建後刪除、exit 1。驗收以子行程執行 `bin/dujs.js`，**不得以 stub 代替**；
