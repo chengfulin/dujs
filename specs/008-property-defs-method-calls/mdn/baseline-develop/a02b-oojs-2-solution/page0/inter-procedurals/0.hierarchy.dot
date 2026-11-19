@@ -1,0 +1,11 @@
+digraph Hierarchy {
+node [shape="box"]
+label = "inter-procedural: $DOMAIN.$PAGE_0"
+h0 [label="$DOMAIN.$PAGE_0"]
+h1 [label="$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2"]
+h2 [label="$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3"]
+h0 -> h1 [color="blue", label="call"]
+h1 -> h0 [color="blue", style="dashed", label="return"]
+h0 -> h2 [color="blue", label="call"]
+h2 -> h0 [color="blue", style="dashed", label="return"]
+}

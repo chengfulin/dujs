@@ -1,0 +1,27 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.Person
+## intra $DOMAIN.$PAGE_0
+Person: entry -> L11
+Person: entry -> L14
+Person: entry -> L16
+console: entry -> L18
+console: entry -> L19
+irma: L16 -> L18
+irma: L16 -> L19
+personPrototype: L1 -> L11
+reuben: L14 -> L15
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+## intra $DOMAIN.$PAGE_0.Person
+name: entry -> L8
+## intra-page (nodes 11)
+Person: entry -> L11
+Person: entry -> L14
+Person: entry -> L16
+console: entry -> L18
+console: entry -> L19
+irma: L16 -> L18
+irma: L16 -> L19
+personPrototype: L1 -> L11
+reuben: L14 -> L15

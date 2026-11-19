@@ -2,28 +2,41 @@ digraph structs {
 node [shape="plaintext"]
 struct1 [label=<
 <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
-<tr><td>Variable</td><td COLSPAN="18">Def-Use pairs</td></tr><tr><td>window</td><td>(entry_a,78)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>document</td><td>(entry_a,79)</td><td>(entry_a,80)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>String</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>console</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>items</td><td>(entry_a,entry_b)</td><td>(3,entry_b)</td><td>(64,entry_b)</td><td>(entry_a,65)</td><td>(3,65)</td><td>(64,65)</td><td>(entry_a,entry_c)</td><td>(3,entry_c)</td><td>(64,entry_c)</td><td>(entry_a,69)</td><td>(3,69)</td><td>(64,69)</td><td>(entry_a,70)</td><td>(3,70)</td><td>(64,70)</td><td>(entry_a,71)</td><td>(3,71)</td><td>(64,71)</td></tr>
-<tr><td>mode</td><td>(entry_a,entry_d)</td><td>(4,entry_d)</td><td>(75,entry_d)</td><td>(entry_a,75)</td><td>(4,75)</td><td>(75,75)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>add</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>sumAll</td><td>(entry_a,entry_b)</td><td>(entry_a,65)</td><td>(entry_a,entry_c)</td><td>(entry_a,70)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>countDown</td><td>(entry_a,entry_c)</td><td>(entry_a,69)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>describeMode</td><td>(entry_a,entry_d)</td><td>(entry_a,75)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>parseSaved</td><td>(entry_a,entry_b)</td><td>(entry_a,64)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>onLoad</td><td>(entry_a,78)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>onAdd</td><td>(entry_a,79)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td>onModeChange</td><td>(entry_a,80)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Variable</td><td COLSPAN="16">Def-Use pairs</td></tr><tr><td>window</td><td>(entry_a,78)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,79)</td><td>(entry_a,80)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>items</td><td>(call (64),call (65))</td><td>(3,call (69))</td><td>(call (64),call (69))</td><td>(3,call (70))</td><td>(call (64),call (70))</td><td>(3,71)</td><td>(call (64),71)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>mode</td><td>(4,call (75))</td><td>(call (75),call (75))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>add</td><td>(entry_a,call (19)_a_b_a_b)</td><td>(entry_a,call (19)_a_b_a_b)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>sumAll</td><td>(entry_a,call (65))</td><td>(entry_a,call (70))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>countDown</td><td>(entry_a,call (69))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>describeMode</td><td>(entry_a,call (75))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>parseSaved</td><td>(entry_a,call (64))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>onLoad</td><td>(entry_a,78)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>onAdd</td><td>(entry_a,79)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>onModeChange</td><td>(entry_a,80)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>JSON</td><td>(entry_a,54)</td><td>(entry_a,71)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>raw</td><td>(entry_c,54)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>parsed</td><td>(54,60)</td><td>(56,60)</td><td>(52,60)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>e</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>list</td><td>(entry_d_h_a_b_a_b,(18beabab,call (19)_a_b_a_b))</td><td>(entry_d_h_a_b_a_b,(18beabab,21abab))</td><td>(entry_d_h_a_b_a_b,call (19)_a_b_a_b)</td><td>(entry_d_h_a_b_a_b,(18beabab,call (19)_a_b_a_b))</td><td>(entry_d_h_a_b_a_b,(18beabab,21abab))</td><td>(entry_d_h_a_b_a_b,call (19)_a_b_a_b)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>sum</td><td>(call (19)_a_b_a_b,call (19)_a_b_a_b)</td><td>(17abab,call (19)_a_b_a_b)</td><td>(call (19)_a_b_a_b,21abab)</td><td>(17abab,21abab)</td><td>(call (19)_a_b_a_b,call (19)_a_b_a_b)</td><td>(17abab,call (19)_a_b_a_b)</td><td>(call (19)_a_b_a_b,21abab)</td><td>(17abab,21abab)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>i</td><td>(18cfabab,(18beabab,call (19)_a_b_a_b))</td><td>(18cfabab,(18beabab,21abab))</td><td>(18adab,(18beabab,call (19)_a_b_a_b))</td><td>(18adab,(18beabab,21abab))</td><td>(18cfabab,call (19)_a_b_a_b)</td><td>(18adab,call (19)_a_b_a_b)</td><td>(18cfabab,18cfabab)</td><td>(18adab,18cfabab)</td><td>(18cfabab,(18beabab,call (19)_a_b_a_b))</td><td>(18cfabab,(18beabab,21abab))</td><td>(18adab,(18beabab,call (19)_a_b_a_b))</td><td>(18adab,(18beabab,21abab))</td><td>(18cfabab,call (19)_a_b_a_b)</td><td>(18adab,call (19)_a_b_a_b)</td><td>(18cfabab,18cfabab)</td><td>(18adab,18cfabab)</td></tr>
+<tr><td>value</td><td>(entry_e_i_a_b_a_b,(8abab,9abab))</td><td>(entry_e_i_a_b_a_b,(8abab,11abab))</td><td>(entry_e_i_a_b_a_b,9abab)</td><td>(entry_e_i_a_b_a_b,11abab)</td><td>(entry_e_i_a_b_a_b,(8abab,9abab))</td><td>(entry_e_i_a_b_a_b,(8abab,11abab))</td><td>(entry_e_i_a_b_a_b,9abab)</td><td>(entry_e_i_a_b_a_b,11abab)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>result</td><td>(9abab,13abab)</td><td>(11abab,13abab)</td><td>(9abab,13abab)</td><td>(11abab,13abab)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>n</td><td>(entry_g,(26,27))</td><td>(entry_g,(26,31))</td><td>(27,(26,27))</td><td>(27,(26,31))</td><td>(entry_g,27)</td><td>(27,27)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>steps</td><td>(25,28)</td><td>(28,28)</td><td>(25,31)</td><td>(28,31)</td><td>(31,31)</td><td>(31,(32,31))</td><td>(31,(32,33))</td><td>(31,33)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>m</td><td>(entry_k,(39,40))</td><td>(entry_k,(39,42))</td><td>(entry_k,(42,43))</td><td>(entry_k,(42,45))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>text</td><td>(40,48)</td><td>(43,48)</td><td>(46,48)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 </TABLE>
 >];
 }

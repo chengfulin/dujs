@@ -1,0 +1,80 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 20,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+      "callNode": "n15",
+      "entry": "n16",
+      "exit": "n20",
+      "callReturn": "n21",
+      "exceptionalReturn": "n31",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 21,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n22",
+      "entry": "n23",
+      "exit": "n25",
+      "callReturn": "n26",
+      "exceptionalReturn": "n31",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 23,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+      "callNode": "n27",
+      "entry": "n16",
+      "exit": "n20",
+      "callReturn": "n28",
+      "exceptionalReturn": "n31",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 4,
+      "callSiteLine": 24,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n29",
+      "entry": "n23",
+      "exit": "n25",
+      "callReturn": "n30",
+      "exceptionalReturn": "n31",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "console"
+      ],
+      "exceptional": []
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 6,
+      "callSiteLine": 19,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n169",
+      "entry": "n170",
+      "exit": "n172",
+      "callReturn": "n173",
+      "exceptionalReturn": "n176",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 7,
+      "callSiteLine": 19,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n173",
+      "entry": "n170",
+      "exit": "n172",
+      "callReturn": "n174",
+      "exceptionalReturn": "n176",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 8,
+      "callSiteLine": 19,
+      "callee": "$DOMAIN.$PAGE_0.random",
+      "callNode": "n174",
+      "entry": "n170",
+      "exit": "n172",
+      "callReturn": "n175",
+      "exceptionalReturn": "n176",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 12,
+      "callSiteLine": 68,
+      "callee": "$DOMAIN.$PAGE_0.randomRGB",
+      "callNode": "n167",
+      "entry": "n168",
+      "exit": "n176",
+      "callReturn": "n177",
+      "exceptionalReturn": "n178",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.random": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.randomRGB": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math",
+        "random"
+      ],
+      "exceptional": []
+    }
+  }
+}

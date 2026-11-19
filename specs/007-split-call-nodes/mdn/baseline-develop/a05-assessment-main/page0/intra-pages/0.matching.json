@@ -1,0 +1,50 @@
+{
+  "format": "dujs-matching/1",
+  "level": "intraPage",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 206,
+      "callee": "$DOMAIN.$PAGE_0.loop",
+      "callNode": "n74",
+      "entry": "n75",
+      "exit": "n87",
+      "callReturn": "n88",
+      "exceptionalReturn": "n89",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [
+    {
+      "loop": "n89",
+      "loopReturn": "n91",
+      "handlers": []
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.loop": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "ctx@n76"
+      ],
+      "mustKill": [
+        "ctx"
+      ],
+      "upwardExposed": [
+        "balls",
+        "evilBall",
+        "height",
+        "loop",
+        "requestAnimationFrame",
+        "width"
+      ],
+      "exceptional": [
+        "ctx@n76"
+      ]
+    }
+  }
+}

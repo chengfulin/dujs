@@ -1,7 +1,6 @@
 /*
  * Test cases for ScopeTree module
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-04
  */
 var should = require('should'),
 	jsParser = require('../../lib/dujs/jsparser');
@@ -141,7 +140,7 @@ describe('ScopeTree', function () {
 
 				it('should not set local variables yet', function () {
 					var pageScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0');
-					pageScope._testonly_._vars.size.should.eql(0);
+					pageScope._testonly_._variables.length.should.eql(0);
 				});
 			});
 
@@ -186,8 +185,8 @@ describe('ScopeTree', function () {
 				it('should not set the local variables yet', function () {
 					var fooScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.foo');
 					var funScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.fun');
-					fooScope._testonly_._vars.size.should.eql(0);
-					funScope._testonly_._vars.size.should.eql(0);
+					fooScope._testonly_._variables.length.should.eql(0);
+					funScope._testonly_._variables.length.should.eql(0);
 				});
 			});
 
@@ -228,7 +227,7 @@ describe('ScopeTree', function () {
 
 				it('should not set the local variables yet', function () {
 					var anonymousScope = tree._testonly_._mapFromNameToScope.get('$PAGE_0.fun.$ANONYMOUS_FUN_0');
-					anonymousScope._testonly_._vars.size.should.eql(0);
+					anonymousScope._testonly_._variables.length.should.eql(0);
 				});
 			});
 		});

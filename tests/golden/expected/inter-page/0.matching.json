@@ -1,0 +1,268 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interPage",
+  "mainScope": "$DOMAIN",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 19,
+      "callee": "$DOMAIN.$PAGE_0.add",
+      "callNode": "n257",
+      "entry": "n258",
+      "exit": "n264",
+      "callReturn": "n265",
+      "exceptionalReturn": "n268",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 64,
+      "callee": "$DOMAIN.$PAGE_0.parseSaved",
+      "callNode": "n241",
+      "entry": "n242",
+      "exit": "n248",
+      "callReturn": "n251",
+      "exceptionalReturn": "n270",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 65,
+      "callee": "$DOMAIN.$PAGE_0.sumAll",
+      "callNode": "n252",
+      "entry": "n253",
+      "exit": "n268",
+      "callReturn": "n269",
+      "exceptionalReturn": "n270",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 4,
+      "callSiteLine": 69,
+      "callee": "$DOMAIN.$PAGE_0.countDown",
+      "callNode": "n273",
+      "entry": "n274",
+      "exit": "n282",
+      "callReturn": "n283",
+      "exceptionalReturn": "n303",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c5",
+      "seq": 5,
+      "callSiteLine": 70,
+      "callee": "$DOMAIN.$PAGE_0.sumAll",
+      "callNode": "n284",
+      "entry": "n253",
+      "exit": "n268",
+      "callReturn": "n301",
+      "exceptionalReturn": "n303",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c6",
+      "seq": 6,
+      "callSiteLine": 75,
+      "callee": "$DOMAIN.$PAGE_0.describeMode",
+      "callNode": "n305",
+      "entry": "n306",
+      "exit": "n311",
+      "callReturn": "n316",
+      "exceptionalReturn": "n317",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [
+    {
+      "loop": "n238",
+      "loopReturn": "n271",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.onLoad",
+          "entry": "n240",
+          "exit": "n270"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.onAdd",
+          "entry": "n272",
+          "exit": "n303"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.onModeChange",
+          "entry": "n304",
+          "exit": "n317"
+        }
+      ]
+    },
+    {
+      "loop": "n323",
+      "loopReturn": "n329",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_1.onLoad",
+          "entry": "n325",
+          "exit": "n328"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_1.onClear",
+          "entry": "n330",
+          "exit": "n333"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.add": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.countDown": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.describeMode": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.onAdd": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "total@n284"
+      ],
+      "mustKill": [
+        "total"
+      ],
+      "upwardExposed": [
+        "JSON",
+        "add",
+        "countDown",
+        "items",
+        "localStorage",
+        "sumAll"
+      ],
+      "exceptional": [
+        "total@n284"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.onLoad": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "items@n241",
+        "total@n252"
+      ],
+      "mustKill": [
+        "items",
+        "total"
+      ],
+      "upwardExposed": [
+        "JSON",
+        "add",
+        "localStorage",
+        "parseSaved",
+        "sumAll"
+      ],
+      "exceptional": [
+        "items@n241",
+        "total@n245"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.onModeChange": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "mode@n305"
+      ],
+      "mustKill": [
+        "mode"
+      ],
+      "upwardExposed": [
+        "describeMode",
+        "mode"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.parseSaved": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "total@n245"
+      ],
+      "mustKill": [
+        "total"
+      ],
+      "upwardExposed": [
+        "JSON"
+      ],
+      "exceptional": [
+        "total@n245"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.sumAll": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "add"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_1.onClear": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "count@n332"
+      ],
+      "mustKill": [
+        "count"
+      ],
+      "upwardExposed": [
+        "localStorage"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_1.onLoad": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "saved@n326",
+        "count@n327"
+      ],
+      "mustKill": [
+        "count",
+        "saved"
+      ],
+      "upwardExposed": [
+        "JSON",
+        "localStorage"
+      ],
+      "exceptional": [
+        "saved@n326"
+      ]
+    }
+  }
+}

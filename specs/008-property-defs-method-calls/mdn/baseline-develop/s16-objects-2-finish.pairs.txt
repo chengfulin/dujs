@@ -1,0 +1,16 @@
+## scopes
+$DOMAIN.$PAGE_0
+## intra $DOMAIN.$PAGE_0
+band: L3 -> L30
+bandInfo: L30 -> L34
+document: entry -> L32
+document: entry -> L33
+para1: L34 -> L35
+section: L32 -> L35
+## intra-page (nodes 11)
+band: L3 -> L30
+bandInfo: L30 -> L34
+document: entry -> L32
+document: entry -> L33
+para1: L34 -> L35
+section: L32 -> L35

@@ -1,0 +1,11 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+## intra $DOMAIN.$PAGE_0
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+name: entry -> L7
+sideLength: entry -> L9
+sides: entry -> L8
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+## intra-page (nodes 5)

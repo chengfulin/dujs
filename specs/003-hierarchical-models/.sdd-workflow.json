@@ -1,0 +1,77 @@
+{
+  "feature": "003-hierarchical-models",
+  "steps": {
+    "specify": {
+      "done": true
+    },
+    "clarify": {
+      "done": true
+    },
+    "plan": {
+      "done": true
+    },
+    "tasks": {
+      "done": true
+    },
+    "analyze": {
+      "done": true,
+      "findings": 20,
+      "remediated": 18
+    },
+    "implement": {
+      "parallel_plan": {
+        "mode": "sequential",
+        "mode_reason": "分析基礎為 grep，集合不足以作為並行實作的邊界",
+        "granularity": "task",
+        "basis": "grep",
+        "tasks": 67,
+        "conflict_pairs": 850,
+        "pairs": 2211,
+        "by_type": {
+          "宣告": 543,
+          "相依": 207,
+          "寫入": 100
+        },
+        "batches": 40,
+        "max_width": 7,
+        "phases": 5,
+        "waves": 12,
+        "est_speedup": 1.4,
+        "low_conf": [
+          "T013",
+          "T018",
+          "T026",
+          "T030",
+          "T034",
+          "T037",
+          "T064",
+          "T065"
+        ],
+        "plan_file": "specs/003-hierarchical-models/parallel-plan.json"
+      },
+      "setup_commit": "e68bb2d76c365f0999dd0de7202145a7c6ed3ff0",
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US2": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US3": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      },
+      "done": true,
+      "pr_url": "https://github.com/chengfulin/dujs/pull/5"
+    }
+  },
+  "brief": {
+    "artifact_url": "https://claude.ai/artifact/GsDodzwesZaonTfYiwZaHX"
+  }
+}

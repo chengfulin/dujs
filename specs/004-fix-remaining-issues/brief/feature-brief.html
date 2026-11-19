@@ -1,0 +1,280 @@
+<title>修正已知問題</title>
+<style>
+:root{
+  --bg:#FFFBF2; --card:#FFFFFF; --ink:#1F2937; --sub:#5B6470; --line:#E6E0D2; --th:#F4EFE3;
+  --blue:#2B59C3; --blue-soft:#DCE6FA;
+  --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
+  --coral:#E4573D; --coral-soft:#FBDDD6;
+  --green:#3A9D6B; --green-soft:#D8F0E3;
+  --grey:#AEB6C0;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+    --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+  --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding-block:32px 72px;padding-inline:20px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:900;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
+.meta{color:var(--sub);font-size:.9rem}
+.note{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:8px 12px;margin:10px 0;font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin:16px 0;display:grid;gap:12px}
+.panel h3{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;line-height:1.2;margin:0;text-wrap:balance}
+.num{display:inline-block;font-weight:900;font-size:.75rem;letter-spacing:.15em;color:var(--blue);background:var(--blue-soft);padding:2px 10px;border-radius:999px;width:max-content}
+.pic{overflow-x:auto}
+.pic svg{display:block;width:100%;min-width:640px;height:auto}
+.cap{font-size:1.05rem;font-weight:500;max-width:52ch;margin:0}
+.cap b{font-weight:900}
+.cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
+text{font-family:var(--sans)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+.mermaid{min-width:640px;text-align:center}
+ul{margin:6px 0;padding-left:20px}
+li small{color:var(--sub)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--th)}
+.ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
+code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 100 110"><circle cx="50" cy="28" r="20" fill="currentColor"/><path d="M12 108 a38 38 0 0 1 76 0 z" fill="currentColor"/></symbol>
+    <symbol id="doc" viewBox="0 0 100 120"><path d="M14 6 h50 l22 22 v86 h-72 z" fill="currentColor"/><path d="M64 6 v22 h22" fill="none" stroke="#FFFFFF" stroke-width="4"/><g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"><path d="M28 50 h44 M28 68 h44 M28 86 h30"/></g></symbol>
+    <symbol id="sheet" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="6" fill="currentColor"/><g stroke="#FFFFFF" stroke-width="3"><path d="M4 28 h112 M4 50 h112 M4 72 h112 M40 4 v92 M78 4 v92"/></g></symbol>
+    <symbol id="term" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="8" fill="currentColor"/><rect x="4" y="4" width="112" height="18" rx="8" fill="#FFFFFF" opacity=".35"/><path d="M22 44 l16 12 l-16 12" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M48 68 h30" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/></symbol>
+    <symbol id="bot" viewBox="0 0 100 110"><rect x="44" y="4" width="12" height="14" rx="3" fill="currentColor"/><circle cx="50" cy="4" r="5" fill="currentColor"/><rect x="10" y="18" width="80" height="62" rx="16" fill="currentColor"/><rect x="22" y="32" width="56" height="30" rx="10" fill="#FFFFFF"/><circle cx="38" cy="47" r="6" fill="#1F2937"/><circle cx="62" cy="47" r="6" fill="#1F2937"/><rect x="26" y="84" width="48" height="22" rx="8" fill="currentColor"/></symbol>
+    <symbol id="server" viewBox="0 0 100 110"><rect x="10" y="6" width="80" height="28" rx="6" fill="currentColor"/><rect x="10" y="41" width="80" height="28" rx="6" fill="currentColor"/><rect x="10" y="76" width="80" height="28" rx="6" fill="currentColor"/><g fill="#FFFFFF"><circle cx="24" cy="20" r="4"/><circle cx="24" cy="55" r="4"/><circle cx="24" cy="90" r="4"/></g></symbol>
+    <symbol id="warn" viewBox="0 0 100 100"><path d="M50 8 L96 90 H4 Z" fill="currentColor"/><path d="M50 36 v26" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="76" r="5" fill="#FFFFFF"/></symbol>
+    <symbol id="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="currentColor"/><path d="M28 52 l15 15 l30 -34" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grey)"/></marker>
+  </defs>
+</svg>
+
+<main>
+<h1>修正其餘已知問題（§7、§10–§12、§14、§15、§17、§20、§21）</h1>
+<p class="meta">feature 004-fix-remaining-issues · analyze · 第 1 輪 · 2026-11-16</p>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
+
+<h2>看懂它</h2>
+
+<section class="panel">
+  <span class="num">01 · 背景</span>
+  <h3>研究者用工具查「資料在哪寫、在哪讀」</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="研究者用分析工具檢查網頁程式裡變數 x 的寫入與讀取">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">研究者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">檢查</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">第 4 行：把 x 改成 1</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">第 7 行：呼叫那段程式</text><text x="280" y="134">第 8 行：讀出 x</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">網頁程式：一段要檢查的程式</text>
+    <use href="#term" x="650" y="55" width="150" height="125" color="var(--ink)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">分析工具</text>
+  </svg></div>
+  <p class="cap">研究者靠工具知道<b>每個值從哪一行來、到哪一行被用</b>。<small>來源：spec User Scenarios &amp; Testing 開頭</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">02 · 要解決的問題</span>
+  <h3>工具有看漏、連錯，操作時也不說清楚</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="工具說 x 來自第 1 行，實際來自第 4 行；命令列沒有說明、失敗也不告知">
+    <use href="#warn" x="60" y="50" width="100" height="100" color="var(--coral)"/>
+    <text x="110" y="190" text-anchor="middle" font-size="20" font-weight="900" fill="var(--coral)">結果不對</text>
+    <path d="M180 100 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">實際：x 在第 4 行被改</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">工具說：x 來自第 1 行</text><text x="280" y="134">命令列：沒說明、失敗也沒提醒</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">9 個已知問題尚未修</text>
+    <use href="#person" x="670" y="50" width="100" height="110" color="var(--blue)"/>
+    <text x="720" y="190" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">研究者被誤導</text>
+  </svg></div>
+  <p class="cap">類型有三種：<b>漏報、連錯、命令列不友善</b>。<small>來源：spec Input、User Story 1–6 的 Why this priority</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">03 · 目的</span>
+  <h3>把 9 個已知問題一次修好</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="九個已知問題逐一修正">
+    <use href="#doc" x="60" y="40" width="100" height="120" color="var(--blue)"/>
+    <text x="110" y="190" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">已知問題清單</text>
+    <path d="M180 100 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="85" text-anchor="middle" font-size="15" fill="var(--sub)">逐一修正</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="64">1. 條件判斷中的讀取要認對</text><text x="280" y="94">2. 建立物件與呼叫其功能要連上</text><text x="280" y="124">3. 漏掉的來源要補回來</text><text x="280" y="154">4. 命令列有說明、失敗要告知</text><text x="280" y="184">5. 圖上的標籤要分得清</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">範圍：KI 的 9 節</text>
+    <use href="#check" x="680" y="50" width="100" height="100" color="var(--green)"/>
+    <text x="730" y="190" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">重現程式皆正確</text>
+  </svg></div>
+  <p class="cap">只修這 9 節；<b>階層模型 stage 2 的 §18 等不在範圍</b>。<small>來源：spec 範圍決策 D1</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">04 · 預期結果</span>
+  <h3>結果變正確，每處改變都有記錄</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="x 的來源改為第 4 行，失敗時回報錯誤，所有差異有記錄">
+    <use href="#check" x="60" y="50" width="100" height="100" color="var(--green)"/>
+    <text x="110" y="190" text-anchor="middle" font-size="20" font-weight="900" fill="var(--green)">修正後</text>
+    <path d="M180 100 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--green)">x 的來源：第 4 行</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="94">失敗時：明確回報「不成功」</text><text x="280" y="122">改變的結果：逐項有記錄</text><text x="280" y="150">沒有說明的改變視為出錯</text><text x="280" y="178">自己呼叫自己：也能完成分析</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">成功標準</text>
+    <use href="#person" x="670" y="50" width="100" height="110" color="var(--blue)"/>
+    <text x="720" y="190" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">研究者可放心用</text>
+  </svg></div>
+  <p class="cap">每個驗收情境都有測試，且<b>所有結果差異都對得到某一項修正</b>，遞迴程式也跑得完。<small>來源：spec Success Criteria SC-001–SC-003、SC-006；FR-013</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">流程</span>
+  <h3>最大改動：一行呼叫依序連到被執行的程式</h3>
+  <div class="pic"><svg viewBox="0 0 860 350" role="img" aria-label="new A().m(); 依序連到欄位初始化式、constructor、方法 m，讀取 x 得到第 4 行；兩條不連結支線">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">呼叫敘述</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">new A().m();</text>
+      <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">連欄位初始化</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">A 的欄位先跑</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">連 constructor</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">接著跑本體</text>
+      <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">連方法 m</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">最後跑 m 本體</text>
+      <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">結果正確</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">x: L4 -&gt; L8</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M168 100 h14"/><path d="M338 100 h14"/><path d="M508 100 h14"/><path d="M678 100 h14"/></g>
+    <g stroke="var(--coral)" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arr)"><path d="M570 150 v50"/><path d="M640 150 v50"/></g>
+    <rect x="340" y="210" width="250" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="465" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">物件來源不明或混合</text>
+    <text x="465" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">不連結、不報錯</text>
+    <text x="465" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">README 註明此限制</text>
+    <rect x="610" y="210" width="230" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="725" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">方法不在該 class 內</text>
+    <text x="725" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">不連結、不報錯</text>
+    <text x="725" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">不沿 extends 往上找</text>
+    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">只有「呼叫敘述」會連結；x = o.m() 這類寫法維持不連結</text>
+  </svg></div>
+  <p class="cap">單獨的 <b>new 敘述與可判定的方法呼叫</b>都成為連結點。<small>來源：spec User Story 2、3；FR-002–FR-005</small></p>
+  <ul>
+    <li>先欄位、後 constructor，取代 001 D7「欄位初始化式不接入流程」。<small>（範圍決策 D3）</small></li>
+    <li>有 <code>extends</code> 時不追 super 鏈；遞迴（如 <code>m(){ this.m(); }</code>）改以回邊成環，不再報錯。<small>（D3；FR-015）</small></li>
+  </ul>
+</section>
+
+<section class="panel">
+  <span class="num">架構</span>
+  <h3>只新增 2 個模組，其餘是既有模組的局部改動</h3>
+  <div class="box"><div class="mermaid">
+flowchart LR
+  bin["bin/dujs.js 改"] --> cli["cli.js 新：util.parseArgs、exit 0/1/2"]
+  cli --> outw["outputwriter／reportgenerator 改：輸出目錄唯一"]
+  cli --> exe["defuseanalysisexecutor 既有"]
+  exe -.-> mb["modelbuilder 改：DFS 守衛、登記條件"]
+  mb --> cr["callresolver.js 新：new 與方法呼叫解析"]
+  cr --> st["scopetree 改：params、欄位合成 return"]
+  mb --> hx["hierarchy／expansion 改：回邊、bypass 記錄"]
+  hx --> md["model 改：存 bypass"]
+  an["defuseanalyzer 改：bypass 過濾"] --> md
+  ue["usedexpressions 改：條件模式"] --> an
+  </div></div>
+  <ul>
+    <li>新模組只有 <code>callresolver.js</code>（解析被呼叫 scope）與 <code>cli.js</code>；<code>inputreader.js</code> 刪除。<small>（plan Source Code）</small></li>
+    <li>呼叫環以階層<b>回邊</b>表示、繞過規則放在分析層；LGPL 衍生檔（<code>esgraph/index.js</code>、<code>dot.js</code>、<code>analyses/</code>）不動。<small>（research R5、R6；plan Technical Context）</small></li>
+    <li>另有 <code>cfggraphconverter</code>、<code>branchsplitter</code> 為獨立小改（標籤、支配關係），不在此圖。<small>（plan 變更影響範圍 US6）</small></li>
+  </ul>
+</section>
+
+<h3>範圍一覽</h3>
+<div class="box"><table>
+<tr><th>Story</th><th>優先</th><th>來源</th><th>一句話</th><th>實作階段／相依</th></tr>
+<tr><td>(Foundational)</td><td>—</td><td>FR-016</td><td>呼叫端看不到的定義繞過被呼叫端，到達 CALL RETURN 之後</td><td>最先做；US2／US3 的前置</td></tr>
+<tr><td>US1</td><td>P1</td><td>KI §20；Fable A5</td><td>條件內的讀取一律 p-use；呼叫（含 <code>new</code>）的引數一律 c-use</td><td>獨立</td></tr>
+<tr><td>US2</td><td>P1</td><td>KI §21；D3</td><td><code>new</code> 敘述成為 call-site，class 依序連欄位初始化式與 constructor</td><td>需 Foundational</td></tr>
+<tr><td>US3</td><td>P2</td><td>KI §7；D2、D6</td><td>可靜態判定的 class 方法呼叫連到方法本體；呼叫環以回邊表示</td><td>依賴 US2</td></tr>
+<tr><td>US4</td><td>P2</td><td>KI §10、§11、§17</td><td>補回參數預設值函式、class 宣告名稱 static 內 use、解構內層預設值的 pair</td><td>獨立；與 US3 改同批檔案，須協調</td></tr>
+<tr><td>US5</td><td>P2</td><td>KI §12；D4</td><td>CLI help、失敗 exit 非零、輸出目錄唯一（D5）</td><td>獨立，檔案不重疊</td></tr>
+<tr><td>US6</td><td>P3</td><td>KI §14、§15</td><td>CALL RETURN 標籤可區分；for-in／of 回邊改以支配關係判定</td><td>獨立，檔案不重疊</td></tr>
+</table></div>
+
+<h2>本輪變更（analyze · 第 1 輪）</h2>
+<p class="meta">兩份檢查（speckit-analyze、sdd-spec-clarifier）皆無 CRITICAL；FR 覆蓋 100%、共 85 個任務；基線無漂移、無上游目錄。核心問題是「spec 與 acceptance／tasks 對不上」。</p>
+
+<h3>發現表（CRITICAL／HIGH 全列）</h3>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>說明</th><th>建議處置</th></tr>
+<tr><td>H1（＝F9）</td><td class="no">HIGH</td><td>spec FR-017；acceptance；tasks T026</td><td>FR-017 仍寫 <code>new B()</code> MUST 視為 call-site，但 acceptance 與 T026 斷言「不連」，互相矛盾</td><td>改寫 FR-017：欄位初始值本身是 <code>this.m()</code> 時連結；<code>new B()</code> 依 H3 不連；補驗收情境（判斷點 1）</td></tr>
+<tr><td>H2</td><td class="no">HIGH</td><td>spec FR-015、Clarifications；plan L101</td><td>handler 查找修正（U3）是行為變更，spec 只有一行 Clarification、無 FR 與驗收情境（§CP-1）</td><td>FR-015 補 handler 接續要求＋2 個情境：<code>cyc-handler</code> 有環版與無環對照版都接上（判斷點 2）</td></tr>
+</table></div>
+<p class="meta">MEDIUM 以下彙總：MEDIUM 6 項（F1、F2、F3、M1、M2、M5）與 LOW 多項（F4–F8、F10–F12、M3、M6 等）皆為文件對齊與任務補述，處置內容見下方「判斷點 3」；其中 M4（FR-015／016／017 未掛 story）併入判斷點 2。</p>
+
+<h3>已知會改的既有測試</h3>
+<div class="box"><table>
+<tr><th>檔案</th><th>改動</th><th>原因</th></tr>
+<tr><td><code>tests/dujs/usedexpressions.js</code>（約 139、145、273、279 行）</td><td><code>o</code>、<code>i</code>、read <code>'walk'</code> 改為 p-use</td><td>US1</td></tr>
+<tr><td><code>tests/dujs/es2015.js</code>（約 407 行）</td><td><code>o: L4 -&gt; L5</code> 變 p-use</td><td>US1</td></tr>
+<tr><td><code>tests/dujs/paramsandnew.js</code>（約 148 行）</td><td>預設值箭頭函式變 scope（多出 <code>f.$ANONYMOUS_FUN_0</code>）</td><td>US4</td></tr>
+<tr><td><code>call cycle</code> 測試</td><td>改斷言 <code>model cycle</code></td><td>US3</td></tr>
+<tr><td><code>classfields.js</code>（檔頭與 92 行標題）、<code>golden.js</code> 註解</td><td class="no">plan Constraints 漏列，建議補上（F4、M6）</td><td>US2</td></tr>
+</table></div>
+
+<h2>工程師要決定的事</h2>
+
+<h3>驗收條件盤點</h3>
+<p class="meta">acceptance.md 已有 42 個探針與完整預期；本輪新發現的缺口在於「spec 條文沒有對應情境」。</p>
+<div class="box"><table>
+<tr><th>Story</th><th>判定</th><th>說明（出處）</th></tr>
+<tr><td>US1（6 條）</td><td class="ok">全部可驗證</td><td>acceptance US1；FR-001 未明載 switch discriminant 納入、for-in／for-of head 與 §18 entry 走訪不動（M1，plan R1 已定）</td></tr>
+<tr><td>US2（5 條）</td><td><span class="ok">可驗證</span>；FR-017 <span class="no">與 acceptance 矛盾</span></td><td>FR-017 寫 <code>new B()</code> MUST 連結，acceptance／T026 斷言不連（H1，判斷點 1）</td></tr>
+<tr><td>US3（7 條）</td><td><span class="ok">7 條可驗證</span>；<span class="no">缺 5 條 spec 情境</span></td><td>FR-015／016／017 未掛 story、無 Given/When/Then（M4）；handler 接續無 FR 與情境（H2）；FR-014 缺 §16 後果段（判斷點 2）</td></tr>
+<tr><td>US4（6 條）</td><td class="ok">全部可驗證</td><td>U1 已決（改用 <code>g();</code>）；acceptance US4 #1／#1' 的過時註記待清（F11）</td></tr>
+<tr><td>US5（5 條）</td><td><span class="ok">4 條可驗證</span>；<span class="no">SC-004 輸入未定</span></td><td>SC-004「分析錯誤」的 <code>bad.js</code> 未定、允許 stub（M5）；情境 4 判準已定（cli.md）</td></tr>
+<tr><td>US6（4 條）</td><td class="ok">全部可驗證</td><td>標籤格式 <code>callReturn (&lt;line&gt;:&lt;path&gt;)</code> 見 output.md §1</td></tr>
+</table></div>
+
+<h3>tech-standards 缺漏或變更</h3>
+<div class="box"><table>
+<tr><th>項目</th><th>狀況</th></tr>
+<tr><td>規範未涵蓋</td><td>CLI 的 help／exit status 慣例、輸出目錄唯一化——規範對本 CLI／函式庫不適用，plan 於 cli.md 自訂</td></tr>
+<tr><td>plan 偏離規範</td><td>無（<code>util.parseArgs</code> 為內建、非新依賴）</td></tr>
+</table></div>
+
+<h3>CRITICAL／HIGH 衝突與影響</h3>
+<div class="box"><table>
+<tr><th>憲章條款</th><th>衝突內容</th><th>受影響 story</th></tr>
+<tr><td>§CP-1（spec 為準）</td><td>H1：FR-017 與 acceptance／T026 矛盾，實作會違反 spec 字面</td><td>US2</td></tr>
+<tr><td>§CP-1</td><td>H2：handler 查找為行為變更，spec 無 FR 與情境；F3：驗收預期更正若涉及 spec 明列的 pair，須先改 spec，tasks 規則缺這步</td><td>US3（F3 為全程）</td></tr>
+</table></div>
+<p class="meta">無 CRITICAL。其餘條款（§CP-2～§CP-6、§GV）無衝突。</p>
+
+<h3>本輪判斷點</h3>
+<div class="note">已決（analyze）：Fable 另行仲裁後，使用者裁決 ① 本輪只對 class 放寬 H3（函式／方法／constructor／欄位／handler 內的 <code>new X()</code>、<code>X.s()</code> 在全頁唯一 class 定義時連結；FR-017 條文保留、新增 FR-018）；② <code>f()</code> 與 <code>new F()</code>／方法呼叫統一為嚴格規則（到達定義全部指向同一個才連）；③ 其餘發現全部依建議套用（含 handler、FR-015／016／017 補成 US3 情境）。任務數 85 → 87、探針 42 → 50。</div>
+<div class="note">已決事項（plan review，不再問）：US4 驗收改用 <code>g();</code>；<code>new B()</code> 依 H3 不連；handler 查找優先採以頁面為根的模型。本輪問題是把這三項決定<b>寫回 spec</b>。</div>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>選項（建議標粗）</th><th>影響</th><th>出處</th></tr>
+<tr><td>1</td><td>FR-017 怎麼寫，才不與「<code>new B()</code> 不連」矛盾（H1＝F9）</td><td><b>A：改寫條文——欄位初始值本身是 <code>this.m()</code> 時連結；<code>new B()</code> 依 H3 不連，移除其 MUST，並補驗收情境</b><br>B：保留條文，只移除誤落在 Key Entities 的 U2 註記</td><td>A：spec、acceptance、T026 三者一致；B：spec 仍寫 MUST 而測試斷言不連，矛盾留存，實作者無所適從</td><td>spec FR-017、Key Entities</td></tr>
+<tr><td>2</td><td>handler 查找、FR-015／016／017 要不要補成 US3 的正式驗收情境（H2＋M4）</td><td><b>A：補——FR-015 加 handler 接續（<code>cyc-handler</code> 有環版、無環對照版）；US3 增 3 情境（cyc-1／cyc-2、byp-3、byp-1／ki16b）；FR-014 補 §16 後果段</b><br>B：不補，僅靠 acceptance.md，並記 §CP-6 例外</td><td>A：US3 增列 5 條情境，spec 可獨立驗收，tasks 跟著補；B：行為變更無 spec 依據，留下憲章例外</td><td>spec FR-014／015／016／017、US3；plan L101</td></tr>
+<tr><td>3</td><td>其餘 MEDIUM／LOW 是否全部依建議處置套用（下表）</td><td><b>A：同意，全部套用</b><br>B：逐項調整（請指出項目）</td><td>皆為文件對齊或任務補述，不改交付行為；唯 F1 會影響既有 <code>f()</code> 連結是否保留</td><td>spec／plan／tasks／acceptance</td></tr>
+</table></div>
+
+<h3>判斷點 3 套用內容</h3>
+<div class="box"><table>
+<tr><th>範圍</th><th>項目與處置</th></tr>
+<tr><td>tasks</td><td>F1：T030 寫明把 <code>findFunctionDefinitionFromReachInSet</code> 搬進 callresolver（避免循環依賴），涵蓋決策節點的 CallExpression；T027 補 <code>f()</code>→[f] 與「結果不變」斷言（照 T031 字面會讓既有 <code>f()</code> 連結消失）。M2：T009 的「byp-3 留給 T027」改為 T037。F3：全程規則補「驗收預期更正涉及 spec 明列 pair 時，先改 spec」。F5：T074 一律用 <code>f();</code></td></tr>
+<tr><td>spec</td><td>M1：FR-001 明載 switch discriminant 納入、for-in／for-of head 與 §18 entry 走訪不動。F8：「延後釐清」M2 標記已由 acceptance.md 解決。F10（＝M3）：H5 答案過期部分更新</td></tr>
+<tr><td>plan</td><td>F2：L101 改為已裁決 (a)；影響範圍表 US3 列補 <code>reachInsForHandlerLookup</code>／<code>tests/dujs/modelbuilder.js</code>；model-api 補 handler 規則；<code>cyc-handler</code> 探針放 <code>specs/.../probes/</code> 再複製。F4／M6：Constraints 補 <code>classfields.js</code> 檔頭與 92 行標題、<code>golden.js</code> 註解</td></tr>
+<tr><td>acceptance 與其他</td><td>F11：US4 #1／#1' 過時註記。F12：T020 <code>es2015.js:407</code> 的目標標記先推導寫進 acceptance。F7：golden-verification §4 補「驗收預期更正」節格式。M5：SC-004 的 <code>bad.js</code> 定為語法錯誤檔，子行程測試斷言 exit 1 且輸出目錄被刪</td></tr>
+</table></div>
+
+<h3>次要疑點</h3>
+<p>無。F6（任務順序合理）不處理；I1／I2 為資訊項，無需動作。</p>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>

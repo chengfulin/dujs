@@ -142,5 +142,26 @@ describe('Factory Methods', function () {
                 loopReturn._testonly_._type.should.eql('loopReturn');
             });
         });
+
+        /// feature 005 US6 (FR-013, data-model §7)
+        describe('createFinallyExitNode', function () {
+            it('should create a finallyExit node without astNode at the end line of the finally block', function () {
+                var node = factoryFlowNode.createFinallyExitNode(14, 1);
+                node.type.should.eql(FlowNode.FINALLY_EXIT_NODE_TYPE);
+                node.type.should.eql('finallyExit');
+                should(node.astNode).equal(null);
+                should(node.parent).equal(null);
+                node.line.should.eql(14);
+                node.col.should.eql(1);
+                node.cfgId.should.eql(0);
+                factoryFlowNode.counter.should.eql(1);
+            });
+
+            it('should leave the line and column unset when they are not given', function () {
+                var node = factoryFlowNode.createFinallyExitNode();
+                should(node.line).equal(null);
+                should(node.col).equal(null);
+            });
+        });
     });
 });

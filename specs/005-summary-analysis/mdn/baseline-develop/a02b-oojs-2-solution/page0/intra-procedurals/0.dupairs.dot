@@ -1,0 +1,23 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="2">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td></tr>
+<tr><td>document</td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td></tr>
+<tr><td>Shape</td><td>(2,21)</td><td></td></tr>
+<tr><td>Shape</td><td></td><td></td></tr>
+<tr><td>Square</td><td>(21,33)</td><td></td></tr>
+<tr><td>Square</td><td></td><td></td></tr>
+<tr><td>square</td><td>(33,35)</td><td>(33,36)</td></tr>
+</TABLE>
+>];
+}

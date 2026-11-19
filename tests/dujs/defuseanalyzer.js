@@ -1,7 +1,6 @@
 /**
  * Test cases for DefUseAnalyzer
  * @lastmodifiedBy ChengFuLin
- * @lastmodifiedDate 2015-08-25
  */
 var should = require('should');
 var defuseAnalyzer = require('../../lib/dujs/defuseanalyzer'),
@@ -55,12 +54,8 @@ describe('DefUseAnalyzer', function () {
                     {name: 'bi_5', def: 'htmlDom'},
                     {name: 'bi_6', def: 'localStorage'}
                 ];
-                scope._testonly_._builtInObjectVars.set('bi_1', varFactory.create('bi_1'));
-                scope._testonly_._builtInObjectVars.set('bi_2', varFactory.create('bi_2'));
-                scope._testonly_._builtInObjectVars.set('bi_3', varFactory.create('bi_3'));
-                scope._testonly_._builtInObjectVars.set('bi_4', varFactory.create('bi_4'));
-                scope._testonly_._builtInObjectVars.set('bi_5', varFactory.create('bi_5'));
-                scope._testonly_._builtInObjectVars.set('bi_6', varFactory.create('bi_6'));
+                /// feature 006: the Vars of the built-in objects are created from the descriptors
+                scope.setBuiltInObjectVariables();
             });
 
             it('should set the GEN set of built-in object variables well', function () {
@@ -81,9 +76,9 @@ describe('DefUseAnalyzer', function () {
 
         describe('analyzeDefaultValueOfLocalVariables', function () {
             beforeEach(function () {
-                scope._testonly_._vars.set('loc_1', varFactory.create('loc_1'));
-                scope._testonly_._vars.set('loc_2', varFactory.create('loc_2'));
-                scope._testonly_._vars.set('loc_3', varFactory.create('loc_3'));
+                scope.addVariable(varFactory.create('loc_1'));
+                scope.addVariable(varFactory.create('loc_2'));
+                scope.addVariable(varFactory.create('loc_3'));
             });
 
             it('should set the GEN set of the default definition of local variables well', function () {
@@ -195,9 +190,9 @@ describe('DefUseAnalyzer', function () {
                 node2.scope = childScope1;
                 node3.scope = descendantScope;
 
-                rootScope._testonly_._vars.set('g', var1);
-                childScope1._testonly_._vars.set('a', var2);
-                descendantScope._testonly_._vars.set('c', var3);
+                rootScope.addVariable(var1);
+                childScope1.addVariable(var2);
+                descendantScope.addVariable(var3);
 
                 vardefs = new Set();
                 vardefs.add(vardefFactory.create(var1, defFactory.createLiteralDef(node1, [0,0])));
@@ -260,5 +255,319 @@ describe('DefUseAnalyzer', function () {
                 fooIntraProceduralModel.graph[0].generate.size.should.eql(1);
             });
         });
+    });
+});
+/**
+ * findGENSet records where each definition is completed (feature 007 T009,
+ * data-model §3, research R3): cfgNode.generatedAt maps each VarDef of the
+ * GEN set to the AST node completing it; the returned GEN set is unchanged.
+ */
+describe('DefUseAnalyzer.findGENSet generatedAt (feature 007 R3)', function () {
+    "use strict";
+    var analyze = require('../helpers/analyze'),
+        FlowNode = require('../../lib/esgraph/flownode');
+
+    after(function () {
+        analyze.reset();
+    });
+
+    /**
+     * The first node of a line in the intra-procedural model of a scope
+     * @param {Object} result
+     * @param {string} scopeName
+     * @param {number} line
+     * @returns {FlowNode}
+     */
+    function nodeAt(result, scopeName, line) {
+        var found = null;
+        modelCtrl.collectionOfPageModels.get(result.scopeTree).intraProceduralModels.forEach(function (model) {
+            if (model.mainlyRelatedScope.name !== scopeName) {
+                return;
+            }
+            model.graph[2].forEach(function (node) {
+                if (!found && node.type !== FlowNode.ENTRY_NODE_TYPE && node.type !== FlowNode.EXIT_NODE_TYPE &&
+                    node.line === line) {
+                    found = node;
+                }
+            });
+        });
+        should.exist(found, 'no node at L' + line);
+        return found;
+    }
+
+    /**
+     * Run findGENSet on the node of a line and describe generatedAt
+     * @param {string} source
+     * @param {number} line
+     * @param {string} [scopeName] default the page
+     * @returns {Array} sorted "<variable>@<AST type>:<source of the AST>"
+     */
+    function generatedAtOf(source, line, scopeName) {
+        var result = analyze(source),
+            node = nodeAt(result, scopeName || '$DOMAIN.$PAGE_0', line),
+            before = node.generate.values().map(String).sort(),
+            returned = defuseAnalyzer.findGENSet(node);
+        /// the returned GEN set is unchanged
+        returned.values().map(String).sort().should.eql(before);
+        (node.generatedAt instanceof Map).should.eql(true);
+        node.generatedAt.size.should.eql(returned.size);
+        return returned.values().map(function (vardef) {
+            node.generatedAt.has(vardef).should.eql(true, 'no generatedAt of ' + vardef);
+            var ast = node.generatedAt.get(vardef);
+            return vardef.variable.toString() + '@' + ast.type + ':' + source.slice(ast.range[0], ast.range[1]);
+        }).sort();
+    }
+
+    it('should map var y = g() to the VariableDeclarator', function () {
+        generatedAtOf('function g() {}\nvar y = g();', 2).should.eql(['y@VariableDeclarator:y = g()']);
+    });
+
+    it('should map x = f() and x += f() to the AssignmentExpression', function () {
+        var source = 'var x;\nfunction f() {}\nx = f();\nx += f();';
+        generatedAtOf(source, 3).should.eql(['x@AssignmentExpression:x = f()']);
+        generatedAtOf(source, 4).should.eql(['x@AssignmentExpression:x += f()']);
+    });
+
+    it('should map a chained assignment to each AssignmentExpression', function () {
+        generatedAtOf('var a, b;\na = b = 1;', 2).should.eql(['a@AssignmentExpression:a = b = 1',
+            'b@AssignmentExpression:b = 1']);
+    });
+
+    it('should map a destructuring declaration to the VariableDeclarator', function () {
+        generatedAtOf('var c = [];\nvar [a, b] = c;', 2).should.eql(['a@VariableDeclarator:[a, b] = c',
+            'b@VariableDeclarator:[a, b] = c']);
+    });
+
+    it('should map the loop variable of for-of to the loop statement', function () {
+        generatedAtOf('var a = [];\nfor (var v of a) {\n}', 2).should.eql(['v@ForOfStatement:for (var v of a) {\n}']);
+    });
+
+    it('should map the name of a class declaration to the ClassDeclaration', function () {
+        var defs = generatedAtOf('class A {\n  static y = 1;\n}', 1);
+        defs.length.should.be.above(0);
+        defs.forEach(function (def) {
+            def.should.startWith('A@ClassDeclaration:class A {');
+        });
+    });
+
+    it('should map a parameter default to its AssignmentExpression', function () {
+        generatedAtOf('function g() {}\nfunction k(p,\n  q = g()) {\n}', 3, '$DOMAIN.$PAGE_0.k')
+            .should.eql(['q@AssignmentExpression:q = g()']);
+    });
+
+    it('should map an update and a named function expression to themselves', function () {
+        generatedAtOf('var i = 0;\ni++;', 2).should.eql(['i@UpdateExpression:i++']);
+        generatedAtOf('var h = function n() {};', 1).should.eql(['h@VariableDeclarator:h = function n() {}',
+            'n@FunctionExpression:function n() {}']);
+    });
+});
+
+/**
+ * findDUPairs pairs the deferred p-uses (feature 007) with the branches of an
+ * owner only when the owner is reached by the solver (feature 008 FR-013, D017,
+ * US3 scenario 7, contracts/lib-api.md §3, research R14): a decision node after
+ * a call never returning normally has no p-use pair; the c-uses of the segment
+ * 0 and the intra-procedural model are unchanged.
+ */
+describe('DefUseAnalyzer.findDUPairs deferred p-uses of an unreachable owner (feature 008 FR-013)', function () {
+    "use strict";
+    var analyze = require('../helpers/analyze'),
+        PAGE = '$DOMAIN.$PAGE_0',
+        RECURSION = 'var x = 0;\nfunction f() {\n  f();\n}\n';
+
+    afterEach(function () {
+        analyze.reset();
+    });
+
+    /**
+     * Pairs of the inter-procedural model of the page, of the intra-page model
+     * and of the intra-procedural model of the page
+     * @param {string} source
+     * @returns {Object} {inter, intraPage, intra, interModel}
+     */
+    function pairsOf(source) {
+        var result = analyze(source),
+            pageModels = modelCtrl.collectionOfPageModels.get(result.scopeTree),
+            interModels = pageModels.interProceduralModels.filter(function (model) {
+                return model.mainlyRelatedScope.name === PAGE;
+            });
+        interModels.length.should.eql(1);
+        return {
+            inter: analyze.pairsOfModel(interModels[0]),
+            intraPage: result.intraPage(),
+            intra: result.intraProcedural(),
+            interModel: interModels[0]
+        };
+    }
+
+    /**
+     * Assert the pairs of the inter-procedural and intra-page models
+     * @param {Object} pairs pairsOf
+     * @param {Array} present pairs in both
+     * @param {Array} absent pairs in neither
+     */
+    function expectUpper(pairs, present, absent) {
+        [pairs.inter, pairs.intraPage].forEach(function (list) {
+            list.should.containDeep(present);
+            absent.forEach(function (pair) {
+                list.should.not.containEql(pair);
+            });
+        });
+    }
+
+    it('should pair the deferred p-uses of a reachable owner: if (a < h(a)) and if (h(a)), h returning', function () {
+        var source = 'var a = 1;\nfunction h(v) {\n  return v;\n}\nif (a < h(a)) {\n  a = 2;\n}\nconsole.log(a);\n',
+            pairs = pairsOf(source);
+        expectUpper(pairs, ['a: L1 -> L5>L6:T', 'a: L1 -> L5>L8:F', 'h: entry -> L5>L6:T', 'h: entry -> L5>L8:F'], []);
+        analyze.reset();
+        pairs = pairsOf('var a = 1;\nfunction h(v) {\n  return v;\n}\nif (h(a)) {\n  a = 2;\n}\nconsole.log(a);\n');
+        expectUpper(pairs, ['a: L1 -> L5', 'h: entry -> L5>L6:T', 'h: entry -> L5>L8:F'], []);
+    });
+
+    it('should not pair the deferred p-uses of the decision of if (f()), f never returning', function () {
+        var pairs = pairsOf(RECURSION + 'if (f()) {\n  x = 1;\n}\nconsole.log(x);\n'),
+            decision = pairs.interModel.graph[2].filter(function (node) {
+                return node.line === 5 && !!node.true && !!node.false;
+            });
+        expectUpper(pairs, ['f: entry -> L3'], ['f: entry -> L5>L6:T', 'f: entry -> L5>L8:F']);
+        /// the owner is not reached by the solver: no analysis result
+        decision.length.should.eql(1);
+        should(pairs.interModel.analysisResultOf(decision[0])).be.null();
+        /// intra-procedural: the call is opaque, the p-use pairs are unchanged
+        pairs.intra.should.eql(['console: entry -> L8', 'f: entry -> L5>L6:T', 'f: entry -> L5>L8:F', 'x: L1 -> L8',
+            'x: L6 -> L8']);
+    });
+
+    it('should not pair the deferred p-uses of a variable read before f() in the condition: if (a < f())', function () {
+        var pairs = pairsOf('var a = 1;\nfunction f() {\n  f();\n}\nif (a < f()) {\n  a = 2;\n}\nconsole.log(a);\n');
+        expectUpper(pairs, ['f: entry -> L3'], ['a: L1 -> L5>L6:T', 'a: L1 -> L5>L8:F', 'f: entry -> L5>L6:T',
+            'f: entry -> L5>L8:F']);
+        pairs.intra.should.containDeep(['a: L1 -> L5>L6:T', 'a: L1 -> L5>L8:F', 'f: entry -> L5>L6:T',
+            'f: entry -> L5>L8:F']);
+    });
+
+    it('should not pair the deferred p-uses of the decision of while (f()), f never returning', function () {
+        var pairs = pairsOf(RECURSION + 'while (f()) {\n  x = 1;\n}\nconsole.log(x);\n');
+        expectUpper(pairs, ['f: entry -> L3'], ['f: entry -> L5>L6:T', 'f: entry -> L5>L8:F']);
+        pairs.intra.should.eql(['console: entry -> L8', 'f: entry -> L5>L6:T', 'f: entry -> L5>L8:F', 'x: L1 -> L8',
+            'x: L6 -> L8']);
+    });
+
+    it('should not pair the deferred p-uses of the decision of if (g(f())), f never returning', function () {
+        var pairs = pairsOf(RECURSION + 'function g(v) {\n  return v;\n}\nif (g(f())) {\n  x = 1;\n}\nconsole.log(x);\n');
+        expectUpper(pairs, ['f: entry -> L3', 'f: entry -> L8'], ['g: entry -> L8>L9:T', 'g: entry -> L8>L11:F']);
+        pairs.intra.should.eql(['console: entry -> L11', 'f: entry -> L8', 'g: entry -> L8>L11:F', 'g: entry -> L8>L9:T',
+            'x: L1 -> L11', 'x: L9 -> L11']);
+    });
+
+    it('should keep every node of the intra-page model of a program without calls analyzed (no owner skipped)', function () {
+        var result = analyze('var a = 1;\nif (a) {\n  a = 2;\n}\nconsole.log(a);\n'),
+            model = modelCtrl.collectionOfPageModels.get(result.scopeTree).intraPageModels[0];
+        model.graph[2].forEach(function (node) {
+            should(model.analysisResultOf(node)).not.be.null();
+        });
+        result.intraPage().should.containDeep(['a: L1 -> L2>L3:T', 'a: L1 -> L2>L5:F']);
+    });
+});
+
+/**
+ * findGENSet and findUSESet of each form of member target of spec "notation"
+ * (feature 008 User Story 1, FR-001, FR-002; data-model §1 reads(T), defs(T);
+ * D004, D008, D013): a member target defines no variable and reads its
+ * object expression and computed key, except for an object variable that is
+ * the domain localStorage (exempted: the develop GEN and USE). Each row is a
+ * program whose statement under test is at the given line; the names are
+ * sorted. Characterization rows (the same as develop 2035c93): the decision
+ * node of o.p ||= v, o.p++, delete o.p, the two exempted rows, this.p and
+ * super.p.
+ */
+describe('DefUseAnalyzer.findGENSet and findUSESet of member targets (feature 008 User Story 1)', function () {
+    "use strict";
+    var analyze = require('../helpers/analyze'),
+        FlowNode = require('../../lib/esgraph/flownode'),
+        pathOf = require('../../lib/esgraph/branchlabel').pathOf,
+        PAGE = '$DOMAIN.$PAGE_0',
+        HEAD = 'var o = {p: {}}, a = [1], k = \'p\', i = 0, v = 1, n = \'k\';\nfunction f() {\n  return {};\n}\n';
+
+    afterEach(function () {
+        analyze.reset();
+    });
+
+    /**
+     * Sorted names of a Set of Var or VarDef
+     * @param {Object} set
+     * @returns {Array}
+     */
+    function namesOf(set) {
+        return set.values().map(function (item) {
+            return !!item.variable ? item.variable.name : item.name;
+        }).sort();
+    }
+
+    /**
+     * GEN, c-use and p-use variable names of the only node at a line (with the branch path) of the
+     * intra-procedural model of a scope
+     * @param {string} source
+     * @param {number} line
+     * @param {string} [labelPath] default ''
+     * @param {string} [scopeName] default the page
+     * @returns {Object} {gen, cuse, puse}
+     */
+    function defUseAt(source, line, labelPath, scopeName) {
+        var result = analyze(source),
+            found = [];
+        modelCtrl.collectionOfPageModels.get(result.scopeTree).intraProceduralModels.forEach(function (model) {
+            if (model.mainlyRelatedScope.name !== (scopeName || PAGE)) {
+                return;
+            }
+            model.graph[2].forEach(function (node) {
+                if (node.type !== FlowNode.ENTRY_NODE_TYPE && node.type !== FlowNode.EXIT_NODE_TYPE &&
+                    node.line === line && pathOf(node) === (labelPath || '')) {
+                    found.push(node);
+                }
+            });
+        });
+        found.should.have.length(1, 'nodes at L' + line + (labelPath ? ':' + labelPath : ''));
+        var uses = defuseAnalyzer.findUSESet(found[0]);
+        return {gen: namesOf(defuseAnalyzer.findGENSet(found[0])), cuse: namesOf(uses.cuse), puse: namesOf(uses.puse)};
+    }
+
+    /// [title, statement at L5 after HEAD, label path, expected {gen, cuse, puse}]
+    [
+        ['=: o.p = v', 'o.p = v;', '', {gen: [], cuse: ['o', 'v'], puse: []}],
+        ['compound: o.p += v', 'o.p += v;', '', {gen: [], cuse: ['o', 'v'], puse: []}],
+        /// R2-4: the decision node reads o.p (p-use); the assignment of the F branch does not read o again
+        ['logical, decision node: o.p ||= v', 'o.p ||= v;', '', {gen: [], cuse: [], puse: ['o']}],
+        ['logical, F branch: o.p ||= v', 'o.p ||= v;', 'F', {gen: [], cuse: ['v'], puse: []}],
+        ['update: o.p++', 'o.p++;', '', {gen: [], cuse: ['o'], puse: []}],
+        ['destructuring: [o.p] = a', '[o.p] = a;', '', {gen: [], cuse: ['a', 'o'], puse: []}],
+        ['for-in: for (o.p in a)', 'for (o.p in a) {}', '', {gen: [], cuse: ['a', 'o'], puse: []}],
+        ['for-of: for (o[k] of a)', 'for (o[k] of a) {}', '', {gen: [], cuse: ['a', 'k', 'o'], puse: []}],
+        ['nested: o.p.q = v', 'o.p.q = v;', '', {gen: [], cuse: ['o', 'v'], puse: []}],
+        ['computed key: o[k] = v', 'o[k] = v;', '', {gen: [], cuse: ['k', 'o', 'v'], puse: []}],
+        ['computed key and member: o[i].q = v', 'o[i].q = v;', '', {gen: [], cuse: ['i', 'o', 'v'], puse: []}],
+        /// D013: a call on the chain, no object variable; the callee and the arguments are read
+        ['call object: f(a).p = v', 'f(a).p = v;', '', {gen: [], cuse: ['a', 'f', 'v'], puse: []}],
+        ['delete o.p', 'delete o.p;', '', {gen: [], cuse: ['o'], puse: []}],
+        /// D004, D008: the domain localStorage is exempted, the develop GEN and USE (s1, s4)
+        ['exempted: localStorage.k = v', 'localStorage.k = v;', '', {gen: ['localStorage'], cuse: ['v'], puse: []}],
+        ['exempted: localStorage[k] = v', 'localStorage[k] = v;', '', {gen: ['localStorage'], cuse: ['v'], puse: []}],
+        /// D013 (P42): no object variable, not exempted
+        ['not exempted: localStorage.getItem(n).p = v', 'localStorage.getItem(n).p = v;', '',
+            {gen: [], cuse: ['localStorage', 'n', 'v'], puse: []}]
+    ].forEach(function (row) {
+        it('should give the GEN and USE of ' + row[0], function () {
+            defUseAt(HEAD + row[1], 5, row[2]).should.eql(row[3]);
+        });
+    });
+
+    it('should give the GEN and USE of this.p = v in a method', function () {
+        var source = 'var v = 1;\nclass A {\n  m() {\n    this.p = v;\n  }\n}\nnew A().m();';
+        defUseAt(source, 4, '', PAGE + '.$ANONYMOUS_FUN_0').should.eql({gen: [], cuse: ['v'], puse: []});
+    });
+
+    it('should give the GEN and USE of super.p = v in a method', function () {
+        var source = 'var v = 1;\nclass A {}\nclass B extends A {\n  m() {\n    super.p = v;\n  }\n}\nnew B().m();';
+        defUseAt(source, 5, '', PAGE + '.$ANONYMOUS_FUN_0').should.eql({gen: [], cuse: ['v'], puse: []});
     });
 });

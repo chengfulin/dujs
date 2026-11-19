@@ -1,0 +1,13 @@
+digraph CFG {
+node [shape="box"]
+label = "function $DOMAIN.$PAGE_0.updateDisplayedImage"
+n75 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n76 [label="49"]
+n77 [label="50"]
+n78 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n75 -> n76 []
+n76 -> n77 []
+n76 -> n78 [color="red", label="exception"]
+n77 -> n78 []
+n77 -> n78 [color="red", label="exception"]
+}

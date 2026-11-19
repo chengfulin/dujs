@@ -1,0 +1,39 @@
+{
+  "format": "dujs-matching/1",
+  "level": "intraPage",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [],
+  "loops": [
+    {
+      "loop": "n16",
+      "loopReturn": "n31",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.setWeather",
+          "entry": "n18",
+          "exit": "n30"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.setWeather": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "para@n21",
+        "para@n23",
+        "para@n25",
+        "para@n27",
+        "para@n29"
+      ],
+      "mustKill": [
+        "para"
+      ],
+      "upwardExposed": [
+        "select"
+      ],
+      "exceptional": []
+    }
+  }
+}

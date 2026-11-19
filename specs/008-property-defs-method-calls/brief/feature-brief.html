@@ -1,0 +1,241 @@
+<title>成員賦值與方法呼叫</title>
+<style>
+/* 版面：單欄 900px；上半「看懂它」一格一件事（編號＋大標＋SVG 場景＋一句重點），下半表格 */
+:root{
+  --bg:#FFFBF2; --card:#FFFFFF; --ink:#1F2937; --sub:#5B6470; --line:#E6E0D2; --th:#F4EFE3;
+  --blue:#2B59C3; --blue-soft:#DCE6FA;
+  --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
+  --coral:#E4573D; --coral-soft:#FBDDD6;
+  --green:#3A9D6B; --green-soft:#D8F0E3;
+  --grey:#AEB6C0;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+    --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+  --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding-block:32px 72px;padding-inline:20px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:900;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
+.meta{color:var(--sub);font-size:.9rem}
+.note{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:8px 12px;margin:10px 0;font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin:16px 0;display:grid;gap:12px}
+.panel h3{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;line-height:1.2;margin:0;text-wrap:balance}
+.num{display:inline-block;font-weight:900;font-size:.75rem;letter-spacing:.15em;color:var(--blue);background:var(--blue-soft);padding:2px 10px;border-radius:999px;width:max-content}
+.pic{overflow-x:auto}
+.pic svg{display:block;width:100%;min-width:640px;height:auto}
+.cap{font-size:1.05rem;font-weight:500;max-width:52ch;margin:0}
+.cap b{font-weight:900}
+.cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
+text{font-family:var(--sans)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+ul{margin:6px 0;padding-left:20px}
+li small{color:var(--sub)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--th)}
+.ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
+code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 100 110"><circle cx="50" cy="28" r="20" fill="currentColor"/><path d="M12 108 a38 38 0 0 1 76 0 z" fill="currentColor"/></symbol>
+    <symbol id="doc" viewBox="0 0 100 120"><path d="M14 6 h50 l22 22 v86 h-72 z" fill="currentColor"/><path d="M64 6 v22 h22" fill="none" stroke="#FFFFFF" stroke-width="4"/><g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"><path d="M28 50 h44 M28 68 h44 M28 86 h30"/></g></symbol>
+    <symbol id="sheet" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="6" fill="currentColor"/><g stroke="#FFFFFF" stroke-width="3"><path d="M4 28 h112 M4 50 h112 M4 72 h112 M40 4 v92 M78 4 v92"/></g></symbol>
+    <symbol id="term" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="8" fill="currentColor"/><rect x="4" y="4" width="112" height="18" rx="8" fill="#FFFFFF" opacity=".35"/><path d="M22 44 l16 12 l-16 12" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M48 68 h30" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/></symbol>
+    <symbol id="bot" viewBox="0 0 100 110"><rect x="44" y="4" width="12" height="14" rx="3" fill="currentColor"/><circle cx="50" cy="4" r="5" fill="currentColor"/><rect x="10" y="18" width="80" height="62" rx="16" fill="currentColor"/><rect x="22" y="32" width="56" height="30" rx="10" fill="#FFFFFF"/><circle cx="38" cy="47" r="6" fill="#1F2937"/><circle cx="62" cy="47" r="6" fill="#1F2937"/><rect x="26" y="84" width="48" height="22" rx="8" fill="currentColor"/></symbol>
+    <symbol id="server" viewBox="0 0 100 110"><rect x="10" y="6" width="80" height="28" rx="6" fill="currentColor"/><rect x="10" y="41" width="80" height="28" rx="6" fill="currentColor"/><rect x="10" y="76" width="80" height="28" rx="6" fill="currentColor"/><g fill="#FFFFFF"><circle cx="24" cy="20" r="4"/><circle cx="24" cy="55" r="4"/><circle cx="24" cy="90" r="4"/></g></symbol>
+    <symbol id="warn" viewBox="0 0 100 100"><path d="M50 8 L96 90 H4 Z" fill="currentColor"/><path d="M50 36 v26" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="76" r="5" fill="#FFFFFF"/></symbol>
+    <symbol id="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="currentColor"/><path d="M28 52 l15 15 l30 -34" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grey)"/></marker>
+  </defs>
+</svg>
+
+<main>
+<h1>成員賦值與方法呼叫</h1>
+<div class="meta">feature 008-property-defs-method-calls · spec · 第 3 輪（plan）· 2026-11-18（D001–D017 已裁決）</div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準。</div>
+
+<h2>看懂它</h2>
+
+<section class="panel">
+  <span class="num">01 · 背景</span>
+  <h3>研究者用工具，查「誰寫入、誰讀取」</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="研究者拿一段腳本去分析，得到寫入與讀取的對照表">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">研究者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">拿來分析</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">一段網頁腳本</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">1. 造出一台機器 o</text><text x="280" y="134">2. 替機器 o 貼一張標籤</text><text x="280" y="166">3. 啟動機器 o</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">腳本：研究者要看的程式</text>
+    <path d="M590 115 h50" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <use href="#sheet" x="650" y="55" width="150" height="125" color="var(--blue)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">對照表：誰寫、誰讀</text>
+  </svg></div>
+  <p class="cap">工具替研究者列出<b>每個值在哪裡被寫入、在哪裡被讀取</b>，再據此設計測試。<small>來源：spec User Scenarios &amp; Testing 開頭</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">02 · 要解決的問題</span>
+  <h3>對照表會多報、漏報，還列出不可能的情形</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="貼標籤被當成換機器、流程裡啟動機器找不到是哪台、走不到的步驟也被列出">
+    <use href="#warn" x="55" y="50" width="110" height="110" color="var(--coral)"/>
+    <text x="110" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--coral)">三種卡關</text>
+    <rect x="250" y="30" width="330" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="270" y="62" font-size="18" font-weight="900" fill="var(--coral)">現在的毛病</text>
+    <g font-size="17" fill="var(--ink)"><text x="270" y="102">① 貼標籤被當成換了機器</text><text x="270" y="134">② 流程裡啟動，找不到是哪台</text><text x="270" y="166">③ 走不到的步驟也被列出</text></g>
+    <text x="415" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">造成不存在的配對與漏掉的配對</text>
+    <path d="M590 115 h40" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <use href="#sheet" x="650" y="55" width="150" height="125" color="var(--coral)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--coral)">對照表不準</text>
+  </svg></div>
+  <p class="cap">貼標籤被誤當「換機器」，後面的啟動就<b>找不到它是哪一台</b>；走不到的步驟會產生<b>不可能實現的測試需求</b>。<small>來源：spec User Scenarios &amp; Testing 開頭；US1–US3 Why this priority</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">03 · 目的</span>
+  <h3>讓對照表的寫入、讀取與連結都對得上</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="工具改成貼標籤只算查看、流程裡的啟動連回造機器處、走不到的步驟不列出">
+    <use href="#bot" x="55" y="50" width="100" height="110" color="var(--blue)"/>
+    <text x="105" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">工具</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">改成</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--blue)">新的算法</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">① 貼標籤只算「查看」機器</text><text x="280" y="134">② 流程裡啟動連回造機器處</text><text x="280" y="166">③ 走不到的步驟不列出</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">三件事各自獨立可驗收</text>
+    <path d="M590 115 h50" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <use href="#sheet" x="650" y="55" width="150" height="125" color="var(--green)"/>
+    <text x="725" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">準確的對照表</text>
+  </svg></div>
+  <p class="cap">三件事：<b>貼標籤不算重新造機器</b>、<b>流程裡的啟動連回唯一的造機器處</b>、<b>走不到的步驟不產生配對</b>。<small>來源：spec User Story 1／2／3；FR-001、FR-004、FR-006</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">04 · 預期結果</span>
+  <h3>做完後，對照表連得回正確的那一行</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="貼標籤後仍連回造機器那行、流程裡的啟動連到機器的動作、走不到的步驟違規數為零">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">研究者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">檢查</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--green)">看得出成功的三處</text>
+    <g font-size="16" fill="var(--ink)"><text x="280" y="102">① 貼標籤後仍連回造機器那行</text><text x="280" y="134">② 流程裡的啟動連到機器的動作</text><text x="280" y="166">③ 走不到的步驟：違規數為 0</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="15" fill="var(--sub)">代價：「貼標籤→讀標籤」的配對不再列出</text>
+    <path d="M590 115 h50" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <use href="#check" x="670" y="60" width="110" height="110" color="var(--green)"/>
+    <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">逐筆差異皆分類</text>
+  </svg></div>
+  <p class="cap">成功＝<b>範例程式的配對與連結如驗收情境所列</b>，每筆相對 develop 的差異都有分類並經簽核。<small>來源：spec Success Criteria SC-002～SC-005；D001（all-uses 損失）</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">流程</span>
+  <h3>一個方法呼叫怎麼被連回 A 的 m</h3>
+  <div class="pic"><svg viewBox="0 0 860 350" role="img" aria-label="五步主流程：造出 o、貼標籤只算查看、函式內啟動、檢查頁面定義、連到 m；兩條支線：條件不符不連結、走不到的步驟不列">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">頁面造出 o</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">new A()</text>
+      <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">o.p = 1</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">只算查看 o</text><text x="264" y="132" font-size="14" font-weight="400" fill="var(--sub)">不算重定義</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">函式內 o.m()</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">函式內沒有</text><text x="434" y="132" font-size="14" font-weight="400" fill="var(--sub)">o 的定義</text>
+      <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">查頁面定義</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">僅一個定義</text><text x="604" y="132" font-size="14" font-weight="400" fill="var(--sub)">const／let</text>
+      <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">連到 A 的 m</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">x: L4 -> L12</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M168 100 h14"/><path d="M338 100 h14"/><path d="M508 100 h14"/><path d="M678 100 h14"/></g>
+    <g stroke="var(--coral)" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arr)"><path d="M604 150 v50"/><path d="M774 150 v50"/></g>
+    <rect x="350" y="210" width="260" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="480" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">條件不符：不連結</text>
+    <text x="480" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">兩個定義／var／非 class</text>
+    <text x="480" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">同 develop（P6、P7、P10）</text>
+    <rect x="630" y="210" width="220" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="740" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">走不到的步驟</text>
+    <text x="740" y="264" text-anchor="middle" font-size="13" fill="var(--ink)">例外：finally 的三種形態</text>
+    <text x="740" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">屬 §38，列入允許清單</text>
+    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">箭頭代表 P5／P9 的處理；支線為守門情境，維持 develop 結果</text>
+  </svg></div>
+  <p class="cap">函式內沒有 o 的定義時，改看<b>頁面上是否恰有一個 const／let 的 new A()</b>，是才連到 m。<small>來源：spec FR-004；US2 情境 1、3、4、5、7、9</small></p>
+  <ul>
+    <li>走不到的步驟不產生配對，靠獨立於求解器的可到達判定檢查。<small>（FR-006、FR-007）</small></li>
+    <li><code>localStorage.k = v</code> 仍是儲存定義，inter-page 依賴它。<small>（FR-001 例外；US1 情境 3、4、6）</small></li>
+  </ul>
+</section>
+
+<h2>工程師要決定的事</h2>
+
+<h3>本輪變更（plan）</h3>
+<p>plan 產出 plan.md、research.md（R0–R14）、data-model.md、quickstart.md、contracts/{lib-api,reachability,diff-check,acceptance}.md。改動檔：defuseanalyzer、usedexpressions、bindingpattern、scopebinding、callresolver、hierarchy（重構）；檢查器 tests/helpers/reachability.js；008 差異工具 specs/008/tools/（classify.js＋diffcheck.js）。技術選型維持 repo 現況，無偏離。</p>
+
+<h3>前輪變更（clarify）</h3>
+<p>Clarifications 新增「Session 2026-11-18（clarify）」：D006–D010、SC-007（文件條目逐項核對）、延後釐清（inter-page 可到達判定的起點與例外邊交 plan）。改動小節：FR-001、FR-009、US1 情境 2／4／13–15、US2 情境 13、Success Criteria、Edge Cases。</p>
+
+<h3>驗收條件盤點</h3>
+<div class="box"><table>
+<tr><th>Story</th><th>驗收條件</th><th>判定</th><th>出處</th></tr>
+<tr><td>US1</td><td>情境 1–5、7：P1、P2、P3、P4、P12、P25 的 pair 有／沒有清單（P2 的 <code>o: L1 -> L2…L11</code> 逐條列出）</td><td class="ok">可驗證</td><td>US1 Acceptance 1–5、7</td></tr>
+<tr><td>US1</td><td>情境 6：兩頁探測 <code>probes/pages/</code> s1–s9 的輸出與 baseline-develop.txt 逐行相同</td><td class="ok">可驗證</td><td>US1 Acceptance 6</td></tr>
+<tr><td>US2</td><td>情境 1–7、9：P5、P8、P9、P7、P10、P11、P6、P26 的連結與 pair</td><td class="ok">可驗證</td><td>US2 Acceptance 1–7、9</td></tr>
+<tr><td>US2</td><td>情境 8：MDN <code>a05-assessment-main.js</code> 的三個 <code>evilBall</code> 呼叫連結</td><td class="ok">可驗證（讀 corpus）</td><td>US2 Acceptance 8；SC-004</td></tr>
+<tr><td>US3</td><td>情境 1、3、5：P13、P16／P17、P21／P23／P24 的 pair（P21、P23、P24 與 develop 相同並被報違反）</td><td class="ok">可驗證</td><td>US3 Acceptance 1、3、5</td></tr>
+<tr><td>US3</td><td>情境 2：P15 在情境內只寫「無返回呼叫之後的節點」，具體 pair 只在探測表（沒有 <code>x</code>、<code>console</code> 的 pair）</td><td class="no">部分缺（pair 未逐條列）</td><td>US3 Acceptance 2；探測結果 P15</td></tr>
+<tr><td>US3</td><td>情境 4、6：不變量檢查零違反＋陽性對照；注入方式交 plan</td><td class="ok">可驗證（機制待 plan）</td><td>US3 Acceptance 4、6；FR-007</td></tr>
+<tr><td>跨 story</td><td>Edge Cases 的 <code>o.p += 1</code>、<code>o.p ||= 1</code>、<code>o.p++</code>、<code>delete o.p</code>、<code>o[g()] = v</code>、<code>this.p</code>：無專屬情境（P2 是否涵蓋 spec 未逐項對應）</td><td class="no">缺（次要）</td><td>Edge Cases；FR-002</td></tr>
+<tr><td>跨 story</td><td>FR-005 呼叫連結與 <code>*.matching.json</code> 一致：無專屬情境</td><td class="no">缺（次要）</td><td>FR-005</td></tr>
+<tr><td>跨 story</td><td>SC-001～SC-006（測試通過、P1–P26 結果、差異簽核與分類、零違反、時間 ≤2 倍）</td><td class="ok">可驗證（簽核為人為）</td><td>Success Criteria</td></tr>
+<tr><td>跨 story</td><td>FR-011（known-issues 改寫）、FR-012（README 改寫）：無自動驗證，靠 review</td><td class="no">不可自動驗證</td><td>FR-011、FR-012</td></tr>
+</table></div>
+
+<h3>tech-standards 缺漏或變更</h3>
+<p>無：spec 明寫技術選型維持 repo 現況、不引入新依賴；tech-standards 未涵蓋靜態分析 CLI／函式庫（plan 起再確認是否需 §CP-6 例外）。<small>來源：spec Assumptions</small></p>
+
+<h3>CRITICAL／HIGH 衝突與影響</h3>
+<p>無（spec 階段尚無 analyze 發現表）。憲章條款衝突：無。</p>
+
+<h3>已決事項（Clarifications，不再詢問）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>決定</th><th>出處</th></tr>
+<tr><td>D001</td><td>成員賦值要不要追蹤屬性層級</td><td>A（附條件）：成員目標不定義任何變數，只把物件與計算鍵記為讀取；§22 (1) 只標「部分修正」；P25 的 <code>o: L2 -> L3</code>、<code>o: L4 -> L5</code> 消失為已知損失，另設差異分類；屬性層級定義記為後續 KI</td><td>Clarifications D001；FR-009～FR-012</td></tr>
+<tr><td>D002</td><td>§23 放寬是否涵蓋 <code>var</code></td><td>A：只 <code>const</code>／<code>let</code>；<code>var</code> 維持不連結並寫入 README 限制</td><td>Clarifications D002；FR-004、FR-012</td></tr>
+<tr><td>D003</td><td>是否修 P21（<code>finally</code> 只由例外進入）</td><td>A（附條件）：不修；P21、P23、P24 為 §38 根因，列允許清單與陽性對照；§22 (5) 寫成「除 §38 的 <code>finally</code> 情形外已修」</td><td>Clarifications D003；FR-006～FR-008、FR-011</td></tr>
+<tr><td>D004</td><td><code>localStorage</code> 儲存定義保留範圍</td><td>A（改措辭）：物件變數為 <code>localStorage</code> 的成員目標，定義與使用一律與 develop 相同，整個豁免 FR-001／FR-002；凍結表與兩頁探測 <code>probes/pages/</code> 為驗收基準；缺口記入 KI §22 (4)</td><td>Clarifications D004；表示法；FR-001、FR-002、FR-011 (e)</td></tr>
+<tr><td>D005</td><td>允許清單由誰判定</td><td>A（附前提）：檢查器差分判準（全開違反、關掉 (c) 後可達）＋見證＋過期項失敗；(a) 的無正常返回由檢查器自行重算</td><td>Clarifications D005；FR-007、FR-008、SC-005</td></tr>
+<tr><td>D006</td><td>差異中「損失」與「修正」如何區分</td><td>A：損失＝屬性層級模型（選項 B）會保留的 pair（同一屬性路徑）；計算鍵、路徑前綴重疊、同行多敘述、整個物件讀取預設歸損失；<code>o.m()</code> 歸修正；由 008 新寫的 diffcheck 機械判定</td><td>FR-009</td></tr>
+<tr><td>D007</td><td>inter-page 是否要有自己的驗收</td><td>A：新增兩頁 probe s10，<code>run-pages.js</code> 加印 <code>inter-page (all)</code></td><td>US1 情境 14</td></tr>
+<tr><td>D008</td><td><code>localStorage</code> 例外的判定</td><td>A：Var 同一性；被遮蔽、頁面宣告、別名不豁免；<code>window.localStorage.*</code> 屬 <code>window</code></td><td>FR-001；US1 情境 15</td></tr>
+<tr><td>D009</td><td><code>f(a).p = 1</code> 的呼叫</td><td>A：仍連結，保留 <code>o: L1 -> L3</code>、<code>v: entry -> L3</code></td><td>US1 情境 13</td></tr>
+<tr><td>D010</td><td>P36 是否獨立情境</td><td>A：補 US2 情境 13</td><td>US2 情境 13</td></tr>
+<tr><td>D011</td><td>使用端是呼叫位置時的分類</td><td>裸識別字 callee／<code>new</code> 運算元歸修正；<code>o.m = fn; o.m()</code> 同路徑歸損失（P37）</td><td>FR-009</td></tr>
+<tr><td>D012</td><td>成員目標右側的巢狀賦值</td><td>維持 develop；通用缺口記新 KI，回歸測試釘住 <code>o.p = x = 1</code></td><td>FR-011 (g)</td></tr>
+<tr><td>D013</td><td>以呼叫開頭的成員鏈</td><td>物件變數沿 <code>.object</code> 鏈；<code>localStorage.getItem(n).p</code> 不豁免（P42）</td><td>表示法；US1 情境 16</td></tr>
+<tr><td>D014</td><td>被呼叫端未捕捉的例外</td><td>檢查器以 exceptionalReturn 為呼叫節點的例外邊並斷言其為圖上目標</td><td>表示法；contracts/reachability</td></tr>
+<tr><td>D015</td><td>返回分呼叫點</td><td>分；可達集合為字面的子集（P41）</td><td>表示法；US3 情境 8</td></tr>
+<tr><td>D016</td><td>MDN 語料進測試</td><td>直接讀 specs/006 語料，缺檔／檔數／sha256 不符即失敗</td><td>FR-007</td></tr>
+<tr><td>D017</td><td><code>if (f())</code> 中 f 無返回仍產生 p-use</td><td>範圍內修正：deferred p-use 只在決策節點可到達時配對（FR-013，P38–P40）</td><td>FR-013；US3 情境 7</td></tr>
+<tr><td>—</td><td>測試 helper 的 <code>Lnull</code> 標記（P18）</td><td>不修，記入 known-issues</td><td>Clarifications；FR-011 (d)</td></tr>
+</table></div>
+
+<h3>本輪判斷點</h3>
+<p>無：判斷點 1、2 已裁決為 D004、D005（見上表）。</p>
+
+<h3>次要疑點</h3>
+<div class="box"><table>
+<tr><th>疑點</th><th>出處</th></tr>
+<tr><td>FR-004 的「頁面上恰有一個定義」對巢狀函式中 <code>const o = new A()</code>（非頁面頂層 binding）是否適用？Assumptions 說「以 binding 計」傾向適用，但 FR 字面是「頁面上」</td><td>FR-004；Assumptions</td></tr>
+<tr><td>FR-004 放寬在 inter-page 模型是否同樣生效，FR-003 只列 FR-001／002 跨模型一致</td><td>FR-003；FR-005</td></tr>
+<tr><td>「屬性寫入→讀取損失」差異分類如何機械判定（定義端為成員目標、使用端為讀取 <code>o.p</code>）未寫，交 plan／差異工具</td><td>FR-009；SC-004</td></tr>
+<tr><td>US3 優先級 P2、產品程式碼預期不改：交付物主要是測試與 known-issues，若檢查發現 §38 以外違反範圍會擴大</td><td>US3；FR-008</td></tr>
+</table></div>
+</main>

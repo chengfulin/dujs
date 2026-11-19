@@ -17,7 +17,7 @@ var baseRules = {
 	'strict': ['error', 'function'],
 	'no-undef': 'error',
 	'no-bitwise': 'error',
-	'no-unused-vars': 'error'
+	'no-unused-vars': ['error', { caughtErrorsIgnorePattern: '^ignored' }]
 };
 
 module.exports = [
@@ -30,7 +30,23 @@ module.exports = [
 			// esgraph fixtures: intentionally undefined identifiers as CFG input
 			'tests/esgraph/tests/**',
 			// golden fixtures: browser scripts analyzed as input, not run by Node
-			'tests/golden/fixtures/**'
+			'tests/golden/fixtures/**',
+			// probe programs (features 003, 004): browser scripts analyzed as input, not run by Node
+			'specs/**/probes/**',
+			'tests/dujs/cases/probes/**',
+			'tests/dujs/cases/probes004/**',
+			// feature 006: probe copies and MDN corpus are browser scripts analyzed as input
+			'tests/dujs/cases/probes006/**',
+			'specs/006-eslint-scope/mdn/**',
+			// feature 005: probe copies and MDN baseline snapshots are analysis inputs
+			'tests/dujs/cases/probes005/**',
+			'specs/005-summary-analysis/mdn/**',
+			// feature 007: probe copies are browser scripts analyzed as input
+			'tests/dujs/cases/probes007/**',
+			// feature 008: probe copies are browser scripts analyzed as input
+			'tests/dujs/cases/probes008/**',
+			// research helper scripts (not part of dujs)
+			'docs/research/**'
 		]
 	},
 	{

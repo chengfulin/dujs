@@ -1,0 +1,70 @@
+=== s1-eq.js
+intra(page 1): console: entry -> L3 | localStorage: L2 -> L3
+storage nodes (page 1): 2
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L2 -> L1 | localStorage: L2 -> L3
+inter-page (all): console: entry -> L1 | console: entry -> L3 | localStorage: L1 -> L1 | localStorage: L2 -> L1 | localStorage: L2 -> L3
+=== s10-two-pages-method.js
+intra(page 1): A: L2 -> L5 | g: entry -> L12 | x: L1 -> L13
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L13 -> L7
+inter-page (all): A: L2 -> L5 | console: entry -> L7 | f2: entry -> L4 | f: entry -> L8 | g2: entry -> L6 | g: entry -> L12 | localStorage: L13 -> L7 | o: L11 -> L9 | x: L6 -> L13 | y: L2 -> L7
+=== s11-shadowed-storage.js
+intra(page 1): console: entry -> L8 | f: entry -> L7 | localStorage: L1 -> L8
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L8 | localStorage: L4 -> L5
+inter-page (all): console: entry -> L1 | console: entry -> L5 | console: entry -> L8 | f: entry -> L7 | localStorage: L1 -> L1 | localStorage: L1 -> L8 | localStorage: L4 -> L5
+=== s12-page-var-storage.js
+intra(page 1): console: entry -> L3 | localStorage: L2 -> L3
+storage nodes (page 1): 0
+inter-page localStorage: localStorage: L2 -> L3
+inter-page (all): console: entry -> L1 | console: entry -> L3 | localStorage: L2 -> L3
+=== s13-storage-alias.js
+intra(page 1): console: entry -> L4 | localStorage: L1 -> L2 | localStorage: L1 -> L4 | s: L3 -> L4
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L2 | localStorage: L1 -> L4
+inter-page (all): console: entry -> L1 | console: entry -> L4 | localStorage: L1 -> L1 | localStorage: L1 -> L2 | localStorage: L1 -> L4 | s: L3 -> L4
+=== s14-window-storage.js
+intra(page 1): console: entry -> L5 | window: L4 -> L5 | window: entry -> L3
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L1 -> L1
+inter-page (all): console: entry -> L1 | console: entry -> L5 | localStorage: L1 -> L1 | window: L4 -> L5 | window: entry -> L3
+=== s2-plus.js
+intra(page 1): console: entry -> L3 | localStorage: L1 -> L2 | localStorage: L2 -> L3
+storage nodes (page 1): 2
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L2 | localStorage: L2 -> L1 | localStorage: L2 -> L3
+inter-page (all): console: entry -> L1 | console: entry -> L3 | localStorage: L1 -> L1 | localStorage: L1 -> L2 | localStorage: L2 -> L1 | localStorage: L2 -> L3
+=== s3-logic.js
+intra(page 1): console: entry -> L3 | localStorage: L1 -> L2>L2:F | localStorage: L1 -> L2>L3:T | localStorage: L1 -> L3 | localStorage: L2:F -> L3
+storage nodes (page 1): 2
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L2>L2:F | localStorage: L1 -> L2>L3:T | localStorage: L1 -> L3 | localStorage: L2:F -> L1 | localStorage: L2:F -> L3
+inter-page (all): console: entry -> L1 | console: entry -> L3 | localStorage: L1 -> L1 | localStorage: L1 -> L2>L2:F | localStorage: L1 -> L2>L3:T | localStorage: L1 -> L3 | localStorage: L2:F -> L1 | localStorage: L2:F -> L3
+=== s4-computed.js
+intra(page 1): console: entry -> L4 | localStorage: L3 -> L4
+storage nodes (page 1): 2
+inter-page localStorage: localStorage: L2 -> L1 | localStorage: L3 -> L1 | localStorage: L3 -> L4
+inter-page (all): console: entry -> L1 | console: entry -> L4 | localStorage: L2 -> L1 | localStorage: L3 -> L1 | localStorage: L3 -> L4
+=== s5-destructuring.js
+intra(page 1): a: L1 -> L3 | console: entry -> L4 | localStorage: L3 -> L4
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L2 -> L1 | localStorage: L3 -> L4
+inter-page (all): a: L1 -> L3 | console: entry -> L1 | console: entry -> L4 | localStorage: L2 -> L1 | localStorage: L3 -> L4
+=== s6-for-in.js
+intra(page 1): a: L1 -> L3 | console: entry -> L4 | localStorage: L2 -> L3 | localStorage: L3 -> L3 | localStorage: L3 -> L4
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L2 -> L1 | localStorage: L2 -> L3 | localStorage: L3 -> L3 | localStorage: L3 -> L4
+inter-page (all): a: L1 -> L3 | console: entry -> L1 | console: entry -> L4 | localStorage: L2 -> L1 | localStorage: L2 -> L3 | localStorage: L3 -> L3 | localStorage: L3 -> L4
+=== s7-update.js
+intra(page 1): console: entry -> L3 | localStorage: L1 -> L2 | localStorage: L1 -> L3
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L2 | localStorage: L1 -> L3
+inter-page (all): console: entry -> L1 | console: entry -> L3 | localStorage: L1 -> L1 | localStorage: L1 -> L2 | localStorage: L1 -> L3
+=== s8-deep.js
+intra(page 1): console: entry -> L3 | localStorage: L1 -> L3
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L1 -> L1 | localStorage: L1 -> L3
+inter-page (all): console: entry -> L1 | console: entry -> L3 | localStorage: L1 -> L1 | localStorage: L1 -> L3
+=== s9-nested.js
+intra(page 1): console: entry -> L4 | localStorage: L3 -> L4
+storage nodes (page 1): 1
+inter-page localStorage: localStorage: L2 -> L1 | localStorage: L3 -> L4
+inter-page (all): console: entry -> L1 | console: entry -> L4 | localStorage: L2 -> L1 | localStorage: L3 -> L4

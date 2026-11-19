@@ -1,7 +1,6 @@
 /**
  * Test cases for Var
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-07-27
  */
 var Var = require('../../lib/dujs/var'),
     should = require('should');
@@ -59,9 +58,25 @@ describe('Var', function () {
 
 		    it('should return false as the input has invalid symbols', function () {
 			    Var.isValidName('!invalid').should.eql(false);
-			    Var.isValidName('$doolars').should.eql(false);
 			    Var.isValidName('NO.1').should.eql(false);
 			    Var.isValidName('time02:10').should.eql(false);
+		    });
+
+		    /// feature 006 U1: a Var name is an ES IdentifierName ($ and non-ASCII
+		    /// letters are valid; '$doolars' moved here from the invalid symbols)
+		    it('should return true as the input is an IdentifierName with $ or non-ASCII characters', function () {
+			    Var.isValidName('$').should.eql(true);
+			    Var.isValidName('$doolars').should.eql(true);
+			    Var.isValidName('\u00e9t\u00e9').should.eql(true);
+			    Var.isValidName('a\u200Cb').should.eql(true);
+			    Var.isValidName('$ANONYMOUS_FUN_0').should.eql(true);
+		    });
+
+		    it('should return false as the input is not an IdentifierName', function () {
+			    Var.isValidName('1a').should.eql(false);
+			    Var.isValidName('a-b').should.eql(false);
+			    Var.isValidName('').should.eql(false);
+			    Var.isValidName(null).should.eql(false);
 		    });
 	    });
 
@@ -138,6 +153,42 @@ describe('Var', function () {
 
 			it('should be enumerable', function () {
 				Var.prototype.propertyIsEnumerable('name').should.eql(true);
+			});
+		});
+
+		/// feature 006 data-model section 2: read-only binding {variable, kind, declarations}
+		describe('binding', function () {
+			it('should be null when the Var is created without a binding', function () {
+				should(new Var('a').binding).be.null();
+			});
+
+			it('should support to retrieve the binding given to the constructor', function () {
+				var info = {variable: null, kind: 'implicitGlobal', declarations: []};
+				var aVar = new Var('a', info);
+				aVar.binding.kind.should.eql('implicitGlobal');
+				should(aVar.binding.variable).be.null();
+				aVar.binding.declarations.should.eql([]);
+			});
+
+			it('should not support to modify the binding', function () {
+				var aVar = new Var('a', {variable: null, kind: 'var', declarations: []});
+				should(function () {
+					aVar.binding = null;
+				}).throw();
+				aVar.binding.kind.should.eql('var');
+			});
+
+			it('should be set only once by setBinding', function () {
+				var aVar = new Var('a');
+				Var.setBinding(aVar, {variable: null, kind: 'builtIn', declarations: []});
+				aVar.binding.kind.should.eql('builtIn');
+				should(function () {
+					Var.setBinding(aVar, {variable: null, kind: 'var', declarations: []});
+				}).throw(/already has a binding/);
+			});
+
+			it('should not be enumerable', function () {
+				Var.prototype.propertyIsEnumerable('binding').should.eql(false);
 			});
 		});
 	});

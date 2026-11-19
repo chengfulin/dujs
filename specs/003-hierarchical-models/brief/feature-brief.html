@@ -1,0 +1,331 @@
+<title>階層式模型</title>
+<style>
+/* 版面：單欄 900px；上半「看懂它」一格一件事（編號＋大標＋SVG 場景＋一句重點），下半表格 */
+:root{
+  --bg:#FFFBF2; --card:#FFFFFF; --ink:#1F2937; --sub:#5B6470; --line:#E6E0D2; --th:#F4EFE3;
+  --blue:#2B59C3; --blue-soft:#DCE6FA;
+  --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
+  --coral:#E4573D; --coral-soft:#FBDDD6;
+  --green:#3A9D6B; --green-soft:#D8F0E3;
+  --grey:#AEB6C0;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+    --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+  --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding-block:32px 72px;padding-inline:20px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:900;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
+.meta{color:var(--sub);font-size:.9rem}
+.note{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:8px 12px;margin:10px 0;font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin:16px 0;display:grid;gap:12px}
+.panel h3{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;line-height:1.2;margin:0;text-wrap:balance}
+.num{display:inline-block;font-weight:900;font-size:.75rem;letter-spacing:.15em;color:var(--blue);background:var(--blue-soft);padding:2px 10px;border-radius:999px;width:max-content}
+.pic{overflow-x:auto}
+.pic svg{display:block;width:100%;min-width:640px;height:auto}
+.cap{font-size:1.05rem;font-weight:500;max-width:52ch;margin:0}
+.cap b{font-weight:900}
+.cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
+text{font-family:var(--sans)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+ul{margin:6px 0;padding-left:20px}
+li small{color:var(--sub)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--th)}
+.ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
+code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 100 110"><circle cx="50" cy="28" r="20" fill="currentColor"/><path d="M12 108 a38 38 0 0 1 76 0 z" fill="currentColor"/></symbol>
+    <symbol id="doc" viewBox="0 0 100 120"><path d="M14 6 h50 l22 22 v86 h-72 z" fill="currentColor"/><path d="M64 6 v22 h22" fill="none" stroke="#FFFFFF" stroke-width="4"/><g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"><path d="M28 50 h44 M28 68 h44 M28 86 h30"/></g></symbol>
+    <symbol id="warn" viewBox="0 0 100 100"><path d="M50 8 L96 90 H4 Z" fill="currentColor"/><path d="M50 36 v26" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="76" r="5" fill="#FFFFFF"/></symbol>
+    <symbol id="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="currentColor"/><path d="M28 52 l15 15 l30 -34" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grey)"/></marker>
+  </defs>
+</svg>
+
+<main>
+<h1>階層式模型結構（重構 stage 1）</h1>
+<div class="meta">feature：003-hierarchical-models · analyze · 第 1 輪（承 plan 與 Fable 仲裁） · 2026-11-16 · PR 目標分支 develop</div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準</div>
+<div class="note">plan 已經 Fable 仲裁：以原型實跑驗證既有 golden 逐位元組相同。analyze 兩份發現表的修正方案<b>尚未套用</b>，待下方 3 個判斷點回覆後一併處理。</div>
+
+<h2>看懂它</h2>
+
+<section class="panel">
+  <span class="num">01 · 背景</span>
+  <h3>維護者手上有個把程式畫成圖的工具</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="維護者維護 dujs 分析工具，工具把網頁程式分四層畫成圖並產出報告">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">維護者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">維護</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">dujs 分析工具</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">把網頁程式分成四層來看</text><text x="280" y="134">敘述 → 函式 → 單頁 → 多頁</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">由細到粗，各畫成一張圖</text>
+    <use href="#doc" x="665" y="55" width="100" height="120" color="var(--blue)"/>
+    <text x="715" y="215" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">分析報告</text>
+  </svg></div>
+  <p class="cap">維護者要修、要擴充這個工具，<b>讀報告裡的圖來理解分析結果</b>。<small>來源：User Scenarios &amp; Testing（本 feature 的使用者）</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">02 · 要解決的問題</span>
+  <h3>上層整理時，順手把下層的圖改掉了</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="上層把下層原本指向頁面結束的線改接到事件等待點，且分析結果只存一份被後算的蓋掉">
+    <use href="#doc" x="50" y="45" width="90" height="108" color="var(--blue)"/>
+    <text x="95" y="195" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">下層的圖</text>
+    <path d="M155 100 h85" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="197" y="85" text-anchor="middle" font-size="15" fill="var(--sub)">被改接</text>
+    <rect x="250" y="30" width="340" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="270" y="62" font-size="18" font-weight="900" fill="var(--coral)">例：if (a) { a = 2; }</text>
+    <g font-size="16" fill="var(--ink)"><text x="270" y="98">L2 的 false 線原本指向「頁面結束」</text><text x="270" y="128">上層建好後，改指向「事件等待點」</text><text x="270" y="158">分析結果只存一份，後算的蓋掉先算的</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">下層不再是剛建好的樣子</text>
+    <path d="M595 110 h45" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <use href="#warn" x="650" y="50" width="110" height="110" color="var(--coral)"/>
+    <text x="705" y="200" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">無法單獨檢查</text>
+  </svg></div>
+  <p class="cap">下層的圖與結果會被上層<b>改動、覆蓋</b>，後續想只靠下層摘要做分析就不成立。<small>來源：User Story 1 的說明與 Why this priority</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">03 · 目的</span>
+  <h3>上層只「參照」下層，並多給一張概觀圖</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="各層各自保存、上層只參照；由各層重新展開成完整圖來分析，另輸出只畫大單位的概觀圖">
+    <rect x="40" y="75" width="220" height="110" rx="12" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="3"/>
+    <text x="150" y="112" text-anchor="middle" font-size="18" font-weight="900" fill="var(--ink)">各層各自保存</text>
+    <text x="150" y="140" text-anchor="middle" font-size="14" fill="var(--sub)">上層只參照下層</text>
+    <text x="150" y="162" text-anchor="middle" font-size="14" fill="var(--sub)">不改下層的圖</text>
+    <path d="M262 110 L330 70" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <path d="M262 150 L330 190" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <rect x="340" y="20" width="260" height="100" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="470" y="55" text-anchor="middle" font-size="18" font-weight="900" fill="var(--ink)">完整圖（敘述層級）</text>
+    <text x="470" y="80" text-anchor="middle" font-size="14" fill="var(--sub)">複製各層、編號照舊</text>
+    <text x="470" y="102" text-anchor="middle" font-size="14" fill="var(--sub)">分析在這張圖上做</text>
+    <rect x="340" y="140" width="260" height="100" rx="12" fill="var(--green-soft)" stroke="var(--green)" stroke-width="3"/>
+    <text x="470" y="175" text-anchor="middle" font-size="18" font-weight="900" fill="var(--green)">概觀圖（新增）</text>
+    <text x="470" y="200" text-anchor="middle" font-size="14" fill="var(--sub)">只畫函式、頁面</text>
+    <text x="470" y="222" text-anchor="middle" font-size="14" fill="var(--sub)">等大單位</text>
+    <text x="625" y="75" font-size="15" fill="var(--ink)">分析結果與以前相同</text>
+    <text x="625" y="195" font-size="15" fill="var(--ink)">報告多看一張全貌</text>
+  </svg></div>
+  <p class="cap">這一輪<b>只改結構、不改結果</b>；摘要式分析留給下一階段（stage 2）。<small>來源：範圍決策 D1、D2、D3；FR-004、FR-005</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">04 · 預期結果</span>
+  <h3>圖檔一字不差，下層圖不再被動過</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="既有輸出與重構前相同，四層建完後下層的圖與配對結果和剛建好時一樣，報告多一張概觀圖">
+    <use href="#check" x="50" y="45" width="110" height="110" color="var(--green)"/>
+    <text x="105" y="195" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">既有輸出</text>
+    <text x="105" y="220" text-anchor="middle" font-size="15" fill="var(--sub)">與以前完全相同</text>
+    <rect x="250" y="30" width="330" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="270" y="62" font-size="18" font-weight="900" fill="var(--green)">四層建完後回頭看下層</text>
+    <g font-size="17" fill="var(--ink)"><text x="270" y="102">L2 的 false 線 → 頁面結束</text><text x="270" y="134">配對 a: L1 -&gt; L2&gt;exit:F</text></g>
+    <text x="415" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">圖與結果和剛建好時一樣</text>
+    <use href="#doc" x="665" y="50" width="100" height="120" color="var(--blue)"/>
+    <text x="715" y="205" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">報告多一張</text>
+    <text x="715" y="230" text-anchor="middle" font-size="15" fill="var(--sub)">階層概觀圖</text>
+  </svg></div>
+  <p class="cap"><b>既有圖檔 0 差異、下層 0 變動</b>，報告每段多一張概觀圖。<small>來源：Success Criteria SC-001、SC-003、SC-004</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">流程</span>
+  <h3>由下往上建，再展開分析，輸出不變</h3>
+  <div class="pic"><svg viewBox="0 0 860 350" role="img" aria-label="五步主流程與兩條風險支線：遞迴不無窮展開、既有圖檔有差異視為行為改變">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">單一函式內</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">建敘述層級圖</text>
+      <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">往上建三層</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">只參照下層</text><text x="264" y="132" font-size="14" font-weight="400" fill="var(--sub)">不改下層的圖</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">複製展開</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">成完整圖</text><text x="434" y="132" font-size="14" font-weight="400" fill="var(--sub)">複本沿用原編號</text>
+      <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">分析</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">在完整圖上做</text><text x="604" y="132" font-size="14" font-weight="400" fill="var(--sub)">每層各存結果</text>
+      <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">輸出</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">既有圖檔不變</text><text x="774" y="132" font-size="14" font-weight="400" fill="var(--sub)">另多概觀圖</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M168 100 h14"/><path d="M338 100 h14"/><path d="M508 100 h14"/><path d="M678 100 h14"/></g>
+    <g stroke="var(--coral)" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arr)"><path d="M434 150 v50"/><path d="M774 150 v50"/></g>
+    <rect x="300" y="210" width="220" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="410" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">遞迴或互相呼叫</text>
+    <text x="410" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">展開不得無窮展開</text>
+    <text x="410" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">以手工環狀階層測試驗證</text>
+    <rect x="560" y="210" width="280" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="700" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">既有圖檔有差異</text>
+    <text x="700" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">一律視為行為改變</text>
+    <text x="700" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">不得更新 golden 放行</text>
+  </svg></div>
+  <p class="cap"><b>只改結構，結果不變</b>：分析仍在展開後的完整圖上進行。<small>來源：範圍決策 D2、D3；Edge Cases；FR-005、FR-006</small></p>
+  <ul>
+    <li>展開時複製下層節點，複本沿用原編號、不消耗節點計數器；上層新增的呼叫／返回／LOOP 節點各只建一次、順序與現況同。<small>（Clarifications；Edge Cases，節點編號；FR-005）</small></li>
+    <li>呼叫邊帶四項資訊：呼叫點節點、呼叫順序、是否插在決策節點之前、被呼叫的模型。<small>（Clarifications；FR-004）</small></li>
+  </ul>
+</section>
+
+<section class="panel">
+  <span class="num">架構</span>
+  <h3>階層是唯一真相，扁平圖只是展開出來的複本</h3>
+  <div class="box"><div class="mermaid">
+flowchart LR
+  MB["modelbuilder.js<br/>建階層、記操作"] --> HI["hierarchy.js<br/>單位＋全域序號操作"]
+  HI --> EX["expansion.js<br/>expand 純函式"]
+  EX -->|複製原件| FN["flownode.js<br/>copyNodes"]
+  EX -->|依序重播| FL["扁平圖（複本）<br/>編號、順序同現況"]
+  FL --> DA["defuseanalyzer.js<br/>doAnalysis"]
+  DA -->|每模型各存一份| MO["model.js<br/>analysisResultOf"]
+  HI --> HD["hierarchydot.js<br/>階層圖 dot"]
+  HD --> OW["outputwriter.js<br/>reportgenerator.js"]
+  FL --> OW
+  OW --> GO["golden＋manifest<br/>baseline 雜湊把關"]
+  </div></div>
+  <p class="cap"><b>下層原件從此不被碰</b>，上層只記錄操作，展開時才在複本上重播。<small>來源：plan.md 摘要、關鍵設計 1–6、Structure Decision</small></p>
+  <ul>
+    <li>複本沿用 <code>cfgId</code>、不消耗計數器；結構節點（CALL／LOOP／domain）建階層時只建一次。<small>（研究 R2、R3；關鍵設計 1–2）</small></li>
+    <li>操作依全域序號 <code>seq</code> 重播，鄰接順序才與現況一致。<small>（研究 R1、R5）</small></li>
+    <li>新增 3 個 MIT 模組；<code>bin/dujs.js</code> 與 LGPL 衍生檔的程式不動（<code>index.js</code> 只補檔頭紀錄）。<small>（Technical Context；變更影響範圍）</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（analyze · 第 1 輪）</h2>
+<p>speckit-analyze：0 CRITICAL／0 HIGH／3 MEDIUM／5 LOW，需求覆蓋 100%。clarifier full：0 CRITICAL／<b>1 HIGH</b>／8 MEDIUM／3 INFO，跨文件無矛盾、每個 FR 與情境都有任務。以下為 HIGH 與 MEDIUM 的發現與處置（已全部套用）。</p>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>說明</th><th>建議處置</th></tr>
+<tr><td>H1</td><td class="no">HIGH</td><td>research R8；T008、T033</td><td>現有探針分不出 R8 正確讀法與「只讀正在搜尋的模型」，R8 無測試守住。實跑確認：頁面層 g、h 內以識別字註冊 g、h 被呼叫也被註冊，現況 LOOP 的 onEvent 目標為 [g,h,g]</td><td>判斷點 1：存為 <code>probes/r8.js</code>，納入 T008 基準與 T033 斷言</td></tr>
+<tr><td>U1／M2</td><td>MEDIUM</td><td>T005；quickstart §1.7</td><td>bf07818 的 worktree 沒有 node_modules，必做的交叉比對跑不動</td><td>worktree 內 symlink 專案根 node_modules（或 npm ci）；<code>&lt;scratchpad&gt;</code> 改為「任意暫存目錄」</td></tr>
+<tr><td>M3／I1</td><td>MEDIUM</td><td>全程規則的步驟閘門</td><td>不帶 commit 的 <code>git diff --exit-code</code> 比的是 index，<code>git add</code> 就繞過；T052 改 added 後 US2 起還會誤報</td><td>判斷點 3</td></tr>
+<tr><td>M5</td><td>MEDIUM</td><td>US2；T048、T049、T052</td><td>US2 沒有逐步綠閘門：T048 寫出新 .dot 後 golden 紅到 T052</td><td>判斷點 3</td></tr>
+<tr><td>M1</td><td>MEDIUM</td><td>T031</td><td>沒說 <code>getRegisteredEventHandlerCallback</code> 如何拿到 reach-in（內部讀 <code>graphNode.reachIns</code>，複本為 null 會拋錯）</td><td>直接套用：加可選 <code>reachIns</code> 參數，省略時沿用 <code>node.reachIns</code>，既有測試不動</td></tr>
+<tr><td>M4</td><td>MEDIUM</td><td>T019、T027</td><td>沒有任務寫明新 Model 的 <code>relatedScopes</code>／<code>mainlyRelatedScope</code> 順序重現，多處依賴</td><td>直接套用：明列「呼叫端 mainly → 呼叫端 related → 被呼叫端 related」並加單元測試</td></tr>
+<tr><td>M6a</td><td>MEDIUM</td><td>contracts/hierarchy-output §2.2；FR-008</td><td>主程式→LOOP 邊無標籤（<code>h0 -> h1 []</code>），FR-008 要求邊標示種類</td><td>判斷點 2</td></tr>
+<tr><td>I2</td><td>MEDIUM</td><td>quickstart §3 情境 4</td><td>grep 永遠非空，檢查形同虛設</td><td>直接套用：改成 T045 的拆分寫法</td></tr>
+<tr><td>M6c</td><td>MEDIUM</td><td>T067</td><td>PR 必含清單缺「連結 spec」（§CP-5）與 README 第 26 行 golden 說明更新</td><td>直接套用：補入 T067</td></tr>
+</table></div>
+<p><b>LOW／INFO 彙總</b>：T002 行數 26→29（I3）；T005 刪除「T062 會再建 worktree」括號（I4）；T065 的 diff 範圍加 <code>lib/esgraph/index.js</code>（濾檔頭）、<code>dot.js</code>、<code>lib/analyses/</code>（C1）；新測試不讀 <code>specs/.../probes/*.js</code>，改複製到 <code>tests/</code> 底下 fixtures（clarifier I1，避免 specs 搬移後壞掉）；clarifier I2、I3 無須處置。
+另有 2 項<b>會改 spec.md</b>：T1 US3 情境 2 的 <code>useLoopHead</code> 已不存在（002 已移除），應為 <code>useNestedLoopHead</code>；T2 FR-014 把 <code>flownode.js</code> 列為 esgraph 衍生，與 THIRD_PARTY_NOTICES 列為 MIT 不符，從 FR-014 移除。known-issues §9 的同一筆筆誤由 T059 修。</p>
+
+<h2>前輪已定（plan · 第 1 輪）</h2>
+
+<h3>技術選型（使用者已確認）</h3>
+<div class="box"><table>
+<tr><th>項目</th><th>選擇</th><th>出處</th></tr>
+<tr><td>語言／執行環境</td><td>JavaScript（CommonJS，<code>lib/</code> 維持 ES5 風格）、Node.js ≥ 24</td><td>Technical Context</td></tr>
+<tr><td>相依套件</td><td>espree、walkes；<b>無新增依賴</b>（golden 雜湊用 Node 內建 <code>crypto</code>）</td><td>Primary Dependencies</td></tr>
+<tr><td>測試與品質</td><td>mocha＋should＋fast-check、golden 回歸、eslint、c8；基線 786 passing、lint 0 錯誤、119 筆既有抑制</td><td>Testing</td></tr>
+<tr><td>授權</td><td>新模組皆 MIT；LGPL 衍生檔只改檔頭紀錄</td><td>Primary Dependencies；R16</td></tr>
+</table></div>
+
+<h3>偏離 tech-standards 的清單</h3>
+<p>無。<code>tech-standards.md</code> 針對服務後端／前端，對本 CLI／函式庫屬「不適用」而非偏離，不需憲章 §CP-6 例外。<small>（plan Technical Context；研究 R17）</small></p>
+
+<h3>plan 對 spec「延後釐清」的回答</h3>
+<div class="box"><table>
+<tr><th>項目</th><th>plan 的答案</th></tr>
+<tr><td>golden 如何驗「既有檔不變」與「新增檔清單」</td><td>新增 <code>manifest.json</code>：<code>baseline</code>＝重構前 .dot 的 sha256、<code>added</code>＝新增清單；<code>UPDATE_GOLDEN</code> 不碰它，所以放行不了既有檔差異（R10）</td></tr>
+<tr><td>HTML 不依賴 Graphviz 的驗證</td><td>讀 <code>report.html</code> 文字，斷言階層圖路徑在同模型扁平圖之前、其餘順序不變（R12）</td></tr>
+<tr><td><code>scope.lastReachIns</code></td><td>移除（無讀取者，且為跨模型全域狀態）（R7）</td></tr>
+<tr><td><code>dujsDecisionCalledBefore</code> 斷言</td><td>改以階層查詢 <code>edge.beforeDecision</code>，預期值不變（R13）</td></tr>
+</table></div>
+
+<h2>工程師要決定的事</h2>
+
+<h3>驗收條件盤點</h3>
+<div class="box"><table>
+<tr><th>Story</th><th>條件（Acceptance Scenarios）</th><th>標記</th><th>備註</th></tr>
+<tr><td>US1-1</td><td>L2 的 false 分支仍指向頁面 exit，pair 不變</td><td class="ok">可驗證</td><td></td></tr>
+<tr><td>US1-2</td><td>§16 範例：決策節點前驅不變、inter-procedural 順序與 pair 不變</td><td class="ok">可驗證</td><td></td></tr>
+<tr><td>US1-3</td><td>每模型每節點的分析結果與建好當下相同</td><td class="ok">可驗證</td><td>helper 在四層建完後重取快照比對（R14）</td></tr>
+<tr><td>US1-4</td><td>移除兩個測試繞路後既有測試全過</td><td class="ok">可驗證</td><td>只許改取值方式，預期值一字不動</td></tr>
+<tr><td>US1-5</td><td>既有 .dot（含 dupairs.dot 標籤如 <code>entry_a</code>）逐位元組相同（基準 bf07818）</td><td class="ok">可驗證</td><td>manifest 的 baseline 雜湊逐檔比對（R10）；步驟閘門的基準待判斷點 3</td></tr>
+<tr><td>US1-6</td><td><code>f();</code> 呼叫點的種類、GEN／KILL、出邊不變；頁面節點無多出 storage 邊</td><td class="ok">可驗證</td><td></td></tr>
+<tr><td>US1-7</td><td>從程式取得上層節點參照的下層模型與呼叫邊資訊</td><td class="ok">可驗證</td><td><code>model.analysisResultOf(node)</code>、<code>flatNodeOf</code>、<code>hierarchy</code>（contracts/model-api.md）</td></tr>
+<tr><td>US2-1</td><td>inter-procedural 階層圖：主程式→f→g，無敘述節點，一對單位一條邊</td><td class="ok">可驗證</td><td>新 fixture 與重構前 golden 於 Setup 先建（R11）</td></tr>
+<tr><td>US2-2</td><td>intra-page 階層圖：主程式、LOOP、兩個處理器</td><td class="ok">可驗證</td><td></td></tr>
+<tr><td>US2（FR-008）</td><td>階層圖每條邊標示種類</td><td class="no">缺</td><td>主程式→LOOP 邊無標籤，與 FR-008 衝突；待判斷點 2</td></tr>
+<tr><td>FR-005（R8）</td><td>事件處理器依「包含該節點的最頂端 inter-procedural 模型」的 reach-in 找出，順序與重複同現況</td><td class="no">缺（擬補）</td><td>現有探針分不出對錯，無測試守住；待判斷點 1</td></tr>
+<tr><td>US2-3</td><td>inter-page 階層圖：頁面節點加單一 domain 節點，多個儲存點一條邊</td><td class="ok">可驗證</td><td>本輪由不可驗證轉為可驗證</td></tr>
+<tr><td>US2-4</td><td>HTML 三段在扁平圖之前引用階層圖，既有順序不變</td><td class="ok">可驗證</td><td>讀 <code>report.html</code> 文字驗證（R12）</td></tr>
+<tr><td>US2（FR-010）</td><td>新階層圖 golden「經人工核對」</td><td class="ok">可驗證</td><td>plan 已補核對準則（contracts/hierarchy-output.md §3），並以測試自動對應；上輪缺口已補</td></tr>
+<tr><td>Edge：遞迴防護</td><td>展開不得無窮展開</td><td class="ok">可驗證</td><td>手工建環狀階層，<code>expand</code> 須拋出 call cycle 錯誤（R15）</td></tr>
+<tr><td>US3-1～4</td><td>修改紀錄、JSDoc 位置、移除 <code>findKILLSet</code>、有綁定的 catch</td><td class="ok">可驗證</td><td>JSDoc 位置需審閱；catch 綁定命名 <code>ignoredModuleError</code>＋lint 規則忽略 <code>^ignored</code></td></tr>
+<tr><td>US3-5</td><td>known-issues 的 §9、§13、§16、§18 註記</td><td class="ok">可驗證</td><td></td></tr>
+</table></div>
+
+<h3>tech-standards 缺漏或變更</h3>
+<p>無。規範對本 CLI／函式庫「不適用」，plan 無偏離項目，沿用現況選型。</p>
+
+<h3>CRITICAL／HIGH 衝突與影響</h3>
+<p>CRITICAL 無；HIGH 1 項（H1）。憲章檢查 §CP-1～§CP-6、§GV 在 plan 階段皆 PASS，§CP-4 由新模組單元測試、SC-003 不變性檢查與 golden 三個 case 把關。H1 對應憲章 §CP-4（核心邏輯需有測試）：它影響 FR-005 的事件處理器順序（intra-page 輸出），目前沒有測試守住。</p>
+
+<h3>本輪判斷點（analyze · 第 1 輪）— 已決：三項皆採 A，修正已套用</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>方案</th><th>影響</th><th>對應小節</th></tr>
+<tr><td>1</td><td>H1：R8（找事件處理器讀哪個模型的 reach-in）無測試守住，要不要補？</td><td><b>A（建議）</b>：<code>probes/r8.js</code> 納入 T008 重構前基準，T033 斷言 LOOP 的 onEvent 順序與重複（現況 [g,h,g]），並複製到 <code>tests/</code> fixtures 供測試讀取<br>B：不補，只靠 research R8 的等價論證</td><td>A：重構時讀錯模型會立刻紅燈，多 1 個 fixture 與 2 處任務文字；B：錯誤只能靠 golden 碰運氣抓</td><td>FR-005；research R8；T008、T033</td></tr>
+<tr><td>2</td><td>M6a：intra-page 階層圖的主程式→LOOP 邊要不要標種類？</td><td><b>A（建議）</b>：標 <code>label="loop"</code>（FR-008 的種類列舉目前沒有此項，需順手補一個「進入 LOOP」；intra-page 新 golden 內容隨之含此標籤）<br>B：放寬 FR-008，允許此邊無標籤</td><td>A：每條邊都有種類、HTML 讀者一眼看懂，改 contracts 與 FR-008 文字；B：保留現行 contracts 輸出，但 FR-008 出現例外</td><td>FR-008；contracts/hierarchy-output §2.2</td></tr>
+<tr><td>3</td><td>M3／M5：步驟閘門的比對基準與 US2 的 commit 單位怎麼定？</td><td><b>A（建議）</b>：US1 全程用 <code>git diff --exit-code &lt;Setup commit&gt; -- &lt;路徑&gt;</code>；US2 起排除 expected 與 manifest，改檢查「只多 .hierarchy.dot、baseline 不變」；T052 移到 T048／T049 之後，US2 的輸出與 golden 更新同一 commit<br>B：維持現行閘門與順序，接受 T048～T052 之間 golden 為紅</td><td>A：每個 commit 都綠、閘門不被 <code>git add</code> 繞過，任務順序與 commit 切法要改；B：改動最少，但中間 commit 不能逐步驗證</td><td>US1／US2 全程規則；tasks T048、T049、T052；quickstart</td></tr>
+</table></div>
+<p class="meta">使用者決定（2026-11-16）：1 補 r8 測試；2 主程式→LOOP 邊標 <code>loop</code>；3 閘門以 Setup commit 為基準、US2 輸出與 golden 同一 commit。其餘（U1、M1、M4、I2、M6c 與 LOW／INFO）已直接套用；本輪不再請 Fable 仲裁。</p>
+
+<h3>已決事項（spec review 與 clarify，2026-11-16）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>決定</th><th>寫入 spec</th></tr>
+<tr><td>1</td><td>inter-procedural 階層圖的 golden 怎麼來</td><td>新增會產生 inter-procedural 輸出的 fixture；扁平輸出先以重構前程式產生入 golden，階層圖一併入 golden</td><td>D7；FR-010</td></tr>
+<tr><td>2</td><td>階層圖要不要畫呼叫返回、LOOP 返回節點</td><td>不畫，以返回邊表示</td><td>D8；FR-008；Key Entities</td></tr>
+<tr><td>3</td><td>inter-page 階層圖的 domain／storage 節點粒度</td><td>與扁平圖的跨頁節點一一對應</td><td>D9；US2-3；FR-008</td></tr>
+<tr><td>4</td><td>扁平圖節點與下層節點的關係（clarify）</td><td>複製下層節點、沿用編號、不消耗計數器</td><td>FR-005；Edge Cases</td></tr>
+<tr><td>5</td><td>階層模型保留的資訊；建模讀哪個 reach-in（clarify）</td><td>呼叫邊帶四項資訊；reach-in 規則已由仲裁修訂（見下表 H4）</td><td>FR-004；FR-005</td></tr>
+<tr><td>6</td><td>階層圖的邊與報告版面（clarify）</td><td>一對單位一種邊一條；domain 一個節點；階層圖在扁平圖之前</td><td>FR-008、FR-009</td></tr>
+<tr><td>7</td><td>fixture 與現況限制（clarify）</td><td>只能新增 fixture；呼叫須為現況可解析寫法；現況不產生呼叫環</td><td>D7；FR-010</td></tr>
+<tr><td>8</td><td>技術選型（plan）</td><td>沿用現況、不新增依賴；tech-standards 不適用、無偏離</td><td>plan Technical Context</td></tr>
+</table></div>
+
+<h3>仲裁與本輪判斷點的決定（Fable 仲裁＋clarify 閘門，2026-11-16）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>決定</th><th>寫入 spec</th></tr>
+<tr><td>N1</td><td>子模型分析沿共用節點的邊漏到外層（定義於 plan 仲裁擴大，見下表）</td><td>視為缺陷、不重現；known-issues 新增一節標為已修正；新 fixture 不含此型態</td><td>Clarifications；FR-005、FR-010、FR-012；Edge Cases</td></tr>
+<tr><td>H4</td><td>找事件處理器讀哪個模型的 reach-in</td><td>改為「包含該節點的最頂端 inter-procedural 模型」，完全重現現況</td><td>Clarifications；FR-005</td></tr>
+<tr><td>1</td><td>呼叫環防護如何驗證</td><td>手工建立環狀階層的單元測試</td><td>Clarifications；Edge Cases</td></tr>
+<tr><td>2</td><td>每模型節點分析結果是否公開</td><td>公開唯讀查詢介面，形狀由 plan 決定</td><td>Clarifications；FR-003</td></tr>
+<tr><td>3</td><td>FR-006 測試例外界線</td><td>只許改取值方式，預期值一字不動（依 SC-002）</td><td>Clarifications；FR-006</td></tr>
+<tr><td>次要</td><td>domain 用語、fixture 份數</td><td>FR-004 改為 domain 單一節點；新增一個 ES5 fixture</td><td>FR-004；Clarifications</td></tr>
+</table></div>
+
+<h3>其他補充（仲裁的小缺口，已直接寫入）</h3>
+<ul>
+<li>複本預設 GEN 中定義的來源節點改指複本（否則 dupairs.dot 印舊標籤）。</li>
+<li>扁平圖中的重複節點必須是同一個複本物件出現多次。</li>
+<li>FR-005 的「結構」含前驅／後繼的鄰接順序；intra-page 階層保留處理器清單的順序與重複，輸出時才去重。</li>
+<li>可解析呼叫的精確條件：節點本身是呼叫運算式（含 <code>if (f())</code>），callee 為識別字、定義在呼叫端 intra 分析可達。</li>
+</ul>
+
+<h3>plan 仲裁與本輪決定（Fable 仲裁＋plan 閘門，2026-11-16）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>決定／修正</th><th>寫入</th></tr>
+<tr><td>1</td><td>外漏型態的定義（plan 原舉「兩個互不呼叫的頂層模型共用被呼叫函式」在現況造不出來）</td><td>擴大為「子模型呼叫鏈上任一函式（根函式或其祖先）被呼叫兩次以上或在迴圈內」，視為 N1 同一缺陷、不重現；既有測試與 golden 不依賴外漏（仲裁實測 786 全過）</td><td>spec Clarifications、FR-010；research R6、R11</td></tr>
+<tr><td>2</td><td><code>catch (e)</code> 觸發 <code>no-unused-vars</code></td><td><code>eslint.config.js</code> 加 <code>caughtErrorsIgnorePattern: '^ignored'</code>，綁定命名 <code>ignoredModuleError</code>；PR 與 known-issues §9 各記一筆</td><td>spec Clarifications；research R16</td></tr>
+<tr><td>修正</td><td>GEN 重建範圍（plan 原寫只有 entry）</td><td>所有非 null 的 generate 都要在重播前以複本重建；加 <code>f(x = 1);</code> 測試案例</td><td>research R2、R7；plan 關鍵設計 4、風險 3</td></tr>
+<tr><td>修正</td><td>測試改寫清單缺漏</td><td>補 <code>branchsplit.js</code>、<code>reviewfixes.js</code> 的節點身分斷言（改比對 <code>flatNodeOf(原件)</code>）；實作加 grep 檢查空轉</td><td>research R13；plan 步驟 2.7</td></tr>
+<tr><td>補充</td><td>R8 與 spec「最頂端模型」</td><td>在現況呼叫解析下等價（模型間只有巢狀或互斥）；以 bf07818 交叉比對改為必做；探針程式存於 <code>probes/</code></td><td>research R8、R11；quickstart §1</td></tr>
+</table></div>
+
+<h3>次要疑點</h3>
+<div class="box"><table>
+<tr><th>疑點</th><th>出處</th></tr>
+<tr><td>新 fixture 不含鏈接呼叫（ES2015 class static）與重複處理器，只靠既有測試、展開單元測試與 helper 不變性檢查補位</td><td>plan 已知風險 6；FR-010</td></tr>
+<tr><td>若某上層扁平圖節點在該模型分析中未被走訪，<code>findDUPairs</code> 會拋錯；plan 預期不發生，發生則停下裁決</td><td>plan 已知風險 4</td></tr>
+</table></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>

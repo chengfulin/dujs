@@ -1,0 +1,186 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.random
+$DOMAIN.$PAGE_0.randomRGB
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+$DOMAIN.$PAGE_0.loop
+## intra $DOMAIN.$PAGE_0
+Ball: L21 -> L108
+Ball: L21 -> L80
+ball: L80 -> L91
+balls: L76 -> L78>L107:F
+balls: L76 -> L78>L79:T
+balls: L76 -> L91
+canvas: L3 -> L4
+document: entry -> L3
+height: L7 -> L80
+loop: entry -> L107
+random: entry -> L79
+random: entry -> L80
+randomRGB: entry -> L80
+size: L79 -> L80
+width: L6 -> L80
+window: entry -> L6
+window: entry -> L7
+## intra $DOMAIN.$PAGE_0.random
+max: entry -> L12
+min: entry -> L12
+## intra $DOMAIN.$PAGE_0.randomRGB
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+color: entry -> L27
+size: entry -> L28
+velX: entry -> L25
+velY: entry -> L26
+x: entry -> L23
+y: entry -> L24
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+ctx: L33 -> L34
+ctx: L33 -> L35
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+ball: L61 -> L62>L61:F
+ball: L61 -> L62>L63:T
+ball: L61 -> L63
+ball: L61 -> L64
+ball: L61 -> L67>L61:F
+ball: L61 -> L67>L68:T
+distance: L65 -> L67>L61:F
+distance: L65 -> L67>L68:T
+dx: L63 -> L65
+dy: L64 -> L65
+## intra $DOMAIN.$PAGE_0.loop
+ball: L98 -> L100
+ball: L98 -> L101
+ball: L98 -> L99
+ctx: L95 -> L96
+## inter[0] $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+ball: L61 -> L62>L61:F
+ball: L61 -> L62>L63:T
+ball: L61 -> L63
+ball: L61 -> L64
+ball: L61 -> L67>L61:F
+ball: L61 -> L67>L68:T
+distance: L65 -> L67>L61:F
+distance: L65 -> L67>L68:T
+dx: L63 -> L65
+dy: L64 -> L65
+## inter[1] $DOMAIN.$PAGE_0 , $DOMAIN.$PAGE_0.loop , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+Ball: L21 -> L108
+Ball: L21 -> L80
+ball: L61 -> L62>L61:F
+ball: L61 -> L62>L63:T
+ball: L61 -> L63
+ball: L61 -> L64
+ball: L61 -> L67>L61:F
+ball: L61 -> L67>L68:T
+ball: L80 -> L91
+ball: L98 -> L100
+ball: L98 -> L101
+ball: L98 -> L99
+balls: L76 -> L61
+balls: L76 -> L78>L107:F
+balls: L76 -> L78>L79:T
+balls: L76 -> L91
+balls: L76 -> L98
+balls: L76 -> entry
+canvas: L3 -> L4
+color: entry -> L27
+ctx: L4 -> entry
+ctx: L95 -> L96
+distance: L65 -> L67>L61:F
+distance: L65 -> L67>L68:T
+document: entry -> L3
+dx: L63 -> L65
+dy: L64 -> L65
+height: L7 -> L47>L48:T
+height: L7 -> L47>L51:F
+height: L7 -> L80
+height: L7 -> L96
+height: L7 -> entry
+loop: entry -> L104
+loop: entry -> L107
+loop: entry -> entry
+random: entry -> L79
+random: entry -> L80
+randomRGB: entry -> L68
+randomRGB: entry -> L80
+size: L79 -> L80
+size: entry -> L28
+velX: entry -> L25
+velY: entry -> L26
+width: L6 -> L39>L40:T
+width: L6 -> L39>L43:F
+width: L6 -> L80
+width: L6 -> L96
+width: L6 -> entry
+window: entry -> L6
+window: entry -> L7
+x: entry -> L23
+y: entry -> L24
+## inter[2] $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+ball: L61 -> L62>L61:F
+ball: L61 -> L62>L63:T
+ball: L61 -> L63
+ball: L61 -> L64
+ball: L61 -> L67>L61:F
+ball: L61 -> L67>L68:T
+distance: L65 -> L67>L61:F
+distance: L65 -> L67>L68:T
+dx: L63 -> L65
+dy: L64 -> L65
+## intra-page (nodes 61)
+Ball: L21 -> L108
+Ball: L21 -> L80
+ball: L61 -> L62>L61:F
+ball: L61 -> L62>L63:T
+ball: L61 -> L63
+ball: L61 -> L64
+ball: L61 -> L67>L61:F
+ball: L61 -> L67>L68:T
+ball: L80 -> L91
+ball: L98 -> L100
+ball: L98 -> L101
+ball: L98 -> L99
+balls: L76 -> L61
+balls: L76 -> L78>L107:F
+balls: L76 -> L78>L79:T
+balls: L76 -> L91
+balls: L76 -> L98
+balls: L76 -> entry
+canvas: L3 -> L4
+color: entry -> L27
+ctx: L4 -> entry
+ctx: L95 -> L96
+distance: L65 -> L67>L61:F
+distance: L65 -> L67>L68:T
+document: entry -> L3
+dx: L63 -> L65
+dy: L64 -> L65
+height: L7 -> L47>L48:T
+height: L7 -> L47>L51:F
+height: L7 -> L80
+height: L7 -> L96
+height: L7 -> entry
+loop: entry -> L104
+loop: entry -> L107
+loop: entry -> entry
+random: entry -> L79
+random: entry -> L80
+randomRGB: entry -> L68
+randomRGB: entry -> L80
+size: L79 -> L80
+size: entry -> L28
+velX: entry -> L25
+velY: entry -> L26
+width: L6 -> L39>L40:T
+width: L6 -> L39>L43:F
+width: L6 -> L80
+width: L6 -> L96
+width: L6 -> entry
+window: entry -> L6
+window: entry -> L7
+x: entry -> L23
+y: entry -> L24

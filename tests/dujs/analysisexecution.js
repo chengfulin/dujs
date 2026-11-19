@@ -1,7 +1,6 @@
 /*
  * Test cases for testing analysis execution
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-27
  */
 var should = require('should');
 var fs = require('fs');
@@ -46,7 +45,7 @@ describe('DefUseAnalysisExecutor', function () {
                     scopeTree.scopes.forEach(function (scope, scopeIndex) {
                         scopeNames.push(scope.toString());
                         var scopeLocals = [];
-                        scope.vars.forEach(function (variable) {
+                        scope.variables.forEach(function (variable) {
                             scopeLocals.push(variable.toString());
                         });
                         scopeLocals.should.containDeep(expected[index].scopeLocalVars[scopeIndex]);

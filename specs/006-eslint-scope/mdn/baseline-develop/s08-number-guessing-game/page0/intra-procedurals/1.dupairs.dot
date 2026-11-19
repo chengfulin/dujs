@@ -1,0 +1,13 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="7">Def-Use pairs</td></tr><tr><td>userGuess</td><td>(12,17)</td><td>(12,(19,20))</td><td>(12,(19,24))</td><td>(12,(31,32))</td><td>(12,(31,33))</td><td>(12,(33,34))</td><td>(12,(33,38))</td></tr>
+<tr><td>guesses</td><td>(14,17)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>lastResult</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>lowOrHi</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guessCount</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>guessField</td><td>(39,40)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

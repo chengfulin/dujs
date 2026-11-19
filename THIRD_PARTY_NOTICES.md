@@ -29,7 +29,9 @@ arpad.borsos@googlemail.com).
 | `tests/esgraph/test.js` | upstream test runner |
 | `tests/esgraph/tests/*.js` | upstream test fixtures |
 
-`lib/esgraph/flownode.js`, `lib/esgraph/flownodefactory.js` and the other files
+`lib/esgraph/flownode.js`, `lib/esgraph/flownodefactory.js`,
+`lib/esgraph/branchsplitter.js`, `lib/esgraph/decisionfinder.js`,
+`lib/esgraph/astrewriter.js`, `lib/esgraph/branchlabel.js` and the other files
 under `tests/esgraph/` are original dujs code (MIT); they live in this directory
 only because the forked CFG builder uses them.
 
@@ -48,6 +50,59 @@ only because the forked CFG builder uses them.
     esprima 1.x `handlers` array), required after switching the parser to
     espree.
   - Tests parse through `lib/dujs/jsparser` (espree) instead of esprima.
+  - Arrow functions are treated like function expressions: their bodies are
+    separate scopes, so no CFG nodes are created or linked inside them and
+    they are not considered as throwing.
+  - `ForOfStatement` is handled like `ForInStatement` (loop node with
+    true/false branches, `continue` and `break` targets).
+  - A `ClassDeclaration` is a single statement node; no CFG nodes are created
+    or linked inside class bodies (methods are separate scopes).
+  - ES module declarations: `import`, `export * from` and `export { ... }` are
+    statement nodes; an exported declaration (`export const`, `export function`,
+    `export default class`, ...) is analyzed as the declaration itself.
+  - `expressionThrows` returns `false` for a null expression instead of
+    reading its properties.
+  - A `ClassDeclaration` is a leaf in `createNodes`: no FlowNodes are created
+    for the nodes inside a class body.
+- 2026-11-16, by ChengFuLin
+  - `LabeledStatement`: has no node of its own and is entered at its body;
+    labeled `break l` jumps to the successor of the labeled statement and
+    labeled `continue l` to the continue target of the labeled loop.
+    Unlabeled `break`/`continue` are unchanged.
+  - `WithStatement`: a node evaluating the object expression (the node refers
+    to the object, flagged by `FlowNode.isWithObject`), followed by the body.
+  - `DebuggerStatement`: a plain statement node.
+  - Conditional expressions and short-circuit operators (`?:`, `&&`, `||`,
+    `??`, `&&=`, `||=`, `??=`) are split into decision and leaf nodes: after
+    the edges are connected and before the nodes are ordered and numbered,
+    `lib/esgraph/index.js` calls `branchsplitter.split(entryNode,
+    { expressionThrows })`, passing its own `expressionThrows` as a callback.
+    The splitting algorithm is in `lib/esgraph/branchsplitter.js` (the graph
+    part), `lib/esgraph/decisionfinder.js` and `lib/esgraph/astrewriter.js`,
+    which are original dujs code (MIT) and contain no esgraph code; `index.js`
+    only gained the call.
+  - Test fixture `tests/esgraph/tests/maythrow.js`: the expected DOT output
+    was updated for the split of `1 && call()` into a decision node `1` and the
+    leaf `call()` (the empty false branch gets no node); the change is recorded
+    in `tests/esgraph/tests/README.md`.
+- 2026-11-17, by ChengFuLin
+  - `lib/esgraph/index.js`: catch throws, jumps and exceptional completion are
+    routed through non-empty finally blocks (an empty `finally {}` or
+    `finally { ; }` is the same as no finally block; emptiness is decided on
+    the AST, so `finally { continue; }` is not empty): an exception in a try
+    block without a catch clause, or in a catch body, goes to the entry of the
+    finally block; `return`, `break` and `continue` leaving a try block or a
+    catch clause go through each non-empty finally block on the way to their
+    target; a finally block entered otherwise than by the normal completion of
+    its try block ends at a new `finallyExit` node (normal, exception and
+    `finally` edges to the pending targets), inserted before the branch
+    splitting. Only the edges falling off the end of a finally block (marked
+    by a temporary end marker that is not part of the graph) are redirected;
+    a `break` or `continue` inside the finally block keeps its own target. `linkSiblings` links a finally block before its try block and
+    catch clause; the ordering of the nodes also follows `finally` edges.
+  - `lib/esgraph/dot.js`: `finallyExit` nodes are drawn as ellipses labeled by
+    their type, `finally` edges with `label="finally"`.
+  - The test fixtures `tests/esgraph/tests/*.js` are unchanged.
 
 The full history is in `git log -- lib/esgraph tests/esgraph`.
 

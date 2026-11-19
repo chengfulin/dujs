@@ -1,0 +1,86 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0.generateStory",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 26,
+      "callee": "$DOMAIN.$PAGE_0.randomValueFromArray",
+      "callNode": "n125",
+      "entry": "n126",
+      "exit": "n129",
+      "callReturn": "n130",
+      "exceptionalReturn": "n137",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 27,
+      "callee": "$DOMAIN.$PAGE_0.randomValueFromArray",
+      "callNode": "n131",
+      "entry": "n126",
+      "exit": "n129",
+      "callReturn": "n132",
+      "exceptionalReturn": "n137",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 28,
+      "callee": "$DOMAIN.$PAGE_0.randomValueFromArray",
+      "callNode": "n133",
+      "entry": "n126",
+      "exit": "n129",
+      "callReturn": "n134",
+      "exceptionalReturn": "n137",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 4,
+      "callSiteLine": 40,
+      "callee": "$DOMAIN.$PAGE_0.returnRandomStoryString",
+      "callNode": "n123",
+      "entry": "n124",
+      "exit": "n137",
+      "callReturn": "n138",
+      "exceptionalReturn": "n149",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.randomValueFromArray": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.returnRandomStoryString": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math",
+        "characters",
+        "events",
+        "places",
+        "randomValueFromArray"
+      ],
+      "exceptional": []
+    }
+  }
+}

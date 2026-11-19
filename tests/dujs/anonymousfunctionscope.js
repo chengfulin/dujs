@@ -1,7 +1,6 @@
 /*
  * Test cases for AnonymousFunctionScope module
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-08-30
  */
 var should = require('should');
 var AnonymousFunctionScope = require('../../lib/dujs/anonymousfunctionscope');

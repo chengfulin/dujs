@@ -1,0 +1,71 @@
+{
+  "feature": "006-eslint-scope",
+  "steps": {
+    "specify": {
+      "done": true
+    },
+    "clarify": {
+      "done": true
+    },
+    "plan": {
+      "done": true
+    },
+    "tasks": {
+      "done": true
+    },
+    "analyze": {
+      "done": true,
+      "findings": 23,
+      "remediated": 23
+    },
+    "implement": {
+      "parallel_plan": {
+        "mode": "sequential",
+        "mode_reason": "plan 規定改 golden 的階段（Foundational、US1、US3、US4）須序列化，熱點檔跨幾乎所有 story；Foundational 依 tasks 分 2a/2b/2c 三批；略過並行規劃"
+      },
+      "phases": {
+        "Setup": {
+          "reviewed": true,
+          "committed": true
+        },
+        "Foundational": {
+          "reviewed": true,
+          "committed": true
+        },
+        "Polish": {
+          "reviewed": true,
+          "validated": true,
+          "committed": true,
+          "signoff": "2026-11-17 使用者簽核（T071）"
+        }
+      },
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US2": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US3": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US4": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true,
+          "signoff": "2026-11-17 使用者簽核（T070）"
+        }
+      },
+      "done": true
+    }
+  },
+  "brief": {
+    "artifact_url": "https://claude.ai/artifact/Hk2HbLNp2MafqnRpPyLaAe"
+  }
+}

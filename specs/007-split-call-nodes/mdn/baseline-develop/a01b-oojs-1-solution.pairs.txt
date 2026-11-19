@@ -1,0 +1,26 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+## intra $DOMAIN.$PAGE_0
+Shape: L1 -> L19
+Shape: L1 -> L22
+square: L19 -> L20
+triangle: L22 -> L23
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+name: entry -> L7
+sideLength: entry -> L9
+sides: entry -> L8
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+## inter[0] $DOMAIN.$PAGE_0 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+Shape: L1 -> L19
+Shape: L1 -> L22
+console: entry -> L13
+square: L19 -> L20
+triangle: L22 -> L23
+## intra-page (nodes 14)
+Shape: L1 -> L19
+Shape: L1 -> L22
+console: entry -> L13
+square: L19 -> L20
+triangle: L22 -> L23

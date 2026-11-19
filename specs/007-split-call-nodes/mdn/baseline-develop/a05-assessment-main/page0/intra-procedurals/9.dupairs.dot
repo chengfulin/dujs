@@ -1,0 +1,8 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="8">Def-Use pairs</td></tr><tr><td>e</td><td>(entry,(104,105))</td><td>(entry,(104,107))</td><td>(entry,(107,108))</td><td>(entry,(107,110))</td><td>(entry,(110,111))</td><td>(entry,(110,113))</td><td>(entry,(113,114))</td><td>(entry,(113,exit))</td></tr>
+</TABLE>
+>];
+}

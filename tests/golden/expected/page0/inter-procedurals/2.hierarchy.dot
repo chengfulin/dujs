@@ -1,0 +1,14 @@
+digraph Hierarchy {
+node [shape="box"]
+label = "inter-procedural: $DOMAIN.$PAGE_0.onAdd"
+h0 [label="$DOMAIN.$PAGE_0.onAdd"]
+h1 [label="$DOMAIN.$PAGE_0.countDown"]
+h2 [label="$DOMAIN.$PAGE_0.sumAll"]
+h3 [label="$DOMAIN.$PAGE_0.add"]
+h0 -> h1 [color="blue", label="call"]
+h1 -> h0 [color="blue", style="dashed", label="return"]
+h0 -> h2 [color="blue", label="call"]
+h2 -> h3 [color="blue", label="call"]
+h3 -> h2 [color="blue", style="dashed", label="return"]
+h2 -> h0 [color="blue", style="dashed", label="return"]
+}

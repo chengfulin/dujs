@@ -1,0 +1,89 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.checkGuess
+$DOMAIN.$PAGE_0.setGameOver
+$DOMAIN.$PAGE_0.resetGame
+## intra $DOMAIN.$PAGE_0
+Math: entry -> L1
+checkGuess: entry -> L42
+document: entry -> L2
+document: entry -> L3
+document: entry -> L4
+document: entry -> L5
+document: entry -> L6
+guessSubmit: L5 -> L42
+## intra $DOMAIN.$PAGE_0.checkGuess
+guessField: L38 -> L39
+guesses: L13 -> L16
+userGuess: L11 -> L16
+userGuess: L11 -> L18>L19:T
+userGuess: L11 -> L18>L23:F
+userGuess: L11 -> L30>L31:T
+userGuess: L11 -> L30>L32:F
+userGuess: L11 -> L32>L33:T
+userGuess: L11 -> L32>L37:F
+## intra $DOMAIN.$PAGE_0.setGameOver
+resetButton: L48 -> L49
+resetButton: L48 -> L50
+## intra $DOMAIN.$PAGE_0.resetGame
+guessField: L63 -> L64
+resetParas: L55 -> L56
+## inter[0] $DOMAIN.$PAGE_0.checkGuess , $DOMAIN.$PAGE_0.setGameOver
+guessField: L38 -> L39
+guesses: L13 -> L16
+resetButton: L48 -> L49
+resetButton: L48 -> L50
+userGuess: L11 -> L16
+userGuess: L11 -> L18>L19:T
+userGuess: L11 -> L18>L23:F
+userGuess: L11 -> L30>L31:T
+userGuess: L11 -> L30>L32:F
+userGuess: L11 -> L32>L33:T
+userGuess: L11 -> L32>L37:F
+## intra-page (nodes 47)
+Math: entry -> L1
+Number: entry -> L11
+checkGuess: entry -> L42
+document: entry -> L2
+document: entry -> L3
+document: entry -> L4
+document: entry -> L47
+document: entry -> L49
+document: entry -> L5
+document: entry -> L6
+guessCount: L37 -> L12>L13:T
+guessCount: L37 -> L12>L16:F
+guessCount: L37 -> L23>L24:T
+guessCount: L37 -> L23>L28:F
+guessCount: L37 -> L37
+guessCount: L7 -> L12>L13:T
+guessCount: L7 -> L12>L16:F
+guessCount: L7 -> L23>L24:T
+guessCount: L7 -> L23>L28:F
+guessCount: L7 -> L37
+guessField: L38 -> L11
+guessField: L38 -> L39
+guessField: L45 -> L11
+guessField: L6 -> L11
+guessSubmit: L5 -> L42
+guesses: L13 -> L16
+guesses: L16 -> L16
+guesses: L2 -> L16
+randomNumber: L1 -> L18>L19:T
+randomNumber: L1 -> L18>L23:F
+randomNumber: L1 -> L30>L31:T
+randomNumber: L1 -> L30>L32:F
+randomNumber: L1 -> L32>L33:T
+randomNumber: L1 -> L32>L37:F
+resetButton: L48 -> L49
+resetButton: L48 -> L50
+resetGame: entry -> L50
+setGameOver: entry -> L22
+setGameOver: entry -> L26
+userGuess: L11 -> L16
+userGuess: L11 -> L18>L19:T
+userGuess: L11 -> L18>L23:F
+userGuess: L11 -> L30>L31:T
+userGuess: L11 -> L30>L32:F
+userGuess: L11 -> L32>L33:T
+userGuess: L11 -> L32>L37:F

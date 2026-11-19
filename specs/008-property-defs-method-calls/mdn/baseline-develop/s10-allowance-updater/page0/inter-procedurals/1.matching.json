@@ -1,0 +1,37 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 2,
+      "callSiteLine": 12,
+      "callee": "$DOMAIN.$PAGE_0.updateAllowance",
+      "callNode": "n36",
+      "entry": "n37",
+      "exit": "n43",
+      "callReturn": "n44",
+      "exceptionalReturn": "n46",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.updateAllowance": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "para@n41"
+      ],
+      "mustKill": [
+        "para"
+      ],
+      "upwardExposed": [
+        "shoppingDone"
+      ],
+      "exceptional": []
+    }
+  }
+}

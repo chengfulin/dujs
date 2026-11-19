@@ -1,7 +1,6 @@
 /**
  * Test cases for Def
  * @lastmodifiedBy ChengFuLin(chengfulin0806@gmail.com)
- * @lastmodifiedDate 2015-07-27
  */
 var Def = require('../../lib/dujs/def'),
 	flownodeFactory = require('../../lib/esgraph/flownodefactory'),
@@ -81,6 +80,41 @@ describe('Def', function () {
 		    it('should not support to modify value', function () {
 			    should(function () {
 				    Def.LOCAL_STORAGE_TYPE = 'type';
+			    }).throw();
+		    });
+	    });
+
+	    /// feature 006 US3: the definition of a global read without declaration
+	    describe('GLOBAL_TYPE', function () {
+		    it('should have correct value', function () {
+			    Def.GLOBAL_TYPE.should.eql('global');
+		    });
+
+		    it('should be one of the TYPES', function () {
+			    Def.TYPES.should.containEql(Def.GLOBAL_TYPE);
+		    });
+
+		    it('should not support to modify value', function () {
+			    should(function () {
+				    Def.GLOBAL_TYPE = 'type';
+			    }).throw();
+		    });
+	    });
+
+	    /// feature 005 US1: the sentinel definition of the summaries (data-model §2)
+	    describe('SENTINEL_TYPE', function () {
+		    it('should have correct value', function () {
+			    Def.SENTINEL_TYPE.should.eql('sentinel');
+		    });
+
+		    it('should be one of the TYPES', function () {
+			    Def.TYPES.should.containEql(Def.SENTINEL_TYPE);
+			    Def.isValidDefType(Def.SENTINEL_TYPE).should.be.true();
+		    });
+
+		    it('should not support to modify value', function () {
+			    should(function () {
+				    Def.SENTINEL_TYPE = 'type';
 			    }).throw();
 		    });
 	    });

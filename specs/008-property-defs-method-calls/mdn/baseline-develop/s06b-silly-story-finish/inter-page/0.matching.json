@@ -1,0 +1,121 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interPage",
+  "mainScope": "$DOMAIN",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 26,
+      "callee": "$DOMAIN.$PAGE_0.randomValueFromArray",
+      "callNode": "n155",
+      "entry": "n156",
+      "exit": "n159",
+      "callReturn": "n160",
+      "exceptionalReturn": "n167",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 27,
+      "callee": "$DOMAIN.$PAGE_0.randomValueFromArray",
+      "callNode": "n161",
+      "entry": "n156",
+      "exit": "n159",
+      "callReturn": "n162",
+      "exceptionalReturn": "n167",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 28,
+      "callee": "$DOMAIN.$PAGE_0.randomValueFromArray",
+      "callNode": "n163",
+      "entry": "n156",
+      "exit": "n159",
+      "callReturn": "n164",
+      "exceptionalReturn": "n167",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 4,
+      "callSiteLine": 40,
+      "callee": "$DOMAIN.$PAGE_0.returnRandomStoryString",
+      "callNode": "n153",
+      "entry": "n154",
+      "exit": "n167",
+      "callReturn": "n168",
+      "exceptionalReturn": "n179",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [
+    {
+      "loop": "n150",
+      "loopReturn": "n180",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.generateStory",
+          "entry": "n152",
+          "exit": "n179"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.generateStory": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "story@n177"
+      ],
+      "mustKill": [
+        "story"
+      ],
+      "upwardExposed": [
+        "Math",
+        "characters",
+        "customName",
+        "document",
+        "events",
+        "places",
+        "randomValueFromArray",
+        "returnRandomStoryString"
+      ],
+      "exceptional": [
+        "story@n177"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.randomValueFromArray": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.returnRandomStoryString": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Math",
+        "characters",
+        "events",
+        "places",
+        "randomValueFromArray"
+      ],
+      "exceptional": []
+    }
+  }
+}

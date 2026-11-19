@@ -1,0 +1,39 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+## intra $DOMAIN.$PAGE_0
+btn: L10 -> L12
+document: entry -> L10
+document: entry -> L8
+document: entry -> L9
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+contact: L17 -> L18
+input: L14 -> L15
+para: L16 -> L24>L25:T
+para: L16 -> L24>exit:F
+para: L20 -> L24>L25:T
+para: L20 -> L24>exit:F
+searchName: L13 -> L19>L17:F
+searchName: L13 -> L19>L20:T
+splitContact: L18 -> L19>L17:F
+splitContact: L18 -> L19>L20:T
+splitContact: L18 -> L20
+## intra-page (nodes 21)
+btn: L10 -> L12
+contact: L17 -> L18
+contacts: L1 -> L17
+document: entry -> L10
+document: entry -> L8
+document: entry -> L9
+input: L14 -> L13
+input: L14 -> L15
+input: L9 -> L13
+para: L16 -> L24>L25:T
+para: L16 -> L24>exit:F
+para: L20 -> L24>L25:T
+para: L20 -> L24>exit:F
+searchName: L13 -> L19>L17:F
+searchName: L13 -> L19>L20:T
+splitContact: L18 -> L19>L17:F
+splitContact: L18 -> L19>L20:T
+splitContact: L18 -> L20

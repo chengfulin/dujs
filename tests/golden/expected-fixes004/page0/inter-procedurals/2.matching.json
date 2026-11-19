@@ -1,0 +1,357 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 9,
+      "callee": "$DOMAIN.$PAGE_0.P",
+      "callNode": "n41",
+      "entry": "n42",
+      "exit": "n44",
+      "callReturn": "n45",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 11,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+      "callNode": "n47",
+      "entry": "n48",
+      "exit": "n50",
+      "callReturn": "n51",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c3",
+      "seq": 3,
+      "callSiteLine": 11,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+      "callNode": "n51",
+      "entry": "n52",
+      "exit": "n54",
+      "callReturn": "n55",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c4",
+      "seq": 4,
+      "callSiteLine": 36,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2",
+      "callNode": "n56",
+      "entry": "n57",
+      "exit": "n59",
+      "callReturn": "n60",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c5",
+      "seq": 5,
+      "callSiteLine": 36,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
+      "callNode": "n60",
+      "entry": "n61",
+      "exit": "n63",
+      "callReturn": "n64",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c6",
+      "seq": 6,
+      "callSiteLine": 28,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4",
+      "callNode": "n71",
+      "entry": "n65",
+      "exit": "n77",
+      "callReturn": "n72",
+      "exceptionalReturn": "n73",
+      "back": true,
+      "beforeDecision": false
+    },
+    {
+      "id": "c7",
+      "seq": 7,
+      "callSiteLine": 22,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5",
+      "callNode": "n67",
+      "entry": "n68",
+      "exit": "n73",
+      "callReturn": "n75",
+      "exceptionalReturn": "n77",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c8",
+      "seq": 8,
+      "callSiteLine": 36,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4",
+      "callNode": "n64",
+      "entry": "n65",
+      "exit": "n77",
+      "callReturn": "n78",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c9",
+      "seq": 9,
+      "callSiteLine": 37,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2",
+      "callNode": "n79",
+      "entry": "n57",
+      "exit": "n59",
+      "callReturn": "n80",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c10",
+      "seq": 10,
+      "callSiteLine": 37,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3",
+      "callNode": "n80",
+      "entry": "n61",
+      "exit": "n63",
+      "callReturn": "n81",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c11",
+      "seq": 11,
+      "callSiteLine": 38,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5",
+      "callNode": "n82",
+      "entry": "n68",
+      "exit": "n73",
+      "callReturn": "n83",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c12",
+      "seq": 12,
+      "callSiteLine": 39,
+      "callee": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_6",
+      "callNode": "n84",
+      "entry": "n85",
+      "exit": "n87",
+      "callReturn": "n88",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c13",
+      "seq": 13,
+      "callSiteLine": 42,
+      "callee": "$DOMAIN.$PAGE_0.log",
+      "callNode": "n90",
+      "entry": "n91",
+      "exit": "n92",
+      "callReturn": "n93",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c14",
+      "seq": 14,
+      "callSiteLine": 49,
+      "callee": "$DOMAIN.$PAGE_0.h.$ANONYMOUS_FUN_7",
+      "callNode": "n100",
+      "entry": "n101",
+      "exit": "n103",
+      "callReturn": "n104",
+      "exceptionalReturn": "n105",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c15",
+      "seq": 15,
+      "callSiteLine": 51,
+      "callee": "$DOMAIN.$PAGE_0.h",
+      "callNode": "n94",
+      "entry": "n95",
+      "exit": "n105",
+      "callReturn": "n106",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c16",
+      "seq": 16,
+      "callSiteLine": 42,
+      "callee": "$DOMAIN.$PAGE_0.log",
+      "callNode": "n108",
+      "entry": "n91",
+      "exit": "n92",
+      "callReturn": "n109",
+      "exceptionalReturn": "n110",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "Counter"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "y@n53"
+      ],
+      "mustKill": [
+        "y"
+      ],
+      "upwardExposed": [
+        "Counter"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "x"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "x@n62"
+      ],
+      "mustKill": [
+        "x"
+      ],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "c@n70",
+        "x@n74",
+        "y@n76"
+      ],
+      "mustKill": [
+        "x",
+        "y"
+      ],
+      "upwardExposed": [
+        "c"
+      ],
+      "exceptional": [
+        "c@n70",
+        "x@n74",
+        "y@n76"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "c@n70",
+        "x@n74",
+        "y@n76"
+      ],
+      "mustKill": [
+        "x"
+      ],
+      "upwardExposed": [
+        "c"
+      ],
+      "exceptional": [
+        "c@n70",
+        "x@n74",
+        "y@n76"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_6": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "x@n86"
+      ],
+      "mustKill": [
+        "x"
+      ],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.P": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "x@n43"
+      ],
+      "mustKill": [
+        "x"
+      ],
+      "upwardExposed": [],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.h": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "a"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.h.$ANONYMOUS_FUN_7": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [
+        "q"
+      ],
+      "exceptional": []
+    },
+    "$DOMAIN.$PAGE_0.log": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    }
+  }
+}

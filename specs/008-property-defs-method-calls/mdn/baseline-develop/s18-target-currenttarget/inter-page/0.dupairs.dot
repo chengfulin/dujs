@@ -1,0 +1,25 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="4">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td>(entry_a,2)</td><td>(entry_a,9)</td><td>(entry_a,10)</td><td>(entry_a,12)</td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>handleClick</td><td>(entry_a,12)</td><td>(entry_a,13)</td><td>(entry_a,14)</td><td></td></tr>
+<tr><td>output</td><td>(2,6)</td><td>(6,6)</td><td></td><td></td></tr>
+<tr><td>container</td><td>(9,13)</td><td></td><td></td><td></td></tr>
+<tr><td>button</td><td>(10,14)</td><td></td><td></td><td></td></tr>
+<tr><td>e</td><td>(entry_b,4)</td><td>(entry_b,5)</td><td></td><td></td></tr>
+<tr><td>logTarget</td><td>(4,6)</td><td></td><td></td><td></td></tr>
+<tr><td>logCurrentTarget</td><td>(5,6)</td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

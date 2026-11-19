@@ -1,0 +1,36 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="10">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>document</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>console</td><td>(entry_a,52)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>a</td><td>(2,(3,4))</td><td>(2,(3,call (9)))</td><td>(4,call (42:T))</td><td>(2,call (42:T))</td><td>(4,44)</td><td>(2,44)</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>b</td><td>(2,(3,4))</td><td>(2,(3,call (9)))</td><td>(2,call (42:F))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>c</td><td>(2,(3,4))</td><td>(2,(3,call (9)))</td><td>(2,(26,27))</td><td>(2,(26,30))</td><td>(27,(26,27))</td><td>(27,(26,30))</td><td>(2,(42,call (42:T)))</td><td>(2,(42,call (42:F)))</td><td>(27,(42,call (42:T)))</td><td>(27,(42,call (42:F)))</td></tr>
+<tr><td>x</td><td>(7,10)</td><td>(7,16)</td><td>(30,16)</td><td>(33,52)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>y</td><td>(23,52)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>counter</td><td>(call (37)_a,call (38))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>P</td><td>(entry_a,call (9))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>log</td><td>(entry_a,call (42:T))</td><td>(entry_a,call (42:F))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>h</td><td>(entry_a,call (51))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>v</td><td>(entry_b,7)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Counter</td><td>(call (11)_a,call (36)_a)</td><td>(call (11)_a,call (37)_a)</td><td>(call (11)_a,call (39))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Counter</td><td>(call (11)_a,12)</td><td>(call (11)_a,14)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>n</td><td>(entry_g,21)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>t</td><td>(21,23)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>value</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>p</td><td>(44,45)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>q</td><td>(45,48)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>g</td><td>(47,call (49))</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</TABLE>
+>];
+}

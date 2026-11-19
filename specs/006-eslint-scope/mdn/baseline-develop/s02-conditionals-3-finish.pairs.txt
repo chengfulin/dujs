@@ -1,0 +1,36 @@
+## scopes
+$DOMAIN.$PAGE_0
+## intra $DOMAIN.$PAGE_0
+document: entry -> L17
+document: entry -> L18
+document: entry -> L19
+machineActive: L1 -> L7>L14:F
+machineActive: L1 -> L7>L8:T
+machineResult: L14 -> L20
+machineResult: L8 -> L20
+para1: L20 -> L22
+para2: L21 -> L23
+pwd: L2 -> L9>L9:F
+pwd: L2 -> L9>L9:T
+pwdResult: L5 -> L21
+pwdResult: L9:F -> L21
+pwdResult: L9:T -> L21
+section: L17 -> L22
+section: L17 -> L23
+## intra-page (nodes 21)
+document: entry -> L17
+document: entry -> L18
+document: entry -> L19
+machineActive: L1 -> L7>L14:F
+machineActive: L1 -> L7>L8:T
+machineResult: L14 -> L20
+machineResult: L8 -> L20
+para1: L20 -> L22
+para2: L21 -> L23
+pwd: L2 -> L9>L9:F
+pwd: L2 -> L9>L9:T
+pwdResult: L5 -> L21
+pwdResult: L9:F -> L21
+pwdResult: L9:T -> L21
+section: L17 -> L22
+section: L17 -> L23

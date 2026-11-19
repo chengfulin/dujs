@@ -1,0 +1,91 @@
+{
+  "format": "dujs-matching/1",
+  "level": "intraPage",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 41,
+      "callee": "$DOMAIN.$PAGE_0.updateDisplayedImage",
+      "callNode": "n69",
+      "entry": "n62",
+      "exit": "n65",
+      "callReturn": "n74",
+      "exceptionalReturn": "n75",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [
+    {
+      "loop": "n60",
+      "loopReturn": "n66",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.updateDisplayedImage",
+          "entry": "n62",
+          "exit": "n65"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.$BLOCK_0.$BLOCK_1.$ANONYMOUS_FUN_0",
+          "entry": "n67",
+          "exit": "n75"
+        },
+        {
+          "scope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1",
+          "entry": "n76",
+          "exit": "n83"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "btn@n78",
+        "btn@n81"
+      ],
+      "mustKill": [
+        "btn"
+      ],
+      "upwardExposed": [
+        "btn"
+      ],
+      "exceptional": [
+        "btn@n78",
+        "btn@n81"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.$BLOCK_0.$BLOCK_1.$ANONYMOUS_FUN_0": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "displayedImage@n64"
+      ],
+      "mustKill": [],
+      "upwardExposed": [
+        "updateDisplayedImage"
+      ],
+      "exceptional": [
+        "displayedImage@n63"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.updateDisplayedImage": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "displayedImage@n64"
+      ],
+      "mustKill": [
+        "displayedImage"
+      ],
+      "upwardExposed": [],
+      "exceptional": [
+        "displayedImage@n63"
+      ]
+    }
+  }
+}

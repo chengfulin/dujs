@@ -1,0 +1,204 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.random
+$DOMAIN.$PAGE_0.randomRGB
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5.$ANONYMOUS_FUN_6
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_7
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_8
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_9
+$DOMAIN.$PAGE_0.loop
+## intra $DOMAIN.$PAGE_0
+Ball: L38 -> L169
+EvilCircle: L93 -> L184
+Shape: L27 -> L38
+Shape: L27 -> L93
+ball: L169 -> L179
+balls: L165 -> L167>L168:T
+balls: L165 -> L167>L184:F
+balls: L165 -> L179
+canvas: L8 -> L9
+count: L180 -> L180
+count: L180 -> L181
+count: L6 -> L180
+document: entry -> L5
+document: entry -> L8
+height: L12 -> L169
+height: L12 -> L184
+loop: entry -> L205
+random: entry -> L168
+random: entry -> L169
+random: entry -> L184
+randomRGB: entry -> L169
+size: L168 -> L169
+width: L11 -> L169
+width: L11 -> L184
+window: entry -> L11
+window: entry -> L12
+## intra $DOMAIN.$PAGE_0.random
+max: entry -> L17
+min: entry -> L17
+num: L17 -> L18
+## intra $DOMAIN.$PAGE_0.randomRGB
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+velX: entry -> L32
+velY: entry -> L33
+x: entry -> L30
+y: entry -> L31
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+color: entry -> L43
+size: entry -> L44
+velX: entry -> L41
+velY: entry -> L41
+x: entry -> L41
+y: entry -> L41
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+ctx: L50 -> L51
+ctx: L50 -> L52
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_4
+ball: L78 -> L79:T>L78:F
+ball: L78 -> L79:T>L80:T
+ball: L78 -> L79>L78:F
+ball: L78 -> L79>L79:T
+ball: L78 -> L80
+ball: L78 -> L81
+ball: L78 -> L84>L78:F
+ball: L78 -> L84>L85:T
+distance: L82 -> L84>L78:F
+distance: L82 -> L84>L85:T
+dx: L80 -> L82
+dy: L81 -> L82
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5
+x: entry -> L96
+y: entry -> L96
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_5.$ANONYMOUS_FUN_6
+e: entry -> L103>L104:T
+e: entry -> L103>L106:F
+e: entry -> L106>L107:T
+e: entry -> L106>L109:F
+e: entry -> L109>L110:T
+e: entry -> L109>L112:F
+e: entry -> L112>L113:T
+e: entry -> L112>exit:F
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_7
+ctx: L122 -> L123
+ctx: L122 -> L124
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_8
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_9
+ball: L146 -> L147>L146:F
+ball: L146 -> L147>L148:T
+ball: L146 -> L148
+ball: L146 -> L149
+ball: L146 -> L152>L146:F
+ball: L146 -> L152>L153:T
+count: L154 -> L154
+count: L154 -> L155
+distance: L150 -> L152>L146:F
+distance: L150 -> L152>L153:T
+dx: L148 -> L150
+dy: L149 -> L150
+## intra $DOMAIN.$PAGE_0.loop
+ball: L190 -> L191>L190:F
+ball: L190 -> L191>L192:T
+ball: L190 -> L192
+ball: L190 -> L193
+ball: L190 -> L194
+ctx: L187 -> L188
+## inter[0] $DOMAIN.$PAGE_0 , $DOMAIN.$PAGE_0.loop
+Ball: L38 -> L169
+EvilCircle: L93 -> L184
+Shape: L27 -> L38
+Shape: L27 -> L93
+ball: L169 -> L179
+ball: L190 -> L191>L190:F
+ball: L190 -> L191>L192:T
+ball: L190 -> L192
+ball: L190 -> L193
+ball: L190 -> L194
+balls: L165 -> L167>L168:T
+balls: L165 -> L167>L184:F
+balls: L165 -> L179
+balls: L165 -> L190
+balls: L165 -> entry
+canvas: L8 -> L9
+count: L180 -> L180
+count: L180 -> L181
+count: L6 -> L180
+ctx: L187 -> L188
+ctx: L9 -> entry
+document: entry -> L5
+document: entry -> L8
+evilBall: L184 -> L198
+evilBall: L184 -> L199
+evilBall: L184 -> L200
+evilBall: L184 -> entry
+height: L12 -> L169
+height: L12 -> L184
+height: L12 -> L188
+height: L12 -> entry
+loop: entry -> L202
+loop: entry -> L205
+loop: entry -> entry
+random: entry -> L168
+random: entry -> L169
+random: entry -> L184
+randomRGB: entry -> L169
+size: L168 -> L169
+width: L11 -> L169
+width: L11 -> L184
+width: L11 -> L188
+width: L11 -> entry
+window: entry -> L11
+window: entry -> L12
+## intra-page (nodes 36)
+Ball: L38 -> L169
+EvilCircle: L93 -> L184
+Shape: L27 -> L38
+Shape: L27 -> L93
+ball: L169 -> L179
+ball: L190 -> L191>L190:F
+ball: L190 -> L191>L192:T
+ball: L190 -> L192
+ball: L190 -> L193
+ball: L190 -> L194
+balls: L165 -> L167>L168:T
+balls: L165 -> L167>L184:F
+balls: L165 -> L179
+balls: L165 -> L190
+balls: L165 -> entry
+canvas: L8 -> L9
+count: L180 -> L180
+count: L180 -> L181
+count: L6 -> L180
+ctx: L187 -> L188
+ctx: L9 -> entry
+document: entry -> L5
+document: entry -> L8
+evilBall: L184 -> L198
+evilBall: L184 -> L199
+evilBall: L184 -> L200
+evilBall: L184 -> entry
+height: L12 -> L169
+height: L12 -> L184
+height: L12 -> L188
+height: L12 -> entry
+loop: entry -> L202
+loop: entry -> L205
+loop: entry -> entry
+random: entry -> L168
+random: entry -> L169
+random: entry -> L184
+randomRGB: entry -> L169
+size: L168 -> L169
+width: L11 -> L169
+width: L11 -> L184
+width: L11 -> L188
+width: L11 -> entry
+window: entry -> L11
+window: entry -> L12

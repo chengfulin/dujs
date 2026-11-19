@@ -1,0 +1,14 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interPage",
+  "mainScope": "$DOMAIN",
+  "calls": [],
+  "loops": [
+    {
+      "loop": "n110",
+      "loopReturn": "n112",
+      "handlers": []
+    }
+  ],
+  "summaries": {}
+}

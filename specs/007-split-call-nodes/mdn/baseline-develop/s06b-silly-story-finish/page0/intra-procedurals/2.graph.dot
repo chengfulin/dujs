@@ -1,0 +1,20 @@
+digraph CFG {
+node [shape="box"]
+label = "function $DOMAIN.$PAGE_0.returnRandomStoryString"
+n80 [label="entry", shape="ellipse", style="filled", fillcolor="yellow"]
+n81 [label="26"]
+n82 [label="27"]
+n83 [label="28"]
+n84 [label="30"]
+n85 [label="32"]
+n86 [label="exit", shape="ellipse", style="filled", fillcolor="yellow"]
+n80 -> n81 []
+n81 -> n82 []
+n81 -> n86 [color="red", label="exception"]
+n82 -> n83 []
+n82 -> n86 [color="red", label="exception"]
+n83 -> n84 []
+n83 -> n86 [color="red", label="exception"]
+n84 -> n85 []
+n85 -> n86 []
+}

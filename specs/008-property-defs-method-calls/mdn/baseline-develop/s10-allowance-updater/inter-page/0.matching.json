@@ -1,0 +1,83 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interPage",
+  "mainScope": "$DOMAIN",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 26,
+      "callee": "$DOMAIN.$PAGE_0.updateAllowance",
+      "callNode": "n68",
+      "entry": "n69",
+      "exit": "n75",
+      "callReturn": "n76",
+      "exceptionalReturn": "n77",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 12,
+      "callee": "$DOMAIN.$PAGE_0.updateAllowance",
+      "callNode": "n82",
+      "entry": "n69",
+      "exit": "n75",
+      "callReturn": "n90",
+      "exceptionalReturn": "n92",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [
+    {
+      "loop": "n77",
+      "loopReturn": "n93",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0",
+          "entry": "n79",
+          "exit": "n92"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "para@n73",
+        "shoppingDone@n81",
+        "shoppingDone@n91"
+      ],
+      "mustKill": [
+        "para",
+        "shoppingDone"
+      ],
+      "upwardExposed": [
+        "shoppingDone",
+        "updateAllowance"
+      ],
+      "exceptional": [
+        "shoppingDone@n81",
+        "shoppingDone@n91"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.updateAllowance": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "para@n73"
+      ],
+      "mustKill": [
+        "para"
+      ],
+      "upwardExposed": [
+        "shoppingDone"
+      ],
+      "exceptional": []
+    }
+  }
+}

@@ -1,0 +1,25 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.chooseName
+## intra $DOMAIN.$PAGE_0
+chooseName: entry -> L23
+document: entry -> L11
+## intra $DOMAIN.$PAGE_0.chooseName
+choice: L19 -> L20
+randomNumber: L18 -> L19
+## inter[0] $DOMAIN.$PAGE_0 , $DOMAIN.$PAGE_0.chooseName
+Math: entry -> L18
+choice: L19 -> L20
+chooseName: entry -> L23
+document: entry -> L11
+names: L1 -> L18
+names: L1 -> L19
+randomNumber: L18 -> L19
+## intra-page (nodes 13)
+Math: entry -> L18
+choice: L19 -> L20
+chooseName: entry -> L23
+document: entry -> L11
+names: L1 -> L18
+names: L1 -> L19
+randomNumber: L18 -> L19

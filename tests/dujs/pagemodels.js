@@ -1,7 +1,6 @@
 /**
  * Test cases for PageModels
  * @lastmodifiedBy ChengFuLin
- * @lastmodifiedDate 2015-08-27
  */
 var should = require('should');
 var PageModels = require('../../lib/dujs/pagemodels'),

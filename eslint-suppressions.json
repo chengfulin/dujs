@@ -83,11 +83,6 @@
       "count": 1
     }
   },
-  "lib/dujs/inputreader.js": {
-    "strict": {
-      "count": 1
-    }
-  },
   "lib/dujs/jsparser.js": {
     "strict": {
       "count": 1
@@ -109,11 +104,6 @@
     }
   },
   "lib/dujs/rangefactory.js": {
-    "strict": {
-      "count": 1
-    }
-  },
-  "lib/dujs/reportgenerator.js": {
     "strict": {
       "count": 1
     }
@@ -152,9 +142,6 @@
     }
   },
   "lib/dujs/variableanalyzer.js": {
-    "no-unused-vars": {
-      "count": 1
-    },
     "strict": {
       "count": 1
     }
@@ -235,11 +222,6 @@
   "tests/dujs/scopetree.js": {
     "no-unused-vars": {
       "count": 1
-    }
-  },
-  "tests/esgraph/test.js": {
-    "no-unused-vars": {
-      "count": 2
     }
   }
 }

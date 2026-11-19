@@ -1,0 +1,310 @@
+<title>小型重構</title>
+<style>
+:root{
+  --bg:#FFFBF2; --card:#FFFFFF; --ink:#1F2937; --sub:#5B6470; --line:#E6E0D2; --th:#F4EFE3;
+  --blue:#2B59C3; --blue-soft:#DCE6FA;
+  --yellow:#F5C242; --yellow-soft:#FDF1CF; --yellow-ink:#8A5A12;
+  --coral:#E4573D; --coral-soft:#FBDDD6;
+  --green:#3A9D6B; --green-soft:#D8F0E3;
+  --grey:#AEB6C0; --paper:#FFFFFF;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+    --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+    --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; --paper:#FFFFFF; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171A20; --card:#21252E; --ink:#F1F3F6; --sub:#AEB6C2; --line:#343A45; --th:#2A303B;
+  --blue:#7FA3F0; --blue-soft:#243452; --yellow:#F7CF6B; --yellow-soft:#4A3C16; --yellow-ink:#F7CF6B;
+  --coral:#F08A74; --coral-soft:#4A2620; --green:#6FCB98; --green-soft:#1F3D2D; --grey:#6C7683; --paper:#FFFFFF; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6}
+main{max-width:900px;margin:0 auto;padding-block:32px 72px;padding-inline:20px}
+h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+h2{font-size:1.35rem;font-weight:900;margin:40px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--blue)}
+h3{font-size:1.05rem;font-weight:700;margin:22px 0 6px}
+.meta{color:var(--sub);font-size:.9rem}
+.note{background:var(--yellow-soft);border-left:4px solid var(--yellow);padding:8px 12px;margin:10px 0;font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px 18px;margin:16px 0;display:grid;gap:12px}
+.panel h3{font-size:clamp(1.3rem,4vw,1.8rem);font-weight:900;line-height:1.2;margin:0;text-wrap:balance}
+.num{display:inline-block;font-weight:900;font-size:.75rem;letter-spacing:.15em;color:var(--blue);background:var(--blue-soft);padding:2px 10px;border-radius:999px;width:max-content}
+.pic{overflow-x:auto}
+.pic svg{display:block;width:100%;min-width:640px;height:auto}
+.cap{font-size:1.05rem;font-weight:500;max-width:52ch;margin:0}
+.cap b{font-weight:900}
+.cap small{display:block;color:var(--sub);font-size:.82rem;font-weight:400;margin-top:2px}
+text{font-family:var(--sans)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto}
+ul{margin:6px 0;padding-left:20px}
+li small{color:var(--sub)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:.88rem}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--th)}
+.ok{color:var(--green);font-weight:700}.no{color:var(--coral);font-weight:700}
+code{font-size:.9em;background:var(--th);padding:1px 4px;border-radius:3px}
+.mermaid{background:var(--paper);color:#1F2937;border-radius:8px;padding:8px;min-width:640px;text-align:center}
+.lg{font-size:.82rem;color:var(--sub);margin:4px 0}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="person" viewBox="0 0 100 110"><circle cx="50" cy="28" r="20" fill="currentColor"/><path d="M12 108 a38 38 0 0 1 76 0 z" fill="currentColor"/></symbol>
+    <symbol id="doc" viewBox="0 0 100 120"><path d="M14 6 h50 l22 22 v86 h-72 z" fill="currentColor"/><path d="M64 6 v22 h22" fill="none" stroke="#FFFFFF" stroke-width="4"/><g stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"><path d="M28 50 h44 M28 68 h44 M28 86 h30"/></g></symbol>
+    <symbol id="sheet" viewBox="0 0 120 100"><rect x="4" y="4" width="112" height="92" rx="6" fill="currentColor"/><g stroke="#FFFFFF" stroke-width="3"><path d="M4 28 h112 M4 50 h112 M4 72 h112 M40 4 v92 M78 4 v92"/></g></symbol>
+    <symbol id="warn" viewBox="0 0 100 100"><path d="M50 8 L96 90 H4 Z" fill="currentColor"/><path d="M50 36 v26" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="76" r="5" fill="#FFFFFF"/></symbol>
+    <symbol id="check" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="currentColor"/><path d="M28 52 l15 15 l30 -34" fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--grey)"/></marker>
+  </defs>
+</svg>
+
+<main>
+<h1>三項小型重構</h1>
+<div class="meta">feature：002-small-refactors · analyze · 第 2 輪 · 2026-11-16 · 目標分支 develop</div>
+<div class="note">本頁為理解參照；spec.md 為唯一權威，兩者不一致時以 spec 為準</div>
+
+<h2>看懂它</h2>
+
+<section class="panel">
+  <span class="num">01 · 背景</span>
+  <h3>維護者手上有個分析工具</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="維護者維護一個分析 JavaScript 程式的工具">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">維護者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">維護</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">dujs 分析工具</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">讀進一段 JavaScript 程式</text><text x="280" y="134">標出每個變數在哪被用到</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">工具：追蹤變數的來龍去脈</text>
+    <use href="#doc" x="670" y="50" width="100" height="120" color="var(--blue)"/>
+    <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">分析結果</text>
+  </svg></div>
+  <p class="cap">維護者要持續修正、擴充<b>分析工具</b>。<small>來源：User Scenarios &amp; Testing 開頭</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">02 · 要解決的問題</span>
+  <h3>程式擠在一起，要查錯很麻煩</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="一支大檔案把三件事混在一起，同一種標籤寫了三處">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">維護者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">想追查</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--coral)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">一支 687 行的大檔案</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">三件事全擠在一起</text><text x="280" y="134">同一種標籤寫了 3 處</text><text x="280" y="166">讀什麼與怎麼讀混在一起</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">查一個錯得整支重跑</text>
+    <use href="#warn" x="665" y="55" width="110" height="110" color="var(--coral)"/>
+    <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">難查、易改壞</text>
+  </svg></div>
+  <p class="cap">現況是<b>難以單獨檢查</b>，下一個功能又要動這裡。<small>來源：User Story 1、2、3 的 Why this priority</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">03 · 目的</span>
+  <h3>把事情拆開，各自可檢查</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="三項重構：拆成三份、標籤只定義一次、讀取規則獨立">
+    <use href="#person" x="50" y="50" width="110" height="121" color="var(--blue)"/>
+    <text x="105" y="210" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">維護者</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">希望</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--coral)">三項重構</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="98">① 大檔案拆成三份</text><text x="280" y="130">② 拆分資訊收成一處</text><text x="280" y="162">③ 讀取規則獨立出來</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">每件事可單獨檢查、測試</text>
+    <use href="#sheet" x="665" y="60" width="120" height="100" color="var(--blue)"/>
+    <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">標籤只定義一次</text>
+  </svg></div>
+  <p class="cap">只整理結構、<b>不新增也不修正任何功能</b>。<small>來源：範圍決策 D1；Functional Requirements FR-001、004、007</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">04 · 預期結果</span>
+  <h3>輸出一個字都不能變</h3>
+  <div class="pic"><svg viewBox="0 0 860 260" role="img" aria-label="重構前後的輸出逐位元組相同，測試全過">
+    <use href="#sheet" x="50" y="55" width="120" height="100" color="var(--blue)"/>
+    <text x="105" y="195" text-anchor="middle" font-size="20" font-weight="900" fill="var(--ink)">重構前輸出</text>
+    <path d="M180 110 h60" stroke="var(--grey)" stroke-width="6" marker-end="url(#arr)"/>
+    <text x="210" y="95" text-anchor="middle" font-size="15" fill="var(--sub)">比對</text>
+    <rect x="260" y="30" width="320" height="170" rx="12" fill="var(--green-soft)" stroke="var(--green)" stroke-width="3"/>
+    <text x="280" y="62" font-size="18" font-weight="900" fill="var(--green)">兩邊完全一樣</text>
+    <g font-size="17" fill="var(--ink)"><text x="280" y="102">輸出檔：0 個差異</text><text x="280" y="134">既有 640+ 個測試全過</text><text x="280" y="166">新增的小測試全過</text></g>
+    <text x="420" y="232" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">連節點編號都不能動</text>
+    <use href="#check" x="670" y="55" width="110" height="110" color="var(--green)"/>
+    <text x="725" y="205" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">分析結果不變</text>
+  </svg></div>
+  <p class="cap">成功＝<b>0 個差異</b>且測試與 lint 全過。<small>來源：Success Criteria SC-001、002（≥ 640）、006</small></p>
+</section>
+
+<section class="panel">
+  <span class="num">流程</span>
+  <h3>三步重構，每步都比對輸出</h3>
+  <div class="pic"><svg viewBox="0 0 860 350" role="img" aria-label="依 US1、US2、US3 順序重構，逐步比對 golden，有差異就當成行為改變">
+    <g font-size="16" font-weight="700" fill="var(--ink)" text-anchor="middle">
+      <rect x="20" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="94" y="84">拆成三份</text><text x="94" y="110" font-size="14" font-weight="400" fill="var(--sub)">US1 · P1</text>
+      <rect x="190" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="264" y="84">收攏欄位</text><text x="264" y="110" font-size="14" font-weight="400" fill="var(--sub)">US2 · P2</text><text x="264" y="132" font-size="14" font-weight="400" fill="var(--sub)">標籤統一</text>
+      <rect x="360" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="434" y="84">抽出讀取規則</text><text x="434" y="110" font-size="14" font-weight="400" fill="var(--sub)">US3 · P3</text>
+      <rect x="530" y="50" width="148" height="100" rx="10" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="604" y="84">比對輸出</text><text x="604" y="110" font-size="14" font-weight="400" fill="var(--sub)">每步結束都做</text>
+      <rect x="700" y="50" width="148" height="100" rx="10" fill="var(--green-soft)" stroke="var(--green)" stroke-width="2.5"/><text x="774" y="84" fill="var(--green)">完成</text><text x="774" y="110" font-size="14" font-weight="400" fill="var(--sub)">測試 lint 全過</text>
+    </g>
+    <g stroke="var(--grey)" stroke-width="5" marker-end="url(#arr)"><path d="M168 100 h14"/><path d="M338 100 h14"/><path d="M508 100 h14"/><path d="M678 100 h14"/></g>
+    <g stroke="var(--coral)" stroke-width="4" stroke-dasharray="7 5" marker-end="url(#arr)"><path d="M94 150 v50"/><path d="M604 150 v50"/></g>
+    <rect x="20" y="210" width="230" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="135" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">節點編號順移</text>
+    <text x="135" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">保持建立節點的順序</text>
+    <text x="135" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">拆模組時最易發生</text>
+    <rect x="480" y="210" width="250" height="90" rx="10" fill="var(--coral-soft)"/>
+    <text x="605" y="240" text-anchor="middle" font-size="16" font-weight="900" fill="var(--coral)">輸出有任何差異</text>
+    <text x="605" y="264" text-anchor="middle" font-size="14" fill="var(--ink)">視為行為改變，回頭修</text>
+    <text x="605" y="286" text-anchor="middle" font-size="13" fill="var(--sub)">不得更新 golden 放行</text>
+    <text x="430" y="336" text-anchor="middle" font-size="14" fill="var(--sub)">每個 story 一個 commit，PR 目標分支 develop</text>
+  </svg></div>
+  <p class="cap">先拆再改欄位、最後抽函式，<b>golden 差異一律不放行</b>。<small>來源：Assumptions；Edge Cases 第 1 項</small></p>
+  <ul>
+    <li>對外呼叫 <code>split(entryNode, { expressionThrows })</code> 不變，呼叫端免改。<small>（FR-002）</small></li>
+    <li>known-issues §13–§17 的既有錯誤行為原樣保留，不在本輪修。<small>（Edge Cases）</small></li>
+  </ul>
+</section>
+
+<section class="panel">
+  <span class="num">架構</span>
+  <h3>一個大檔拆三份，標籤與讀取規則各立一處</h3>
+  <div class="pic"><div class="mermaid">
+flowchart LR
+  IDX["index.js<br/>LGPL，不修改"]:::keep
+  BS["branchsplitter.js<br/>建節點、接邊"]:::mod
+  AR["astrewriter.js<br/>複製改寫 AST"]:::new
+  DF["decisionfinder.js<br/>只讀 AST"]:::new
+  FN["flownode.js<br/>split、labelPath"]:::mod
+  BL["branchlabel.js<br/>標籤格式唯一處"]:::new
+  RD["cfgbuilder、cfggraphconverter<br/>modelbuilder"]:::mod
+  TH["tests/helpers/analyze.js"]:::mod
+  DU["defuseanalyzer.js<br/>findUSESet 只走訪"]:::mod
+  UE["usedexpressions.js<br/>usedExpressionsOf"]:::new
+  IDX -->|split 呼叫不變| BS
+  BS --> AR --> DF
+  BS --> FN
+  BS --> BL
+  RD --> BL
+  TH --> BL
+  DU --> UE
+  UE -.->|讀 split| FN
+  RD -.->|讀 split、labelPath| FN
+  classDef new fill:#D8F0E3,stroke:#3A9D6B,color:#1F2937
+  classDef mod fill:#FDF1CF,stroke:#F5C242,color:#1F2937
+  classDef keep fill:#E5E7EB,stroke:#9CA3AF,color:#1F2937
+  </div></div>
+  <p class="lg">綠＝新增模組　黃＝修改　灰＝不變；實線＝require，虛線＝讀取欄位。</p>
+  <ul>
+    <li>依賴單向 <code>branchsplitter → astrewriter → decisionfinder</code>，後兩者不 require <code>flownode</code>。<small>（FR-001；research R1）</small></li>
+    <li>標籤路徑一律讀 <code>labelPath</code>（拆分節點建立時設 <code>labelPath = split.path</code>）；字串只在 <code>branchlabel.js</code> 組，含 <code>branchsplitter</code> 的路徑延伸。<small>（D5、FR-004、FR-006、SC-004；R5）</small></li>
+    <li><code>findUSESet</code> 只走訪 <code>usedExpressionsOf</code> 給的清單；<code>index.js</code> 不動故無 LGPL 紀錄；esgraph 三個新模組補進 <code>THIRD_PARTY_NOTICES</code> §1，<code>usedexpressions.js</code> 不列。<small>（FR-007、FR-011；R2、R6）</small></li>
+  </ul>
+</section>
+
+<h2>本輪變更（analyze · 第 2 輪處置結果）</h2>
+
+<p>前輪發現 <b>1 HIGH（H1）</b>與 MEDIUM／LOW 已依使用者答案全數套用到 spec／plan／research／data-model／contracts／quickstart／tasks；附件未提供新增發現。</p>
+<div class="box"><table>
+<tr><th>ID</th><th>嚴重度</th><th>位置</th><th>處置結果</th></tr>
+<tr><td>H1</td><td class="no">HIGH</td><td>D5；US2 情境 2／3；FR-004、006、009；Key Entities</td><td>標籤路徑一律只取 <code>labelPath</code>；拆分節點建立時 <code>labelPath = split.path</code>（不變量 <code>split !== null ⇒ labelPath === split.path</code>）。callSite 非決策節點時改型為呼叫節點並保留 split 與 labelPath；新建呼叫節點與 call return 節點 split 為 null、labelPath 取 callSite 的。T016 分 a1／a2，新增 T029 不變量性質測試</td></tr>
+<tr><td>M-1</td><td>MEDIUM</td><td>FR-011；plan；T013</td><td>esgraph 三個新模組補進 <code>THIRD_PARTY_NOTICES</code> §1 那一句（<code>branchlabel.js</code> 於 US2 加）；<code>usedexpressions.js</code> 不列；舊 T036 刪除</td></tr>
+<tr><td>M-2／T1</td><td>MEDIUM／LOW</td><td>SC-002</td><td>改「≥ 640」；上半部 627 同步改 640</td></tr>
+<tr><td>M-3、C1</td><td>MEDIUM</td><td>SC-004；T032</td><td>排除 <code>L行:C欄</code> 與 <code>type (L…)</code> 位置標籤；grep 加 <code>\+ *'[TF]'</code>，納入 <code>branchsplitter.js</code> 的路徑延伸</td></tr>
+<tr><td>I1</td><td>MEDIUM</td><td>plan 驗證；tasks</td><td>SC-004 檢查移到 US2 末（T032）、SC-005 移到 US3 末（T039）；Polish T041 重跑</td></tr>
+<tr><td>I-1</td><td>INFO</td><td>FR-009 例外句</td><td>補「欄位被取代者（如 flownodetest 的舊欄位預設值斷言）改測新欄位」</td></tr>
+<tr><td colspan="4">LOW 已套用：C2（SC-005 grep 擴充並限定 findUSESet 範圍）、F1（T011 與 T012 對調、T012 去 [P]、T015 加 grep <code>_testonly_</code>）、F2（T042 釘 9254c18）、D1（原 T039 併入 T043）、T2（T026 補行號）</td></tr>
+</table></div>
+
+<h2>前輪已定（plan，沿用並依本輪更新）</h2>
+
+<h3>技術選型與偏離</h3>
+<div class="box"><table>
+<tr><th>項目</th><th>選擇</th><th>偏離 tech-standards？</th></tr>
+<tr><td>語言與執行環境</td><td>JavaScript（CommonJS）、Node.js ≥ 24，沿用既有專案</td><td>無偏離</td></tr>
+<tr><td>測試與品質</td><td>mocha＋should、fast-check、golden 回歸、eslint（抑制項維持 119 筆）</td><td>無偏離</td></tr>
+<tr><td>新增依賴</td><td>無</td><td>無偏離</td></tr>
+<tr><td>tech-standards 本身</td><td>針對服務後端／前端；本 CLI／函式庫內部重構屬「不適用」</td><td>不適用，非偏離，不需 §CP-6 例外</td></tr>
+</table></div>
+
+<h3>plan 自行決定的事（spec 授權 plan 定，不改外部行為）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>決定</th><th>理由與替代案</th><th>出處</th></tr>
+<tr><td>1</td><td><code>usedExpressionsOf</code> 獨立成 <code>lib/dujs/usedexpressions.js</code></td><td>可直接以手建節點單測、不穿過 singleton；留在 <code>defuseanalyzer.js</code> 則檔案仍約 700 行</td><td>R6；FR-008</td></tr>
+<tr><td>2</td><td>新增 <code>lib/esgraph/branchlabel.js</code>（pathOf、pathSuffix、lineLabel、extendPath、branchMark）</td><td>spec 要求「流程節點模組旁」的 helper；做成 FlowNode 方法會讓 1057 行的檔案更大</td><td>R5；FR-006</td></tr>
+<tr><td>3</td><td><code>package.json</code>：<code>test</code> 改納入 <code>tests/esgraph/*.js</code>，<code>doc</code> 加 <code>branchlabel.js</code></td><td>目前該目錄頂層恰為三個既有檔，集合不變再加新檔；否則新測試不會被執行</td><td>R7；FR-003</td></tr>
+<tr><td>4</td><td>helper 歸屬：<code>PLACEHOLDER_TYPE</code>、<code>isInert</code>、<code>preEvaluatedOf</code> 歸 decisionfinder；<code>shallowCopy</code>、<code>branchesOf</code>、<code>staticChoice</code> 歸 astrewriter</td><td>各依「誰需要它」；預估 ≈265／195／280 行，皆 &lt; 350（SC-003 可行）</td><td>R1；FR-003</td></tr>
+<tr><td>5</td><td><code>split</code> 為凍結物件 <code>{path, origin, preEvaluated}</code>；<code>labelPath</code> 為標籤路徑唯一來源，拆分節點建立時設為 <code>split.path</code>（不變量 <code>split !== null ⇒ labelPath === split.path</code>）</td><td>標籤取法只有一個來源；改型為呼叫節點者例外保留 split（D5）；不變量由性質測試 T029 守住</td><td>R4；FR-004</td></tr>
+</table></div>
+
+<h3>US3 重點：單一識別字的讀法改由 usedExpressionsOf 決定</h3>
+<p>走訪端不再知道根節點是什麼，只看每項的 <code>read</code> 三值（<code>c-use</code> 強制、<code>p-use</code> 起始、<code>walk</code> 預設）。依 spec 的 US3 節點種類表，預期值取自重構前行為（research R6 逐項對照）：</p>
+<div class="box"><table>
+<tr><th>節點種類</th><th>要讀的運算式</th><th>read</th></tr>
+<tr><td>有已求值運算式的決策節點</td><td>各已求值運算式（在 astNode 前）</td><td><code>c-use</code>（強制）</td></tr>
+<tr><td>switch case，有 test 且 discriminant 未拆分</td><td>switch 的 discriminant</td><td><code>p-use</code></td></tr>
+<tr><td>switch case，default 或 discriminant 已拆分</td><td>無（test 一律不讀）</td><td>無項目</td></tr>
+<tr><td>for-in/for-of loop</td><td>左側成員物件、左側解構預設值與計算鍵；右側僅未拆分時</td><td><code>walk</code></td></tr>
+<tr><td>astNode 為單一識別字</td><td>該識別字</td><td>有 true/false 邊 <code>p-use</code>；拆分葉或 with 物件 <code>c-use</code>；其他無項目</td></tr>
+<tr><td>其他</td><td>astNode</td><td><code>walk</code></td></tr>
+</table></div>
+<div class="note">易錯點：<code>for (k in x)</code> 的 loop 節點有 true/false 邊，但 <code>x</code> 重構前是 c-use。若沿用「根為識別字就 p-use」會誤判，所以此規則必須只在 <code>usedExpressionsOf</code> 決定、走訪端移除（R6）。</div>
+
+<h2>工程師要決定的事</h2>
+
+<h3>驗收條件盤點</h3>
+<div class="box"><table>
+<tr><th>Story</th><th>驗收情境（Acceptance Scenarios）</th><th>可驗證？</th></tr>
+<tr><td rowspan="4">US1</td><td>1 直接對 AST 呼叫 decision finder，得第一個條件與已求值運算式</td><td class="ok">可驗證（plan 已定：<code>findFirstDecision</code> 回 <code>{split, condition, ancestors, entries}</code>，<code>preEvaluatedOf</code> 取已求值運算式）</td></tr>
+<tr><td>2 AST rewriter 回傳副本、不改原 AST</td><td class="ok">可驗證</td></tr>
+<tr><td>3 全測試與 golden 與重構前相同</td><td class="ok">可驗證</td></tr>
+<tr><td>4 呼叫端不需修改</td><td class="ok">可驗證</td></tr>
+<tr><td rowspan="5">US2</td><td>1 未拆分節點的拆分資訊為 null</td><td class="ok">可驗證</td></tr>
+<tr><td>2 決策節點與葉節點的 split 內容（路徑、原敘述、已求值運算式），且 <code>labelPath</code> 等於路徑</td><td class="ok">可驗證</td></tr>
+<tr><td>3 呼叫節點與 call return 節點（輸出與重構前相同）：(a) callSite 非決策節點而被改型者保留 split 與 <code>labelPath</code>（兩者一致）；(b) 新建的呼叫節點與 call return 節點 split 為 null、<code>labelPath</code> 取 callSite 的</td><td class="ok">可驗證（H1 已修；T016 a1／a2 各一例）</td></tr>
+<tr><td>4 標籤字串只有一處定義</td><td class="ok">可驗證（SC-004 範圍：lib 與 tests/helpers，含路徑延伸，排除 <code>L行:C欄</code> 位置標籤）</td></tr>
+<tr><td>5 with 物件節點、loop／case 原節點旗標行為不變</td><td class="ok">可驗證</td></tr>
+<tr><td rowspan="6">US3</td><td>1 決策節點：已求值運算式在前、c-use，條件在後依走訪規則</td><td class="ok">可驗證</td></tr>
+<tr><td>2 單一識別字：拆分葉、with 物件 c-use；<code>if (a)</code> p-use；<code>a;</code> 不讀</td><td class="ok">可驗證</td></tr>
+<tr><td>3 switch：<code>case y</code> 讀 x（p-use）、不讀 y；default 不讀；discriminant 已拆分時皆不讀</td><td class="ok">可驗證</td></tr>
+<tr><td>4 for-in/for-of：左側物件／預設值／計算鍵；右側僅未拆分時</td><td class="ok">可驗證</td></tr>
+<tr><td>5 一般節點：得到 astNode</td><td class="ok">可驗證</td></tr>
+<tr><td>6 每個節點的 c/p-use 集合與重構前相同</td><td class="ok">可驗證</td></tr>
+</table></div>
+
+<h3>tech-standards 缺漏或變更</h3>
+<p>無缺漏、無偏離。規範針對服務後端／前端；本重構為 CLI／函式庫內部，屬「不適用」。</p>
+
+<h3>CRITICAL／HIGH 衝突與影響</h3>
+<p>無未解項。前輪 H1（呼叫節點 split 與現況不符）已依使用者決定修正於 spec D5／US2 情境 3／FR-004，影響的 story 為 US2，已回到「可驗證」。</p>
+
+<h3>本輪判斷點（0 個新問題，僅末題確認）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>方案（建議標示）</th><th>影響</th><th>出處</th></tr>
+<tr><td>末題</td><td>修正方案：上列已套用的處置結果是否同意？</td><td>同意套用（建議）／調整</td><td>只動 spec 字句、tasks 順序與 grep 指令；不擴大交付範圍</td><td>見「本輪變更」表</td></tr>
+</table></div>
+<h3>已決事項（不再詢問）</h3>
+<div class="box"><table>
+<tr><th>#</th><th>問題</th><th>決定</th><th>出處</th></tr>
+<tr><td>A1</td><td>（analyze 第 1 輪）呼叫節點要不要帶 <code>split</code>，標籤路徑怎麼取</td><td>使用者自由文字：標籤路徑一律只取 <code>labelPath</code>，有 split 者 <code>split.path</code> 與 <code>labelPath</code> 一致；已套用</td><td>Clarifications analyze 閘門；D5</td></tr>
+<tr><td>A2</td><td>（analyze 第 1 輪）新模組的授權紀錄放哪</td><td>方案 A：esgraph 三個新模組補進 §1 那一句；<code>usedexpressions.js</code> 不列</td><td>FR-011</td></tr>
+<tr><td>A3</td><td>（analyze 第 1 輪）其餘 MEDIUM／LOW</td><td>全部套用</td><td>本輪變更表</td></tr>
+<tr><td>S1</td><td>（spec 閘門）呼叫節點與 call return 節點的 split 處理</td><td>採 A（不帶 split、標籤 helper 吃路徑參數），後經 A1 細化：改型者保留</td><td>Assumptions；FR-004、FR-006</td></tr>
+<tr><td>S2</td><td>（spec 閘門）FR-008 的 for-in/for-of 與一般節點讀法</td><td>補兩條驗收情境，預期值取自現行行為</td><td>US3 情境 4、5；FR-008</td></tr>
+</table></div>
+
+<h3>次要疑點</h3>
+<div class="box"><table>
+<tr><th>疑點</th><th>出處</th></tr>
+<tr><td>FR-003 的「D12 已求值／未求值判定」引用 001 spec 的決策，本 spec 內僅以例子說明；REF 為外部連結，審閱者無法直接核對</td><td>FR-003；規格來源</td></tr>
+<tr><td>三個模組的行數（≈265／195／280）是依現行函式行數推估，實作後以 <code>wc -l</code> 量測才算確認；上限 350 目前有餘裕</td><td>plan 量測與 SC-003 可行性；SC-003</td></tr>
+<tr><td><code>test</code> 腳本改用 <code>tests/esgraph/*.js</code> 後，日後放進該目錄的檔案會自動納入 <code>npm test</code>（範圍比逐檔列出寬）</td><td>research R7</td></tr>
+<tr><td>已由 plan 收斂：SC-003 可行性（量測）；for-in/for-of 根層讀法（R6 定為 <code>walk</code>，<code>for (k in x)</code> 的 <code>x</code> 為 c-use）</td><td>R1、R6</td></tr>
+</table></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.15.0/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>

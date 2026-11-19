@@ -1,0 +1,45 @@
+{
+  "feature": "002-small-refactors",
+  "steps": {
+    "specify": {
+      "done": true
+    },
+    "clarify": {
+      "done": true
+    },
+    "plan": {
+      "done": true
+    },
+    "tasks": {
+      "done": true
+    },
+    "analyze": {
+      "done": true,
+      "findings": 16,
+      "remediated": 16
+    },
+    "implement": {
+      "done": true,
+      "stories": {
+        "US1": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US2": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        },
+        "US3": {
+          "validated": true,
+          "reviewed": true,
+          "committed": true
+        }
+      }
+    }
+  },
+  "brief": {
+    "artifact_url": "https://claude.ai/artifact/Lg34xBYcEjr3HtK9uoA8po"
+  }
+}

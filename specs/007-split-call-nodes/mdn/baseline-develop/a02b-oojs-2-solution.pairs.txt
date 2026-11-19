@@ -1,0 +1,31 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+$DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+## intra $DOMAIN.$PAGE_0
+Shape: L1 -> L20
+Square: L20 -> L32
+square: L32 -> L34
+square: L32 -> L35
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_0
+name: entry -> L7
+sideLength: entry -> L9
+sides: entry -> L8
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_1
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_2
+sideLength: entry -> L22
+## intra $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+## inter[0] $DOMAIN.$PAGE_0 , $DOMAIN.$PAGE_0.$ANONYMOUS_FUN_3
+Shape: L1 -> L20
+Square: L20 -> L32
+console: entry -> L26
+square: L32 -> L34
+square: L32 -> L35
+## intra-page (nodes 13)
+Shape: L1 -> L20
+Square: L20 -> L32
+console: entry -> L26
+square: L32 -> L34
+square: L32 -> L35

@@ -1,0 +1,24 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="2">Def-Use pairs</td></tr><tr><td>window</td><td></td><td></td></tr>
+<tr><td>document</td><td></td><td></td></tr>
+<tr><td>String</td><td></td><td></td></tr>
+<tr><td>Number</td><td></td><td></td></tr>
+<tr><td>Boolean</td><td></td><td></td></tr>
+<tr><td>Array</td><td></td><td></td></tr>
+<tr><td>Map</td><td></td><td></td></tr>
+<tr><td>WeakMap</td><td></td><td></td></tr>
+<tr><td>Set</td><td></td><td></td></tr>
+<tr><td>Date</td><td></td><td></td></tr>
+<tr><td>console</td><td>(entry_a,27)</td><td></td></tr>
+<tr><td>Shape</td><td>(2,21)</td><td></td></tr>
+<tr><td>Shape</td><td></td><td></td></tr>
+<tr><td>Square</td><td>(21,call (33))</td><td></td></tr>
+<tr><td>Square</td><td></td><td></td></tr>
+<tr><td>sideLength</td><td>(entry_b,23)</td><td></td></tr>
+<tr><td>square</td><td>(call (33),35)</td><td>(call (33),call (36))</td></tr>
+</TABLE>
+>];
+}

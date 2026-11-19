@@ -1,0 +1,55 @@
+## scopes
+$DOMAIN.$PAGE_0
+$DOMAIN.$PAGE_0.randomValueFromArray
+$DOMAIN.$PAGE_0.returnRandomStoryString
+$DOMAIN.$PAGE_0.generateStory
+## intra $DOMAIN.$PAGE_0
+document: entry -> L3
+document: entry -> L4
+document: entry -> L5
+generateBtn: L4 -> L36
+generateStory: entry -> L36
+## intra $DOMAIN.$PAGE_0.randomValueFromArray
+array: entry -> L8
+array: entry -> L9
+random: L8 -> L9
+## intra $DOMAIN.$PAGE_0.returnRandomStoryString
+randomCharacter: L25 -> L29
+randomEvent: L27 -> L29
+randomPlace: L26 -> L29
+storyText: L29 -> L31
+## intra $DOMAIN.$PAGE_0.generateStory
+name: L42 -> L43
+newStory: L39 -> L43
+newStory: L39 -> L49
+newStory: L39 -> L53
+newStory: L43 -> L49
+newStory: L43 -> L53
+newStory: L49 -> L50
+newStory: L50 -> L53
+temperature: L48 -> L50
+weight: L47 -> L49
+## intra-page (nodes 24)
+Math: entry -> L47
+Math: entry -> L48
+customName: L3 -> L41>L42:T
+customName: L3 -> L41>L46:F
+customName: L3 -> L42
+document: entry -> L3
+document: entry -> L4
+document: entry -> L46>L47:T
+document: entry -> L46>L53:F
+document: entry -> L5
+generateBtn: L4 -> L36
+generateStory: entry -> L36
+name: L42 -> L43
+newStory: L39 -> L43
+newStory: L39 -> L49
+newStory: L39 -> L53
+newStory: L43 -> L49
+newStory: L43 -> L53
+newStory: L49 -> L50
+newStory: L50 -> L53
+returnRandomStoryString: entry -> L39
+temperature: L48 -> L50
+weight: L47 -> L49

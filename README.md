@@ -1,12 +1,20 @@
-#dujs
+# dujs
 A Dataflow analysis tool for JavaScript. (working project)
-##Goal
+
+## Goal
 Propose a tool to build a JavaScript Dataflow test model automatically, which includes four types of dataflow graph, intra-procedural, inter-procedural, intra-page and inter-page.<br>
 Then the tool can compute all valid Def-Use pairs and dataflow anomalies.
 
+## Background
+dujs started from the author's thesis "JavaScript網頁應用程式資料流測試模型之研究"
+(A Study on Dataflow Testing Model of JavaScript Web Applications); the thesis
+is at https://hdl.handle.net/11296/u8f5n6.
+
 ## Requirements
 - Node.js 24 or later (see `.nvmrc`)
-- [Graphviz](http://www.graphviz.org) (optional): if the `dot` executable is on your `PATH`, the `.dot` outputs are also rendered to PNG
+- A Markdown viewer with Mermaid support (GitHub, VS Code, ...) to view the
+  outputs; `out-*/` is excluded by `.gitignore` and never appears on GitHub,
+  so open the outputs in a local viewer
 
 ## Dependency
 [espree](https://github.com/eslint/js/tree/main/packages/espree): JavaScript parser producing ESTree AST<br>
@@ -22,32 +30,48 @@ npm run coverage   # run unit tests with coverage report
 npm run doc        # generate API docs into doc/
 ```
 
-`tests/golden/` runs the CLI on two ES5 sample pages and compares all generated
-`.dot` files (four models) with `tests/golden/expected/`. After an intended
-change to the analysis, regenerate them with `UPDATE_GOLDEN=1 npm test` and
-review the diff.
-
-Existing lint violations are recorded in `eslint-suppressions.json`
-(ESLint bulk suppressions), so only new violations fail `npm run lint`. After
-fixing some of them, run `npx eslint . --prune-suppressions`.
-
 ## Usage
 ```
-node bin/dujs.js -js [src_file_page1_1] [src_file_page1_2] ... [src_file_page1_i] -js [src_file_page2_1] [src_file_page2_2] ... [src_file_page2_i]
+Usage: dujs -js <file>... [-js <file>...]...
+       dujs -h | --help
 ```
 
-Result files will located under the <strong>out-[year]-[month]-[day]-[hour]-[minute]-[second]</strong> directory
+Example: `node bin/dujs.js -js lib.js app.js -js report.js` (two pages). See
+[docs/usage.md](docs/usage.md) for the command line, the output directory and
+the exit status.
 
-##Limits
-<ul>
-    <li>Anonymous function call</li>
-    <li>Closure</li>
-    <li>HTML DOM object</li>
-    <li>ES2015+ syntax (let/const, arrow functions, classes, modules, ...) can be parsed but is not yet modeled correctly</li>
-</ul>
+## Output
+Each run writes a new directory `out-…` with, for every model, its `.dot`
+files and a Markdown file `<n>.md` with the graphs drawn as Mermaid diagrams;
+the `README.md` of the directory is the overview, with links to every `<n>.md`.
+See [docs/output-format.md](docs/output-format.md) for the details.
 
-##Demo
+Output changes: since feature `009-mermaid-markdown-output`, dujs no longer
+writes `report.html` or `.png` files and does not need Graphviz; open the
+overview `README.md` and the model files `<n>.md` instead.
+
+## Documentation
+- [docs/usage.md](docs/usage.md): command line, output directory and exit
+  status
+- [docs/output-format.md](docs/output-format.md): output files, call and
+  return matching, node labels and call sites
+- [docs/limitations.md](docs/limitations.md): supported syntax and limits
+- [docs/development.md](docs/development.md): golden tests and lint
+- [docs/known-issues.md](docs/known-issues.md): confirmed issues that are not
+  fixed yet, each with a reproducing input; the limits it refers to as "the
+  README limits" are in [docs/limitations.md](docs/limitations.md#limits)
+
+## Demo
 [Single page sample](http://chengfulin.github.io/dujs/)
+
+## SDD 導入宣告
+
+| 項目 | 值 |
+|------|-----|
+| 目前導入階段 | 第 1 階段（對齊基礎）|
+| 服務風險分級 | 未分級（階段一）|
+| 應用類型 | 工具服務（函式庫＋CLI）|
+| 憲章基線 | chengfulin/sdd-baseline v5.6.0@4a4b2be |
 
 ## License
 dujs is released under the [MIT License](LICENSE), except for the files derived

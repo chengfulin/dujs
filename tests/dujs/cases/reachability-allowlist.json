@@ -1,0 +1,236 @@
+[
+	{
+		"program": "probes008/p21-finally.js",
+		"model": "inter-procedural[1]",
+		"pair": "console: entry -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P21（呼叫端直接：try 內無返回呼叫 f()，finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p21-finally.js",
+		"model": "inter-procedural[1]",
+		"pair": "x: L1 -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P21（呼叫端直接：try 內無返回呼叫 f()，finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p21-finally.js",
+		"model": "intra-page[0]",
+		"pair": "console: entry -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P21（呼叫端直接：try 內無返回呼叫 f()，finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p21-finally.js",
+		"model": "intra-page[0]",
+		"pair": "x: L1 -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P21（呼叫端直接：try 內無返回呼叫 f()，finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p21-finally.js",
+		"model": "inter-page",
+		"pair": "console: entry -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P21（呼叫端直接：try 內無返回呼叫 f()，finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p21-finally.js",
+		"model": "inter-page",
+		"pair": "x: L1 -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P21（呼叫端直接：try 內無返回呼叫 f()，finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p23-finally-summary.js",
+		"model": "inter-procedural[2]",
+		"pair": "console: entry -> L14",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0.g",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P23（經摘要外溢：g 的 try 內無返回呼叫 f()，finally 只由例外進入，g 的 normalReturn 為真而外溢到呼叫端；D003 不修）"
+	},
+	{
+		"program": "probes008/p23-finally-summary.js",
+		"model": "inter-procedural[2]",
+		"pair": "x: L11 -> L14",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0.g",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P23（經摘要外溢：g 的 try 內無返回呼叫 f()，finally 只由例外進入，g 的 normalReturn 為真而外溢到呼叫端；D003 不修）"
+	},
+	{
+		"program": "probes008/p23-finally-summary.js",
+		"model": "intra-page[0]",
+		"pair": "console: entry -> L14",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0.g",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P23（經摘要外溢：g 的 try 內無返回呼叫 f()，finally 只由例外進入，g 的 normalReturn 為真而外溢到呼叫端；D003 不修）"
+	},
+	{
+		"program": "probes008/p23-finally-summary.js",
+		"model": "intra-page[0]",
+		"pair": "x: L11 -> L14",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0.g",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P23（經摘要外溢：g 的 try 內無返回呼叫 f()，finally 只由例外進入，g 的 normalReturn 為真而外溢到呼叫端；D003 不修）"
+	},
+	{
+		"program": "probes008/p23-finally-summary.js",
+		"model": "inter-page",
+		"pair": "console: entry -> L14",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0.g",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P23（經摘要外溢：g 的 try 內無返回呼叫 f()，finally 只由例外進入，g 的 normalReturn 為真而外溢到呼叫端；D003 不修）"
+	},
+	{
+		"program": "probes008/p23-finally-summary.js",
+		"model": "inter-page",
+		"pair": "x: L11 -> L14",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0.g",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P23（經摘要外溢：g 的 try 內無返回呼叫 f()，finally 只由例外進入，g 的 normalReturn 為真而外溢到呼叫端；D003 不修）"
+	},
+	{
+		"program": "probes008/p24-finally-throw.js",
+		"model": "inter-procedural[0]",
+		"pair": "console: entry -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P24（被呼叫端單純 throw：try 內 t() 只會拋錯（非遞迴），finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p24-finally-throw.js",
+		"model": "inter-procedural[0]",
+		"pair": "x: L1 -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P24（被呼叫端單純 throw：try 內 t() 只會拋錯（非遞迴），finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p24-finally-throw.js",
+		"model": "intra-page[0]",
+		"pair": "console: entry -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P24（被呼叫端單純 throw：try 內 t() 只會拋錯（非遞迴），finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p24-finally-throw.js",
+		"model": "intra-page[0]",
+		"pair": "x: L1 -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P24（被呼叫端單純 throw：try 內 t() 只會拋錯（非遞迴），finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p24-finally-throw.js",
+		"model": "inter-page",
+		"pair": "console: entry -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P24（被呼叫端單純 throw：try 內 t() 只會拋錯（非遞迴），finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	},
+	{
+		"program": "probes008/p24-finally-throw.js",
+		"model": "inter-page",
+		"pair": "x: L1 -> L11",
+		"witness": [
+			{
+				"scope": "$DOMAIN.$PAGE_0",
+				"line": 10,
+				"nonExceptionalEntries": 0
+			}
+		],
+		"note": "KI §38 形態 P24（被呼叫端單純 throw：try 內 t() 只會拋錯（非遞迴），finally 只由例外進入，仍以正常路徑接到 L11；D003 不修）"
+	}
+]

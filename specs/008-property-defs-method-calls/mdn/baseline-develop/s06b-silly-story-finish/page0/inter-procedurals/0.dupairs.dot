@@ -1,0 +1,13 @@
+digraph structs {
+node [shape="plaintext"]
+struct1 [label=<
+<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
+<tr><td>Variable</td><td COLSPAN="2">Def-Use pairs</td></tr><tr><td>randomCharacter</td><td>(call (26),30)</td><td></td></tr>
+<tr><td>randomPlace</td><td>(call (27),30)</td><td></td></tr>
+<tr><td>array</td><td>(entry_b,9)</td><td>(entry_b,10)</td></tr>
+<tr><td>random</td><td>(9,10)</td><td></td></tr>
+<tr><td>randomEvent</td><td>(call (28),30)</td><td></td></tr>
+<tr><td>storyText</td><td>(30,32)</td><td></td></tr>
+</TABLE>
+>];
+}

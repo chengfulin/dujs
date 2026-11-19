@@ -1,0 +1,31 @@
+{
+  "format": "dujs-matching/1",
+  "level": "interProcedural",
+  "mainScope": "$DOMAIN.$PAGE_0.onModeChange",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 6,
+      "callSiteLine": 75,
+      "callee": "$DOMAIN.$PAGE_0.describeMode",
+      "callNode": "n182",
+      "entry": "n183",
+      "exit": "n188",
+      "callReturn": "n193",
+      "exceptionalReturn": "n194",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.describeMode": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [],
+      "mustKill": [],
+      "upwardExposed": [],
+      "exceptional": []
+    }
+  }
+}

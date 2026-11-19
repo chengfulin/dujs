@@ -1,0 +1,123 @@
+{
+  "format": "dujs-matching/1",
+  "level": "intraPage",
+  "mainScope": "$DOMAIN.$PAGE_0",
+  "calls": [
+    {
+      "id": "c1",
+      "seq": 1,
+      "callSiteLine": 23,
+      "callee": "$DOMAIN.$PAGE_0.setGameOver",
+      "callNode": "n58",
+      "entry": "n59",
+      "exit": "n66",
+      "callReturn": "n67",
+      "exceptionalReturn": "n82",
+      "back": false,
+      "beforeDecision": false
+    },
+    {
+      "id": "c2",
+      "seq": 2,
+      "callSiteLine": 27,
+      "callee": "$DOMAIN.$PAGE_0.setGameOver",
+      "callNode": "n74",
+      "entry": "n59",
+      "exit": "n66",
+      "callReturn": "n75",
+      "exceptionalReturn": "n82",
+      "back": false,
+      "beforeDecision": false
+    }
+  ],
+  "loops": [
+    {
+      "loop": "n47",
+      "loopReturn": "n83",
+      "handlers": [
+        {
+          "scope": "$DOMAIN.$PAGE_0.checkGuess",
+          "entry": "n49",
+          "exit": "n82"
+        }
+      ]
+    }
+  ],
+  "summaries": {
+    "$DOMAIN.$PAGE_0.checkGuess": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "guesses@n53",
+        "lastResult@n55",
+        "lowOrHi@n57",
+        "guessSubmit@n61",
+        "resetButton@n63",
+        "guessCount@n68",
+        "guessField@n69",
+        "lastResult@n72",
+        "lowOrHi@n73",
+        "lastResult@n76",
+        "lowOrHi@n79",
+        "lowOrHi@n81"
+      ],
+      "mustKill": [
+        "guessCount",
+        "guessField",
+        "guesses",
+        "lastResult"
+      ],
+      "upwardExposed": [
+        "Number",
+        "document",
+        "guessCount",
+        "guessField",
+        "guesses",
+        "randomNumber",
+        "resetGame",
+        "setGameOver"
+      ],
+      "exceptional": [
+        "guesses@n52",
+        "guesses@n53",
+        "lastResult@n55",
+        "lowOrHi@n57",
+        "guessField@n60",
+        "guessSubmit@n61",
+        "resetButton@n62",
+        "resetButton@n63",
+        "guessCount@n68",
+        "guessField@n69",
+        "lastResult@n72",
+        "lowOrHi@n73",
+        "lastResult@n76",
+        "lowOrHi@n79",
+        "lowOrHi@n81"
+      ]
+    },
+    "$DOMAIN.$PAGE_0.setGameOver": {
+      "normalReturn": true,
+      "conservative": false,
+      "gen": [
+        "guessField@n60",
+        "guessSubmit@n61",
+        "resetButton@n63"
+      ],
+      "mustKill": [
+        "guessField",
+        "guessSubmit",
+        "resetButton"
+      ],
+      "upwardExposed": [
+        "document",
+        "resetGame"
+      ],
+      "exceptional": [
+        "guessField@n60",
+        "guessSubmit@n61",
+        "resetButton@n62",
+        "resetButton@n63"
+      ]
+    }
+  }
+}
