@@ -2034,3 +2034,37 @@ inter-procedural model gives `c: L1 -> L8>exit:F`. Only the tests are
 affected (not the CLI output or the golden files); `tests/dujs/expansion.js:127`,
 `tests/dujs/splitcallnodes.js:251` and `tests/dujs/reachability.js` (P18)
 pin the label. Not fixed.
+
+### 57. Only `addEventListener` registers a handler of the event loop (pre-existing)
+
+The intra-page model connects a handler to the LOOP node only when it is
+registered by `<object>.addEventListener(<type>, <handler>)`, with a function
+expression, an arrow function or the name of a function declaration as the
+second argument (`getRegisteredEventHandlerCallback`,
+`lib/dujs/modelbuilder.js:439`). An async function registered this way is a
+handler like any other. Other callbacks run by the event loop are not
+handlers: `promise.then(cb)`, `setTimeout(cb)`, `setInterval(cb)`,
+`queueMicrotask(cb)` and the event handler properties (`el.onclick = cb`).
+Their definitions reach no use of the page or of the handlers. The part of an
+async function after an `await` is not resumed from the event loop either:
+the body is a function run to the end, with the conservative summary of §37
+at a direct call.
+
+```js
+var x = 0;
+var p = Promise.resolve();
+function h() { x = 1; }
+function t() { x = 2; }
+document.addEventListener('click', function () { console.log(x); });
+p.then(h);
+setTimeout(t, 0);
+document.body.onclick = function () { x = 3; };
+```
+
+The intra-page model gives only `x: L1 -> L5` (checked with
+`tests/helpers/analyze.js`); `x: L3 -> L5`, `x: L4 -> L5` and `x: L8 -> L5`
+are missing, although `h`, `t` and the `onclick` handler may run before the
+`click` handler. Treating these callbacks as handlers of the LOOP node would
+over-approximate microtasks (a `then` callback of a settled promise always
+runs before the next event), and resuming after `await` would need the body
+of an async function split at each `await`. Status: limit, not fixed.
