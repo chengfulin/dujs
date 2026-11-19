@@ -139,6 +139,13 @@ compound and logical assignments, async functions and generators.
   and a function called directly returns only to its call. The event loop does
   not kill definitions (a handler may never run), and the definitions of each
   handler flow to every handler, itself included
+- Only `<object>.addEventListener(<type>, <handler>)` registers an event
+  handler (a function expression, an arrow function or the name of a
+  function declaration as the second argument). Callbacks run later by the
+  event loop through other APIs, such as `promise.then(cb)`, `setTimeout(cb)`,
+  `setInterval(cb)`, `queueMicrotask(cb)` or `el.onclick = cb`, are not
+  handlers of the intra-page model, and the part of an async function after
+  an `await` is not resumed from the event loop (known-issues §57)
 - In the MDN bouncing balls example, `const ball = new Ball()` is connected,
   but `ball.draw()` on a `for...of` binding is not (the loop variable is not a
   definition `new Ball(...)`)
